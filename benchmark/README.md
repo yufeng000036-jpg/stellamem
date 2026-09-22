@@ -13,13 +13,17 @@
 
 ```
 benchmark/
-├── samples/    # 输入日记（自己准备，脱敏后）
-├── golden/     # 标准答案（人工标注：draft 草稿 → confirmed 确认）
-├── results/    # 跑分输出
-└── match.py    # 语义匹配工具（temp=0 确定性匹配）
+├── measure.py  # 存储解析 / 索引 / 查找的合成扩缩容测量（已随仓提供）
+├── samples/    # 输入日记（自行准备，脱敏后）—— 尚未随仓提供
+├── golden/     # 标准答案（人工标注：draft → confirmed）—— 尚未随仓提供
+└── results/    # 跑分输出 —— 尚未随仓提供
 ```
 
-## 流程
+> ⚠️ **当前状态**：仓库里**只有 `measure.py`**（存储层合成测量，见下）。
+> 下面描述的语义匹配器 `match.py` 与 samples/golden/results 目录 **均不在本仓**。
+> 它们描述的是一个尚未随仓发布的评测流程，不能作为可复现证据引用。
+
+## 流程（计划）
 
 1. `samples/` 放输入日记
 2. 生成 `golden/*_draft.json`（AI 初标，`status: draft`）
@@ -32,15 +36,16 @@ benchmark/
 - 只有 `*_confirmed.json` 才能用于可信评分。
 - **绝不拿系统自己的产出当标准答案。**
 
-## 语义匹配
+## 存储测量（已随仓）
 
-`match.py` 提供 `strict_match(expected, predicted)`，用本地模型做语义判断（temp=0 确定性），不依赖字符串相等。
+`python benchmark/measure.py` 用合成数据测量 canonical markdown 的解析、索引和
+查找耗时与峰值内存（默认 10 / 100 / 1k / 10k / 100k 条）——它只描述**存储层**，不声称任何提取质量。
 
 ---
 
 ## 2026-09-22 解释边界（追加）
 
-- 当前最终结果：expected 393、matched 277、missed 116、extra 272、recall 0.705、precision 0.505。
+- 历史曾报告 expected 393、matched 277、missed 116、extra 272、recall 0.705、precision 0.505。
+  **这些数字来自单用户私有样本与一个未随仓发布的匹配器，无法在本仓独立复现，不应作为证据引用。**
 - `False Write = 0` 只适用于已定义并实际运行的对抗样本，不代表真实环境零错误。
-- extra 尚未全部经过独立人工复核，不能全部视为误提取，也不能全部视为标准答案漏标。
-- 样本来自单一用户且按文件大小选择，匹配器包含单次 LLM 判断；结果仅用于内部版本比较。
+- 样本来自单一用户且按文件大小选择；结果仅用于内部版本比较。

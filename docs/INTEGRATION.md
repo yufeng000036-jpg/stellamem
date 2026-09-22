@@ -38,9 +38,10 @@ AI 对话 ──(daily-autolog hook)──▶ daily/*.md 日记        [自动]
 **步骤**：
 
 1. 编辑 `handler.js` 顶部三个常量：
-   - `AI_NAME`：你自己的 AI 名字（日记以谁的第一人称写）
    - `SESSIONS_DIR`：OpenClaw 会话目录（如 `C:/Users/你/.openclaw/agents/main/sessions`）
    - `DAILY_DIR`：记忆根目录下的 daily 子目录（如 `C:/Users/你/<你的记忆根>/daily`）
+   - `TIMEZONE_OFFSET`：时区偏移小时数（如中国 `8`）
+   （`handler.js` **不调用模型**，也**不复制对话原文**：它只写 `daily/YYYY-MM-DD.sources.json` 来源指针 + 简短摘要。）
 
 2. 把 `daily-autolog/` 复制到 `~/.openclaw/hooks/`
 
@@ -70,9 +71,11 @@ AI 对话 ──(daily-autolog hook)──▶ daily/*.md 日记        [自动]
 把日记编译成结构化记忆（偏好/决策/教训/项目/身份）。
 
 ```bash
-python compiler/extract.py                 # 日记 → Claim
-python compiler/sleep_purify.py --mode review   # Claim → 记忆文件
+python compiler/sleep_purify.py --mode review   # 读取来源 → 编译 → 记忆/收件箱
+python compiler/inbox.py list                   # 查看待人工确认的候选
 ```
+
+（`extract.py` 是一个**单独的调试 CLI**，把单篇来源的 Claim 打到 stdout，不参与主流程；主流程统一走 `sleep_purify.py`。）
 
 详见 `docs/QUICKSTART.md`。
 
@@ -91,7 +94,7 @@ python compiler/sleep_purify.py --mode review   # Claim → 记忆文件
 3. 在 `openclaw.json` 的 plugins 里启用 `stellamem-adapter`
 4. 重启 OpenClaw
 
-**验证**：问 AI「你记得我之前说过什么偏好吗？」——它应该能答出 `core/preferences.md` 里的内容。
+**验证**：问 AI「你记得我之前说过什么偏好吗？」——它应该能答出已批准入库的偏好 Claim（未批准的候选在收件箱里，不会注入）。
 
 ---
 

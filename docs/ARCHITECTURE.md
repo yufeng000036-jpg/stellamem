@@ -57,4 +57,7 @@ Adapter 契约：`inject_core / inject_recall / healthcheck`。
 - Claim 的现行字段增加 `scope`；稳定 ID 与去重键均必须包含 scope。
 - `core/identity.md` 和 `core/user-core.md` 是人工确认区，编译器不得直接写入。
 - confidence 不是经过校准的正确概率，必须与来源、安全、时效和目标敏感度规则共同决定路由。
-- 本地代码已加入四字段去重和 legacy 读取并通过 9 项安全测试；真实定时编译仍未验证。
+- 本地代码已加入四字段去重和 legacy 读取并通过 78 项 Python / 3 组 JS 测试（合成数据）；真实模型仅完成工程性验证，真实宿主端到端仍未验证。
+- 模型客户端仅允许环回 endpoint（`127.0.0.1` / `localhost`），拒绝远程 API、重定向与系统代理。
+- 来源不复制原文，只保存指针与 hash（`daily/*.sources.json`）；指针解析失败时报 `SourceError`，不伪造来源。
+- 人工审批闭环：`compiler/inbox.py`（list / show / approve / reject / edit）。

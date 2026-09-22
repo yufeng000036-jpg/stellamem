@@ -15,7 +15,7 @@
 - benchmark 评测：30 篇真实日记，召回 0.705 / 精确 0.505 / False Write 0
 - memory CLI：只读体检（索引同步 / 冲突检测 / 健康检查 / 版本链校验）
 - **AI 自举安装**：`AI_BOOTSTRAP.md` + `INSTALL.md` + `setup.py` 三件套，AI 读完可自行安装
-- **可分发安装器**：`setup.py` 支持 `--ai-name` / `--mem-root` / `--merge-openclaw` 参数，一行全自动安装
+- **可分发安装器**：`setup.py` 支持 `--mem-root` / `--config` / `--oc-root` / `--model-url` / `--dry-run` / `--upgrade` 参数；**不会**修改 `openclaw.json`，只生成配置片段。
 - **发布前安全文档**：新增 `SECURITY.md`（安全策略）、`THREAT_MODEL.md`（12 项威胁模型）、`ROADMAP.md`（规划中能力）
 - **README 重写为发布版**：Alpha 声明、安全模型（Secret is not Memory / Single Writer / Adapter 边界）、Your Memory Is Yours、Git for AI Memory、退出机制、数据边界
 
@@ -49,5 +49,5 @@
 ## 2026-09-22 审计更正
 
 - 评测口径：`False Write 0` 只描述既定对抗样本，不能解释为所有写入正确或真实环境零错误；同次评测还包含 272 条 extra，并受单用户样本与单次 LLM 匹配器限制。
-- Schema：稳定 ID 与去重键增加 scope；本地编译器已加入四字段实现和 legacy 读取，9 项安全测试通过，真实定时编译仍待验证。
+- Schema：稳定 ID 与去重键增加 scope；本地编译器已加入四字段实现和 legacy 读取，78 项 Python 测试与 3 组 JS 测试在合成数据上通过，真实模型仅完成工程性验证（非准确率声明）；安装后的 OpenClaw hook/adapter 尚未在真实宿主端到端验证。
 - 模板：补齐编译器和适配器已引用但此前未随安装模板创建的四个 semantic 文件。

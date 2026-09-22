@@ -100,7 +100,7 @@ python setup.py install
 | 当前默认 | Qwen3-4B Q5_K_M | 8GB 显存 | 约 7 秒 | 本地可跑，零成本 |
 | 轻量档 | Qwen3-1.7B Q5 | 4GB 显存 | 约 3 秒 | 低配设备，质量略降 |
 | 进阶档 | Qwen3-14B / 32B | 16–24GB 显存 | 视硬件 | 质量优先 |
-| 云端档 | GPT-4o / Claude / DeepSeek | API | 视网络 | 质量最高（API 鉴权适配开发中，暂需自行加 header） |
+| 云端档 | 暂不支持（客户端仅允许环回地址） | — | — | 见下方「仅限本地」说明 |
 
 上限不固定。模型越强，抽取越准、去重越干净、冲突裁决越可靠。
 整个架构、schema、路由逻辑都是模型无关的——换模型不用改记忆结构。
@@ -121,7 +121,7 @@ python setup.py install
 
 - 推荐：8GB 显存 + llama.cpp，跑 Qwen3-4B Q5_K_M。
 - 进阶：16GB 显存，可上更大模型。
-- 无 GPU：CPU 也能跑，速度慢 10 倍以上；或改用本地 OpenAI 兼容服务（Ollama / LM Studio）。
+- 无 GPU：CPU 也能跑，速度较慢；或改用本地 OpenAI 兼容服务（Ollama / LM Studio）。
 
 ---
 
@@ -144,10 +144,9 @@ python setup.py install
 ## FAQ
 
 **能接 Claude / GPT 吗？**
-目前**直接支持本地 OpenAI-compatible 模型服务**（llama.cpp / Ollama / LM Studio 等），
-默认不需要把记忆发送给第三方模型服务。
-远程 API Provider（GPT / Claude / DeepSeek 等）**适配计划中**：当前 `extract.py` 未带
-`Authorization` 头，直连远程 API 会 401。想要远程跑，需要自行加鉴权头，或等官方适配。
+目前**只支持本地 OpenAI-compatible 模型服务**（llama.cpp / Ollama / LM Studio 等），且必须是环回地址。
+远程 API Provider（GPT / Claude / DeepSeek 等）**当前被显式拒绝**：`model_client.py` 只允许
+`127.0.0.1` / `localhost`，并拒绝重定向与系统代理。这是隐私设计，不是尚未完成的适配。
 实际质量差异需自行 Benchmark 验证，本仓不声称「某个模型一定最好」。
 
 **记忆存在哪？会上传吗？**
@@ -198,4 +197,4 @@ Made by 宇枫
 
 `False Write = 0` 只表示既定对抗样本中未观察到对应错误，不能推出“所有写入都正确”，也不能代表真实运行环境的错误写入率为零。该数据只适合版本内部比较，不能外推为通用准确率。
 
-Scope 说明：Schema 与本地编译器已改为四字段稳定 ID，并兼容读取 legacy 三字段 ID；9 项安全测试已通过，定时任务恢复后的真实编译仍未验证。
+Scope 说明：Schema 与本地编译器已改为四字段稳定 ID，并兼容读取 legacy 三字段 ID；78 项 Python 测试与 3 组 JS 测试在合成数据上通过，真实模型仅完成工程性验证（非准确率声明）；安装后的 OpenClaw hook/adapter 尚未在真实宿主中端到端跑通。

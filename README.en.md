@@ -78,10 +78,15 @@ Stellamem's compile quality is not tied to any single model. The extraction laye
 | Default | Qwen3-4B Q5_K_M | 8GB VRAM | ~7s | Local, zero cost |
 | Light | Qwen3-1.7B Q5 | 4GB VRAM | ~3s | Low-end devices |
 | Advanced | Qwen3-14B / 32B | 16–24GB VRAM | hardware-dependent | Quality first |
-| Cloud | GPT-4o / Claude / DeepSeek | API | network-dependent | Highest quality |
 
 No fixed ceiling. Stronger models mean more accurate extraction, cleaner deduplication, more reliable conflict resolution.
 The architecture, schema, and routing logic are model-agnostic — swapping models does not require changing your memory structure.
+
+> **Local-only by design.** The model client (`compiler/model_client.py`) accepts
+> **loopback endpoints only** (`127.0.0.1` / `localhost`). Remote and cloud APIs are
+> refused, redirects are rejected and system proxies are ignored, so memory content
+> does not egress by default. Supporting a hosted provider would require an explicit
+> code and policy change; it is **not** available today.
 
 ---
 
@@ -99,7 +104,7 @@ The architecture, schema, and routing logic are model-agnostic — swapping mode
 
 - Recommended: 8GB VRAM + llama.cpp, running Qwen3-4B Q5_K_M.
 - Advanced: 16GB VRAM for larger models.
-- No GPU: CPU works but is 10x+ slower; or use a cloud API.
+- No GPU: CPU works, but is slower.
 
 ---
 
@@ -125,7 +130,8 @@ Avoid: if you want a turnkey SaaS, prefer no command line, or only need short-te
 Yes. The extraction layer is model-agnostic; any JSON-output model works.
 
 **Where is memory stored? Is it uploaded?**
-Local markdown files by default, Git-diffable, no network. Content is only sent to a service provider if you explicitly configure a cloud model API.
+Local markdown files by default, Git-diffable, no network. The model client only
+connects to a loopback endpoint; content is never sent to a remote service.
 
 **Does a stronger model help?**
 Yes. Stronger models mean higher recall, fewer false writes. 4B is the default starting point, not the ceiling.
@@ -162,4 +168,4 @@ The current 30-diary, single-user benchmark contains 393 expected claims: 277 ma
 
 `False Write = 0` only means that no such failure was observed in the defined adversarial cases. It does not prove that every stored memory is correct or that the production false-write rate is zero. These results are suitable for internal version comparisons and should not be generalized.
 
-Scope status: the schema and local compiler now use a four-part stable ID while retaining legacy three-field reads. Nine local safety tests pass; the first real scheduled compile after re-enabling the job remains unverified.
+Scope status: the schema and local compiler use a four-part stable ID while retaining legacy three-field reads. 78 local Python tests and 3 JS test groups pass against synthetic data; the real model has been verified for engineering behaviour only. The installed OpenClaw hook and adapter have not been run end-to-end in a real host.
