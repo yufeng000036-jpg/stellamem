@@ -340,15 +340,18 @@ def append_to_file(rel, claim):
     os.makedirs(os.path.dirname(p), exist_ok=True)
     line = (f"- `claim-id:{claim_id(claim)}` **{claim['predicate']}**: {claim['value']} "
             f"(置信 {claim['confidence']:.2f} · 来源 {claim['source']})\n")
-    # Evidence 落盘：可审计链条的地基（原句 + 来源文件 + 观察时间）
+    # Evidence 落盘：可审计链条的地基（原句 + 来源文件 + 观察时间 + 消息时间）
     ev = str(claim.get("evidence") or "").strip()
     ref = str(claim.get("source_ref") or "").strip()
+    sts = str(claim.get("source_timestamp") or "").strip()
     at = datetime.now().strftime("%Y-%m-%d %H:%M")
     if ev:
         ev = ev.replace("\n", " ")[:200]
         line += f"  - evidence: \"{ev}\""
         if ref:
             line += f" | source_ref: {ref}"
+        if sts:
+            line += f" | source_timestamp: {sts}"
         line += f" | observed_at: {at}\n"
     with open(p, "a", encoding="utf-8") as fh:
         fh.write(line)

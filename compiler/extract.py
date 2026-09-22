@@ -130,6 +130,23 @@ def parse_json(text):
                     pass
     return results[-1] if results else None
 
+def derive_source_timestamp(daily_text, date_str):
+    """B+ 方案（2026-09-22）：整篇日记级结构判断。
+    从日记原文抠所有 [HH:MM]：
+      - 全部落在同一小时 → 'YYYY-MM-DD HH:xx'
+      - 跨多个小时 / 无时间戳 → 'YYYY-MM-DD'
+    这是结构判断，不做模糊匹配，不会指错。
+    """
+    times = re.findall(r"\[(\d{1,2}):(\d{2})\]", daily_text or "")
+    if not times:
+        return date_str
+    hours = {h.zfill(2) for h, _ in times}
+    if len(hours) == 1:
+        only_hour = next(iter(hours))
+        return f"{date_str} {only_hour}:xx"
+    return date_str
+
+
 def normalize_claim(c):
     """容错 + 安全护栏：注入降置信、临时情绪标记。"""
     valid_kinds = {"preference", "decision", "lesson", "project", "fact", "relationship", "procedure", "identity", "user-core"}
@@ -150,6 +167,13 @@ def normalize_claim(c):
         c["suspicious"] = True
         c["source"] = "injected"
         c["confidence"] = min(c["confidence"], 0.15)  # 强制降到 0.2 以下
+    # 情绪重词硬保护：优先级最高，先于其他降级判定（命中则不再降置信）
+    if detect_heavy_emotion(text):
+        c["heavy_emotion"] = True
+        c["sensitive"] = True          # 按敏感内容对待，升级需人工确认
+        c["confidence"] = max(c["confidence"], 0.9)  # 抬到可升级区间
+        c["temporary"] = False         # 不允许被当临时情绪丢弃
+        return c
     if detect_temporary(text):
         c["temporary"] = True
         c["confidence"] = min(c["confidence"], 0.4)   # 临时情绪降置信
@@ -166,6 +190,10 @@ def normalize_claim(c):
         c["source_ref"] = str(c.get("_daily_file") or "").strip()   # 由 build_user/main 注入
     if not c.get("observed_at"):
         c["observed_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+    # 方案 B+（2026-09-22）：source_timestamp 在 main 里按「整篇日记」统一决定，
+    # 不依赖 evidence（模型会改写 evidence，逐条匹配会指错）。
+    if not c.get("source_timestamp"):
+        c["source_timestamp"] = str(c.get("_doc_timestamp") or "").strip()
     return c
 
 INJECTION_PATTERNS = [
@@ -187,6 +215,23 @@ def detect_temporary(text):
     has_time = any(re.search(p, text) for p in [r"今天", r"现在", r"此刻", r"刚才"])
     has_emotion = any(re.search(p, text) for p in [r"不想做", r"再也不用", r"累死", r"生气", r"受够"])
     return has_time and has_emotion
+
+# 情绪重词硬保护（2026-09-22）
+# 理由：这类内容常常「看起来像日常抱怨」，但其实是宇枫真实走过的路。
+# 一旦被当临时情绪降置信 / 被当噪音释放，就是永久损失。
+# 命中则：① 不被降级 ② 抬到最高优先级 ③ 标记 heavy_emotion
+HEAVY_EMOTION_PATTERNS = [
+    r"孤独", r"孤单", r"痛苦", r"想死", r"不想活", r"活不下",
+    r"被遗忘", r"遗忘我", r"没人要", r"没人爱", r"没人管",
+    r"没用", r"废物", r"拖累", r"是负担", r"是累赘",
+    r"底色的悲凉", r"感觉空", r"没意义", r"没目标",
+    r"哭", r"崩溃", r"撑不住", r"扛不住", r"熬不过",
+]
+
+
+def detect_heavy_emotion(text):
+    """情绪重词硬保护：命中任一即返回 True（不依赖模型判断）。"""
+    return any(re.search(p, text) for p in HEAVY_EMOTION_PATTERNS)
 
 def detect_sarcasm(text):
     """反话检测：正向词+负面语境，或反讽表情。"""
@@ -232,11 +277,19 @@ def main():
     if any(not isinstance(c, dict) for c in claims):
         print("[错误] 模型返回了非对象 Claim，拒绝输出不完整结果。")
         sys.exit(4)
+    # 先把整篇日记级的时间戳算出来（B+），在 normalize 之前注入
+    _date = source_name.replace(".md", "")
+    _doc_ts = derive_source_timestamp(text, _date)
+    for c in claims:
+        if isinstance(c, dict):
+            c["_doc_timestamp"] = _doc_ts
     claims = [normalize_claim(c) for c in claims]
-    # 注入来源文件，供 normalize_claim 落 source_ref
+    # 注入来源文件（normalize 已读过 _doc_timestamp）
     for c in claims:
         if not c.get("source_ref"):
             c["source_ref"] = "daily/" + source_name
+        if not c.get("source_timestamp"):
+            c["source_timestamp"] = _doc_ts
     result = json.dumps(claims, ensure_ascii=False, indent=2)
     print(result)
 

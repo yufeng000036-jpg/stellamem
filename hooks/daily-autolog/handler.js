@@ -111,7 +111,7 @@ async function readSessionsForDate(dateStr) {
             (entry.message?.content || [])
               .map((c) => c.text || "")
               .join(" ")
-          ).slice(0, 150);
+          ).slice(0, 500);
           if (content) msgs.push({ time: getLocalHHMM(ts), role, content });
         } catch {}
       }
@@ -190,12 +190,14 @@ async function write_daily(dateStr) {
   let diff = lastTime ? msgs.filter((m) => m.time > lastTime) : msgs;
   if (diff.length === 0) return { skipped: true, reason: "已覆盖" };
 
-  // 消息数上限保护：超 60 条按时间均匀抽样，避免 prompt 超长（模型 context 8192）
-  if (diff.length > 60) {
-    const step = diff.length / 60;
-    const sampled = [];
-    for (let i = 0; i < 60; i++) sampled.push(diff[Math.floor(i * step)]);
-    diff = sampled;
+  // 消息数上限保护（2026-09-22）：不再均匀抽样（会丢中间内容）。
+  // 改为保留「最后 N 条」—— 保留最近上下文，且明确记录丢弃了多少条。
+  // 若模型 context 不足，可调小 RAW_LIMIT。
+  const RAW_LIMIT = 400;
+  if (diff.length > RAW_LIMIT) {
+    const dropped = diff.length - RAW_LIMIT;
+    diff = diff.slice(-RAW_LIMIT);
+    logError(`write_daily(${dateStr}) 消息过多，已保留最后 ${RAW_LIMIT} 条（丢弃 ${dropped} 条早期消息）`);
   }
 
   let text;
