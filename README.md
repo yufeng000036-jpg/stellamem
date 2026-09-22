@@ -17,6 +17,7 @@ Stellamem 是一个**本地优先、可审计的 AI 长期记忆治理层**。
   <a href="README.en.md">English</a> ·
   <a href="docs/QUICKSTART.md">Quick Start</a> ·
   <a href="docs/ARCHITECTURE.md">架构</a> ·
+  <a href="docs/PHILOSOPHY.md">理念</a> ·
   <a href="SECURITY.md">安全</a> ·
   <a href="docs/USE_CASES.md">应用场景</a> ·
   <a href="CONTRIBUTING.md">参与贡献</a>
@@ -86,6 +87,8 @@ Version history —— 旧版本保留，可回滚
 | **Memory must have provenance** | AI 应该知道「为什么相信这件事」。 |
 | **Conflict must not disappear** | 冲突不能静默覆盖。 |
 | **Users own their memory** | 用户应能看见 / 修改 / 拒绝 / 删除 / 回滚 / 导出 AI 的记忆。 |
+
+> 展开说明见 [`docs/PHILOSOPHY.md`](docs/PHILOSOPHY.md)。
 
 ---
 

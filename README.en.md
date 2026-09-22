@@ -18,6 +18,7 @@ reviewable and reversible** — instead of an opaque black box.
   <a href="README.md">中文</a> ·
   <a href="docs/QUICKSTART.md">Quick Start</a> ·
   <a href="docs/ARCHITECTURE.md">Architecture</a> ·
+  <a href="docs/PHILOSOPHY.md">Philosophy</a> ·
   <a href="SECURITY.md">Security</a> ·
   <a href="docs/USE_CASES.md">Use Cases</a> ·
   <a href="CONTRIBUTING.md">Contributing</a>
@@ -92,6 +93,8 @@ Version history — old versions are kept and can be rolled back
 | **Memory must have provenance** | The AI should know *why* it believes something. |
 | **Conflict must not disappear** | Conflicts may not be silently overwritten. |
 | **Users own their memory** | Users can view / edit / reject / delete / roll back / export it. |
+
+> Expanded in [`docs/PHILOSOPHY.md`](docs/PHILOSOPHY.md).
 
 ---
 
