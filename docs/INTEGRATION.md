@@ -12,16 +12,16 @@
 
 **只装 adapter（注入）不装 hook（写入），你的 AI 能"读到"记忆，但它的对话永远不会自动写进来。** 你需要手动写日记，否则整条流水线是断的。
 
-完整闭环：
+完整流水线（⚠️ 中间「编译」一步目前需人工 / 定时触发，**不是全自动**）：
 
 ```
-AI 对话 ──(daily-autolog hook)──▶ daily/*.md 日记
+AI 对话 ──(daily-autolog hook)──▶ daily/*.md 日记        [自动]
                                         │
                                         ▼
-                              (compiler 编译)
+                              (compiler 编译)            [需手动 / 定时触发]
                                         │
                                         ▼
-                        core/ long-term/ semantic/ 记忆
+                        core/ long-term/ semantic/ 记忆  [自动落盘]
                                         │
                                         ▼
                         (adapter 注入) ◀── AI 下一次对话

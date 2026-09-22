@@ -145,9 +145,10 @@ python setup.py install
 
 **能接 Claude / GPT 吗？**
 目前**直接支持本地 OpenAI-compatible 模型服务**（llama.cpp / Ollama / LM Studio 等），
-本地跑零成本、零隐私风险。
+默认不需要把记忆发送给第三方模型服务。
 远程 API Provider（GPT / Claude / DeepSeek 等）**适配计划中**：当前 `extract.py` 未带
 `Authorization` 头，直连远程 API 会 401。想要远程跑，需要自行加鉴权头，或等官方适配。
+实际质量差异需自行 Benchmark 验证，本仓不声称「某个模型一定最好」。
 
 **记忆存在哪？会上传吗？**
 默认全本地 markdown 文件，Git 可 diff，不联网。只有你主动配置远程模型 API 时，

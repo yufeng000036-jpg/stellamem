@@ -201,8 +201,8 @@ def deep_merge(base, overlay, path="", conflicts=None):
                 base[key] = {}
                 deep_merge(base[key], val, cur_path, conflicts)
             elif isinstance(val, list):
-                base[key] = []
-                deep_merge(base[key], val, cur_path, conflicts)
+                # 列表直接拷贝，不递归（deep_merge 只接受 dict），否则 .items() 会 AttributeError
+                base[key] = list(val)
             else:
                 base[key] = val
         elif isinstance(base[key], dict) and isinstance(val, dict):
@@ -603,15 +603,24 @@ def cmd_install(dry_run=False, yes=False, ai_name=None, mem_root=None, merge_ope
                     else:
                         ok("无字段冲突（你的已有配置全数保留）")
                     modified += 1
+                    globals()["_merge_state"] = "ok"
                 except Exception as e:
+                    globals()["_merge_state"] = "failed"
                     err(f"合并 openclaw.json 失败（已跳过，可手动合并 snippet）: {e}")
             elif kind == "install-report":
                 out_dir2, mem, did_merge = arg
-                merge_line = (
-                    "✅ 已自动合并 openclaw.json（已备份）"
-                    if did_merge
-                    else "⚠️ 未自动合并：请手动合并 setup-out/openclaw.snippet.json 到 openclaw.json"
-                )
+                # 以实际合并结果为准（merge-openclaw 分支会写 _merge_state），
+                # 避免「传了参数但实际失败」却被报告写成「已自动合并」。
+                if did_merge:
+                    actual = globals().get("_merge_state", "failed")
+                    if actual == "ok":
+                        merge_line = "✅ 已自动合并 openclaw.json（已备份）"
+                    elif actual == "failed":
+                        merge_line = "⚠️ 合并失败：请手动合并 setup-out/openclaw.snippet.json 到 openclaw.json"
+                    else:
+                        merge_line = f"⚠️ 合并状态未知（{actual}）：请人工核对"
+                else:
+                    merge_line = "⚠️ 未自动合并：请手动合并 setup-out/openclaw.snippet.json 到 openclaw.json"
                 report = f"""# Stellamem 安装报告
 
 - 时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}

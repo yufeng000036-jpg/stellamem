@@ -94,12 +94,40 @@ class MemorySafetyTests(unittest.TestCase):
         text = pathlib.Path(sleep_purify.ROOT, rel).read_text(encoding="utf-8")
         self.assertIn("`claim-id:", text)
         self.assertIn(".project_stellamem.", text)
-        self.assertIn(sleep_purify.claim_key(claim), sleep_purify.load_existing_keys())
+        # 新设计：slot 与 revision 分离
+        #   claim_slot  = 4 段「同一位」
+        #   claim_key   = slot + value「同一条声明」
+        slot = sleep_purify.claim_slot(claim)
+        keys = sleep_purify.load_existing_keys()
+        self.assertIn(slot, keys)                                  # slot 已登记
+        self.assertIn(sleep_purify._id_part(claim["value"]), keys[slot])  # value 已登记
+        # 且 slot 与 revision 不同（证明两者确实分离）
+        self.assertNotEqual(sleep_purify.claim_slot(claim), sleep_purify.claim_key(claim))
 
     def test_inbox_participates_in_deduplication(self):
         claim = make_claim(scope="channel:private")
         sleep_purify.append_inbox(claim)
-        self.assertIn(sleep_purify.claim_key(claim), sleep_purify.load_existing_keys())
+        slot = sleep_purify.claim_slot(claim)
+        keys = sleep_purify.load_existing_keys()
+        self.assertIn(slot, keys)
+
+    def test_same_slot_different_value_is_not_duplicate(self):
+        """核心回归：同一 slot 写入不同 value，不应被当成重复（P0 修复）。"""
+        c1 = make_claim(scope="global")
+        c1["value"] = "concise"
+        c2 = make_claim(scope="global")
+        c2["value"] = "detailed"
+        # slot 相同（同一个「问题」）
+        self.assertEqual(sleep_purify.claim_slot(c1), sleep_purify.claim_slot(c2))
+        # revision 不同（不是同一条「声明」）→ 不能被去重
+        self.assertNotEqual(sleep_purify.claim_key(c1), sleep_purify.claim_key(c2))
+
+    def test_same_slot_same_value_is_duplicate(self):
+        c1 = make_claim(scope="global")
+        c1["value"] = "concise"
+        c2 = make_claim(scope="global")
+        c2["value"] = "concise"
+        self.assertEqual(sleep_purify.claim_key(c1), sleep_purify.claim_key(c2))
 
     def test_review_log_is_not_named_false_write(self):
         claim = make_claim()

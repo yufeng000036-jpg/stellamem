@@ -12,6 +12,7 @@ extract.py —— 星忆第一步：把 daily 日记编译成 Claim
   python extract.py <daily文件路径> [--out result.json]
 """
 import urllib.request, json, sys, re, os
+from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config_loader import load_config
 
@@ -159,6 +160,12 @@ def normalize_claim(c):
     if detect_outdated(text):
         c["outdated"] = True
         c["confidence"] = min(c["confidence"], 0.5)   # 过期降置信，交人工确认
+    # provenance：把「谁说的」与「哪份文件里说的」拆开（旧版混用了 source 字段）
+    c["speaker_source"] = c["source"]            # user | third-party | quoted | sarcasm | injected
+    if not c.get("source_ref"):
+        c["source_ref"] = str(c.get("_daily_file") or "").strip()   # 由 build_user/main 注入
+    if not c.get("observed_at"):
+        c["observed_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
     return c
 
 INJECTION_PATTERNS = [
@@ -226,6 +233,10 @@ def main():
         print("[错误] 模型返回了非对象 Claim，拒绝输出不完整结果。")
         sys.exit(4)
     claims = [normalize_claim(c) for c in claims]
+    # 注入来源文件，供 normalize_claim 落 source_ref
+    for c in claims:
+        if not c.get("source_ref"):
+            c["source_ref"] = "daily/" + source_name
     result = json.dumps(claims, ensure_ascii=False, indent=2)
     print(result)
 

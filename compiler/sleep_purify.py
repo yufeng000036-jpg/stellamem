@@ -248,12 +248,27 @@ def _id_part(value):
     return text or "unknown"
 
 
-def claim_key(claim):
-    """现行四字段去重键；scope 不同的 Claim 绝不互相覆盖。"""
+def claim_slot(claim):
+    """Slot ID —— 「这是同一个问题吗？」
+    不含 value。同一 slot 写入不同 value = 更新（SUPERSEDES/CONTRADICTS），不是重复。
+    """
     return tuple(_id_part(claim.get(k)) for k in ("kind", "subject", "scope", "predicate"))
 
 
+def claim_key(claim):
+    """Slot + value 四字段去重键（保留旧名兼容）。
+    ⚠ 仅当 slot 和 value 都相同才是真重复；value 不同走 judge。
+    """
+    return claim_slot(claim) + (_id_part(claim.get("value")),)
+
+
 def claim_id(claim):
+    """稳定 ID：slot 四段（保留旧格式供历史文件解析）。"""
+    return ".".join(claim_slot(claim))
+
+
+def claim_revision_id(claim):
+    """Revision ID：slot + value，用来区分「同一位改值」。"""
     return ".".join(claim_key(claim))
 
 def read_cursor():
@@ -267,25 +282,74 @@ def last_daily_from_cursor():
     return m.group(1).replace("daily/", "").replace("daily\\", "")
 
 def load_existing_keys():
-    keys = set()
-    # 正式记忆和 inbox 都参与去重，避免相同候选反复进入待确认箱。
+    """返回 {slot: set(revision)} —— 区分「同一问题」与「同一条声明」。
+
+    slot     = (kind, subject, scope, predicate)      「这是同一个问题吗？」
+    revision = slot + (value,)                        「这是同一条声明吗？」
+
+    同时解析「正式记忆」（含 value）与「inbox」（含候选 Claim 行）。
+    兼容旧库：无 claim-id 的条目仍按 legacy 三段式归入 global scope。
+    """
+    slots = {}
     paths = [os.path.join(ROOT, f) for f in set(ROUTE.values())] + [INBOX]
     for p in paths:
-        if os.path.exists(p):
-            with open(p, encoding="utf-8", errors="replace") as fh:
-                txt = fh.read()
-            for m in re.finditer(r"`claim-id:([^.]+)\.([^.]+)\.([^.]+)\.([^`]+)`", txt):
-                keys.add(tuple(m.groups()))
-            # legacy 三段式 ID 按 global scope 读取，不改写原文件。
-            for m in re.finditer(r"`([^.\s`]+)\.([^.\s`]+)\.([^.\s`]+)`", txt):
-                keys.add((m.group(1), m.group(2), "global", m.group(3)))
-    return keys
+        if not os.path.exists(p):
+            continue
+        with open(p, encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                # 正式记忆格式：- `claim-id:a.b.c.d` **predicate**: value (置信 ...)
+                m = re.search(r"`claim-id:([^.`]+)\.([^.`]+)\.([^.`]+)\.([^.`]+)`\s+\*\*(.+?)\*\*:\s*(.*?)\s*\(", line)
+                if m:
+                    slot = tuple(_id_part(m.group(i)) for i in (1, 2, 3, 4))
+                    slots.setdefault(slot, set()).add(_id_part(m.group(6)))
+                    continue
+                # inbox 格式：- **候选 Claim**：kind.subject.scope.predicate = value
+                m2 = re.search(r"\*\*候选 Claim\*\*：\s*([^.\s]+)\.([^.\s]+)\.([^.\s]+)\.([^.\s]+)\s*=\s*(.+?)\s*$", line)
+                if m2:
+                    slot = tuple(_id_part(m2.group(i)) for i in (1, 2, 3, 4))
+                    slots.setdefault(slot, set()).add(_id_part(m2.group(5)))
+    return slots
+
+
+def load_existing_revisions():
+    """返回已存在的 (slot, value) 集合 —— 用于判定「真重复」。"""
+    revs = set()
+    paths = [os.path.join(ROOT, f) for f in set(ROUTE.values())] + [INBOX]
+    for p in paths:
+        if not os.path.exists(p):
+            continue
+        with open(p, encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                m = re.search(r"`claim-id:([^`]+)`\s+\*\*(.+?)\*\*:\s*(.*?)\s*\(", line)
+                if m:
+                    cid = m.group(1)
+                    parts = cid.split(".")
+                    if len(parts) >= 4:
+                        slot = tuple(parts[:4])
+                        revs.add(slot + (_id_part(m.group(3)),))
+                    continue
+                m2 = re.search(r"\*\*候选 Claim\*\*：([^ ]+)\s*=\s*(.+?)\s*$", line)
+                if m2:
+                    parts = m2.group(1).split(".")
+                    if len(parts) >= 4:
+                        revs.add(tuple(parts[:4]) + (_id_part(m2.group(2)),))
+    return revs
 
 def append_to_file(rel, claim):
     p = os.path.join(ROOT, rel)
     os.makedirs(os.path.dirname(p), exist_ok=True)
     line = (f"- `claim-id:{claim_id(claim)}` **{claim['predicate']}**: {claim['value']} "
             f"(置信 {claim['confidence']:.2f} · 来源 {claim['source']})\n")
+    # Evidence 落盘：可审计链条的地基（原句 + 来源文件 + 观察时间）
+    ev = str(claim.get("evidence") or "").strip()
+    ref = str(claim.get("source_ref") or "").strip()
+    at = datetime.now().strftime("%Y-%m-%d %H:%M")
+    if ev:
+        ev = ev.replace("\n", " ")[:200]
+        line += f"  - evidence: \"{ev}\""
+        if ref:
+            line += f" | source_ref: {ref}"
+        line += f" | observed_at: {at}\n"
     with open(p, "a", encoding="utf-8") as fh:
         fh.write(line)
 
@@ -355,8 +419,9 @@ def main():
         print("- 没有待处理的日记，游标已是最新。")
         return
 
-    existing_keys = load_existing_keys()
-    print(f"- 已有 Claim 指纹 {len(existing_keys)} 条")
+    existing_slots = load_existing_keys()
+    existing_revs = load_existing_revisions()
+    print(f"- 已有 Claim slot {len(existing_slots)} 个（含历史修订）")
 
     for f in pending:
         path = os.path.join(daily_dir, f)
@@ -386,13 +451,19 @@ def main():
                 print("  [错误] Claim 不是对象；停止且不推进游标")
                 return
             c = normalize_claim(c)
-            key = claim_key(c)
+            slot = claim_slot(c)
+            rev = claim_key(c)
             cid = claim_id(c)
             conf = c.get("confidence", 0)
-            if key in existing_keys:
-                print(f"  [重复] {cid} 已存在，跳过")
+            # 去重：只有 slot + value 都相同才是真重复
+            if rev in existing_revs:
+                print(f"  [重复] {cid} = {c.get('value')} 已存在，跳过")
                 continue
-            existing_keys.add(key)
+            if slot in existing_slots:
+                # 同一 slot、不同 value -> 这是更新（supersedes/refines），不是重复
+                print(f"  [更新] {cid} 已有值，本次为新值 → 按新记忆处理（旧值保留为历史）")
+            existing_revs.add(rev)
+            existing_slots.setdefault(slot, set()).add(_id_part(c.get("value")))
             kind = c.get("kind")
             # 第 1 步：安全拦截（优先于阈值）
             blocked, reason = check_security(c)

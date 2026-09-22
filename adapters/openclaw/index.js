@@ -41,8 +41,9 @@ const INDEX_TEXT = [
 const DEFAULT_MAX_CHARS = 4000; // 单个文件最大注入字符数
 const DEFAULT_SENSITIVE_POLICY = "summary"; // summary | full
 const DEFAULT_SUMMARY_LINES = 10; // summary 模式下注入前 N 行
-// 敏感文件识别（画像 / 数据画像 / 收藏 等个人深度档案）
-const SENSITIVE_RE = /profile|data-profile|favorites/i;
+// 敏感文件识别（画像 / 数据画像 / 收藏 / 核心身份 等个人深度档案）
+// ⚠ user-core / identity / preferences 属核心身份，不得全量注入后还提示模型去读原文
+const SENSITIVE_RE = /profile|data-profile|favorites|user-core|identity/i;
 
 // 读取注入策略（plugin config 优先，其次默认值）
 function resolvePolicy(event) {
@@ -61,7 +62,8 @@ function resolvePolicy(event) {
 }
 
 // 按策略预处理注入内容：敏感文件截摘要 + 统一长度上限。
-// 任何情况下都不静默丢内容：截断处显式打 [truncated] 标记，提示 AI 去读原文件。
+// 任何情况下都不静默丢内容：截断处只标 [withheld]，绝不把原文件路径与「去读全文」
+// 的指令交给模型（否则摘要策略形同虚设，模型可自行 read 绕过）。
 function prepareContent(text, filePath, { maxChars, policy, summaryLines }) {
   let out = String(text == null ? "" : text);
   // 1) 敏感文件：默认只注入前 N 行
@@ -70,14 +72,14 @@ function prepareContent(text, filePath, { maxChars, policy, summaryLines }) {
     if (lines.length > summaryLines) {
       out =
         lines.slice(0, summaryLines).join("\n") +
-        `\n\n[truncated: 敏感档案仅注入前 ${summaryLines} 行，完整内容请用 read 读原文件 ${filePath}]`;
+        `\n\n[content withheld by Stellamem privacy policy — ${summaryLines} lines shown]`;
     }
   }
   // 2) 统一长度上限
   if (out.length > maxChars) {
     out =
       out.slice(0, maxChars) +
-      `\n\n[truncated: 超出 ${maxChars} 字符上限，完整内容请用 read 读原文件 ${filePath}]`;
+      `\n\n[truncated: ${maxChars} char limit reached]`;
   }
   return out;
 }
