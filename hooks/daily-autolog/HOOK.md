@@ -1,6 +1,6 @@
 ---
 name: daily-autolog
-description: "Automatically summarize the day's conversations into daily diaries when /new or /reset is issued, and backfill yesterday's diary on gateway startup"
+description: "Record source pointers for the day's conversations on /new or /reset, and backfill yesterday on gateway startup. No model call, no transcript copy."
 homepage: https://docs.openclaw.ai/automation/hooks
 metadata:
   {
@@ -13,58 +13,44 @@ metadata:
   }
 ---
 
-# Daily Autolog Hook（自动日记）
+# Daily Autolog Hook（来源指针记录）
 
-自动把会话总结成 `daily/YYYY-MM-DD.md` 日记。**这是「写入侧」——没有它，AI 的对话不会自动进入记忆系统。**
+在 `/new` / `/reset` 时，把当天会话的**来源指针**写入 `daily/YYYY-MM-DD.sources.json`，并写一份简短活动摘要到 `daily/YYYY-MM-DD.md`。**这是「写入侧」——没有它，对话就不会进入记忆系统的来源清单。**
 
 ## What It Does
 
-- **A（写今天）**：`/new` 或 `/reset` 时，把今天所有会话消息总结成第一人称日记，写入 `daily/YYYY-MM-DD.md`。
-- **C（补昨天）**：网关启动（`gateway:startup`）时，检查昨天日记是否缺失，缺失则补写。
-- **幂等**：每条日记带 `[HH:MM]` 时间戳，只写时间晚于文件已覆盖最后时间的新会话，已覆盖则跳过。
-- **降级**：本地模型总结失败时，降级为原始转录，保证不漏写。
-
-## 安装（3 个地方要改）
-
-编辑 `handler.js` 顶部的常量：
-
-1. `AI_NAME` —— 改成你自己的 AI 名字（日记以谁的第一人称写）
-2. `SESSIONS_DIR` —— 改成你 OpenClaw 的会话目录（如 `C:/Users/你/.openclaw/agents/main/sessions`）
-3. `DAILY_DIR` —— 改成你记忆根目录下的 daily 子目录（如 `C:/Users/你/<你的记忆根>/daily`）
-
-然后把整个 `daily-autolog/` 目录复制到 OpenClaw 的 hooks 目录（`~/.openclaw/hooks/`），并在 `openclaw.json` 里启用：
-
-```json
-{
-  "hooks": {
-    "internal": {
-      "enabled": true,
-      "entries": {
-        "daily-autolog": { "enabled": true }
-      }
-    }
-  }
-}
-```
-
-重启 OpenClaw 即可生效。
+- **A（记今天）**：`/new` 或 `/reset` 时，扫描 `SESSIONS_DIR` 下的会话文件，把当天每条 user/assistant 消息记为一个来源指针。
+- **C（补昨天）**：网关启动（`gateway:startup`）时，同样处理昨天的日期。
+- **不复制原文**：原始对话**不**写进记忆库，只存足以重新定位并校验的指针：
+  `session_file`、`entry_index`、`message_id`、`timestamp`、`speaker`、`content_hash`。原文仍留在宿主会话文件里（唯一真相）。
+- **幂等**：指针按内容 hash 去重；重复运行只增不改，已存在的指针不会重复写入。
+- **不调用模型**：本 hook 不发起任何模型请求，因此不会外发任何内容。
 
 ## Output Format
 
-```markdown
-# 2026-09-20 日记
+`daily/YYYY-MM-DD.sources.json`（`schema_version: 2`）：
 
-[14:32] 我和用户讨论了星忆的配置化收口……
+```json
+{
+  "schema_version": 2,
+  "pointers": [
+    { "provider": "openclaw", "session_file": "<uuid>.jsonl", "session_key": "<uuid>",
+      "message_id": "...", "entry_index": 4, "timestamp": "2026-09-22T09:31:00.201Z",
+      "content_hash": "...", "speaker": "user", "precision": "message" }
+  ]
+}
 ```
 
-每条以 `[HH:MM]` 开头（不加日期），时间按升序。
+`daily/YYYY-MM-DD.md` 只是一份人读摘要（“N 条来源已索引”），**不是证据**；编译以 `.sources.json` 为准。
 
 ## Requirements
 
-- 本地模型服务需运行在 `http://127.0.0.1:8081/v1/chat/completions`（llama.cpp 等），否则降级为原始转录。
-- 会话数据目录即 `SESSIONS_DIR`。
+- `SESSIONS_DIR`：宿主会话目录（安装器会按 `--sessions-dir` 替换）。
+- `DAILY_DIR`：记忆根下的 `daily` 子目录（安装器会替换）。
+- **不需要**本地模型服务：本 hook 不做总结。
 
 ## 注意
 
 - **事件名用冒号格式**：`command:new` / `command:reset` / `gateway:startup`（不是下划线 `gateway_start`）。
-- **归档文件**：`/new` 或 `/reset` 后 OpenClaw 会把旧 session 重命名为 `xxx.jsonl.reset.<时间戳>`，历史消息都在归档里，读取时必须用 `includes(".jsonl")` 而非 `endsWith(".jsonl")`，否则漏读。
+- **归档文件**：`/new` 或 `/reset` 后 OpenClaw 会把旧 session 重命名为 `xxx.jsonl.reset.<时间戳>`，历史消息都在归档里；过滤器用 `\.jsonl(?:\.reset\..+)?$`，否则漏读。
+- **来源缺失时**：编译阶段若指针无法解析（文件被移除或内容改变），`source_reader` 会抛 `SourceError` 并且**不消费**该来源；不会伪造原文。
