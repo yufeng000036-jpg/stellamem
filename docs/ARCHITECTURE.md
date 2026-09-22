@@ -10,7 +10,7 @@
 
 一条自然语言 → 先编译成 Claim → 再决定写进哪个 Markdown 文件。
 
-Claim 字段：`kind / subject / predicate / value / confidence / evidence / source`
+Claim 字段：`kind / subject / scope / predicate / value / confidence / evidence / source`
 
 ## 三阶段流水线
 
@@ -49,3 +49,12 @@ Claim 字段：`kind / subject / predicate / value / confidence / evidence / sou
 - 其他框架（Claude Code 等）：写对应 adapter
 
 Adapter 契约：`inject_core / inject_recall / healthcheck`。
+
+---
+
+## 2026-09-22 架构更正（追加）
+
+- Claim 的现行字段增加 `scope`；稳定 ID 与去重键均必须包含 scope。
+- `core/identity.md` 和 `core/user-core.md` 是人工确认区，编译器不得直接写入。
+- confidence 不是经过校准的正确概率，必须与来源、安全、时效和目标敏感度规则共同决定路由。
+- 本地代码已加入四字段去重和 legacy 读取并通过 9 项安全测试；真实定时编译仍未验证。

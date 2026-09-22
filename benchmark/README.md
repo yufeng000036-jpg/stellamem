@@ -35,3 +35,12 @@ benchmark/
 ## 语义匹配
 
 `match.py` 提供 `strict_match(expected, predicted)`，用本地模型做语义判断（temp=0 确定性），不依赖字符串相等。
+
+---
+
+## 2026-09-22 解释边界（追加）
+
+- 当前最终结果：expected 393、matched 277、missed 116、extra 272、recall 0.705、precision 0.505。
+- `False Write = 0` 只适用于已定义并实际运行的对抗样本，不代表真实环境零错误。
+- extra 尚未全部经过独立人工复核，不能全部视为误提取，也不能全部视为标准答案漏标。
+- 样本来自单一用户且按文件大小选择，匹配器包含单次 LLM 判断；结果仅用于内部版本比较。

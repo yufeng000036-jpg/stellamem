@@ -11,7 +11,8 @@ setup.py —— Stellamem 一键安装器（AI 可执行）
 
 设计原则：
   - 绝不覆盖用户已有记忆文件（存在即跳过）
-  - 绝不自动改 openclaw.json（只生成 snippet，由用户确认后合并）
+  - 默认不改 openclaw.json，只生成 snippet
+  - 仅当用户显式传入 --merge-openclaw 时，先备份再执行“只追加 keys”的合并
   - 更新已有 hook / adapter 前先备份旧目录（不悄悄删除）
   - 幂等：重复执行不会产生重复内容
   - 所有路径探测失败时给出明确修复建议

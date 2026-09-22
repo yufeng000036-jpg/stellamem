@@ -33,19 +33,22 @@ working/     临时工作区
 |------|------|
 | `kind` | 类型：preference / decision / lesson / project / fact / relationship / procedure / identity / user-core |
 | `subject` | 主体 |
+| `scope` | 适用场景；无法判断时暂记 global 并进入待核查 |
 | `predicate` | 谓词 |
 | `value` | 值 |
 | `evidence` | 日记原句（证据链） |
 | `confidence` | 0~1 置信度 |
 | `source` | user / third-party / quoted / sarcasm / injected |
 
-去重键：`(kind, subject, predicate)`。
+去重键：`(kind, subject, scope, predicate)`。
 
 ## 写权限分级
 
 - **identity**：禁止自动写（阈值 1.01），必须人工确认
-- **preference / user-core**：阈值 0.85
-- **project / decision / lesson**：阈值 0.70
+- **user-core**：禁止自动写，必须逐字确认
+- **preference**：阈值 0.95
+- **project / decision / lesson**：阈值 0.85
+- **procedure / fact / relationship**：显式阈值见编译器；缺项不得隐式自动写
 - 低于阈值 → 进 `system/memory-inbox.md` 待确认
 
 ## 安全护栏
@@ -56,3 +59,15 @@ working/     临时工作区
 - 过期事实：变更词（已搬 / 改成 / 不再是）→ 降置信至 0.5，交人工确认
 
 --- 详见 `schema.md`（仓库根）与 `docs/ARCHITECTURE.md`。
+
+---
+
+## 2026-09-22 模板规则更正（追加）
+
+- Claim 增加必填字段 `scope`。
+- 稳定 ID：`{kind}.{subject}.{scope}.{predicate}`。
+- 去重键：`(kind, subject, scope, predicate)`；不同 scope 不得互相覆盖。
+- `core/identity.md` 与 `core/user-core.md` 默认只读，任何写入或恢复均须用户逐字确认，不能仅凭 confidence 自动写入。
+- 历史三字段 Claim 作为 legacy 读取，不自动重写。
+
+注意：仓库代码已加入 scope 兼容迁移并通过本地安全测试；安装或升级后仍应运行实际写入探针，不能仅凭模板文本判断生产运行时已经生效。

@@ -30,7 +30,7 @@ AI 对话
 → 自动日记（hooks/daily-autolog）
 → 日记 daily/*.md
 → 编译（compiler/extract.py，本地模型）
-→ 结构化 Claim（kind / subject / predicate / value / confidence）
+→ 结构化 Claim（kind / subject / scope / predicate / value / confidence）
 → 路由（compiler/sleep_purify.py）
 → markdown 记忆（core / long-term / semantic）
 → adapter 注入 AI 上下文（adapters/openclaw）
@@ -188,3 +188,13 @@ MIT，见 LICENSE。
 ---
 
 Made by 宇枫
+
+---
+
+## 评测口径更正（2026-09-22）
+
+现有 30 篇单用户日记评测得到：标准答案 393 条、命中 277 条、漏检 116 条、多检 272 条；在当前标准答案和单次 LLM 匹配器口径下，召回率为 0.705，精确率为 0.505。
+
+`False Write = 0` 只表示既定对抗样本中未观察到对应错误，不能推出“所有写入都正确”，也不能代表真实运行环境的错误写入率为零。该数据只适合版本内部比较，不能外推为通用准确率。
+
+Scope 说明：Schema 与本地编译器已改为四字段稳定 ID，并兼容读取 legacy 三字段 ID；9 项安全测试已通过，定时任务恢复后的真实编译仍未验证。

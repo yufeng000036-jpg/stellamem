@@ -31,13 +31,13 @@ source: daily/2026-09-20.md                # 来源文件
 
 ## 三、稳定 ID 规范
 
-格式：`{kind缩写}.{subject}.{predicate}`
+格式：`{kind缩写}.{subject}.{scope}.{predicate}`
 
 - `pref.user.response_length` → 「用户回复长度偏好」
 - `dec.tool.version` → 「工具版本决策」
 - `lesson.platform.download-limit` → 「某平台下载限制教训」
 
-**作用**：同一个语义的不同表述，编译后落到同一个稳定 ID，语义去重退化成 `subject + predicate` 的字段比对。
+**作用**：同一个作用域内、同一个语义的不同表述会落到同一稳定 ID；不同 scope 默认兼容并存。
 
 ## 四、Relation Types（7 + 1 种关系）
 
@@ -63,10 +63,10 @@ source: daily/2026-09-20.md                # 来源文件
 | long-term/lessons.md | 中等 | 新教训可自动追加 |
 | semantic/ | 中等 | 画像可自动整合 |
 | core/preferences.md | 严格 | 仅高置信度（≥0.95）自动写 |
-| core/user-core.md | 非常严格 | 几乎不自动写，人工确认 |
+| core/user-core.md | **禁止自动写** | 每次拟写入文本均须用户逐字确认 |
 | core/identity.md | **禁止** | 防止自我强化环 |
 
-## 六、置信度阈值（可校准）
+## 六、置信度阈值（可校准；不适用于两个核心只读文件）
 
 - **≥ 0.95**：自动写入对应文件
 - **0.75 ~ 0.95**：写入 memory-inbox.md 待确认
@@ -79,3 +79,17 @@ source: daily/2026-09-20.md                # 来源文件
 1. **Canonical owner 唯一**：每个事实只有一个权威文件，不允许多处并存。
 2. **Raw source 不改**：原始日记/对话只读，永不修改、永不删除。
 3. **派生可重建**：所有派生记忆必须可从 raw source 重建，删掉可再生成。
+
+---
+
+## 七、2026-09-22 Schema 更正（追加）
+
+本节优先于上文旧稳定 ID、去重键、自动写权限和统一置信度阈值：
+
+- Claim 必须包含 `scope`；稳定 ID 为 `{kind缩写}.{subject}.{scope}.{predicate}`。
+- 确定性去重键为 `(kind, subject, scope, predicate)`。不同 scope 默认兼容并存，不得互相覆盖。
+- 历史三段式 ID 作为 legacy 保留，不自动重写现有记忆。
+- `core/identity.md` 与 `core/user-core.md` 均为默认只读。任何自动提取、路由、合并和恢复都不得直接修改；每次拟写入文本必须由用户逐字确认。
+- 模型自报 confidence 只是一个输入信号，不能解释为经过校准的真实正确率。自动写入还必须通过来源、说话人、引用/反话/注入、时效性和目标敏感度检查。
+
+实现状态：2026-09-22 本地代码已加入四字段去重、四段式 Claim ID 与 legacy 读取，并通过 9 项安全测试；定时任务恢复后的真实编译仍未验证。

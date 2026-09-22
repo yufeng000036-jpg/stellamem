@@ -42,7 +42,13 @@ def count_unresolved_conflicts():
     txt = read(os.path.join(SYSTEM, "conflict-log.md"))
     return len(re.findall(r"conflict（", txt))
 
-def count_false_write():
+def count_review_log():
+    txt = read(os.path.join(SYSTEM, "review-log.md"))
+    return len([l for l in txt.splitlines() if " | " in l and not l.startswith("#")])
+
+
+def count_legacy_false_write():
+    """旧文件仅作历史保留；其中的自动挂起项不能视为已确认 False Write。"""
     txt = read(os.path.join(SYSTEM, "false-write-log.md"))
     return len([l for l in txt.splitlines() if " | " in l and not l.startswith("#")])
 
@@ -68,7 +74,7 @@ def cmd_doctor():
         ("system/conflict-log.md", "system/conflict-log.md"),
         ("system/version-chain.json", "system/version-chain.json"),
         ("system/memory-inbox.md", "system/memory-inbox.md"),
-        ("system/false-write-log.md", "system/false-write-log.md"),
+        ("system/review-log.md", "system/review-log.md"),
         ("system/extraction-cursor.md", "system/extraction-cursor.md"),
     ]
     for label, rel in checks:
@@ -79,7 +85,10 @@ def cmd_doctor():
     print("-" * 40)
     print(f"inbox pending 条数: {count_pending()}")
     print(f"conflict-log 未裁决条数: {count_unresolved_conflicts()}")
-    print(f"false-write-log 条数: {count_false_write()}")
+    print(f"review-log 自动挂起/拦截条数: {count_review_log()}")
+    legacy = count_legacy_false_write()
+    if legacy:
+        print(f"legacy false-write-log 条数: {legacy}（历史名称，不等于已确认错误写入）")
     vc = count_version_chain()
     print(f"version-chain 条数: {vc if vc >= 0 else '解析失败'}")
     daily_dir_p = os.path.join(ROOT, "daily")
@@ -120,7 +129,7 @@ def cmd_explain(cid):
         st = re.search(r"状态[**：: ]*(.+)", block)
         print(f"状态: " + (st.group(1).strip() if st else "?"))
         return
-    # 2) 正式文件里 grep kind.subject.predicate 或 predicate
+    # 2) 正式文件里查四段式 claim-id；legacy 文本仍可按原字符串查询。
     for rel in ALL_MEMORY:
         txt = read(os.path.join(ROOT, rel))
         if cid in txt:

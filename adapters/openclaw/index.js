@@ -135,7 +135,12 @@ const plugin = {
                     prepareContent(await readFile(root + "/" + f, "utf8"), f, policy)
                   );
                 } catch (e) {
-                  // 单个档案读失败就跳过，不影响整体
+                  // 单个档案失败不阻断主流程，但必须留下不含正文的诊断。
+                  try {
+                    (api.log?.warn || console.error)(
+                      `[stellamem-adapter] 读取档案失败，已跳过 ${f}: ${e?.message || e}`
+                    );
+                  } catch {}
                 }
               }
             }

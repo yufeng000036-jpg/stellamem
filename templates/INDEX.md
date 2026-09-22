@@ -27,7 +27,7 @@
 - `system/memory-inbox.md` — 候选记忆待确认
 - `system/conflict-log.md` — 冲突日志
 - `system/version-chain.json` — 版本链
-- `system/false-write-log.md` — 被拒条目
+- `system/review-log.md` — 自动挂起与安全拦截（不等于 False Write）
 - `system/extraction-cursor.md` — 提取游标
 
 ## 原始

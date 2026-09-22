@@ -35,8 +35,9 @@ SYSTEM = (
     "如果没有值得记的，输出空数组 []。\n"
     "\n"
     "输出 JSON 数组，每条含：\n"
-    "kind / subject / predicate / value / evidence / confidence / source（user|third-party|quoted|sarcasm|injected）/ suspicious / temporary / outdated\n"
+    "kind / subject / scope / predicate / value / evidence / confidence / source（user|third-party|quoted|sarcasm|injected）/ suspicious / temporary / outdated\n"
     "kind 只能是这 9 个值之一：preference / decision / lesson / project / fact / relationship / procedure / identity / user-core\n"
+    "scope 表示适用场景，例如 global / project:<name> / channel:<name>；无法判断时填 global。不同 scope 的同名偏好必须并存。\n"
     "confidence 是 0 到 1 的小数；evidence 是日记原句；直接输出 JSON 数组，不要任何解释、不要 markdown 代码块。\n"
 )
 
@@ -59,13 +60,7 @@ def call_llm(system, user, max_tokens=6144, temp=0.0):
     return json.loads(resp.read().decode("utf-8"))["choices"][0]["message"]["content"]
 
 def build_user(daily_text, source_name):
-    n = len(daily_text)
-    if n > 3000:
-        hint = "（这篇日记很长，请提取 15 条以上 Claim，不要漏掉重要信息）"
-    elif n > 1000:
-        hint = "（这篇日记较长，请提取 10 条以上 Claim）"
-    else:
-        hint = ""
+    hint = "（按长期价值提取，没有最低条数；没有合格信息就输出空数组。）"
     return (
         "以下是日记内容（来源文件：" + source_name + "）：\n---\n"
         + daily_text[:6000]
@@ -139,6 +134,10 @@ def normalize_claim(c):
     valid_kinds = {"preference", "decision", "lesson", "project", "fact", "relationship", "procedure", "identity", "user-core"}
     if c.get("kind") not in valid_kinds:
         c["kind"] = "fact"
+    for field in ("subject", "predicate", "value", "evidence"):
+        c[field] = str(c.get(field, "")).strip()
+    c["scope"] = str(c.get("scope") or "global").strip() or "global"
+    c["source"] = str(c.get("source") or "unknown").strip().lower()
     try:
         c["confidence"] = float(c.get("confidence", 0))
     except (TypeError, ValueError):
@@ -223,6 +222,9 @@ def main():
         print(out[:800])
         sys.exit(3)
 
+    if any(not isinstance(c, dict) for c in claims):
+        print("[错误] 模型返回了非对象 Claim，拒绝输出不完整结果。")
+        sys.exit(4)
     claims = [normalize_claim(c) for c in claims]
     result = json.dumps(claims, ensure_ascii=False, indent=2)
     print(result)

@@ -29,7 +29,7 @@ AI conversation
 → auto diary (hooks/daily-autolog)
 → daily/*.md
 → compile (compiler/extract.py, local model)
-→ structured Claims (kind / subject / predicate / value / confidence)
+→ structured Claims (kind / subject / scope / predicate / value / confidence)
 → route (compiler/sleep_purify.py)
 → markdown memory (core / long-term / semantic)
 → adapter injects into AI context (adapters/openclaw)
@@ -153,3 +153,13 @@ MIT, see LICENSE.
 ---
 
 Made by 宇枫
+
+---
+
+## Evaluation clarification (2026-09-22)
+
+The current 30-diary, single-user benchmark contains 393 expected claims: 277 matched, 116 missed, and 272 classified as extra. Under the current gold set and one-pass LLM matcher, recall is 0.705 and precision is 0.505.
+
+`False Write = 0` only means that no such failure was observed in the defined adversarial cases. It does not prove that every stored memory is correct or that the production false-write rate is zero. These results are suitable for internal version comparisons and should not be generalized.
+
+Scope status: the schema and local compiler now use a four-part stable ID while retaining legacy three-field reads. Nine local safety tests pass; the first real scheduled compile after re-enabling the job remains unverified.
