@@ -26,8 +26,8 @@ SECRETS = {
     "google": "AIza" + "E" * 35,
     "aws": "AKIA" + "F" * 16,
     "bearer": "Bearer " + "G" * 24,
-    "jwt": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
-    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEfakefakefake\n-----END PRIVATE KEY-----",
+    "jwt": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",  # secret-scan: synthetic
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEfakefakefake\n-----END PRIVATE KEY-----",  # secret-scan: synthetic
     "password": "password=fictional-hunter2",
     "cookie": "Cookie: session=synthetic-session-token",
     "refresh": "refresh_token=synthetic-refresh-value",
@@ -76,7 +76,7 @@ class SecretGateTests(unittest.TestCase):
                     self.assertNotIn("hunter2", payload, name)
 
     def test_whole_secret_message_is_omitted_not_truncated(self):
-        value = "-----BEGIN PRIVATE KEY-----\nFAKEBODYLINE\n-----END PRIVATE KEY-----"
+        value = "-----BEGIN PRIVATE KEY-----\nFAKEBODYLINE\n-----END PRIVATE KEY-----"  # secret-scan: synthetic
         payload = json.dumps({"source": "2026-01-01.md", "data": "x" * 5000 + value + "TAIL"})
         self.assertTrue(contains_secret(payload))
         messages = parse_messages(

@@ -17,11 +17,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "compiler"))
 from security import RULES
 
-# Value-shaped patterns only: things that look like an actual credential.
+# Value-shaped patterns only: things that look like an actual credential value.
+# The keyword-context rule (the one ending in a value capture) is excluded from
+# gate mode because it matches rule definitions and identifiers.
 VALUE_RULES = [
     re.compile(pattern)
     for pattern in RULES["secret"]
-    if not pattern.endswith(r"[^\r\n,}]+") or "private KEY" in pattern
+    if not pattern.endswith(r"[^\r\n,}]+") or "PRIVATE KEY" in pattern
 ]
 # Rule/definition files legitimately contain the patterns themselves.
 SKIP_FILES = {"shared/policy-rules.json", "tools/secret_scan.py"}
@@ -29,17 +31,26 @@ SKIP_FILES = {"shared/policy-rules.json", "tools/secret_scan.py"}
 ALLOW_MARKERS = ("secret-scan: synthetic", "gitleaks:allow", "synthetic", "fictional", "<YOUR_")
 # Known synthetic detection fixtures committed before the allowlist marker existed.
 # These are fabricated strings used to test the detector itself; no real credential
-# is present. Changing Git history is intentionally avoided, so they are allowlisted
-# by exact value here. Only add to this set after verifying the value is fabricated.
+# is present. Git history is intentionally not rewritten, so they are allowlisted by
+# exact value. Only add after verifying the value is fabricated.
 HISTORY_ALLOWLIST = (
     "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjMifQ.signature",
-    "-----BEGIN PRIVATE KEY-----\\nfake\\n-----END PRIVATE KEY-----",
+    "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
+    "MIIEfakefakefake",
+    "FAKEBODYLINE",
 )
+# A fabricated private-key body is only allowlisted when the surrounding block is
+# also present, so a real key header is never silently ignored.
+SYNTHETIC_PRIVATE_KEY_BODIES = ("fake", "FAKEBODYLINE", "MIIEfakefakefake")
 
 
 def _is_allowlisted(line):
     lowered = line.lower()
-    return any(marker.lower() in lowered for marker in ALLOW_MARKERS)
+    if any(marker.lower() in lowered for marker in ALLOW_MARKERS):
+        return True
+    if "PRIVATE KEY" in line and any(body in line for body in SYNTHETIC_PRIVATE_KEY_BODIES):
+        return True
+    return any(fixture in line for fixture in HISTORY_ALLOWLIST)
 
 
 def scan_text(text):
@@ -83,7 +94,6 @@ def main():
             # Report commit and count only, never the matched source text.
             count = sum(
                 bool(scan_text(line[1:]))
-                and not any(fixture in line for fixture in HISTORY_ALLOWLIST)
                 for line in diff.splitlines()
                 if line.startswith("+") and not line.startswith("+++")
             )
