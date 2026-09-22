@@ -41,11 +41,11 @@ TEST RESULT (all re-run on Python 3.12.4 / Node 22.22.3, Windows 11):
   hits were synthetic detection fixtures, now explicitly allowlisted.
 - Lint: `ruff check .` clean; `ruff format --check .` clean.
 
-REAL MODEL: VERIFIED (engineering behaviour), isolated. Ran
-a local llama.cpp server with Qwen3-4B on test port 18081 against a
+REAL MODEL: VERIFIED (engineering behaviour), isolated. Ran a local
+llama.cpp server with Qwen3-4B on a test port against a
 temporary memory root, 9 synthetic scenarios. No secret leak, no false write,
 provenance present on every claim, sensitive content forced to pending.
-Observed problems are recorded in `.work/real-model/writeup.py` (kind drift,
+Observed problems were recorded in the run notes (kind drift,
 filler claim from a no-memory question, zero-claim recall on repetitive input,
 and an English temporary-emotion phrasing not flagged). None caused a bad write.
 This is NOT an accuracy claim.
