@@ -3,8 +3,11 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, readFile, rename, readdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { writeDaily } from "../hooks/daily-autolog/handler.js";
 import { project } from "../adapters/openclaw/index.js";
+
+const fixtureRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "stellamem-js-"));
@@ -69,4 +72,33 @@ test("projection denies sensitive, secrets, unrelated tasks, legacy and oversize
   await mkdir(path.join(f.root, "system"));
   await writeFile(path.join(f.root, "system/transaction.json"), "{}");
   assert.equal(await project(f.root, "response preference"), "");
+});
+test("model-generated and configured scopes do not silently block recall", async () => {
+  // Regression: eligible() used to require scope in ["global"], but the model
+  // emits free-text scopes like "title". That filtered out every real memory.
+  const f = await fixture();
+  await mkdir(path.join(f.root, "semantic"));
+  const data = [
+    record({ revision_id: "r-title", scope: "title", subject: "project",
+      predicate: "has title", value: "Startown" }),
+    record({ revision_id: "r-global", scope: "global", value: "concise" }),
+  ];
+  const text = data.map((c) => "```stellamem\n" + JSON.stringify(c) + "\n```\n").join("\n");
+  await writeFile(path.join(f.root, "semantic/profile.md"), "\n<!-- stellamem:v2 -->\n" + text);
+  const out = await project(f.root, "title");
+  assert.ok(out.includes("Startown"), "free-text scope must still be injectable");
+  // An explicit activeScopes list is an opt-in restriction and still filters.
+  assert.equal(await project(f.root, "title", { activeScopes: ["other"] }), "");
+  assert.ok((await project(f.root, "title", { activeScopes: ["title"] })).includes("Startown"));
+});
+test("runtime rules load without top-level await", async () => {
+  // Regression: a top-level await in runtime.mjs broke OpenClaw's plugin loader
+  // with "await is not defined" in a real host. The module must be plain ESM
+  // that a CommonJS-ish loader can also evaluate.
+  const source = await readFile(
+    path.join(fixtureRoot, "shared", "runtime.mjs"),
+    "utf8"
+  );
+  assert.ok(!/^await\s/m.test(source), "runtime.mjs must not use top-level await");
+  assert.ok(source.includes("readFileSync"), "rules should load synchronously");
 });

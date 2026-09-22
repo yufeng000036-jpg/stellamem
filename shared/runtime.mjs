@@ -1,8 +1,15 @@
-import { readFile, realpath, mkdir, open, rename, unlink } from "node:fs/promises";
+import { readFileSync } from "node:fs";
+import { realpath, mkdir, open, rename, unlink } from "node:fs/promises";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 
-export const RULES = JSON.parse(await readFile(new URL("./policy-rules.json", import.meta.url), "utf8"));
+// Loaded synchronously: a top-level `await` here breaks hosts that load this
+// module through a non-ESM bridge (OpenClaw's plugin loader reports
+// "await is not defined"). Reading a small local JSON file synchronously at
+// import time is safe and keeps the loader portable.
+export const RULES = JSON.parse(
+  readFileSync(new URL("./policy-rules.json", import.meta.url), "utf8")
+);
 export function matches(group, text) {
   return RULES[group].some((pattern) => new RegExp(pattern, "i").test(String(text)));
 }
