@@ -5,6 +5,10 @@ config.json
 *.bak-*
 *.log
 
+# 排除本地工作区 / 构建沙箱（临时探针、测试根、模型报告）
+.work/
+.ruff_cache/
+
 # 排除安装器运行时产物（含真实路径，绝不进版本库）
 setup-out/
 
