@@ -1,4 +1,5 @@
 """Read complete sources and retain honest precision and offsets."""
+
 import hashlib
 import json
 import re
@@ -16,7 +17,11 @@ def content_hash(text):
 def session_text(entry):
     content = entry.get("message", {}).get("content", "")
     if isinstance(content, list):
-        return " ".join(c.get("text", "") for c in content if isinstance(c, dict) and isinstance(c.get("text", ""), str))
+        return " ".join(
+            c.get("text", "")
+            for c in content
+            if isinstance(c, dict) and isinstance(c.get("text", ""), str)
+        )
     return content if isinstance(content, str) else ""
 
 
@@ -57,16 +62,21 @@ def read_daily(path, config=None):
             except ValueError:
                 continue
             text = session_text(entry)
-            if (content_hash(text) != pointer.get("content_hash")
-                    or entry.get("timestamp") != pointer.get("timestamp")
-                    or entry.get("message", {}).get("role") != pointer.get("speaker")
-                    or str(entry.get("id") or entry.get("message", {}).get("id") or idx) != str(pointer.get("message_id"))):
+            if (
+                content_hash(text) != pointer.get("content_hash")
+                or entry.get("timestamp") != pointer.get("timestamp")
+                or entry.get("message", {}).get("role") != pointer.get("speaker")
+                or str(entry.get("id") or entry.get("message", {}).get("id") or idx)
+                != str(pointer.get("message_id"))
+            ):
                 continue
-            found = {"text": text, "speaker": pointer["speaker"],
-                     "timestamp": pointer["timestamp"],
-                     "provenance": dict(pointer, precision="message",
-                                        resolved_session_file=source.name),
-                     "offset": 0}
+            found = {
+                "text": text,
+                "speaker": pointer["speaker"],
+                "timestamp": pointer["timestamp"],
+                "provenance": dict(pointer, precision="message", resolved_session_file=source.name),
+                "offset": 0,
+            }
             break
         if found is None:
             raise SourceError("Source pointer missing or changed; not consumed")
@@ -79,20 +89,40 @@ def parse_messages(text, source_name):
     matches = list(pattern.finditer(text))
     messages = []
     if not matches:
-        return [{"text": text, "speaker": "unknown", "timestamp": source_name[:10],
-                 "offset": 0, "provenance": {"provider": "daily", "source_ref": source_name,
-                 "precision": "day", "content_hash": content_hash(text)}}]
-    if text[:matches[0].start()].strip().lstrip("#").strip() not in ("", source_name[:10]):
-        prefix = text[:matches[0].start()]
+        return [
+            {
+                "text": text,
+                "speaker": "unknown",
+                "timestamp": source_name[:10],
+                "offset": 0,
+                "provenance": {
+                    "provider": "daily",
+                    "source_ref": source_name,
+                    "precision": "day",
+                    "content_hash": content_hash(text),
+                },
+            }
+        ]
+    if text[: matches[0].start()].strip().lstrip("#").strip() not in ("", source_name[:10]):
+        prefix = text[: matches[0].start()]
         messages.extend(parse_messages(prefix, source_name))
     for i, match in enumerate(matches):
-        body = text[match.end():matches[i + 1].start() if i + 1 < len(matches) else len(text)]
-        messages.append({"text": body, "speaker": match[2],
-                         "timestamp": source_name[:10] + "T" + match[1],
-                         "offset": match.end(), "provenance": {
-                             "provider": "daily", "source_ref": source_name,
-                             "entry_index": i, "precision": "message",
-                             "content_hash": content_hash(body)}})
+        body = text[match.end() : matches[i + 1].start() if i + 1 < len(matches) else len(text)]
+        messages.append(
+            {
+                "text": body,
+                "speaker": match[2],
+                "timestamp": source_name[:10] + "T" + match[1],
+                "offset": match.end(),
+                "provenance": {
+                    "provider": "daily",
+                    "source_ref": source_name,
+                    "entry_index": i,
+                    "precision": "message",
+                    "content_hash": content_hash(body),
+                },
+            }
+        )
     return messages
 
 
@@ -110,9 +140,13 @@ def split_message(message, limit):
                 # An indivisible huge token cannot fit a finite context. Explicit,
                 # contiguous offsets preserve all characters for retry/audit.
                 forced = True
-        piece = dict(message, text=text[start:end],
-                     offset=message.get("offset", 0) + start,
-                     continuation=start > 0, forced_boundary=forced)
+        piece = dict(
+            message,
+            text=text[start:end],
+            offset=message.get("offset", 0) + start,
+            continuation=start > 0,
+            forced_boundary=forced,
+        )
         yield piece
         start = end
 

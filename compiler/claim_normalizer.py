@@ -1,4 +1,5 @@
 """One authoritative claim representation. No configuration or I/O on import."""
+
 import hashlib
 import json
 import math
@@ -17,9 +18,17 @@ ROUTE = {
     "identity": "core/user-core.md",
     "user-core": "core/user-core.md",
 }
-THRESHOLDS = dict(project=0.85, decision=0.85, lesson=0.85, procedure=0.90,
-                  preference=0.95, fact=0.90, relationship=0.95,
-                  identity=1.01, **{"user-core": 1.01})
+THRESHOLDS = dict(
+    project=0.85,
+    decision=0.85,
+    lesson=0.85,
+    procedure=0.90,
+    preference=0.95,
+    fact=0.90,
+    relationship=0.95,
+    identity=1.01,
+    **{"user-core": 1.01},
+)
 VALID_KINDS = set(ROUTE)
 PROTECTED_KINDS = {"identity", "user-core"}
 
@@ -46,8 +55,9 @@ def claim_key(c):
 
 
 def digest(value):
-    return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True,
-                                     separators=(",", ":")).encode("utf-8")).hexdigest()
+    return hashlib.sha256(
+        json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
 
 
 def _id_part(value):
@@ -66,14 +76,12 @@ def claim_revision_id(c):
 def normalize_claim(raw):
     if not isinstance(raw, dict):
         raise ValueError("claim must be an object")
-    c = {k: canonical(raw.get(k)) for k in
-         ("kind", "subject", "predicate", "value", "evidence")}
+    c = {k: canonical(raw.get(k)) for k in ("kind", "subject", "predicate", "value", "evidence")}
     c["scope"] = canonical(raw.get("scope")) or "global"
     c["source"] = canonical(raw.get("source", "unknown")).lower()
     c["confidence"] = number(raw.get("confidence"))
     c["importance"] = number(raw.get("importance"), 0.5)
-    c["valid"] = c["kind"] in VALID_KINDS and all(c[k] for k in
-                                                ("subject", "predicate", "value"))
+    c["valid"] = c["kind"] in VALID_KINDS and all(c[k] for k in ("subject", "predicate", "value"))
     for key in ("suspicious", "temporary", "sarcasm", "outdated", "sensitive", "heavy_emotion"):
         value = raw.get(key, False)
         # Unknown flag encodings are conservative, never treated as false.

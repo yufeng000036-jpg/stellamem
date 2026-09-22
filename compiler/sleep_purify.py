@@ -1,4 +1,5 @@
 """Compile changed daily sources through a single governed pipeline."""
+
 import argparse
 import json
 from pathlib import Path
@@ -33,7 +34,11 @@ def run(config, mode="review", llm=None):
         for source in sorted(daily.glob("*.md")):
             safe_path(root, "daily/" + source.name)
             manifest = source.with_suffix(".sources.json")
-            payload = manifest.read_text(encoding="utf-8") if manifest.exists() else source.read_text(encoding="utf-8")
+            payload = (
+                manifest.read_text(encoding="utf-8")
+                if manifest.exists()
+                else source.read_text(encoding="utf-8")
+            )
             fingerprint = content_hash(payload)
             if cursor["sources"].get(source.name) == fingerprint:
                 continue
@@ -48,20 +53,33 @@ def run(config, mode="review", llm=None):
                     for claim in chunk["claims"]:
                         store.ingest(claim, mode, llm, config)
             except (OSError, ValueError, RuntimeError) as exc:
-                status = {"status": "failed", "source_hash": fingerprint,
-                          "error": type(exc).__name__,
-                          "failed_chunk": getattr(exc, "index", None),
-                          "chunk_id": getattr(exc, "chunk_id", None)}
-                atomic_write(safe_path(root, "system/compile-status.json"), json.dumps(status, indent=2))
+                status = {
+                    "status": "failed",
+                    "source_hash": fingerprint,
+                    "error": type(exc).__name__,
+                    "failed_chunk": getattr(exc, "index", None),
+                    "chunk_id": getattr(exc, "chunk_id", None),
+                }
+                atomic_write(
+                    safe_path(root, "system/compile-status.json"), json.dumps(status, indent=2)
+                )
                 return {"ok": False, **total, **status}
             # Commit source only when every chunk is complete; failures do not
             # consume any chunk or advance the source cursor. Retrying is safe.
             cursor["sources"][source.name] = fingerprint
-            status = {"status": "success", "source_hash": fingerprint, "chunks": chunks,
-                      "blocked": store.counts["blocked"]}
+            status = {
+                "status": "success",
+                "source_hash": fingerprint,
+                "chunks": chunks,
+                "blocked": store.counts["blocked"],
+            }
             cursor_rel = CURSOR if mode == "review" else "system/observe-cursor.json"
-            store.commit({cursor_rel: json.dumps(cursor, indent=2),
-                          "system/compile-status.json": json.dumps(status, indent=2)})
+            store.commit(
+                {
+                    cursor_rel: json.dumps(cursor, indent=2),
+                    "system/compile-status.json": json.dumps(status, indent=2),
+                }
+            )
             total["sources"] += 1
             total["chunks"] += chunks
             for key, count in store.counts.items():
@@ -72,10 +90,13 @@ def run(config, mode="review", llm=None):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=["review", "observe"], default="review")
-    parser.add_argument("--force", action="store_true", help="Legacy alias; sources are content-addressed")
+    parser.add_argument(
+        "--force", action="store_true", help="Legacy alias; sources are content-addressed"
+    )
     args = parser.parse_args(argv)
     try:
         from config_loader import load_config
+
         result = run(load_config(), args.mode)
         print(json.dumps(result, sort_keys=True))
         return 0 if result["ok"] else 2

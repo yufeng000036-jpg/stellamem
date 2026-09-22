@@ -1,4 +1,5 @@
 """Authoritative extraction pipeline shared by both CLIs."""
+
 import json
 from datetime import datetime, timezone
 from claim_normalizer import normalize_claim, digest
@@ -30,8 +31,9 @@ def extract_chunks(messages, config=None, llm=None):
     config = config or {}
     llm = llm or (lambda system, user: call_llm(system, user, config=config or None))
     for index, chunk in enumerate(chunk_messages(messages, config.get("chunk_chars", 4000))):
-        chunk_id = digest([{"text": m["text"], "pointer": m["provenance"],
-                            "offset": m["offset"]} for m in chunk])
+        chunk_id = digest(
+            [{"text": m["text"], "pointer": m["provenance"], "offset": m["offset"]} for m in chunk]
+        )
         # Never forward any part of a message containing a secret. Skip it before
         # chunking in compile_messages; also guard here for direct callers.
         safe = [m for m in chunk if not contains_secret(m["text"])]
@@ -39,8 +41,15 @@ def extract_chunks(messages, config=None, llm=None):
         if not safe:
             yield {"index": index, "id": chunk_id, "claims": [], "secret_messages": blocked}
             continue
-        payload = [{"message_index": i, "speaker": m["speaker"], "timestamp": m["timestamp"],
-                    "text": m["text"]} for i, m in enumerate(safe)]
+        payload = [
+            {
+                "message_index": i,
+                "speaker": m["speaker"],
+                "timestamp": m["timestamp"],
+                "text": m["text"],
+            }
+            for i, m in enumerate(safe)
+        ]
         try:
             raw = parse_json(llm(SYSTEM, json.dumps(payload, ensure_ascii=False)))
             if raw is None or any(not isinstance(c, dict) for c in raw):
@@ -57,17 +66,23 @@ def extract_chunks(messages, config=None, llm=None):
             requested = item.get("message_index")
             candidates = [i for i, m in enumerate(safe) if evidence and evidence in m["text"]]
             # A supplied index does not resolve ambiguous identical evidence.
-            exact = len(candidates) == 1 and (requested is None or
-                    (type(requested) is int and requested == candidates[0]))
+            exact = len(candidates) == 1 and (
+                requested is None or (type(requested) is int and requested == candidates[0])
+            )
             if exact:
                 m = safe[candidates[0]]
                 c["evidence_verified"] = True
                 c["source"] = c["source"] if m["speaker"] == "user" else m["speaker"]
-                c["provenance"] = dict(m["provenance"], speaker=m["speaker"],
-                                       timestamp=m["timestamp"], offset=m["offset"])
+                c["provenance"] = dict(
+                    m["provenance"],
+                    speaker=m["speaker"],
+                    timestamp=m["timestamp"],
+                    offset=m["offset"],
+                )
                 # Model cannot launder malicious source context by dropping words.
                 c["suspicious"] |= detect_injection(m["text"])
                 c["sensitive"] |= matches("sensitive", m["text"]) or matches("heavy", m["text"])
+                c["heavy_emotion"] |= matches("heavy", m["text"])
                 c["temporary"] |= matches("temporary", m["text"])
                 c["sarcasm"] |= matches("sarcasm", m["text"])
                 if matches("quoted", m["text"]):

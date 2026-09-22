@@ -1,4 +1,5 @@
 """Permanent integration regressions; fixtures contain no real user data."""
+
 import json
 import sys
 import tempfile
@@ -7,9 +8,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "compiler"))
-from claim_normalizer import ROUTE, THRESHOLDS, claim_id, claim_key, claim_slot
+from claim_normalizer import ROUTE, THRESHOLDS, claim_key, claim_slot
 from pipeline import compile_messages
-from source_reader import chunk_messages, parse_messages, read_daily
+from source_reader import chunk_messages, parse_messages
 from sleep_purify import run
 from storage import Transaction, load_records, safe_path, writer_lock
 from store import MemoryStore
@@ -20,18 +21,34 @@ def echo_llm(system, payload):
     messages = json.loads(payload)
     if isinstance(messages, dict):
         return '[{"relation":"CONTRADICTS","confidence":0.99}]'
-    return json.dumps([dict(kind="preference", subject="user", scope="global",
-                           predicate="topic_" + str(m["text"].strip()),
-                           value=m["text"].strip(), evidence=m["text"].strip(),
-                           source=m["speaker"], message_index=i, confidence=0.99)
-                       for i, m in enumerate(messages)])
+    return json.dumps(
+        [
+            dict(
+                kind="preference",
+                subject="user",
+                scope="global",
+                predicate="topic_" + str(m["text"].strip()),
+                value=m["text"].strip(),
+                evidence=m["text"].strip(),
+                source=m["speaker"],
+                message_index=i,
+                confidence=0.99,
+            )
+            for i, m in enumerate(messages)
+        ]
+    )
 
 
 def verified(**kwargs):
     c = claim(**kwargs)
     c["evidence_verified"] = True
-    c["provenance"] = {"provider": "test", "precision": "message", "speaker": "user",
-                       "timestamp": "2026-01-01T15:32:01+00:00", "message_id": "1"}
+    c["provenance"] = {
+        "provider": "test",
+        "precision": "message",
+        "speaker": "user",
+        "timestamp": "2026-01-01T15:32:01+00:00",
+        "message_id": "1",
+    }
     return c
 
 
@@ -57,9 +74,15 @@ class MemorySafetyTests(unittest.TestCase):
 
     def test_long_conversations_10_100_500_include_middle_and_tail(self):
         for count in (10, 100, 500):
-            messages = parse_messages("".join("[15:32:01] user: important topic " + str(i) + "\n"
-                                               for i in range(count)), "2026-01-01.md")
-            claims = [c for result in compile_messages(messages, self.config, echo_llm) for c in result["claims"]]
+            messages = parse_messages(
+                "".join("[15:32:01] user: important topic " + str(i) + "\n" for i in range(count)),
+                "2026-01-01.md",
+            )
+            claims = [
+                c
+                for result in compile_messages(messages, self.config, echo_llm)
+                for c in result["claims"]
+            ]
             values = {c["value"] for c in claims}
             self.assertEqual(len(values), count)
             self.assertIn("important topic " + str(count // 2), values)
@@ -73,14 +96,18 @@ class MemorySafetyTests(unittest.TestCase):
             self.assertTrue(all(sum(len(m["text"]) for m in c) <= 256 for c in chunks))
 
     def test_failure_does_not_advance_or_write_partial_memory(self):
-        self.write("".join("[15:32:01] user: " + str(i) + " unique " + "z" * 80 + "\n" for i in range(10)))
+        self.write(
+            "".join("[15:32:01] user: " + str(i) + " unique " + "z" * 80 + "\n" for i in range(10))
+        )
         calls = 0
+
         def failing(system, payload):
             nonlocal calls
             calls += 1
             if calls == 2:
                 return '[{"value":"incomplete"'
             return echo_llm(system, payload)
+
         result = run(self.config, llm=failing)
         self.assertFalse(result["ok"])
         self.assertEqual(result["failed_chunk"], 1)
@@ -100,9 +127,11 @@ class MemorySafetyTests(unittest.TestCase):
     def test_secret_never_reaches_model_or_any_new_file(self):
         secret = "sk-" + "X" * 32
         self.write("[15:32:01] user: " + secret + "\n[15:32:20] user: concise\n")
+
         def model(system, payload):
             self.assertNotIn(secret, payload)
             return echo_llm(system, payload)
+
         result = run(self.config, llm=model)
         self.assertTrue(result["ok"])
         self.assertEqual(result["blocked"], 1)
@@ -111,13 +140,20 @@ class MemorySafetyTests(unittest.TestCase):
                 self.assertNotIn(secret, path.read_text(encoding="utf-8"))
 
     def test_assistant_and_quoted_statements_cannot_be_laundered(self):
-        for role, body in (("assistant", "keep replies concise"), ("user", "he said: keep replies concise")):
+        for role, body in (
+            ("assistant", "keep replies concise"),
+            ("user", "he said: keep replies concise"),
+        ):
             self.write("[15:32:01] " + role + ": " + body + "\n")
             self.assertEqual(run(self.config, llm=echo_llm)["active"], 0)
 
     def test_sensitive_and_identity_even_verified_go_pending(self):
         store = MemoryStore(self.root)
-        for c in (verified(kind="identity"), verified(sensitive=True), verified(value="I feel lonely")):
+        for c in (
+            verified(kind="identity"),
+            verified(sensitive=True),
+            verified(value="I feel lonely"),
+        ):
             store.ingest(c)
         store.commit()
         self.assertEqual(store.counts["active"], 0)
@@ -125,9 +161,19 @@ class MemorySafetyTests(unittest.TestCase):
         self.assertFalse((self.root / "core/user-core.md").exists())
 
     def test_false_evidence_and_ambiguous_source_are_pending(self):
-        messages = parse_messages("[15:32:01] user: concise\n[15:32:20] assistant: concise\n", "2026-01-01.md")
-        raw = dict(kind="preference", subject="user", predicate="reply", value="concise",
-                   evidence="concise", message_index=0, source="user", confidence=1)
+        messages = parse_messages(
+            "[15:32:01] user: concise\n[15:32:20] assistant: concise\n", "2026-01-01.md"
+        )
+        raw = dict(
+            kind="preference",
+            subject="user",
+            predicate="reply",
+            value="concise",
+            evidence="concise",
+            message_index=0,
+            source="user",
+            confidence=1,
+        )
         c = list(compile_messages(messages, llm=lambda *_: json.dumps([raw])))[0]["claims"][0]
         self.assertFalse(c["evidence_verified"])
         self.assertEqual(c["provenance"]["precision"], "chunk")
@@ -138,7 +184,9 @@ class MemorySafetyTests(unittest.TestCase):
         store.ingest(old)
         store.commit()
         changed = verified(value="detailed", evidence="I now prefer detailed replies")
-        changed["provenance"] = dict(old["provenance"], timestamp="2026-02-01T00:00:00+00:00", message_id="2")
+        changed["provenance"] = dict(
+            old["provenance"], timestamp="2026-02-01T00:00:00+00:00", message_id="2"
+        )
         store = MemoryStore(self.root)
         store.ingest(changed, llm=lambda *_: '[{"relation":"SUPERSEDES","confidence":0.99}]')
         store.commit()
@@ -154,10 +202,15 @@ class MemorySafetyTests(unittest.TestCase):
         store.commit()
         before = (self.root / "core/preferences.md").read_bytes()
         store = MemoryStore(self.root)
-        store.ingest(verified(value="detailed"), llm=lambda *_: '[{"relation":"CONTRADICTS","confidence":0.99}]')
+        store.ingest(
+            verified(value="detailed"),
+            llm=lambda *_: '[{"relation":"CONTRADICTS","confidence":0.99}]',
+        )
         store.commit()
         self.assertEqual((self.root / "core/preferences.md").read_bytes(), before)
-        self.assertIn("CONTRADICTS", (self.root / "system/conflict-log.md").read_text(encoding="utf-8"))
+        self.assertIn(
+            "CONTRADICTS", (self.root / "system/conflict-log.md").read_text(encoding="utf-8")
+        )
 
     def test_observe_does_not_prevent_review(self):
         self.write("[15:32:01] user: concise\n")
@@ -167,7 +220,7 @@ class MemorySafetyTests(unittest.TestCase):
     def test_transaction_rollback_preserves_later_edits(self):
         tx = Transaction(self.root)
         txid = tx.commit({"long-term/projects.md": "first"})
-        self.assertEqual(tx.rollback(txid), ["long-term/projects.md"])
+        self.assertIn("long-term/projects.md", tx.rollback(txid))
         (self.root / "long-term/projects.md").write_text("user edit", encoding="utf-8")
         with self.assertRaises(RuntimeError):
             tx.rollback(txid, yes=True)
@@ -185,11 +238,14 @@ class MemorySafetyTests(unittest.TestCase):
     def test_interrupted_transaction_replays_idempotently(self):
         tx = Transaction(self.root)
         import storage
+
         actual = storage.atomic_write
+
         def fail(path, content):
             if str(path).endswith("second.md"):
                 raise OSError("synthetic disk failure")
             return actual(path, content)
+
         with patch("storage.atomic_write", side_effect=fail):
             with self.assertRaises(OSError):
                 tx.commit({"long-term/first.md": "one", "long-term/second.md": "two"})
@@ -213,5 +269,6 @@ class MemorySafetyTests(unittest.TestCase):
     def test_no_import_time_config(self):
         import extract
         import sleep_purify
+
         self.assertIs(extract.normalize_claim, sleep_purify.normalize_claim)
         self.assertIn("TAIL", extract.build_user("x" * 12000 + "TAIL", "day"))

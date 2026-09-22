@@ -1,4 +1,5 @@
 """Deterministic HTTP fixture for engineering tests; NOT an AI quality benchmark."""
+
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
@@ -21,13 +22,30 @@ class FixtureHandler(BaseHTTPRequestHandler):
         if isinstance(messages, dict):
             claims = [{"relation": "UNCERTAIN", "confidence": 1}]
         else:
-            claims = [{"kind": "project", "subject": "fictional-demo", "scope": "global",
-                       "predicate": "note-" + str(m["timestamp"]),
-                       "value": m["text"].strip(), "evidence": m["text"].strip(),
-                       "source": m["speaker"], "message_index": i, "confidence": 0.99}
-                      for i, m in enumerate(messages)]
-        data = json.dumps({"choices": [{"finish_reason": "stop", "message": {
-            "content": json.dumps(claims, ensure_ascii=False)}}]}).encode()
+            claims = [
+                {
+                    "kind": "project",
+                    "subject": "fictional-demo",
+                    "scope": "global",
+                    "predicate": "note-" + str(m["timestamp"]),
+                    "value": m["text"].strip(),
+                    "evidence": m["text"].strip(),
+                    "source": m["speaker"],
+                    "message_index": i,
+                    "confidence": 0.99,
+                }
+                for i, m in enumerate(messages)
+            ]
+        data = json.dumps(
+            {
+                "choices": [
+                    {
+                        "finish_reason": "stop",
+                        "message": {"content": json.dumps(claims, ensure_ascii=False)},
+                    }
+                ]
+            }
+        ).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()

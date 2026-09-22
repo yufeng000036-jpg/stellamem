@@ -1,8 +1,8 @@
 """Non-destructive v1 import into the v2 review inbox; default is dry-run."""
+
 import argparse
 import json
 import re
-from pathlib import Path
 from claim_normalizer import normalize_claim, digest
 from config_loader import load_config
 from security import contains_secret
@@ -34,25 +34,43 @@ def plan(root):
                 continue
             kind, subject = parts[:2]
             scope = parts[2] if len(parts) == 4 else "global"
-            c = normalize_claim({"kind": ALIASES.get(kind, kind), "subject": subject,
-                                 "scope": scope, "predicate": match[2], "value": match[3],
-                                 "source": "unknown", "confidence": 0})
-            c["provenance"] = {"provider": "legacy", "source_ref": rel,
-                               "precision": "legacy", "content_hash": digest(match[0])}
+            c = normalize_claim(
+                {
+                    "kind": ALIASES.get(kind, kind),
+                    "subject": subject,
+                    "scope": scope,
+                    "predicate": match[2],
+                    "value": match[3],
+                    "source": "unknown",
+                    "confidence": 0,
+                }
+            )
+            c["provenance"] = {
+                "provider": "legacy",
+                "source_ref": rel,
+                "precision": "legacy",
+                "content_hash": digest(match[0]),
+            }
             claims.append(c)
     return claims, blocked, unparsed
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--yes", action="store_true", help="Apply reviewed import, keeping legacy originals")
+    parser.add_argument(
+        "--yes", action="store_true", help="Apply reviewed import, keeping legacy originals"
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
     try:
         root = load_config()["memories_root"]
         claims, blocked, unparsed = plan(root)
-        report = {"candidates": len(claims), "blocked_secrets": blocked,
-                  "unparsed": unparsed, "applied": False}
+        report = {
+            "candidates": len(claims),
+            "blocked_secrets": blocked,
+            "unparsed": unparsed,
+            "applied": False,
+        }
         if args.yes and not args.dry_run:
             with writer_lock(root):
                 Transaction(root).recover()

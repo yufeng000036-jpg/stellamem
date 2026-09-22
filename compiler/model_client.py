@@ -1,9 +1,11 @@
 """Local-only OpenAI-compatible HTTP client and strict complete-output parser."""
+
 import ipaddress
 import json
 import re
 import urllib.parse
 import urllib.request
+
 
 class ModelError(RuntimeError):
     pass
@@ -30,16 +32,21 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 def call_llm(system, user, max_tokens=4096, temp=0.0, config=None):
     if config is None:
         from config_loader import load_config
+
         config = load_config()
     url = endpoint(config["server_url"])
-    body = {"messages": [{"role": "system", "content": system},
-                         {"role": "user", "content": user}],
-            "temperature": temp, "max_tokens": max_tokens, "stream": False}
+    body = {
+        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+        "temperature": temp,
+        "max_tokens": max_tokens,
+        "stream": False,
+    }
     model = config.get("model_id")
     if model:
         body["model"] = model
-    req = urllib.request.Request(url, data=json.dumps(body).encode("utf-8"),
-                                 headers={"Content-Type": "application/json"})
+    req = urllib.request.Request(
+        url, data=json.dumps(body).encode("utf-8"), headers={"Content-Type": "application/json"}
+    )
     # No inherited system proxy and no redirects: local data stays loopback.
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
     try:
@@ -69,7 +76,9 @@ def parse_json(text):
             return None
         text = match[1]
     try:
-        result = json.loads(text, parse_constant=lambda value: (_ for _ in ()).throw(ValueError(value)))
+        result = json.loads(
+            text, parse_constant=lambda value: (_ for _ in ()).throw(ValueError(value))
+        )
     except (ValueError, TypeError):
         return None
     return result if isinstance(result, list) else None

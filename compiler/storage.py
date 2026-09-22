@@ -1,4 +1,5 @@
 """Atomic files and recoverable multi-file transactions for one local writer."""
+
 import contextlib
 import hashlib
 import json
@@ -55,9 +56,11 @@ def writer_lock(root):
         try:
             if os.name == "nt":
                 import msvcrt
+
                 msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
             else:
                 import fcntl
+
                 fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:
             raise RuntimeError("another memory writer is active") from None
@@ -95,8 +98,9 @@ def load_records(path):
 def render_records(prefix, records):
     lines = [prefix.rstrip(), "", MARK, ""]
     for record in records:
-        lines.extend(["```stellamem", json.dumps(record, ensure_ascii=False, sort_keys=True),
-                      "```", ""])
+        lines.extend(
+            ["```stellamem", json.dumps(record, ensure_ascii=False, sort_keys=True), "```", ""]
+        )
     return "\n".join(lines)
 
 
@@ -110,7 +114,7 @@ class Transaction:
             return
         entry = json.loads(self.journal.read_text(encoding="utf-8"))
         for rel, item in entry["files"].items():
-            if rel in PROTECTED:
+            if rel.replace("\\", "/") in PROTECTED:
                 raise ValueError("protected core in journal")
             path = safe_path(self.root, rel)
             current = sha(path.read_bytes()) if path.exists() else None
@@ -124,18 +128,22 @@ class Transaction:
         if self.journal.exists():
             raise RuntimeError("recover pending transaction first")
         txid = uuid.uuid4().hex
+        changes = dict(changes, **{"system/generation": txid})
         files = {}
         for rel, text in changes.items():
-            if rel in PROTECTED:
+            if rel.replace("\\", "/") in PROTECTED:
                 raise ValueError("protected core cannot be written")
             path = safe_path(self.root, rel)
             before = path.read_bytes() if path.exists() else None
             after = text.encode("utf-8")
             if before == after:
                 continue
-            files[rel] = {"before": before.decode("utf-8") if before is not None else None,
-                          "before_hash": sha(before) if before is not None else None,
-                          "after": text, "after_hash": sha(after)}
+            files[rel] = {
+                "before": before.decode("utf-8") if before is not None else None,
+                "before_hash": sha(before) if before is not None else None,
+                "after": text,
+                "after_hash": sha(after),
+            }
         if not files:
             return None
         entry = {"schema_version": 2, "id": txid, "files": files}
@@ -152,16 +160,27 @@ class Transaction:
             raise ValueError("invalid transaction ID")
         if self.journal.exists():
             raise RuntimeError("recover interrupted transaction first")
-        entry = json.loads(safe_path(self.root, "system/transactions/" + txid + ".json").read_text(encoding="utf-8"))
+        entry = json.loads(
+            safe_path(self.root, "system/transactions/" + txid + ".json").read_text(
+                encoding="utf-8"
+            )
+        )
         changes = {}
         for rel, item in entry["files"].items():
-            if rel in PROTECTED:
+            if rel.replace("\\", "/") in PROTECTED:
                 raise ValueError("protected core cannot be restored")
             path = safe_path(self.root, rel)
             if not path.exists() or sha(path.read_bytes()) != item["after_hash"]:
                 raise RuntimeError("rollback would overwrite later edits")
             # Newly created files become empty; never recursively delete user data.
-            changes[rel] = item["before"] or ""
+            initial = ""
+            if rel in {"system/extraction-cursor.json", "system/observe-cursor.json"}:
+                initial = json.dumps({"schema_version": 2, "sources": {}})
+            elif rel == "system/version-chain.json":
+                initial = "[]"
+            elif rel == "system/compile-status.json":
+                initial = json.dumps({"status": "rolled_back"})
+            changes[rel] = item["before"] if item["before"] is not None else initial
         if yes:
             return self.commit(changes)
         return list(changes)

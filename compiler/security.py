@@ -1,9 +1,14 @@
 """Deterministic policy; never interpret importance as write permission."""
+
 import json
 import re
 from pathlib import Path
 
-RULES = json.loads((Path(__file__).resolve().parents[1] / "shared" / "policy-rules.json").read_text(encoding="utf-8"))
+RULES = json.loads(
+    (Path(__file__).resolve().parents[1] / "shared" / "policy-rules.json").read_text(
+        encoding="utf-8"
+    )
+)
 
 
 def matches(group, text):
@@ -44,16 +49,21 @@ def detect_outdated(text):
 
 def apply_policy(claim):
     c = dict(claim)
-    text = " ".join(str(c.get(k, "")) for k in
-                    ("kind", "subject", "predicate", "value", "evidence"))
+    text = " ".join(
+        str(c.get(k, "")) for k in ("kind", "subject", "predicate", "value", "evidence")
+    )
     secret = contains_secret(c)
     c["suspicious"] = bool(c.get("suspicious")) or detect_injection(text)
     c["heavy_emotion"] = bool(c.get("heavy_emotion")) or detect_heavy_emotion(text)
     c["temporary"] = bool(c.get("temporary")) or detect_temporary(text)
     c["sarcasm"] = bool(c.get("sarcasm")) or detect_sarcasm(text)
     c["outdated"] = bool(c.get("outdated")) or detect_outdated(text)
-    sensitive = (c.get("sensitivity") == "SENSITIVE" or bool(c.get("sensitive"))
-                 or c["heavy_emotion"] or matches("sensitive", text))
+    sensitive = (
+        c.get("sensitivity") == "SENSITIVE"
+        or bool(c.get("sensitive"))
+        or c["heavy_emotion"]
+        or matches("sensitive", text)
+    )
     c["sensitivity"] = "SECRET" if secret else ("SENSITIVE" if sensitive else "PRIVATE")
     c["importance"] = max(c.get("importance", 0.5), 0.9 if c["heavy_emotion"] else 0)
     c["write_policy"] = "allow"

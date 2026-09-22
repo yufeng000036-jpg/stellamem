@@ -1,4 +1,5 @@
 """Extract complete claims using the same pipeline as sleep_purify."""
+
 import argparse
 import json
 from pathlib import Path
@@ -15,12 +16,17 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         from config_loader import load_config
+
         config = load_config()
-        claims = [c for chunk in compile_messages(read_daily(args.daily, config), config)
-                  for c in chunk["claims"]]
+        claims = [
+            c
+            for chunk in compile_messages(read_daily(args.daily, config), config)
+            for c in chunk["claims"]
+        ]
         result = json.dumps(claims, ensure_ascii=False, indent=2)
         if args.out:
             from storage import atomic_write
+
             atomic_write(Path(args.out), result)
         else:
             print(result)
