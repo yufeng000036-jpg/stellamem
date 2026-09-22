@@ -9,6 +9,9 @@ config.json
 .work/
 .ruff_cache/
 
+# 排除本地环境产生的锁文件（本项目不是 uv 包，pyproject 仅用于 ruff 配置）
+uv.lock
+
 # 排除安装器运行时产物（含真实路径，绝不进版本库）
 setup-out/
 
