@@ -54,6 +54,33 @@ secret_ref: env://FEISHU_APP_SECRET
 
 ---
 
+## Privacy guarantees
+
+Stellamem 的隐私设计可以归纳为五条：
+
+### 1. Local-first
+用户记忆**默认保存在用户自己的机器上**。模型客户端只接受环回地址
+（`127.0.0.1` / `localhost`），会拒绝远程/云端 endpoint、拒绝重定向、忽略系统代理。
+
+### 2. No raw conversation duplication
+Stellamem **不复制第二份完整 raw conversation**。它只保存足以重新定位并校验原文的
+**来源指针 + 内容 hash**，原始对话留在宿主（如 OpenClaw）的会话文件里。
+
+### 3. Secret before model
+密钥在**发送给任何编译模型之前**被确定性检测并阻断：不写库、不进收件箱、不进日志、
+不进模型请求体。
+
+### 4. Sensitive review
+敏感与身份类信息**需要人工确认，且永远不自动写入**。它们进入人工复核收件箱，
+由用户 `approve` / `reject` / `edit`。`core/identity.md` 与 `core/user-core.md`
+是硬保护文件，无法被自动写入。
+
+### 5. Provenance or nothing
+来源不可验证时**不伪造**。来源指针无法解析（文件缺失 / 内容被改）时，
+`source_reader` 会报 `SourceError` 并**不消费**该来源，而不是编造内容。
+
+---
+
 ## 数据边界
 
 - **默认可完全本地运行**：使用 llama.cpp / Ollama / LM Studio 等本地模型时，记忆编译过程不离开本机。

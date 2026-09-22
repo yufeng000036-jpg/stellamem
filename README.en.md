@@ -1,171 +1,337 @@
-# Stellamem
+# Stellamem · 星忆
 
-### Give AI memory a Git.
+> **Give AI memory a Git.**
 
-**Stellamem is a Markdown-first, Local-first long-term memory compiler for AI agents.**
-It lets AI memory be inspected, explained, versioned, and rolled back.
+A **local-first, auditable memory governance layer** for AI agents.
+Stellamem makes an AI's long-term memory **inspectable, traceable, versioned,
+reviewable and reversible** — instead of an opaque black box.
 
-Runs locally · You own your data · Free and open source
+<p align="center">
+  <b>🚧 Alpha (v0.2.0-alpha)</b> ·
+  🦞 First fully validated host: OpenClaw ·
+  🧩 Framework-agnostic core ·
+  🔒 Local-first ·
+  📝 Markdown-first
+</p>
 
-Stellamem — Compilable, auditable, local-first long-term memory for AI agents.
-
-> ⚠️ **Alpha**: currently `v0.1.0-alpha`. Security boundaries are still being hardened — read [SECURITY.md](SECURITY.md) before using on important data.
+<p align="center">
+  <a href="README.md">中文</a> ·
+  <a href="docs/QUICKSTART.md">Quick Start</a> ·
+  <a href="docs/ARCHITECTURE.md">Architecture</a> ·
+  <a href="SECURITY.md">Security</a> ·
+  <a href="docs/USE_CASES.md">Use Cases</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
 
 ---
 
 ## What it solves
 
-- **A digestive system for AI**: daily conversation logs are automatically compiled into structured long-term memory (preferences, decisions, lessons, projects), with deduplication, routing, and storage.
-- **Memory rot**: long-running AI memory degrades and contradicts itself. Stellamem ships conflict logs, version chains, and relation-judgment components (`judge.py`, 8 relation types); automatic Relation Engine integration into the main flow is still in development (see [ROADMAP.md](ROADMAP.md)), so conflict resolution is human-confirmed for now.
-- **White-box transparency**: all memory is markdown. Humans can read it, Git can diff it, every cognitive change has an evidence chain.
-- **Model-agnostic**: the extraction layer is a standardized Claim extraction task. Swap in a stronger model, get higher quality memory. 4B is the recommended starting point, not the ceiling.
+The hard problem in AI memory is **not** that "the AI can't remember".
+
+It is that:
+
+> **once the AI has remembered, you cannot tell why it remembered, where it came
+> from, whether it is stale, whether it misread you, or whether you can undo it.**
+
+A realistic example:
+
+```text
+User: I like concise answers.
+
+Months later:
+User: For technical questions, please answer in detail.
+
+Plain memory: it may overwrite, duplicate, contradict, or silently go wrong.
+```
+
+What Stellamem does instead:
+
+```text
+Conversation
+   ↓
+Claim
+   ↓  scope        — which situation this belongs to
+   ↓  evidence     — what was actually said
+   ↓  relation     — how it relates to existing memory
+   ↓  revision     — which new version it produces
+Memory
+   ↓
+Version history — old versions are kept and can be rolled back
+```
+
+> **Memory should be inspectable infrastructure, not invisible magic.**
 
 ---
 
-## How it works
+## Why Stellamem
 
-```text
-AI conversation
-→ auto diary (hooks/daily-autolog)
-→ daily/*.md
-→ compile (compiler/extract.py, local model)
-→ structured Claims (kind / subject / scope / predicate / value / confidence)
-→ route (compiler/sleep_purify.py)
-→ markdown memory (core / long-term / semantic)
-→ adapter injects into AI context (adapters/openclaw)
-```
-
-Write side and inject side are two independent components. Both are required:
-`hooks/` handles "AI conversation → diary", `adapters/` handles "memory → AI context".
-See `docs/INTEGRATION.md`.
+- **Not a chat-log backup.** Conversation is raw material; long-term memory is the
+  refined result. They are not the same thing.
+- **Every memory has a source.** Claims carry `evidence` + `provenance`. When a
+  source cannot be verified, Stellamem **raises instead of fabricating**.
+- **Scoped.** The same topic can carry different preferences in different
+  situations, without cross-contamination.
+- **Versioned.** `SUPERSEDES` updates a value while the old one stays in the
+  version chain.
+- **Conflicts don't vanish.** `CONTRADICTS` is logged; there is no silent overwrite.
+- **Secrets never enter.** Credentials are blocked **before** any model call.
+- **Sensitive content is never auto-written.** Sensitive and identity claims go to
+  a human review inbox.
+- **You own your memory.** View it, correct it, reject it, delete it, roll it back.
 
 ---
 
-## Directory layout
+## Principles
+
+| Principle | Meaning |
+|---|---|
+| **Memory is not a dump** | A chat log is not long-term memory. |
+| **Secret is not memory** | Credentials should never become long-term memory. |
+| **Sensitive is not auto-write** | Worth keeping ≠ allowed to write automatically. |
+| **Memory must have provenance** | The AI should know *why* it believes something. |
+| **Conflict must not disappear** | Conflicts may not be silently overwritten. |
+| **Users own their memory** | Users can view / edit / reject / delete / roll back / export it. |
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TD
+    A[Agent Conversation] --> B[Source Pointer]
+    B --> C[Claim Extraction]
+    C --> D[Security Policy]
+    D --> E[Relation Engine]
+    E --> F[Human Review Inbox]
+    F --> G[Canonical Memory]
+    G --> H[Context Projection]
+    H --> I[AI Agent]
+```
+
+Memory unit lifecycle:
 
 ```text
-compiler/      Compile and routing scripts
-hooks/         Write side: auto diary hook
-adapters/      Inject side: framework adapters
-templates/     Empty memory structure templates
-demo/          Fictional user, 7 days of diary + one-click demo
-benchmark/     Evaluation tools
-docs/          Documentation
-schema.md      Claim spec
-config.example.json  Config template
+Conversation → Claim → Evidence → Scope → Revision → Relation → Memory
 ```
+
+> See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for details.
+
+---
+
+## What Stellamem does
+
+### Claim-based memory
+Long-term memory is distilled into structured claims:
+`kind / subject / scope / predicate / value / confidence / evidence / provenance`.
+
+### Provenance
+Every claim carries a source pointer and a content hash. If the source cannot be
+resolved, Stellamem raises rather than inventing content.
+
+### Scope
+Different situations can hold different preferences: `global` "concise" and
+`technical` "detailed" coexist.
+
+### Revision
+A fact can evolve; the old revision enters the version chain instead of vanishing.
+
+### Relation Engine
+Eight relations: `NEW` / `DUPLICATE` / `REINFORCES` / `REFINES` / `COMPATIBLE` /
+`SUPERSEDES` / `CONTRADICTS` / `UNCERTAIN`.
+
+### Human Review
+Sensitive, identity, low-confidence and suspicious claims go to an inbox for
+`approve` / `reject` / `edit`.
+
+### Secret Gate
+Secrets are deterministically detected and blocked **before any model call** —
+not written, not logged, not exfiltrated.
+
+### Conflict Handling
+Conflicts are written to a conflict log with both sides preserved. No silent
+overwrite.
+
+### Transaction / Rollback
+A memory write is a transaction with a journal: recoverable and reversible, and a
+rollback refuses to clobber later edits.
+
+### Context Projection
+Only task-relevant, approved claims are injected into the agent, under a global
+character budget.
+
+---
+
+## What it is not
+
+Stellamem is **not**:
+
+- ❌ a tool to break into ChatGPT Memory
+- ❌ a chat-log backup utility
+- ❌ a cloud user-profiling platform
+- ❌ a service that uploads all of your private data
+- ❌ a project that only exists if you use OpenClaw
+
+**OpenClaw is the first fully validated host, not the only host.**
+The core compiler is framework-agnostic.
+
+---
+
+## Status matrix
+
+| Capability | Status |
+|---|---|
+| OpenClaw Adapter | ✅ Alpha · isolated real-host E2E passed |
+| Claim compiler | ✅ |
+| Relation Engine | ✅ |
+| Source provenance | ✅ |
+| Human Review Inbox (CLI) | ✅ |
+| Secret Gate | ✅ |
+| Context Projection | ✅ |
+| Transaction / Rollback | ✅ |
+| Crash recovery | ✅ |
+| Local models (llama.cpp etc.) | ✅ |
+| Remote cloud models | 🚧 not supported (loopback only) |
+| Other agent adapters | 🚧 |
+| GUI | 🚧 |
+| Sync | 🚧 |
+
+> Status reflects the **real implementation** only. 🚧 means not yet built.
 
 ---
 
 ## Quick start
 
-1. Copy config: `cp config.example.json config.json`, fill in your paths and model name.
-2. Create memory structure: see `templates/` for `core / long-term / semantic`.
-3. Start model service, run `compiler/extract.py` to compile diaries.
-4. Install write side: `hooks/daily-autolog/`.
-5. Install inject side: `adapters/openclaw/`.
+```bash
+# 1. Environment check (read-only, changes nothing)
+python setup.py check --offline
 
-Full steps in `docs/INTEGRATION.md`.
+# 2. Dry run — see exactly what would be created
+python setup.py install --mem-root <MEMORY_ROOT> --dry-run
 
----
+# 3. Install (idempotent; never overwrites your customised files)
+python setup.py install --mem-root <MEMORY_ROOT> --config <path/to/config.json>
 
-## Performance ceiling: model-swappable, no fixed limit
+# 4. Offline demo with fictional data (no model needed)
+python demo/run_demo.py --offline
 
-Stellamem's compile quality is not tied to any single model. The extraction layer is a standardized Claim extraction task. Any text model that outputs JSON can be plugged in.
+# 5. Self-check
+python compiler/memory.py doctor
+```
 
-| Tier | Model | Hardware | Per-diary | Notes |
-|------|-------|----------|-----------|-------|
-| Default | Qwen3-4B Q5_K_M | 8GB VRAM | ~7s | Local, zero cost |
-| Light | Qwen3-1.7B Q5 | 4GB VRAM | ~3s | Low-end devices |
-| Advanced | Qwen3-14B / 32B | 16–24GB VRAM | hardware-dependent | Quality first |
+Requirements: **Python 3.10+** (the core uses only the standard library). Node is
+optional and only needed for OpenClaw integration.
 
-No fixed ceiling. Stronger models mean more accurate extraction, cleaner deduplication, more reliable conflict resolution.
-The architecture, schema, and routing logic are model-agnostic — swapping models does not require changing your memory structure.
+> 👉 Full steps: [`docs/QUICKSTART.md`](docs/QUICKSTART.md).
+> ⚠️ A local model service is required (llama.cpp / Ollama / LM Studio) and it
+> must be a **loopback** endpoint.
 
-> **Local-only by design.** The model client (`compiler/model_client.py`) accepts
-> **loopback endpoints only** (`127.0.0.1` / `localhost`). Remote and cloud APIs are
-> refused, redirects are rejected and system proxies are ignored, so memory content
-> does not egress by default. Supporting a hosted provider would require an explicit
-> code and policy change; it is **not** available today.
+### Install with an AI coding agent
 
----
+If you don't code, you can hand the repository to an AI that can operate a
+computer and have it read [`AI_BOOTSTRAP.md`](AI_BOOTSTRAP.md). Paste this:
 
-## Current setup and measured data
-
-- Default model: Qwen3-4B Q5_K_M (llama.cpp)
-- Backend: llama.cpp + CUDA, n_ctx = 8192
-- Measured speed: ~7s per diary, 73 tok/s
-- VRAM: fully offloadable on 8GB
-- Cost: zero (local)
+```text
+Clone this repository and read AI_BOOTSTRAP.md.
+Install Stellamem in an isolated way.
+Do not modify existing memory or agent configuration without asking me first.
+Run the built-in checks and report whether installation succeeded.
+```
 
 ---
 
-## Hardware requirements
+## Safety and privacy
 
-- Recommended: 8GB VRAM + llama.cpp, running Qwen3-4B Q5_K_M.
-- Advanced: 16GB VRAM for larger models.
-- No GPU: CPU works, but is slower.
+Short version below; full version in [`SECURITY.md`](SECURITY.md).
+
+- **Local-first** — your memory lives on your own machine by default.
+- **No raw conversation duplication** — Stellamem does not keep a second full copy
+  of the raw conversation. It stores source pointers and hashes; the original
+  stays in the host.
+- **Secret before model** — secrets are detected and blocked before any model call.
+- **Sensitive review** — sensitive and identity content needs human confirmation
+  and is **never auto-written**.
+- **Provenance or nothing** — when a source cannot be verified, Stellamem does not
+  fabricate.
 
 ---
 
 ## Benchmark
 
-30 real diaries: recall 0.705, False Write 0.
+> **Benchmark results are experimental and limited to predefined test sets.**
+> These are internal version-comparison numbers, not an accuracy claim.
 
-> Note: early internal evaluation. Matching method is still being iterated. A reproducible benchmark will be published; feel free to verify.
+- Samples: 30 diaries (single user)
+- Metrics: recall ≈ 0.705 / precision ≈ 0.505
+- `False Write = 0` **only** means no such failure was observed on the defined
+  adversarial samples; it does **not** mean the real-world error rate is zero.
 
----
-
-## When to use / when not to
-
-Use: local-first, auditable, version-controlled long-term memory for long-running AI assistants.
-
-Avoid: if you want a turnkey SaaS, prefer no command line, or only need short-term context.
+Full conditions and limitations: [`benchmark/README.md`](benchmark/README.md).
 
 ---
 
-## FAQ
+## Current limitations
 
-**Can I use Claude / GPT?**
-Yes. The extraction layer is model-agnostic; any JSON-output model works.
+- **OpenClaw is the only fully validated host** (core is framework-agnostic, but
+  other host adapters are not done)
+- **Remote cloud models are not supported** — the model client is loopback-only
+- **Adapter retrieval is still keyword-based** — it can under-recall natural
+  questions that share no token with a stored claim
+- **The local 4B model shows kind-classification drift**
+- **English temporary-emotion detection is incomplete**
+- **Distillation / retention release is not implemented**
+- **No GUI yet**
+- **Not yet validated by a large external user base over time**
 
-**Where is memory stored? Is it uploaded?**
-Local markdown files by default, Git-diffable, no network. The model client only
-connects to a loopback endpoint; content is never sent to a remote service.
-
-**Does a stronger model help?**
-Yes. Stronger models mean higher recall, fewer false writes. 4B is the default starting point, not the ceiling.
-
-**How is this different from Mem0 / Zep?**
-Markdown-first, diffable, rollback-capable, white-box auditable — not a black-box database.
-
-**Which agent frameworks are supported?**
-OpenClaw currently; more adapters coming.
+This transparency is part of the design, not a hidden defect.
 
 ---
 
-## Actively maintained
+## Roadmap
 
-Stellamem is under active development. Features will keep growing, and the system will keep getting more complete and more polished. Please keep supporting us.
+### Alpha (now)
+- reliability, retrieval quality, external testing
 
-If you find it useful, please Star, open an Issue, or contribute an adapter or model config.
+### Beta
+- more host adapters, semantic retrieval, migration stability, review UX
+
+### Future
+- desktop GUI, companion integrations, MCP, encrypted sync, team memory,
+  enterprise governance
+
+See [`ROADMAP.md`](ROADMAP.md).
+
+---
+
+## Contributing
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+> ⚠️ Any change to memory behaviour **must ship a regression test**.
+
+Please do not report security issues in a public issue; use the channel in
+[`SECURITY.md`](SECURITY.md).
+
+---
+
+## Vision
+
+Future AI systems will exist for years. If an AI is to genuinely accompany, work
+with, or serve a person over time, it must be able to answer:
+
+- Why do I know this?
+- When did the user say it?
+- Is it still true?
+- Has it changed since?
+- What if two memories conflict?
+- Can the user undo it?
+- Should sensitive content be recalled at all?
+
+Stellamem aims to become **the governance foundation for long-term AI memory**.
+
+**OpenClaw is the first stop, not the destination.**
 
 ---
 
 ## License
 
-MIT, see LICENSE.
-
----
-
-Made by 宇枫
-
----
-
-## Evaluation clarification (2026-09-22)
-
-The current 30-diary, single-user benchmark contains 393 expected claims: 277 matched, 116 missed, and 272 classified as extra. Under the current gold set and one-pass LLM matcher, recall is 0.705 and precision is 0.505.
-
-`False Write = 0` only means that no such failure was observed in the defined adversarial cases. It does not prove that every stored memory is correct or that the production false-write rate is zero. These results are suitable for internal version comparisons and should not be generalized.
-
-Scope status: the schema and local compiler use a four-part stable ID while retaining legacy three-field reads. 78 local Python tests and 3 JS test groups pass against synthetic data; the real model has been verified for engineering behaviour only. The installed OpenClaw hook and adapter have not been run end-to-end in a real host.
+MIT © 宇枫 · see [`LICENSE`](LICENSE)
