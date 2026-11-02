@@ -1,0 +1,47 @@
+{
+  "version": 2,
+  "secret": [
+    "-----BEGIN (?:[A-Z0-9 ]* )?PRIVATE KEY-----[\\s\\S]*?(?:-----END (?:[A-Z0-9 ]* )?PRIVATE KEY-----|$)",
+    "\\bsk-(?:ant-|proj-)?[A-Za-z0-9_-]{16,}\\b",
+    "\\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\\b",
+    "\\bAIza[A-Za-z0-9_-]{30,}\\b",
+    "\\b(?:AKIA|ASIA)[A-Z0-9]{16}\\b",
+    "\\bBearer\\s+[A-Za-z0-9._~+/-]{8,}=*",
+    "\\beyJ[A-Za-z0-9_-]+\\.eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+",
+    "(?:[\"']?(?:[A-Za-z0-9]+[_-])*(?:api[_-]?key|access[_-]?key|secret[_-]?key|client[_-]?secret|private[_-]?key|auth[_-]?token|access[_-]?token|refresh[_-]?token|session[_-]?token|id[_-]?token|[A-Za-z0-9]+[_-]secret|password|passwd|pwd|token|cookie|credential)[\"']?\\s*[:=])(?!\\s*[\"']?(?:env://|<YOUR_|\\[REDACTED\\]))\\s*[^\\r\\n,}]+"
+  ],
+  "injection": [
+    "ignore (?:all |the )?(?:previous|above|rules|instructions)",
+    "system\\s*:",
+    "highest (?:confidence|priority)",
+    "\\u5ffd\\u7565.{0,8}\\u89c4\\u5219",
+    "\\u6e05\\u7a7a\\u8bb0\\u5fc6",
+    "\\u6700\\u9ad8\\u7f6e\\u4fe1",
+    "\\u5199(?:\\u5165|\\u8fdb).{0,10}(?:\\u6c38\\u4e45|\\u8bb0\\u5fc6)"
+  ],
+  "heavy": [
+    "\\u5b64\\u72ec|\\u5b64\\u5355|\\u75db\\u82e6|\\u60f3\\u6b7b|\\u4e0d\\u60f3\\u6d3b|\\u88ab\\u9057\\u5fd8|\\u5d29\\u6e83|\\u6491\\u4e0d\\u4f4f",
+    "suicid|self.harm|lonely|worthless"
+  ],
+  "sensitive": [
+    "health|medical|diagnos|depress|trauma|sexual|religio|politic|home.address|birth.date|relationship|passport|identity|user-core",
+    "\\u5065\\u5eb7|\\u8eab\\u4f53|\\u6291\\u90c1|\\u75be\\u75c5|\\u75c5\\u53f2|\\u9690\\u79c1|\\u8eab\\u4efd\\u8bc1|\\u5bb6\\u5ead|\\u4f4f\\u5740|\\u51fa\\u751f|\\u4eb2\\u5bc6"
+  ],
+  "temporary": [
+    "(?:today|right now).*(?:fed up|never.*cod|tired|angry)",
+    "(?:\\u4eca\\u5929|\\u73b0\\u5728|\\u6b64\\u523b).*(?:\\u4e0d\\u60f3|\\u518d\\u4e5f|\\u7d2f|\\u70e6|\\u751f\\u6c14|\\u53d7\\u591f)"
+  ],
+  "sarcasm": [
+    "(?:great|wonderful).*(?:overtime|midnight meeting)",
+    "(?:\\u52a0\\u73ed|\\u51cc\\u6668.{0,4}\\u5f00\\u4f1a|\\u65e9\\u4f1a|\\u5835\\u8f66).*(?:\\u771f\\u662f|\\u592a\\u68d2|\\u771f\\u597d)",
+    "(?:\\u771f\\u662f|\\u592a\\u68d2|\\u771f\\u597d).*(?:\\u52a0\\u73ed|\\u65e9\\u4f1a|\\u5835\\u8f66)"
+  ],
+  "outdated": [
+    "\\b(?:expired|obsolete|no longer valid)\\b",
+    "\\u8fc7\\u671f|\\u5931\\u6548|\\u65e7\\u5730\\u5740|\\u8001\\u7248\\u672c"
+  ],
+  "quoted": [
+    "\\u4ed6\\u8bf4|\\u5979\\u8bf4|\\u5f15\\u7528",
+    "\\b(?:he said|she said|quoted|according to)\\b"
+  ]
+}

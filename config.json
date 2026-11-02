@@ -1,0 +1,23 @@
+{
+    "_note": "PATCH1 安全默认配置：只指向本目录下的 ./stellamem-data 与本地端口，不会被自动当成生产配置。真实生产机配置在 config.production-local.json（不会被 config_loader 自动加载）。",
+    "schema_version": 2,
+    "memories_root": "./stellamem-data/memories",
+    "semantic_dir": "./stellamem-data/memories/semantic",
+    "daily_dir": "./stellamem-data/memories/daily",
+    "system_dir": "./stellamem-data/memories/system",
+    "core_dir": "./stellamem-data/memories/core",
+    "longterm_dir": "./stellamem-data/memories/long-term",
+    "scripts_root": "./compiler",
+    "server_url": "http://127.0.0.1:8081",
+    "chunk_chars": 2500,
+    "model_max_tokens": 3072,
+    "context_size": 8192,
+    "gpu_layers": 99,
+    "llama_bin": "./stellamem-data/bin/llama-server.exe",
+    "model_name": "./stellamem-data/models/placeholder.gguf",
+    "model_timeout": 300,
+    "extract_backend": "local",
+    "cloud_model": "deepseek-chat",
+    "cloud_budget_cny": 50,
+    "cloud_budget_state": "./stellamem-data/budget.json"
+}

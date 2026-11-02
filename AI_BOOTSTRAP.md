@@ -19,9 +19,9 @@
 要求：
 1. 先读 AI_BOOTSTRAP.md，再读 INSTALL.md
 2. 全程按 INSTALL.md 的步骤走
-3. 我的 AI 名字叫「____」（填你的），记忆放「____」（填路径，留空用默认）
+3. 记忆放「____」（填路径，留空用默认）
 4. 装完告诉我：装了什么、装在哪、怎么验证、哪些需要我确认
-5. 不要改我已有的任何文件（openclaw.json 用 --merge-openclaw 会自动备份合并）
+5. 不要改我已有的任何文件（安装器不会改 `openclaw.json`，只会输出配置片段）
 ```
 
 ---
@@ -47,25 +47,24 @@ python setup.py check
 ### 第 2 步：干跑一次，让用户看清楚会动什么
 
 ```bash
-python setup.py install --dry-run --yes --ai-name <AI名字> --mem-root <记忆根目录>
+python setup.py install --dry-run --mem-root <记忆根目录>
 ```
 
 把动作列表给用户看。**这是关键**：让用户知道脚本会创建哪些目录、改哪些文件。
-> `<AI名字>` 和 `<记忆根目录>` 先问用户，或先给个默认值（如 `我的AI` / `~/.stellamem`）。
+> `<记忆根目录>` 先问用户，或先给个默认值（如 `~/.stellamem`）。
 
 ### 第 3 步：真安装（用户确认后，一行全自动）
 
 ```bash
-python setup.py install --yes --ai-name <AI名字> --mem-root <记忆根目录> --merge-openclaw
+python setup.py install --mem-root <记忆根目录> --config <config.json路径> --oc-root <OpenClaw 根目录>
 ```
 
-`--merge-openclaw` 会**自动备份并合并 openclaw.json**（只追加 keys，不覆盖已有内容）。
+安装器**不会**改 `openclaw.json`；它把需要的配置写成 `setup-out/openclaw.snippet.json`。
 安装器是**幂等**的，重复跑安全，不会覆盖已有记忆。
 
 ### 第 4 步：处理需要用户确认的事
 
-如果第 3 步**没加** `--merge-openclaw`（比如用户不想自动改 openclaw.json），
-安装器会生成 `setup-out/openclaw.snippet.json`。此时你需要：
+安装器总是生成 `setup-out/openclaw.snippet.json`（它从不自动修改 `openclaw.json`）。你需要：
 
 1. **先备份** `openclaw.json`（复制一份 `openclaw.json.bak-<日期>`）
 2. 读 `openclaw.json` 和 snippet，**逐条**告诉用户要加什么
@@ -125,7 +124,8 @@ system/     冲突日志 / 版本链 / 回滚记录
 
 你不是「使用它」，你是「**成为它的一部分**」。
 装好后，`core/identity.md` 就是你的自我认知，`core/user-core.md` 就是你对用户的了解。
-每次对话开始，你读它们；每次对话结束，框架帮你写它们。
+每次对话开始，你读它们；**这两个文件是硬保护的核心区，框架不会自动写入**，
+只能由用户逐字确认后手动编辑（事务层会拒绝任何自动写）。
 
 ---
 
@@ -136,7 +136,7 @@ system/     冲突日志 / 版本链 / 回滚记录
 读 `INSTALL.md` 第 6 节。核心是：
 - `compiler/` 完全通用，改 config.json 路径即可
 - 写入侧和注入侧需要你**照着 `hooks/` 和 `adapters/` 的逻辑自己实现**
-- 逻辑很简单：写入 = 对话落盘成 `[HH:MM] role: content`；注入 = 读 core/ 拼进 system prompt
+- 逻辑很简单：写入 = 对话落盘成 `[HH:MM] role: content`（或写来源指针清单）；注入 = 只注入与当前任务相关的单条 Claim
 
 ---
 

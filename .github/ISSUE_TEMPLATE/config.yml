@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔐 Report a security vulnerability (private)
+    url: https://github.com/yufeng000036-jpg/stellamem/security/advisories/new
+    about: Do NOT open a public issue for security problems. Report privately per SECURITY.md.
+  - name: 📖 Documentation
+    url: https://github.com/yufeng000036-jpg/stellamem#readme
+    about: Read the README and docs before opening an issue.
+  - name: 💬 Questions and ideas
+    url: https://github.com/yufeng000036-jpg/stellamem/discussions
+    about: For open-ended questions, use Discussions instead of an issue.

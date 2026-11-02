@@ -1,10 +1,7 @@
 {
   "id": "stellamem-adapter",
   "name": "Stellamem Adapter",
-  "description": "把记忆库的 core/ 记忆，通过 before_prompt_build hook 结构性注入 AI 上下文。",
-  "activation": {
-    "onStartup": true
-  },
+  "description": "Local, task-scoped approved claim projection.",
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
@@ -13,21 +10,20 @@
         "type": "boolean"
       },
       "coreDir": {
-        "type": "string",
-        "description": "记忆库根目录（包含 core/ long-term/ semantic/）。留空则用安装时写入的路径。"
+        "type": "string"
       },
       "maxInjectChars": {
         "type": "number",
-        "description": "单个文件最大注入字符数，超出截断。默认 4000。"
+        "minimum": 0,
+        "maximum": 16000,
+        "description": "Total injected context budget."
       },
-      "sensitiveFilesPolicy": {
-        "type": "string",
-        "enum": ["summary", "full"],
-        "description": "敏感档案（画像/数据画像/收藏）注入策略：summary=只注入前若干行（默认），full=整篇注入。"
-      },
-      "summaryLines": {
-        "type": "number",
-        "description": "summary 模式下注入的行数，默认 10。"
+      "activeScopes": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Explicit task scopes; global is always eligible."
       }
     }
   }
