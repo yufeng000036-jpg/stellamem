@@ -1,0 +1,53 @@
+{
+  "ok": true,
+  "cases": [
+    {
+      "case": "audited_fixture",
+      "expected_exit": 0,
+      "exit_code": 0,
+      "ok": true
+    },
+    {
+      "case": "other_token_same_path",
+      "expected_exit": 1,
+      "exit_code": 1,
+      "ok": true
+    },
+    {
+      "case": "same_fixture_other_path",
+      "expected_exit": 1,
+      "exit_code": 1,
+      "ok": true
+    },
+    {
+      "case": "ordinary_text",
+      "expected_exit": 0,
+      "exit_code": 0,
+      "ok": true
+    },
+    {
+      "case": "allowed_plus_other",
+      "expected_exit": 1,
+      "exit_code": 1,
+      "ok": true
+    },
+    {
+      "case": "marker_cannot_hide",
+      "expected_exit": 1,
+      "exit_code": 1,
+      "ok": true
+    },
+    {
+      "case": "other_private_key",
+      "expected_exit": 1,
+      "exit_code": 1,
+      "ok": true
+    },
+    {
+      "case": "legacy_sequence_no_exemption_needed",
+      "expected_exit": 0,
+      "exit_code": 0,
+      "ok": true
+    }
+  ]
+}

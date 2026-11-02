@@ -1,0 +1,27 @@
+# Stage B — secret scanning and format repair
+
+Base: stage A `910f27d9261a01feb12110a77c88ad1c1df3f91f`; branch `fix/reliability-evidence-20261102`. No production access, workflow modifications, paid calls or merge.
+
+## Changes and evidence
+
+1. Ruff 0.11.13 formatted only the two reported files; diff is four insertions/four deletions, no AST behavior change. Full Python/Node passed before scanner changes.
+2. Eight scanner regression tests ran **before** repair: 8 tests, 9 failing assertions/subtests (marker bypass, fixture plus unrelated key, fixture prefix, fake PEM substring). After repair all eight pass. Marker words no longer exempt lines; exact matching never suppresses a second token on the same line. Complete known fake escaped PEM blocks are removed before detecting other matches. The two entire-file skips were removed. No new allowed credential values were added to this scanner.
+3. Gitleaks v8.30.1 official Linux x64 release archive verified against published SHA-256: `551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb`.
+4. Tried removing custom exemptions with default rules: full history reports **9 findings**, not only the previously suspected sequential fixture. Audit metadata is in `gitleaks-fixture-audit.json`; values never appear in the report. They are the known JWT test fixture (five occurrences including two scanner-source occurrences), generic `synthetic-123` fixture (two), and two oversized private-key false matches across escaped Python source. Exact counting is the JSON file, not a unique-secret count. The sequential a-x privacy fixture triggers no default finding and needs no exemption.
+5. A first global AND configuration appeared green but failed actual same-path negative controls: `gitleaks dir` debug said `skipping file: global allowlist`. Replaced with **rule-scoped** `[[rules.allowlists]]`, explicit AND, anchored exact relative path and anchored full secret. All defaults remain enabled. Four exact finding shapes are allowed; two PEM shapes include their full exact historical source suffix to avoid a prefix/substring exemption. This is verbose but deliberately fails closed if a single source byte changes. Current fake PEM delimiters were split without changing runtime test values, preventing new oversized matches.
+6. `tools/verify_gitleaks.py` runs eight actual external scans in temporary directories. Missing executable, timeout, invalid report or missed detection fails. Cases: exact audited fixture allowed; another JWT at the same path detected; same audited JWT elsewhere detected; ordinary string allowed; fixture plus another token detected; marker plus token detected; another private-key body detected; legacy sequential sample detected by no default rule, with no exemption. Initial harness used absolute paths and a too-short PEM body; these were corrected to relative paths and a default-detectable generated PEM body. The final eight-case pass is in `gitleaks-controls.json`.
+7. All eight real CLI main functions call the UTF-8 guard. Existing Windows fix kept. Added a subprocess/pipe roundtrip forcing cp1252/PYTHONUTF8=0: Chinese, emoji, quotes and newline decode strictly as UTF-8, JSON equals the saved value, and stored record equals the original. No ASCII escaping workaround or workflow change.
+
+## Reproduce
+
+Use Python 3.10/3.12 and Node 22 as CI does; local Linux uses Python 3.12.14 and Node 24.22.1. Install `ruff==0.11.13`; provide Gitleaks 8.30.1. Run all commands in `phase-b-results.json`. Current-tree Gitleaks is run against a temporary `git checkout-index -a` export, so generated pyc/cache files cannot be mistaken for tracked source. `gitleaks git --log-opts=--all --redact=100` scans every fetched historical ref. No real credentials were found by these checks; this is bounded scanner evidence, not proof that arbitrary credentials can always be detected.
+
+Final local result: Python **381/381**, Node **6/6**, offline demo (7 synthetic sources) pass; Ruff lint/format pass; own scanner current/history pass; Gitleaks tracked tree/history pass; eight external scanner controls pass. Commands exit 0. Local history run covers fetched baseline refs; after publishing, rerun against the published branch and record CI separately. Only synthetic fixtures were used; no model accuracy claim.
+
+## Gate / residuals / rollback
+
+B local gate passes. Remote **same-SHA CI is pending** until the branch code update is published; stage C is NOT cleared by baseline CI. The remote action's binary version is not pinned in workflow and must be read from its actual log. The real Gitleaks control script is an explicit local command, not newly wired into workflow (workflows unchanged).
+
+D7–D13 audit original is absent from repository search; UNKNOWN, NOT FIXED. Bridge concurrency, nightly conflicts, host E2E, fault recovery and frozen memory-quality evaluation remain C–F work. Memory quality improvement: cannot quantify. Current score: 8–9 not supported; no new numerical score while these gates remain open.
+
+Rollback: before merge, abandon this isolated branch. To undo B on this branch use `git revert <B-code-commit>` and retain A evidence; this reintroduces known scanner weaknesses and must never be called a safe production fallback. Production rollback: unnecessary, zero changes. No main merge or deployment authorized by this report.

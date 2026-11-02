@@ -5,6 +5,8 @@ UnicodeEncodeError (the two inbox JSON/show failures in CI run
 """
 
 import json
+import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -102,6 +104,30 @@ class InboxUtf8Tests(unittest.TestCase):
             return inbox.main(argv)
         finally:
             sys.stdout = old
+
+    def test_piped_json_roundtrip_under_legacy_encoding(self):
+        store = MemoryStore(self.mem)
+        value = '虚构决定：改用本地模型 🌱\n保留"引号"和换行'
+        candidate = verified(kind="decision", value=value, confidence=0.5)
+        store.ingest(candidate)
+        store.commit()
+        process = subprocess.run(
+            [sys.executable, str(Path(inbox.__file__).resolve()), "list", "--json"],
+            cwd=self.root,
+            env=dict(os.environ, PYTHONIOENCODING="cp1252", PYTHONUTF8="0"),
+            capture_output=True,
+            timeout=15,
+        )
+        self.assertEqual(process.returncode, 0)
+        stdout = process.stdout.decode("utf-8", errors="strict")
+        self.assertIn("🌱", stdout)
+        records = json.loads(stdout)
+        self.assertEqual(records[0]["value"], value)
+        # Verify serialization did not silently replace persisted facts either.
+        from storage import load_records
+        from store import INBOX
+
+        self.assertEqual(load_records(self.mem / INBOX)[1][0]["value"], value)
 
     def test_list_json_under_non_utf8_stdout(self):
         self.seed()
