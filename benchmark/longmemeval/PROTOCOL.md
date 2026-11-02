@@ -1,4 +1,4 @@
-# Preregistered bounded local evaluation v1
+# Preregistered bounded local evaluation v2
 
 Frozen before benchmark inference/results. Source: official LongMemEval cleaned,
 MIT, revision and file SHA in manifest.json. 140 official cases: 20 each of seven
@@ -12,7 +12,7 @@ Reader/extractor: official Qwen/Qwen3-0.6B-GGUF, Apache-2.0, revision
 9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031.
 CPU-only llama.cpp b12032 (dde879bc4), official Ubuntu x64 archive SHA256
 9f10432ca3f66ef003a7a540aaffb9da0acadaefd05404521b9ab7a2436af304.
-No thinking, temperature zero, 16384 tokens/slot, 4 slots, 8 CPU threads.
+No thinking, temperature zero, 16384 tokens/slot, 1 slot, 8 CPU threads.
 No paid API, external model service, inherited proxy or credential.
 
 Compare main 910f27d and this PR, plus no-memory and direct-context baselines.
@@ -63,3 +63,17 @@ The unmeasured criteria cannot pass. This CPU run can expose failure modes; a
 high exact-match score alone cannot satisfy the release gate. No thresholds or
 gold edits after seeing results. Corrections to evaluator bugs require a new
 version, retaining the old report. No model change based on test answers.
+
+## v2 infrastructure correction, before any valid benchmark answers
+
+v1 at 7fd5855 produced zero successful responses. Four slots/65536 total context
+were not viable under the observed 8 GiB cgroup limit; a repeated parallel
+probe exited -9 and cgroup OOM-kill events were observed. Single-slot 4096
+synthetic smoke generated text. v2 keeps the same 16384-token per-request
+window but allocates only one slot (16384 total); four case workers queue on it.
+Model, samples, prompts, output budgets, labels and thresholds are unchanged.
+A real inference preflight now precedes cases; server death invalidates the run.
+Memory accounting uses /proc VmHWM for actual worker/server peaks; v1 ru_maxrss
+inherited the parent's high-water and cannot be used as worker memory evidence.
+v1 case-level failures remain in docs/verification/longmemeval-v1-infrastructure.json.
+The preflight call is reported separately from benchmark model call totals.

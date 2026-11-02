@@ -14,6 +14,13 @@ spec.loader.exec_module(evaluation)
 
 
 class IndependentProtocolTests(unittest.TestCase):
+    def test_health_without_generation_cannot_pass_preflight(self):
+        with self.assertRaises(ValueError):
+            evaluation.validate_preflight({"status": "ok"})
+        self.assertEqual(
+            evaluation.validate_preflight({"choices": [{"message": {"content": "ok"}}]}), {}
+        )
+
     def fixture(self, **kwargs):
         case = dict(
             question_id="fictional",

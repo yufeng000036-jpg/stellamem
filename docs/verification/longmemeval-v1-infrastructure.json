@@ -1,0 +1,4791 @@
+{
+  "status": "INVALID_INFRASTRUCTURE_RUN_NOT_MEMORY_ACCURACY",
+  "protocol": "v1",
+  "dataset_sha256": "821a2034d219ab45846873dd14c14f12cfe7776e73527a483f9dac095d38620c",
+  "baseline_sha": "910f27d9261a01feb12110a77c88ad1c1df3f91f",
+  "candidate_sha": "7fd58557e837825b0bc98aba5a1cbe3979b5d755",
+  "observed_errors": {
+    "main": {
+      "ChunkFailure": 140
+    },
+    "candidate": {
+      "ChunkFailure": 140
+    },
+    "none": {
+      "ModelError": 140
+    },
+    "direct": {
+      "ModelError": 140
+    }
+  },
+  "model_successful_responses": 0,
+  "cgroup_memory_max_bytes": 8589934592,
+  "observed_cgroup_oom": 7,
+  "observed_cgroup_oom_kill": 3,
+  "parallel_probe_server_exit": -9,
+  "single_slot_4096_probe": "HTTP 200; nonempty generated text; process remained alive",
+  "raw_result_sha256": "7afd52eeee7424d4f26b17ec5586b778e852a91dba68ea0d3d392fcd50fdf731",
+  "metric_warning": "No valid inference; exact-match zero is an execution-failure counter, not accuracy. ru_maxrss inherited parent high-water on Linux; not reliable worker memory.",
+  "cases": [
+    {
+      "case_id_sha256": "04e886b4077bed532aadefa4d95102c804fa5b5ba3e0b79e4adc3e65da052ddf",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.025259185999857436
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.013905245999922045
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004941769999277312
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005773504999524448
+        }
+      }
+    },
+    {
+      "case_id_sha256": "0586cee0c8aa2ebc01386d0c9e7560c5ebf85f486a8167c59f55ee350ccde011",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.015681235000556626
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.012977968000086548
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0046001860000615125
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0035658269998748438
+        }
+      }
+    },
+    {
+      "case_id_sha256": "06daf8e2d3ec5ba63306b29e5fc214ed2e2ebb71e570387ec5d1f9c303061df6",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01124672800051485
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.006703768000079435
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0037404099994091666
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004969663999872864
+        }
+      }
+    },
+    {
+      "case_id_sha256": "086818d80aedba6cdf2f59c108f90628545810105159dda656e2318d2dea661f",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.015017720000287227
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.0033326139991913806
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.012215738000122656
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005481996000526124
+        }
+      }
+    },
+    {
+      "case_id_sha256": "0aa8267fd4f5f8c11c4aa5daf34cf7d5a60e2cce2a0ceaffb1a678705d3a5341",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.023110826999982237
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.015159447000769433
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005589608000263979
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0050677609997364925
+        }
+      }
+    },
+    {
+      "case_id_sha256": "0d6d706dfc00b9c5dd440212ea2c33bbf4890deb60e7b622847037b6bea852b8",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.012866400000348222
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.013197377999858872
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00840518799941492
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005607735000012326
+        }
+      }
+    },
+    {
+      "case_id_sha256": "123d72580b1cc3ecaaba87ad91dbf9bdc42432fc14f916904bb0a4a10d9a72be",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.02290974399966217
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.012892808999822591
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0036418009995031753
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005349385999579681
+        }
+      }
+    },
+    {
+      "case_id_sha256": "12f884ee1063262bc6e93c573e4980810b6f5d2e58302ae6d374f7a0b78d78e6",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01754548499957309
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.019762887999604573
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0034265069998582476
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0051041260003330535
+        }
+      }
+    },
+    {
+      "case_id_sha256": "17e9a7e750880329300efc9640a115cdddaa34c715193c45c456a5e085ac8e54",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.014108653000221238
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.011426940000092145
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004757302999678359
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0037813509998159134
+        }
+      }
+    },
+    {
+      "case_id_sha256": "1a258a6ba6a040c170d3905a639ca94fecc4a4df3e5a9d7f0ae38cc0d303fe5b",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.009370628999931796
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.0077009019996694406
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0052719689992954955
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0049773250002544955
+        }
+      }
+    },
+    {
+      "case_id_sha256": "1d34fb76e26f8a4b3b465ff8eaa5f9a6c190cfd0dfbd45e3a66d857b1ce68e89",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.012479066000196326
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.011694152999552898
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004536299999926996
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004459214000235079
+        }
+      }
+    },
+    {
+      "case_id_sha256": "2529395c48d03e25f56b0ac8911317e1378b43664051cdd565d4ec8a63d893ee",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.020287289000407327
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.014614921000429604
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003584064000278886
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004121164000025601
+        }
+      }
+    },
+    {
+      "case_id_sha256": "25e350e4218673736d9db70a15757ce005b3ff04e8d0063392a7bd656db7429a",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.018087331999595335
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.008239013999627787
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003496182000162662
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003915924000466475
+        }
+      }
+    },
+    {
+      "case_id_sha256": "27a1795480b85de024eed51bd321019b1325b467ec3e308b3a779a779d01ee0d",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.02410117099952913
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.014712473999679787
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00419472500016127
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005529637999643455
+        }
+      }
+    },
+    {
+      "case_id_sha256": "2a873fa22a53eb0a1454d398acc92be4a50935052c82ed47f40cca4c47f0c38d",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.025089101000048686
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.014286059999903955
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005345104999832984
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005493222999575664
+        }
+      }
+    },
+    {
+      "case_id_sha256": "2b6611290a98a941b7b7c5cdc95ecdece2887fd18446af8863a7528a234d2042",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.02691375600079482
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.024655545999848982
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004903283999738051
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005268699000225752
+        }
+      }
+    },
+    {
+      "case_id_sha256": "2f44e0f0d7aa500d5f5d1294338327d2e734cc80fe649f3d80fd024029eb0760",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.025563596000210964
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.029032165999524295
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004622118999577651
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005503908999344276
+        }
+      }
+    },
+    {
+      "case_id_sha256": "3485807b7bf53be627640adeea4d4b2bb1392c5dd34620e90547908bfc2172d4",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.029948917999718105
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.016555904000597366
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0049921769996217336
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.07969020899963652
+        }
+      }
+    },
+    {
+      "case_id_sha256": "36f0d0c8a496ebf6e0ba831a09d0cdac7d0c96b38d46d1190146c7bc86480e97",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.014006178999807162
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.011950949000492983
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004038578999825404
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0037747520000266377
+        }
+      }
+    },
+    {
+      "case_id_sha256": "378b9904ff844462647679ddea7635b94ab38a6ac70accbd6390d7b5375da7ac",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.017941631999747187
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.016656886000419036
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003297532000033243
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003722692999872379
+        }
+      }
+    },
+    {
+      "case_id_sha256": "37ed3a0a2444ac26484a74976c981b86f475b37857c310c116f97b5c2151f328",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.020246548000613984
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.017017147999467852
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00358389399934822
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004077767999660864
+        }
+      }
+    },
+    {
+      "case_id_sha256": "38b3e2d3dc1deb507cbfa545d6e0453d3a41fa022854693637eab94e8910d48b",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.010964533000333176
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.005620935000479221
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003629802999967069
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004990424000425264
+        }
+      }
+    },
+    {
+      "case_id_sha256": "3904e129b215e77678bc2bdd0f9ed199a87c898dedc05cd2bd9e4131b1a944a9",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.021186375000070257
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.019552101999579463
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00438791700071306
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0038714869997420465
+        }
+      }
+    },
+    {
+      "case_id_sha256": "3f0823789b67a6155106c447a0f8f2bff0df79532762ca5411a407d8b4d4dde5",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01701093999963632
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.011408092000237957
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00535503500032064
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.009561908000250696
+        }
+      }
+    },
+    {
+      "case_id_sha256": "409ec3d94e3fb69de9b3e02510a8a94f722036f9683c0e5779b687446f4693be",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.015741925999464
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.009753165999427438
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003312825000648445
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.050669350999669405
+        }
+      }
+    },
+    {
+      "case_id_sha256": "40b883eeb8aa5ac13a155d0dd13a6f52f02e90c27f57fad82f73d876e4f66ad9",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.016564856000513828
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.021720709999499377
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004992076999769779
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0055999239993980154
+        }
+      }
+    },
+    {
+      "case_id_sha256": "42c651a58a44a88e1547cfac56b198e3c620f3dd69cf7e13b074d610eabd5a8d",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.019434503999946173
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.01588211800026329
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005249174999335082
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0050278509997951915
+        }
+      }
+    },
+    {
+      "case_id_sha256": "44142c5f5ba2ab6598cf4ed172785c44319e5317c7be9e80526a01f6b2ed5f17",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.018567977000202518
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.01234085799933382
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005730109000069206
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004441566999958013
+        }
+      }
+    },
+    {
+      "case_id_sha256": "4799c2e0e1fd49626c67a8745c4da0add3da9204db87c3a3580475d1d8a72417",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 4.007486962000257
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.015385257999696478
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005160310000064783
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004723242000181926
+        }
+      }
+    },
+    {
+      "case_id_sha256": "47cd65d3aa5f109e2734ea4284dfd7a16dfb1ff2312902a6428ba00e02eff88f",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01248140100051387
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.004387205000057293
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004701047999333241
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00395150799977273
+        }
+      }
+    },
+    {
+      "case_id_sha256": "485d8b7863c94dfa3d0fdc432f7792658e5a4e585973014c123e49da82181b41",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01053791899994394
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.005114171000059287
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004525733999798831
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005869540000276174
+        }
+      }
+    },
+    {
+      "case_id_sha256": "4b9931a830fa1c7f0ad35fcde7d0fc821382bfed0a5293c7b8d28d98c733509a",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.011974344000009296
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.00828816699959134
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005402837000474392
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005530188000193448
+        }
+      }
+    },
+    {
+      "case_id_sha256": "4c206119e4024b7c06b29c596631ea4d421d7b2965db941537c0d6899bf8ed72",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.016933332000007795
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.019669678000354907
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.009556370000609604
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0040826759995979955
+        }
+      }
+    },
+    {
+      "case_id_sha256": "4c580fe4e0ac85e8352ffb52f592a14283841e0e57b102cbde2b223710203943",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.03471777899994777
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.01727098199989996
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0041582599997127545
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004086080999513797
+        }
+      }
+    },
+    {
+      "case_id_sha256": "4df8d43f6302c2016530faa565376bf107706ee471363c9ee0587750bdda768b",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.02522798999962106
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.01261150499976793
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004423610000230838
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005241142999693693
+        }
+      }
+    },
+    {
+      "case_id_sha256": "4e94552c7d3f66fbd6e6fdf312fea6acd611bde452136512ad610994a2a9320e",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.016494131000399648
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.016463023999676807
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004139422000662307
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004120472999602498
+        }
+      }
+    },
+    {
+      "case_id_sha256": "502d5fae24cff22d6afa1d3c940d6a215da77771be5c4524042e43d5c77b95e1",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.03793348799990781
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.01989224400040257
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0046968120004748926
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00549509600023157
+        }
+      }
+    },
+    {
+      "case_id_sha256": "50f94ea71c9fc6a3abd29ff010cd381234a4db32fa708174065299cfd0b6eebc",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.017453407000175503
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.01079963400025008
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003837746999124647
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0048468079994563595
+        }
+      }
+    },
+    {
+      "case_id_sha256": "5279ed368ca2296fd68f8c5d3314e67508a85c257a3fa4d74d95a76f7248ee25",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.024309283999173203
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.019504148000123678
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003428909999456664
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004018980000182637
+        }
+      }
+    },
+    {
+      "case_id_sha256": "59ff53ecf3b17a9c970fb21fefcee6910321041bc9246929c74f249f247f63d7",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.027188965999812353
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.02204609700038418
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004776511999807553
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0042431080000824295
+        }
+      }
+    },
+    {
+      "case_id_sha256": "5c1f87c37cb79bd98aa0402528bab863c74def6875e3f91fdd29bfec73bc1710",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01600955000048998
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.019734126000003016
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004512994999458897
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0050986579999516835
+        }
+      }
+    },
+    {
+      "case_id_sha256": "5e4d2d4ee16f9c2014cea4404a47dcc0ceecfc8dceba91536fc1c55006c69cd4",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.016789826999229263
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.013119231000018772
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003500368000459275
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00406782300069608
+        }
+      }
+    },
+    {
+      "case_id_sha256": "5ec0c79521121f33d1d44faef424752457fcbccddc91ac761e96d3d1ec26c1ff",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.027258510000137903
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.02141107399984321
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0042495780007811845
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005121872999552579
+        }
+      }
+    },
+    {
+      "case_id_sha256": "5f7b615f26178791e86fb4898bc5920372c8551800967161982535beb6ca03cc",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.02022743999987142
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.015675505000217527
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004716812000879145
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00491071499982354
+        }
+      }
+    },
+    {
+      "case_id_sha256": "60727a21d4423c80239ba552cde5b0306f2615f977652b04c2a59016063cf5cb",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.012950516999808315
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.007169499999690743
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003648610999334778
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004489419000492489
+        }
+      }
+    },
+    {
+      "case_id_sha256": "61f8b11e140a09596e6b1727bb291694f46bdaaa8339c1c75f7ea36d9c5c836b",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.017107506000684225
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.010369515000093088
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0036740289997396758
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0065605420004430925
+        }
+      }
+    },
+    {
+      "case_id_sha256": "6280049b4392ce47ecb4865b4a15580ed87892245cdc4989e44cf53aa82517d5",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.030767461999857915
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.02801404999991064
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004571864000354253
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005594625999947311
+        }
+      }
+    },
+    {
+      "case_id_sha256": "63abb79bbd731d3cbc06faf982522bb76dedf813447cf358a46f456574224dc2",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.021247687000141013
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.013578883999798563
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0042645109997465624
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004188225000689272
+        }
+      }
+    },
+    {
+      "case_id_sha256": "66f0a0646e0bbe88d9d319d5ea6e28349af5d2b1b07ebc89619cd97a3e534b3f",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.012060453999765741
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.006466069999987667
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0035329780002939515
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004823162999855413
+        }
+      }
+    },
+    {
+      "case_id_sha256": "6766dc7522973b64bda3f52718d23922432921d724735c2bd8ca0c9a289b8ec1",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.012663113000598969
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.009199791999890294
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.006663997999567073
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0054612140002063825
+        }
+      }
+    },
+    {
+      "case_id_sha256": "6782c8aa68ac78b7bf1149966dfe110efe3069990a2ce90be7cb8214da616ccd",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.019013048000488197
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.012620819999938249
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004580957999678503
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00346834999982093
+        }
+      }
+    },
+    {
+      "case_id_sha256": "67ce7b3893aa26db14348aa6d07f7dd2f30bdc0097460f7ef025ddca0d430e47",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.020833163000133936
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.014773454999158275
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004318530999626091
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005208853999647545
+        }
+      }
+    },
+    {
+      "case_id_sha256": "693f3a0d3b2f87c57d4269f60f2113f10ffa023a77b8259464822492ca9c2e8d",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.011812491000455339
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.0082230289999643
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00475555000048189
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003811648000009882
+        }
+      }
+    },
+    {
+      "case_id_sha256": "6bf9574ed481d76515cac69fa0d11cd23c43e3eef9bd4201a656efea021be15b",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.024776948999715387
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.014208745000360068
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0038760349998483434
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00559521700051846
+        }
+      }
+    },
+    {
+      "case_id_sha256": "6f114fa9be6a342e4b94d1de421778042ac10acd5a4b10065d72fcabf55eee2d",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.029910750000453845
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.022773067000343872
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0039046580004651332
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0061263570005394286
+        }
+      }
+    },
+    {
+      "case_id_sha256": "6fe0390d666bd8dc20618bb762dceda1743eb86a7b50413c0a254217aefaa18d",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.012495551999563759
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.007898309999291087
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.06671032800022658
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0055875959997138125
+        }
+      }
+    },
+    {
+      "case_id_sha256": "708dc671685ef4758e78509402b3802182bc44d5a84c310f33f3dd47bd8aad81",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.012428660000296077
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.01036503800060018
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003959991000556329
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005338850000043749
+        }
+      }
+    },
+    {
+      "case_id_sha256": "71cecb6e6d0e9cfb1924e8303972dd317710cdfc0d2a9c5d01e1617e667dd23e",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.016210642000260123
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.013259061999633559
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0034799869999915245
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0041580199995223666
+        }
+      }
+    },
+    {
+      "case_id_sha256": "763cda8665e7eb3d46a621c931215b37178e60c8210d34c8ea7e308e2a9a194a",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.015205607000098098
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.014420323000194912
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004250132999914058
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004376759000479069
+        }
+      }
+    },
+    {
+      "case_id_sha256": "766668166010fada94fb5cb40883bb51883397da9723207815f28e15328fa8ac",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.021820853000463103
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.013370702000429446
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0041574990000299294
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0039004119998935494
+        }
+      }
+    },
+    {
+      "case_id_sha256": "77d328527896f3757fd2d819449eacb5717fed9a6a222330cb6393b4b5623e19",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.08459847099948092
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.026272044000506867
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004803603000254952
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.006023533000188763
+        }
+      }
+    },
+    {
+      "case_id_sha256": "78749d2afb3efd9af487abf25d77f612fc7c71e1163db6dc7b770eb8aecbdfaf",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01254750999942189
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.00941599900033907
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005477628999869921
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004075886000464379
+        }
+      }
+    },
+    {
+      "case_id_sha256": "78bf9e706e5363b7c3960096746d4583d6347d596a3bbf01de0330e8ec6489d4",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.020539750000352797
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.014274383999691054
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004644743000426388
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004328527000325266
+        }
+      }
+    },
+    {
+      "case_id_sha256": "7f4ff16520358ee27ff17e1891fb0617e61a1422c0aa57944ded5dbbe533de38",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.015814715000487922
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.03113198199935141
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003959501000281307
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004401407000841573
+        }
+      }
+    },
+    {
+      "case_id_sha256": "8137f558a4cf30298650dbde36fdc71335d06e28af4ac12d1916b111111776e4",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.02254690599966125
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.023921550000522984
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004503891000240401
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004440454999894428
+        }
+      }
+    },
+    {
+      "case_id_sha256": "821c96ca7af2d91b367adea0fb110bab29fedda9f79cdee7248020b9b90da47b",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01829018900025403
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.013390551000156847
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004474446000131138
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005564750999837997
+        }
+      }
+    },
+    {
+      "case_id_sha256": "827c1abf0b97a99ef11af5a86441ac190c7d5e278a4c4348baf1ac49d2abc260",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.02500414299993281
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.019534353999915766
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005224728000030154
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005004937000194332
+        }
+      }
+    },
+    {
+      "case_id_sha256": "87d169b8364b903c6435cab9d75a3ba689d52b83ffbc54be325fe66566ce25f4",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.03387364599984721
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.030706098999871756
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004987549999896146
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00529010699938226
+        }
+      }
+    },
+    {
+      "case_id_sha256": "898c722c8c2cd0a03c813de24a8c21053982bdf1514efdc824c1c7a856f543b0",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01244704799955798
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.009310637999988103
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.007665849000659364
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0050203189994135755
+        }
+      }
+    },
+    {
+      "case_id_sha256": "8b142f20fe1ee4677fae9da43ae4d86a166274f35f2337ade8e30492a7cd1b4a",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.014265089000218723
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.008175752000170178
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005739863999224326
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.007621616000506037
+        }
+      }
+    },
+    {
+      "case_id_sha256": "8e42b194056e38db5410489673d58a6b4d7983033a3ebb9988e7bef8b6cfb857",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.012192483999569959
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.009755368999321945
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003965730000345502
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0037355719996412518
+        }
+      }
+    },
+    {
+      "case_id_sha256": "90bd9a9447e4cbf8ba86408e21ffc342927742cc647debe071178fe40f9c1a4b",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01746691800053668
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.018985917000463814
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004080321999936132
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005491779999829305
+        }
+      }
+    },
+    {
+      "case_id_sha256": "9107efecc7b69eaa87a08b4c4b64bb2eef0415213cabc7fab5b17f8993837cb9",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.011825700999906985
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.007024973000625323
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00464626600023621
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005065758000455389
+        }
+      }
+    },
+    {
+      "case_id_sha256": "91b2ce1d832068877535e99547b77a0569c45c7a81a3b94164dcdb848f65442d",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.014406132000658545
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.01792821199978789
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004873784000665182
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005188503999306704
+        }
+      }
+    },
+    {
+      "case_id_sha256": "92769b9aab85af4bf49ba96c70ecd12d760c4da911c579a29a0baeae9c0940ac",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01961074899918458
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.019460423000055016
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0049233839999942575
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005508375999852433
+        }
+      }
+    },
+    {
+      "case_id_sha256": "99d94ec5022d9f5c26caff26ec52863031e759eba5da2499ae368c0bb5629417",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.017067654999664228
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.012172614999144571
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0035588749997259583
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0042197630000373465
+        }
+      }
+    },
+    {
+      "case_id_sha256": "99e85c43d1c021eba022ff2fe08d32b38e8e9e6d463e36fb158868e5ce02ed3d",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.011354811000273912
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.010451809000187495
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0048907549999057665
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004856653000388178
+        }
+      }
+    },
+    {
+      "case_id_sha256": "9c81e184e1d21d931af75b30a71649758375f5f9829ae353800d2db3257086e7",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 4.008379568000237
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.012618595999811077
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004905486000097881
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0051927190006608726
+        }
+      }
+    },
+    {
+      "case_id_sha256": "9ca43a1a71d8b1c56bd67a84ad5a731c778e6c07d1cbeeb460dee50b858f14ee",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.02952156399987871
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.01686470000004192
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004735120000077586
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005497289000231831
+        }
+      }
+    },
+    {
+      "case_id_sha256": "9d42c181dd5916af5b02317353a57807677bed6fef6eeea9617b0af81c1077a0",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01773769200008246
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.00823548700009269
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004917405000014696
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00516136300029757
+        }
+      }
+    },
+    {
+      "case_id_sha256": "9f21f027ec876710fe0079b5b017e8b1d5f33889089fa81d99880a2b4b990bc0",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.02443710699935764
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.02009209500010911
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005232860000432993
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005141462000210595
+        }
+      }
+    },
+    {
+      "case_id_sha256": "a04e61631269d20ea74392733601bebef1e38eb7518aa7afae3a6454a3ed74b6",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.027917503999560722
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.014604510000026494
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004749691999677452
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004275156000403513
+        }
+      }
+    },
+    {
+      "case_id_sha256": "a2c6f419785bb6a7254f5ffc3a8dd9d32ffc889221f1e62a469332fb8b1a6199",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0412178890001087
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.015422774999933608
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004846097999688936
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003839990999949805
+        }
+      }
+    },
+    {
+      "case_id_sha256": "a68d33f53f5550a1680daeb6f953d1c124d0e45911863707e9a1ac67e5e36703",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.013050288000158616
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.010462135000125272
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003663163000055647
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0061507840000558645
+        }
+      }
+    },
+    {
+      "case_id_sha256": "a755f4655d152cca71a25440607048e06189df333379adb6f45f0d418b173234",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.022461026999735623
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.013487465999787673
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004490580000492628
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00535739899987675
+        }
+      }
+    },
+    {
+      "case_id_sha256": "a7a1e50c9089b3bf1942d0c554b2a066f9519f57ca4883e389c4b127ad5bb61b",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01603171300030226
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.01736127700041834
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003646028000730439
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004893799999990733
+        }
+      }
+    },
+    {
+      "case_id_sha256": "a94ac4dacfd6adf4be77a3d5c3f5092e6b2808834efc5cbee52d1819faf2aec8",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.014758512999833329
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.013682451000022411
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003697755000757752
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005939284999840311
+        }
+      }
+    },
+    {
+      "case_id_sha256": "ae36569992fe647a885a5a585111a982c16635f5c8f8e6ec9cdfa4d94267802d",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01891930700003286
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.009529889000077674
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0036125769993304857
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005165829000361555
+        }
+      }
+    },
+    {
+      "case_id_sha256": "ae45e78afc82f192120b2cf6180481f614152366bb04247a90911e89175b782d",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.009290748999774223
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.00871762399947329
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00431258299977344
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005194201999984216
+        }
+      }
+    },
+    {
+      "case_id_sha256": "b047bd9f24eeac48b4b5489f1ed8f6111c95a185d11bae166fd85619ed8e2a94",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.019775447999563767
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.01823469400005706
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005099500000142143
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005201812000450445
+        }
+      }
+    },
+    {
+      "case_id_sha256": "b0dbe601e351d22175067cfbb81c957e9dd547b0001c484874b5923fc0f187c3",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.022372894000000088
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.01137025500065647
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0043659929997375
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00572821199966711
+        }
+      }
+    },
+    {
+      "case_id_sha256": "b11ea88cb6d31b978ef3cf64b544ebc239625e0328c7f38bd58ef1ec53446944",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.017078531999686675
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.00827305399980105
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0035626520002551842
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0048273990005327505
+        }
+      }
+    },
+    {
+      "case_id_sha256": "b2731b7a767c4d7cbfc691428587453b2a345d69ca425f2d2bbf51793893aef6",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.027087893000498298
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.018003485999543045
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00367318900043756
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005168343000150344
+        }
+      }
+    },
+    {
+      "case_id_sha256": "b29d713ffe708fd27d1594f48453ac2cc3b3f009b2aaaa14ff2c299dbbe5dc98",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.02088000500043563
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.020602245000191033
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003706368999701226
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0036722670001836377
+        }
+      }
+    },
+    {
+      "case_id_sha256": "b525b19f7b13fa62f1d7d55bd8e01cb86dbe84e9cbbaeb7064ca7ac250d60c04",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01948450999952911
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.015525800999967032
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004049015000418876
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004620876999979373
+        }
+      }
+    },
+    {
+      "case_id_sha256": "b5ae7089ce9c259c08dd80428fefee5f0a06d7e1fb5c1266e82db1c88ab9c8db",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.022838257000330486
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.015396854999380594
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003970487000515277
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004312312999900314
+        }
+      }
+    },
+    {
+      "case_id_sha256": "bd3a35a95b7443b8a88648152ecdb8dc4e5539207e53702ab783046fc7c03ce3",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.011514841999996861
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.010022442000263254
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005232240000623278
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004342948999692453
+        }
+      }
+    },
+    {
+      "case_id_sha256": "bdaf8728833f8497452979ec13bc453ae9cd572df9d2db2f2e9406ea8e69ee06",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.019133609000164142
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.013515237999854435
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0035558709996621474
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0041313589999845135
+        }
+      }
+    },
+    {
+      "case_id_sha256": "be1b606e1ea2bb2257a47579f04dc02e31f77849b01d2de4d4436ac3ae157fce",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 4.006883717999699
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.020360499999696913
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005415235000327812
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004326184000092326
+        }
+      }
+    },
+    {
+      "case_id_sha256": "c1053377466b2692161f3d0501955367573d998a3e1e984443034b86eaaaaaaf",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0110064960008458
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.011238375000175438
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004236658999616338
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003581811000003654
+        }
+      }
+    },
+    {
+      "case_id_sha256": "c1d5ca81c4bd1cc2078b7971544ed02f59bdc9e926cb0be875a6129be6dba95f",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.017589316999874427
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.009954128000572382
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0035296510004627635
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0038562249992537545
+        }
+      }
+    },
+    {
+      "case_id_sha256": "c4b3502b99674b8ea6db47fbb0a79b5995a52a3eabb721582ec64a3cfe8abb72",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.025147569000182557
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.012353758000244852
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0052271810000092955
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0047734569998283405
+        }
+      }
+    },
+    {
+      "case_id_sha256": "c74c3d15293ce61e9ff5724f438349c9e7d55b967e8584c436e2f987d8310215",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.012089888999980758
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.008045320999372052
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004870803999438067
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00518381700021564
+        }
+      }
+    },
+    {
+      "case_id_sha256": "c9f06f4f7acfa9ad02df73e0e126d4559b880c2ff8e53d1c63c411f04ffcec9c",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01749883599950408
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.019626815000265196
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00371006400018814
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0044203750003362074
+        }
+      }
+    },
+    {
+      "case_id_sha256": "caf40a65923e637041b15debdecff4419dee3b4727f0f8369c86ccc72c6135ff",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.03793841500009876
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.023875911000686756
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005236825000793033
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00421448499946564
+        }
+      }
+    },
+    {
+      "case_id_sha256": "cc2e6698b6821a649a6c570fa652b5439e393975da91fc0f657bf1391c108c9c",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.014921870000762283
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.009953478000170435
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004067923000548035
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.06557302300006995
+        }
+      }
+    },
+    {
+      "case_id_sha256": "cd000049ad30ea54fc63bb81c5a799aa7397a80ab49c21bb22c7ca0cde395cc6",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.015553631999864592
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.012465435000194702
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005060380000031728
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004180573999292392
+        }
+      }
+    },
+    {
+      "case_id_sha256": "ce2765af8fed5aee2bc224dbaa88ec0295b7ff69eb482e01f820722dae1e1c3d",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01809133799997653
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.013387875999796961
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005230126000242308
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00519334999989951
+        }
+      }
+    },
+    {
+      "case_id_sha256": "ce926540dbc02da1e550e08652bf47ea688f2488d4dde435889b64bccf442eb4",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.019725391999600106
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.02009784399979253
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.006026015999850642
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005294133000461443
+        }
+      }
+    },
+    {
+      "case_id_sha256": "d33bad3504a643e8eea14ef77880f16560768bd60076bdc26fcc21df5b423ad4",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.007935855999676278
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.004030818000501313
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004905836000034469
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004938707000292197
+        }
+      }
+    },
+    {
+      "case_id_sha256": "d43f368a28ac7d734e93cb67be44dd8407e78b365fb92ec296826b8a52d7b098",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.01799355999992258
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.014752483999473043
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004991996999706316
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004024498000035237
+        }
+      }
+    },
+    {
+      "case_id_sha256": "d5c550a52b98961d536d5012e0d7616008e1590028313ce96db7b5d73dedb0db",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.020249813000191352
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.039682294000158436
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004197654000563489
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0050331200000073295
+        }
+      }
+    },
+    {
+      "case_id_sha256": "d6f7aa24925e57768cc2358cdaa45b608ba72e0a3af1b4911cf2c3137b1d7776",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.012890396999864606
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.010160520000681572
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0036454159999266267
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005123896999975841
+        }
+      }
+    },
+    {
+      "case_id_sha256": "d82fe9fda4f7bae7b8565c17c7de5540dc4611a5c8a62e2a46ab09f91db73158",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.017572001999724307
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.009671963000073447
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003841200999886496
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0038879820003785426
+        }
+      }
+    },
+    {
+      "case_id_sha256": "d93ff8568ed04f8a3bed9c7be5646695bd647ec3b859a2f342fb0e60ec671e3e",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.013620302999697742
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.03558275300019886
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003357030999723065
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005292351000207418
+        }
+      }
+    },
+    {
+      "case_id_sha256": "da00a576cac93baec68c34e5e9b7317d6e9edb007f414bb1a3b7303478a69fd2",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.013258973000120022
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.011078414000621706
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0041265919999204925
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00426371800040215
+        }
+      }
+    },
+    {
+      "case_id_sha256": "dac0cd9ec467cd319a15a3556008e098efaaaf468a4745e234f0a9e883d6319b",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.021510493000278075
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.016405114999543002
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004864425000050687
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0038757340007578023
+        }
+      }
+    },
+    {
+      "case_id_sha256": "db1b912df6e3d5eeacce8bf3df7a7f063e782685e134b3a1cdcc47b0ec3af76b",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.008040683999752218
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.0072179720000349334
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004560446000141383
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005914697999287455
+        }
+      }
+    },
+    {
+      "case_id_sha256": "dea5b481995cd82f619ecc086f4dbc46055eef8c625d54a7211558928fe04dfa",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.020615594000446436
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.016346587999578333
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004509008999775688
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.006250524000279256
+        }
+      }
+    },
+    {
+      "case_id_sha256": "debee80571192ceb1f99580f07de697d34b51a9d67edcf397896c1366e466297",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.03687151600024663
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.0200489099997867
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0035950009996668086
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.006031834999703278
+        }
+      }
+    },
+    {
+      "case_id_sha256": "dfd475b54a5ec9cfb437016bc3d6cde4d011fc79722c0e8a3f65db316f847bc9",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.019562576999305747
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.014512331999867456
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.006020708000505692
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004170789000454533
+        }
+      }
+    },
+    {
+      "case_id_sha256": "e0d4a221e6a426eb15252e4380c968745b02412eaa284a79ce03763645a0c9c9",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.02056243400056701
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.01605946400013636
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0037165639996601385
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005386562000239792
+        }
+      }
+    },
+    {
+      "case_id_sha256": "e66712c76ad0fa4dcfbae5239e85b73c1123c12ae8f31d4301e8f290b8cd8349",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.016883308000615216
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.010255152999889106
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0047493010006292025
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005398320000495005
+        }
+      }
+    },
+    {
+      "case_id_sha256": "e762ad9fd7ec21dad9c4a56e23057800e6f0c869f568b47b3b6bcf8ed48cb92a",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.012625947999367781
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.008631583999886061
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0037991480003256584
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0054675040000802255
+        }
+      }
+    },
+    {
+      "case_id_sha256": "e855c8736fdd39bfca0ffca70bcd20e8dfc6c286fa68f769eb7094dc92099f60",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.017662040999312012
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.009766665999450197
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004784644000210392
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0037533390004682587
+        }
+      }
+    },
+    {
+      "case_id_sha256": "e8be655d29ff08df7c6c372833c3769aa04f5d037b284a4989dcd46a2881b8dc",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.013082767000014428
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.005988009000247985
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003979339999204967
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004380825000225741
+        }
+      }
+    },
+    {
+      "case_id_sha256": "ed92f6bf932a0084c0a70ade88c7e8d2a05aee342fe252c5a9ffd43114973b95",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.028788287999304885
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.02357008999933896
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003674279999358987
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.011033316000066407
+        }
+      }
+    },
+    {
+      "case_id_sha256": "f150c6a6bc6e8dff7893757eb9bb7a71712704b8c073db76af999d32e074c124",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.010244917999443715
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.0069146770001680125
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004903863999970781
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005186059000152454
+        }
+      }
+    },
+    {
+      "case_id_sha256": "f16814d7f87b624a7f8d84dd0b4d6ad59ad2cbaf6b4315d1af58d0f5ef68aa44",
+      "category": "single-session-assistant",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.016169880999768793
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.010627974999806611
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004194965000351658
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0054256009998425725
+        }
+      }
+    },
+    {
+      "case_id_sha256": "f25759f32bca34e191083dcf2c902db33d805497a13aa4fc1a495dfa360aca60",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.03938640900014434
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.022339293000186444
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003976064999733353
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005416857999989588
+        }
+      }
+    },
+    {
+      "case_id_sha256": "f4ddbf03023eacaa8fae31a3f1723f018a801184fae4f82435625beaddecd1f3",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.039183902999866405
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.023420593999617267
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004783932999998797
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003881612999975914
+        }
+      }
+    },
+    {
+      "case_id_sha256": "f60d877f576187139f046b3e0abde3db7b1b9e938a42ef371225cc6f10c9e30c",
+      "category": "multi-session",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.025777097000172944
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.020388052000271273
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0035430219995760126
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004483109999455337
+        }
+      }
+    },
+    {
+      "case_id_sha256": "f7c6b941b12a5bb4092f3c00a2e09305c4be4f66d74e83b7080de1cff3fb0633",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.02353935300016019
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.012047385999721882
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003908363999471476
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005104114999994636
+        }
+      }
+    },
+    {
+      "case_id_sha256": "f89c35568865562794929090c58ccfbbacf2fd87eeec5719b9abf44945de3e97",
+      "category": "knowledge-update",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.019070465999902808
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.009725845000502886
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004879275999883248
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003784647000429686
+        }
+      }
+    },
+    {
+      "case_id_sha256": "f9dc5c2089d4dc148a834f070ef403c9210ee4aa9ffeb93c441d2f2fd1b36c68",
+      "category": "temporal-reasoning",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.03622253699995781
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.020322112000030756
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004881740999735484
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003994212999714364
+        }
+      }
+    },
+    {
+      "case_id_sha256": "fb8e4ec646f49d62328f4b7e490123ad395cc065f82d0e1e8b2db97c00ab5a1a",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.022600156999942556
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.020046966999871074
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.003953811999963364
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004187913999885495
+        }
+      }
+    },
+    {
+      "case_id_sha256": "fd14cb14ca42ac1a3cf62db82cccd352f30f11f88bdff02dc2ae1924410f339d",
+      "category": "single-session-user",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.011249062000388221
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.010356024999964575
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0049595279997447506
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0043131729999004165
+        }
+      }
+    },
+    {
+      "case_id_sha256": "fe1ba46dc81cce50b1057aeefda1a033754c95acb9b04c464ba46663196fe5a8",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0219772179998472
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.014897834000294097
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0040715889999773935
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.00570202699964284
+        }
+      }
+    },
+    {
+      "case_id_sha256": "fe5674f92789594aea867ebf41160cbd2b37fbb18a7fdaabafcfb40e22f8814f",
+      "category": "abstention",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 4.0074135719996775
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.019321341999784636
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004613367000274593
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.005406592000326782
+        }
+      }
+    },
+    {
+      "case_id_sha256": "ffc28dcc4292ecaabcfaa59625d2706823b5b1e2955ab368309342a3d93904a3",
+      "category": "single-session-preference",
+      "arms": {
+        "main": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.017377171000589442
+        },
+        "candidate": {
+          "error": "ChunkFailure",
+          "extraction_failure_code": "ModelError",
+          "logical_calls": 1,
+          "physical_calls": 0,
+          "elapsed_seconds": 0.013070377999611082
+        },
+        "none": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.004570451000290632
+        },
+        "direct": {
+          "error": "ModelError",
+          "extraction_failure_code": null,
+          "logical_calls": 1,
+          "physical_calls": 1,
+          "elapsed_seconds": 0.0038217829996938235
+        }
+      }
+    }
+  ]
+}

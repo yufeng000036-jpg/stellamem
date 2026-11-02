@@ -5,7 +5,6 @@ import contextlib
 import hashlib
 import io
 import json
-import resource
 import subprocess
 import sys
 import tempfile
@@ -16,6 +15,15 @@ from pathlib import Path
 
 def sha(text):
     return hashlib.sha256(text.encode()).hexdigest()
+
+
+def peak_rss_kib():
+    # ru_maxrss on a fork/exec child can retain the parent's high-water mark.
+    # Linux /proc is the actual worker's memory accounting.
+    for line in Path("/proc/self/status").read_text().splitlines():
+        if line.startswith("VmHWM:"):
+            return int(line.split()[1])
+    raise RuntimeError("worker RSS unavailable")
 
 
 def run(args):
@@ -54,11 +62,16 @@ def run(args):
                 )
                 saved = {"output": output, "seconds": time.monotonic() - started}
             except RuntimeError as exc:
-                saved = {"error": type(exc).__name__, "seconds": time.monotonic() - started}
+                saved = {
+                    "error": type(exc).__name__,
+                    "detail": str(exc),
+                    "seconds": time.monotonic() - started,
+                }
             path.write_text(json.dumps(saved))
             stats["physical_calls"] += 1
         stats["model_seconds"] += saved["seconds"]
         if "error" in saved:
+            stats["last_model_error"] = saved.get("detail", saved["error"])
             raise (
                 ModelOutputTruncated(saved["error"])
                 if saved["error"] == "ModelOutputTruncated"
@@ -195,7 +208,7 @@ def run(args):
                 result["extraction_failure_code"] = getattr(exc, "code", None)
                 result["elapsed_seconds"] = time.monotonic() - started
                 result.update(stats)
-                result["peak_rss_kib"] = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                result["peak_rss_kib"] = peak_rss_kib()
                 return result
     elif args.arm == "direct":
         for m in messages:
@@ -254,7 +267,7 @@ def run(args):
         result["error"] = type(exc).__name__
     result["elapsed_seconds"] = time.monotonic() - started
     result.update(stats)
-    result["peak_rss_kib"] = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    result["peak_rss_kib"] = peak_rss_kib()
     return result
 
 

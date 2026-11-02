@@ -8,6 +8,7 @@ import socket
 import subprocess
 import sys
 import time
+import threading
 import urllib.request
 from collections import Counter
 from pathlib import Path
@@ -15,6 +16,17 @@ from pathlib import Path
 from freeze import DATA_SHA, digest
 
 HERE = Path(__file__).resolve().parent
+
+
+def validate_preflight(payload):
+    choices = payload.get("choices", [])
+    if (
+        not choices
+        or not isinstance(choices[0].get("message", {}).get("content"), str)
+        or not choices[0]["message"]["content"]
+    ):
+        raise ValueError("health endpoint alone does not prove inference works")
+    return payload.get("usage", {})
 
 
 def normalized(value):
@@ -180,9 +192,9 @@ def main():
             "--port",
             str(port),
             "--ctx-size",
-            "65536",
+            "16384",
             "--parallel",
-            "4",
+            "1",
             "--threads",
             "8",
             "--threads-batch",
@@ -196,6 +208,24 @@ def main():
         stderr=log,
     )
     rows = []
+    memory = {"peak_server_rss_kib": 0}
+    sampling = threading.Event()
+    sampling.set()
+
+    def sample_memory():
+        while sampling.is_set():
+            try:
+                for line in Path(f"/proc/{server.pid}/status").read_text().splitlines():
+                    if line.startswith("VmHWM:"):
+                        memory["peak_server_rss_kib"] = max(
+                            memory["peak_server_rss_kib"], int(line.split()[1])
+                        )
+            except OSError:
+                pass
+            time.sleep(0.2)
+
+    monitor = threading.Thread(target=sample_memory, daemon=True)
+    monitor.start()
     try:
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
         deadline = time.monotonic() + 90
@@ -209,14 +239,40 @@ def main():
                 time.sleep(0.25)
         else:
             raise RuntimeError("local model readiness timeout")
+        request = urllib.request.Request(
+            args.endpoint + "/v1/chat/completions",
+            data=json.dumps(
+                {
+                    "model": "stellamem-eval",
+                    "messages": [
+                        {"role": "user", "content": 'Return the JSON object {"ready":true}.'}
+                    ],
+                    "temperature": 0,
+                    "max_tokens": 64,
+                    "stream": False,
+                }
+            ).encode(),
+            headers={"Content-Type": "application/json"},
+        )
+        with opener.open(request, timeout=120) as response:
+            preflight_usage = validate_preflight(json.load(response))
+        if server.poll() is not None:
+            raise RuntimeError("model died after inference preflight")
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
             tasks = [pool.submit(one, case, args) for case in selected]
             for future in concurrent.futures.as_completed(tasks):
                 rows.append(future.result())
+                if server.poll() is not None:
+                    for task in tasks:
+                        task.cancel()
+                    raise RuntimeError("model process exited during evaluation")
                 (args.work / "checkpoint.json").write_text(json.dumps(rows))
                 print(json.dumps({"finished": len(rows), "total": len(selected)}), flush=True)
         result = {
-            "protocol": "v1",
+            "protocol": "v2",
+            "runtime_profile": {"slots": 1, "context_per_slot": 16384, "threads": 8},
+            "preflight_usage": preflight_usage,
+            "memory": memory,
             "dataset_sha256": DATA_SHA,
             "baseline_sha": subprocess.check_output(
                 ["git", "-C", str(args.baseline), "rev-parse", "HEAD"]
@@ -237,7 +293,26 @@ def main():
             "cases": sorted(rows, key=lambda r: r["case_id_sha256"]),
         }
         args.out.write_text(json.dumps(result, indent=2) + "\n")
+    except Exception as exc:
+        args.out.write_text(
+            json.dumps(
+                {
+                    "protocol": "v2",
+                    "status": "INVALID_INFRASTRUCTURE_RUN",
+                    "error": type(exc).__name__,
+                    "detail": str(exc),
+                    "server_exit": server.poll(),
+                    "completed_cases": len(rows),
+                    "memory": memory,
+                },
+                indent=2,
+            )
+            + "\n"
+        )
+        raise
     finally:
+        sampling.clear()
+        monitor.join(timeout=2)
         server.terminate()
         try:
             server.wait(timeout=15)
