@@ -26,8 +26,9 @@ from security import contains_secret
 from storage import PROTECTED, Transaction, load_records, render_records, safe_path, writer_lock
 from store import INBOX, MemoryStore
 from cli_output import ensure_utf8_stdout
+from subjects import validate_subject
 
-EDITABLE = ("kind", "subject", "scope", "predicate", "value")
+EDITABLE = ("kind", "subject", "namespace", "scope", "predicate", "value")
 
 
 def _load_inbox(root):
@@ -89,7 +90,7 @@ def _apply_edits(record, args, root):
     for field in EDITABLE:
         value = getattr(args, field, None)
         if value is not None:
-            edits[field] = value
+            edits[field] = validate_subject(value) if field == "namespace" else value
     if not edits:
         return record, None
     updated = dict(record)
@@ -204,6 +205,8 @@ def cmd_approve(root, args):
             "evidence": decided_record.get("evidence", ""),
             "review_action": "approve",
             "edited": bool(edit),
+            "namespace": approved.get("namespace"),
+            "namespace_before_review": record.get("namespace"),
         }
     ]
     store.dirty.add(INBOX)
@@ -264,7 +267,9 @@ def cmd_edit(root, args):
         raise ValueError("candidate is not pending")
     updated, edit = _apply_edits(record, args, root)
     if edit is None:
-        raise ValueError("no fields to edit; pass --value/--predicate/--subject/--kind/--scope")
+        raise ValueError(
+            "no fields to edit; pass --value/--predicate/--subject/--namespace/--kind/--scope"
+        )
     if contains_secret(updated):
         raise ValueError("edit introduces a secret; refused")
     records[records.index(record)] = updated
@@ -276,6 +281,11 @@ def cmd_edit(root, args):
 def add_edit_flags(parser):
     parser.add_argument("--kind")
     parser.add_argument("--subject")
+    parser.add_argument(
+        "--namespace",
+        choices=("user", "persona", "viewer"),
+        help="explicit human classification; keeps the topic/person subject unchanged",
+    )
     parser.add_argument("--scope")
     parser.add_argument("--predicate")
     parser.add_argument("--value")

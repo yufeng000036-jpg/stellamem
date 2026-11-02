@@ -314,7 +314,17 @@ def canonical(value):
 
 
 def claim_slot(c):
-    return tuple(canonical(c.get(k)).casefold() for k in ("kind", "subject", "scope", "predicate"))
+    slot = tuple(canonical(c.get(k)).casefold() for k in ("kind", "subject", "scope", "predicate"))
+    if "namespace" in c:
+        from subjects import subject_of, validate_subject
+
+        # Explicitly classified topics cannot collide across namespaces. Keep
+        # legacy unclassified IDs stable; no automatic migration or inference.
+        namespace = validate_subject(c["namespace"])
+        if subject_of({"subject": c.get("subject")}) == namespace:
+            return slot
+        return ("namespace", namespace) + slot
+    return slot
 
 
 def claim_key(c):
