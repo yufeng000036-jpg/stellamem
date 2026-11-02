@@ -1,0 +1,22 @@
+# Gitleaks allowlist for Stellamem. Default rules are kept (useDefault);
+# nothing here disables a rule, a path globally, or the scan itself.
+#
+# Why this entry exists: commit 04208c0 introduced tests/test_privacy.py:56,
+# a detector fixture whose first token runs sequentially a-x (a textbook
+# synthetic string, not a random credential) and whose second token is
+# split in source and repeated-character at runtime. The current file no
+# longer contains either token contiguously, but gitleaks scans history,
+# so the old commit would still be flagged without this narrow entry.
+# The regex below is a pattern, not a credential value: it matches only
+# the sequential a-x shape, and only in that one test file's path.
+# No real credential is allowlisted here; a genuinely suspicious finding
+# must never be added to this file.
+title = "Stellamem gitleaks allowlist"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Synthetic detector fixture in tests/test_privacy.py only (sequential a-x token, verified in commit 04208c0)"
+paths = ['''tests/test_privacy\.py''']
+regexes = ['''sk-[a-x]{24}''']

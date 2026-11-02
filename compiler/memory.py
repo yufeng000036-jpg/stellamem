@@ -6,9 +6,11 @@ from pathlib import Path
 from config_loader import load_config
 from storage import Transaction, writer_lock, load_records, safe_path
 from store import FILES
+from cli_output import ensure_utf8_stdout
 
 
 def main(argv=None):
+    ensure_utf8_stdout()
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("doctor")

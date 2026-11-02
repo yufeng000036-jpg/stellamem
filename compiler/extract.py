@@ -11,9 +11,11 @@ from pathlib import Path
 from claim_normalizer import normalize_claim  # noqa: F401  (单一规范化实现的不变量锚点)
 from pipeline import build_user, compile_messages  # noqa: F401  (不截断原文的不变量锚点)
 from source_reader import read_daily
+from cli_output import ensure_utf8_stdout
 
 
 def main(argv=None):
+    ensure_utf8_stdout()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("daily", nargs="?")
     parser.add_argument("--from-raw", metavar="YYYY-MM-DD")

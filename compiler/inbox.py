@@ -25,6 +25,7 @@ from config_loader import load_config
 from security import contains_secret
 from storage import PROTECTED, Transaction, load_records, render_records, safe_path, writer_lock
 from store import INBOX, MemoryStore
+from cli_output import ensure_utf8_stdout
 
 EDITABLE = ("kind", "subject", "scope", "predicate", "value")
 
@@ -274,6 +275,7 @@ def add_edit_flags(parser):
 
 
 def main(argv=None):
+    ensure_utf8_stdout()
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     lst = sub.add_parser("list")

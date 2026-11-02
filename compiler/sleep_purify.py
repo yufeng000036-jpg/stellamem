@@ -10,6 +10,7 @@ from source_reader import content_hash, read_daily
 from security import check_security, contains_secret
 from storage import Transaction, atomic_write, safe_path, writer_lock
 from store import MemoryStore
+from cli_output import ensure_utf8_stdout
 
 CURSOR = "system/extraction-cursor.json"
 
@@ -94,6 +95,7 @@ def run(config, mode="review", llm=None):
 
 
 def main(argv=None):
+    ensure_utf8_stdout()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=["review", "observe"], default="review")
     parser.add_argument(

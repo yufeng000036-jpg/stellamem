@@ -8,6 +8,7 @@ from config_loader import load_config
 from security import contains_secret
 from storage import Transaction, safe_path, writer_lock
 from store import MemoryStore, FILES, INBOX
+from cli_output import ensure_utf8_stdout
 
 LEGACY = re.compile(r"(?m)^- \x60claim-id:([^\x60]+)\x60\s+\*\*(.+?)\*\*:\s*(.*?)\s*\(")
 ALIASES = {"pref": "preference", "dec": "decision"}
@@ -56,6 +57,7 @@ def plan(root):
 
 
 def main(argv=None):
+    ensure_utf8_stdout()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--yes", action="store_true", help="Apply reviewed import, keeping legacy originals"
