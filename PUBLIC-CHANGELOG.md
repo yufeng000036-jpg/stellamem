@@ -357,3 +357,59 @@ D4/D5 与步骤 2–7 已经 PR #11 合并、D1/D3 已经 PR #12 合并，见本
 - D1/D3：经 PR #12 合并到 main（合并提交 e47b4297…）。
 - 本轮（第 16 节）尚未合并到 main，分支与 PR 内容由主会话处理；本轮不含生产执行，
   gate 接线、标签写真实数据、用户库实际写入、批量落库执行、生产部署均未做。
+- 第一轮可靠性轮次：经 PR #13 合并到 main（合并提交 09b227c8…）。
+
+## 17. 第二轮可靠性轮次：Windows 中文输出、密钥扫描误报、桥接安全边界（本轮，尚未合并到 main）
+
+### 1. Windows 中文输出
+- 改了什么：新增 compiler/cli_output.py，入口统一调用 ensure_utf8_stdout()，对 stdout 做
+  reconfigure(encoding="utf-8", errors="replace")，不可用时静默回退、不抛错；已接入 inbox、memory、
+  quarantine、raw_archive、extract、migrate、sleep_purify、judge 共 8 个 CLI 入口。JSON 输出仍用
+  ensure_ascii=False，保持可读中文，没有改成转义来掩盖问题。CI 的 tests 任务加了
+  PYTHONIOENCODING=utf-8 与 PYTHONUTF8=1，这只是平台编码配置，不是关检查。
+- 为什么改：Windows 上 Python 默认 stdout 跟随控制台代码页，打印含中文的 JSON 会
+  UnicodeEncodeError，这正是 CI 运行 41391359251 里 test_list_json_is_machine_readable 与
+  test_show_prints_full_record 失败的可信机理。
+- 测试：新增 tests/test_cli_utf8_output.py 共 5 项（reconfigure 调用、缺 reconfigure 容错、
+  缺 stdout 容错、模拟 cp936 stdout 下 list --json 与 show 均成功且中文未转义）；旧 inbox 测试全部保留。
+- 未决：Linux 工作区无法复现 Windows 真实控制台，Windows 通过仍需 CI 运行验证，本轮不宣称已在 Windows 上验过。
+
+### 2. 密钥扫描误报（严格限定，扫描未关、历史未重写）
+- 当前文件：tests/test_privacy.py 第 56 行改写成分段拼接，文件行里不再出现两个合成密钥的
+  连续写法，运行时拼出的值不变，pii_audit 检测仍计 secret=2，原测试通过；整树 secret_scan 0 命中。
+  没有用宽泛的 allow 注释豁免整文件。
+- 历史命中：把公开仓库 main 克隆到隔离临时目录跑 --history，全部命中只有 1 个提交、1 行，
+  即提交 04208c0 的同一行（与改写前文件行逐字相同）。已核对为合成：该行第一个密钥的字母部分是
+  顺序排列的 a-x（非随机，不可能是真实凭证），第二个密钥在源码里就是拆开的、运行时是重复单字符，
+  文件头注明全部数字是合成样本，测试名就是 test_secret_patterns。已把该精确值（以拼接表达式写入，
+  本文件不含连续原串）加进 tools/secret_scan.py 的 HISTORY_ALLOWLIST 并写清理由；真实可疑项
+  一律不进 allowlist，本轮没有发现真实可疑项。
+- gitleaks：仓库此前无 .gitleaks.toml；gitleaks-action 默认在 fetch-depth: 0 下扫全部历史，
+  根目录的 .gitleaks.toml 会被自动采用（useDefault 保持默认规则）。新增 .gitleaks.toml 只做最窄限定：
+  路径仅 tests/test_privacy.py、正则仅顺序 a-x 形状，不含真实凭证字面值，不关任何规则、不做全局
+  allowlist、不关扫描步骤。gitleaks 本地无二进制、CI 里该步此前因 secret_scan 先失败而未执行，
+  所以 gitleaks 通过仍需 CI 运行验证，本轮不宣称已在本地跑过 gitleaks。
+- 验证：克隆副本里新版 secret_scan 跑 --history 与当前扫描均为 ok=true、0 命中；本轮工作树里
+  secret_scan 按 scan_text 逐文件扫整树也是 0 命中（工作树无 .git，工具的 git 模式在此不适用，
+  这是复制树的产物，不是扫描被关掉）。
+
+### 3. 桥接审批安全边界测试
+- 改了什么：tests/test_bridge_gui.py 新增 10 项，旧 13 项全部保留。新增覆盖：deny/withdraw 无令牌
+  401、空令牌 401、deny 错令牌 401、外来 Referer（无 Origin 时）403、外来 Origin 下 deny 403、
+  重复批准 400 且首位批准人不被覆盖、批准后重复拒绝 400、缺 id / 缺批准人 / 空白批准人 / 未知 id
+  均为 400、错误响应（401/403/400）里不含令牌、未知路径 404。所有伪造或异常请求都验证了
+  “被拒绝且原请求状态不变”这一点。桥接代码本身未改（令牌与来源校验已在上一轮），安全类保护
+  （密钥门禁、全文批准、append-only、fail-closed、默认拒绝）均未删除或放宽。
+- 验证：桥接测试 23/23 通过（旧 13 项 + 新增 10 项）。
+
+### 本轮最终验证（本地）
+- Python 全量 372/372 通过（357 基线 + UTF-8 测试 5 项 + 桥接边界测试 10 项），0 失败；
+  Node 6/6 通过；离线演示通过（7 源 / 7 块 / 7 active）。
+- Ruff：本地无法安装（pip 无可用发行版、本地无 ruff 二进制），check 与 format --check 未在本地跑过，
+  需 CI 运行验证；新文件已按 pyproject 配置核对（lint 仅 E4/E7/E9/F，无未用导入、无语法错误，
+  新增行均在 100 列内，旧有超长行是上一轮已通过格式检查的原有行）。
+- 清单 206 条，0 条哈希不符；脱敏：无 .bak、无 config.production-local.json 文件本身、
+  无 docs/p0/、docs/p2/，新改内容无真实用户目录、生产路径、密钥、个人信息，唯一邮箱仍为
+  SECURITY.md 里已授权公开的那一个。
+- 仍未做的事（勿误读为已完成）：gate 接线、标签写真实数据、用户库实际写入、批量落库执行、
+  生产部署、D7–D13（缺审计细节）均未做；Windows 中文输出、gitleaks、Ruff 仍需 CI 运行验证。

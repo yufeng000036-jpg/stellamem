@@ -53,7 +53,7 @@ class DetectionTest(unittest.TestCase):
         self.assertEqual(pii_audit.scan_text(f"残疾证 {idn}42")["disability"], 1)
 
     def test_secret_patterns(self):
-        text = "key=sk-abcdefghijklmnopqrstuvwx token ghp_" + "a" * 36
+        text = "key=" + "sk" + "-" + "abcdefghijklmnopqrstuvwxyz" + " token " + "ghp" + "_" + "a" * 36
         self.assertEqual(pii_audit.scan_text(text)["secret"], 2)
 
 

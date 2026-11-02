@@ -33,11 +33,18 @@ ALLOW_MARKERS = ("secret-scan: synthetic", "gitleaks:allow", "synthetic", "ficti
 # These are fabricated strings used to test the detector itself; no real credential
 # is present. Git history is intentionally not rewritten, so they are allowlisted by
 # exact value. Only add after verifying the value is fabricated.
+# The last entry is the detector fixture from tests/test_privacy.py:56, first
+# committed in 04208c0 and identical there to the pre-fix line: a token whose
+# letters run sequentially a-x (a textbook fixture, not a random credential),
+# next to a split, repeated-character token fixture, in a file whose header
+# states all numbers are synthetic samples. It is computed here, not written
+# as one contiguous string, so this file itself never contains the fixture.
 HISTORY_ALLOWLIST = (
     "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjMifQ.signature",
     "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
     "MIIEfakefakefake",
     "FAKEBODYLINE",
+    "sk-" + "".join(chr(ord("a") + i) for i in range(24)),
 )
 # A fabricated private-key body is only allowlisted when the surrounding block is
 # also present, so a real key header is never silently ignored.

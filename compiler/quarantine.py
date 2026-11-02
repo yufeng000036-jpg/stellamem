@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from storage import Transaction, load_records, render_records, safe_path
+from cli_output import ensure_utf8_stdout
 
 TARGET_FILES = [
     "core/preferences.md",
@@ -314,6 +315,7 @@ def restore(root, ids, batch="restore"):
 
 
 def main(argv=None):
+    ensure_utf8_stdout()
     parser = argparse.ArgumentParser(description="旧记忆隔离")
     parser.add_argument("command", choices=["plan", "apply", "verify", "restore", "list"])
     parser.add_argument(

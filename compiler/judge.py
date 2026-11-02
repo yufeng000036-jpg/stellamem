@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 from claim_normalizer import claim_slot, claim_key
 from model_client import call_llm, parse_json
+from cli_output import ensure_utf8_stdout
 
 RELATIONS = {
     "NEW",
@@ -63,6 +64,7 @@ def judge_relation(old, new, llm=None, config=None):
 
 
 def main():
+    ensure_utf8_stdout()
     import argparse
 
     parser = argparse.ArgumentParser(description=__doc__)

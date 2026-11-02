@@ -36,6 +36,7 @@ import re
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from cli_output import ensure_utf8_stdout
 
 SCHEMA = 1
 STREAM_DIR = "sessions"
@@ -559,6 +560,7 @@ def _iter_manifest(root):
 
 
 def main(argv=None):
+    ensure_utf8_stdout()
     parser = argparse.ArgumentParser(description="Stellamem 原始档案层")
     parser.add_argument(
         "command", choices=["ingest", "verify", "stats", "export", "forget", "orphans"]
