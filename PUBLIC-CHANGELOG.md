@@ -142,3 +142,14 @@
 - benchmark/ 下 5 个历史脚本中的 14 处旧项目路径（D:/Stellamem、E:/stellamem-p2、E:/stellamem-sandbox）已替换为相对占位路径（./stellamem-data、./stellamem-data-p2、./stellamem-data-sandbox）；其中无用户名、无密钥、无真实记忆内容，属清理遗漏，非新增泄露。
 - SECURITY.md 与 THREAT_MODEL.md 中残留的 v0.1.0-alpha 版本标注已统一为 v0.2.0-alpha，与本分支 README 一致。
 - 本次修复只改上述文件与清单，不改代码行为；修复后测试重跑结果见下。
+
+## 7. 合并前文档修订（2026-11-02，同一公开分支的第三提交，合并到 main 前最后一次修订）
+
+- README 新增“本版是什么（v0.2.0-alpha，2026-11-02）”一节：按组列出现在已有的全部功能
+  （记忆治理核心、时间与过期、注入安全、主体隔离与桥、人格事件与承诺、筛查与宿主），
+  并全量列出现在没有的功能与已知问题（D4/D5、D1/D3/D7–D13、标签只干跑、人格同步未实现、
+  桥无图形界面与 72 小时 TTL 低置信、语义检索未做、生产 pending 未激活、通用 Alpha 限制、量化口径）。
+- README“当前限制”一节同步追加本版新增的已知问题；CHANGELOG 新增 [0.2.0-alpha] 一节。
+- 本次修订只改文档（README、CHANGELOG、PUBLIC-CHANGELOG）与清单，不改代码行为与测试断言；
+  修订后测试重跑仍为 266 / 266，清单仍为 188 条。
+- 修订完成后，本分支合并到 main；main 此前为 v0.1.0-alpha，合并后 main 即为本版内容。
