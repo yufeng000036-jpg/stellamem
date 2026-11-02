@@ -54,6 +54,21 @@ def _num(item: dict, key: str):
     return number
 
 
+def _text(item: dict) -> str:
+    """Text of an item, without KeyError on a missing text field (D5).
+
+    A missing/None text is "" (not a crash); a non-string text is str()-ed.
+    Callers that legitimately pass only signals therefore do not kill the
+    whole injection because one item forgot its text.
+    """
+    value = item.get("text")
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    return str(value)
+
+
 def is_low_signal(item: dict) -> bool:
     """True when an item has no reliable signal, even if weak=False.
 
@@ -100,15 +115,38 @@ class InjectionGate:
         self.max_rotated = max_rotated
 
     def decide(self, bundle, query=None, allow_weak=None) -> dict:
+        """Decide what to inject, with honest blocked counts (D4) and no
+        KeyError on a missing text field (D5).
+
+        Count semantics (all counts are about items actually blocked, i.e.
+        not injected, unless stated otherwise):
+        - blocked_weak: weak-flagged items actually blocked. It used to
+          count every blocked item, which mislabelled low-signal blocks
+          as weak blocks (audit D4).
+        - blocked_low_signal: non-weak low-signal items actually blocked
+          (overlap/semantic/score gave no reliable signal).
+        - blocked_total: blocked_weak + blocked_low_signal.
+        - blocked_low_score: legacy alias kept for existing callers/tests;
+          it counts blocked_low_signal (non-weak low-signal blocks), NOT
+          only score < LOW_SCORE items. The name is historical; use
+          blocked_low_signal for new code.
+        The log entry additionally keeps blocked_low_score_total (all
+        non-weak low-signal items judged, even when allow_weak injects
+        them) and blocked_low_score_only (same count, but 0 when
+        allow_weak, because then nothing is blocked).
+        The empty-result note names the actual composition instead of
+        calling every blocked item "weak" (audit D4).
+        """
         allow = self.allow_weak if allow_weak is None else allow_weak
         strong = [i for i in bundle.get("items", []) if not is_low_signal(i)]
         blocked = [i for i in bundle.get("items", []) if is_low_signal(i)]
-        low_score_only = [i for i in blocked if not i.get("weak")]
+        non_weak_blocked = [i for i in blocked if not i.get("weak")]
+        weak_blocked = [i for i in blocked if i.get("weak")]
 
         injected, blocked_out = list(strong), []
         if blocked:
             if allow:
-                injected += [dict(w, text=w["text"] + WEAK_LABEL, low_confidence=True)
+                injected += [dict(w, text=_text(w) + WEAK_LABEL, low_confidence=True)
                              for w in blocked]
             else:
                 blocked_out = list(blocked)
@@ -120,14 +158,33 @@ class InjectionGate:
         else:
             decision = "empty"
 
+        # Counts about what was actually blocked, not about what was judged.
+        blocked_weak_count = len([i for i in blocked_out if i.get("weak")])
+        blocked_low_signal_count = len([i for i in blocked_out if not i.get("weak")])
+        blocked_total_count = len(blocked_out)
+
+        if decision == "empty" and blocked_out:
+            if blocked_weak_count and not blocked_low_signal_count:
+                note = "没有可靠结果：命中的都是已标记弱信号，已拦下，未注入上下文"
+            elif blocked_low_signal_count and not blocked_weak_count:
+                note = ("没有可靠结果：命中的都是低信号"
+                        "（未标记弱信号，但字面/语义/综合分不足），已拦下，未注入上下文")
+            else:
+                note = (f"没有可靠结果：命中的 {blocked_weak_count} 项已标记弱信号、"
+                        f"{blocked_low_signal_count} 项低信号，已拦下，未注入上下文")
+        else:
+            note = ""
+
         entry = {
             "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "query": query,
             "decision": decision,
             "injected": len(injected),
-            "blocked_weak": len(blocked_out),
-            "blocked_low_score_only": len(low_score_only) if not allow else 0,
-            "blocked_low_score_total": len(low_score_only),
+            "blocked_weak": blocked_weak_count,
+            "blocked_low_signal": blocked_low_signal_count,
+            "blocked_total": blocked_total_count,
+            "blocked_low_score_only": len(non_weak_blocked) if not allow else 0,
+            "blocked_low_score_total": len(non_weak_blocked),
             "allow_weak": allow,
         }
         self._write(entry)
@@ -136,12 +193,13 @@ class InjectionGate:
             "decision": decision,
             "inject": injected,
             "blocked": blocked_out,
-            "text": "\n".join(i["text"] for i in injected),
-            "note": ("没有可靠结果：命中的都是弱信号，已拦下，未注入上下文"
-                     if decision == "empty" and blocked_out else ""),
+            "text": "\n".join(_text(i) for i in injected),
+            "note": note,
             "injected": len(injected),
-            "blocked_weak": len(blocked_out),
-            "blocked_low_score": len(low_score_only),
+            "blocked_weak": blocked_weak_count,
+            "blocked_low_signal": blocked_low_signal_count,
+            "blocked_total": blocked_total_count,
+            "blocked_low_score": blocked_low_signal_count,
             "allow_weak": allow,
         }
 
@@ -196,6 +254,8 @@ class InjectionGate:
                 self.audit_path.parent.mkdir(parents=True, exist_ok=True)
                 line = (f"- {entry['at']}  gate  decision={entry['decision']}"
                         f"  injected={entry['injected']}  blocked_weak={entry['blocked_weak']}"
+                        f"  blocked_low_signal={entry['blocked_low_signal']}"
+                        f"  blocked_total={entry['blocked_total']}"
                         f"  allow_weak={entry['allow_weak']}"
                         f"  query={entry['query'] or ''}\n")
                 if not self.audit_path.exists():
