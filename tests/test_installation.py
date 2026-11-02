@@ -117,6 +117,47 @@ class InstallationTests(unittest.TestCase):
             )
             self.assertEqual(json.loads(content)[0]["value"], "fictional")
 
+    def test_legacy_autolog_is_opt_in_without_changing_host_config(self):
+        host = self.root / "host"
+        host.mkdir()
+        live = host / "openclaw.json"
+        live.write_text('{"existing":true}')
+        self.assertEqual(installer.main(self.args + ["--oc-root", str(host)]), 0)
+        snippet = json.loads((self.root / "report/openclaw.snippet.json").read_text())
+        internal = snippet["hooks"]["internal"]
+        self.assertFalse(internal["entries"]["daily-autolog"]["enabled"])
+        self.assertNotIn("enabled", internal)
+        self.assertTrue(
+            snippet["plugins"]["entries"]["stellamem-adapter"]["hooks"]["allowConversationAccess"]
+        )
+        self.assertEqual(live.read_text(), '{"existing":true}')
+
+    def test_sqlite_source_diagnostic_fails_without_opening_database(self):
+        host = self.root / "host"
+        self.assertEqual(installer.main(self.args + ["--oc-root", str(host)]), 0)
+        db = host / "agents/main/agent/openclaw-agent.sqlite"
+        db.parent.mkdir(parents=True)
+        db.write_bytes(b"fictional storage marker")
+        checks = installer.check_report(str(self.cfg), offline=True)
+        item = next(c for c in checks if c["name"] == "Host source capture")
+        self.assertEqual(item["status"], "FAIL")
+        self.assertIn("SQLite", item["cause"])
+        self.assertEqual(installer.main(["check", "--config", str(self.cfg), "--offline"]), 1)
+        self.assertEqual(db.read_bytes(), b"fictional storage marker")
+
+    def test_legacy_source_directory_alone_does_not_prove_capture(self):
+        host = self.root / "host"
+        self.assertEqual(installer.main(self.args + ["--oc-root", str(host)]), 0)
+        checks = installer.check_report(str(self.cfg), offline=True)
+        self.assertEqual(
+            next(c for c in checks if c["name"] == "Host source capture")["status"], "FAIL"
+        )
+        (host / "agents/main/sessions").mkdir(parents=True)
+        checks = installer.check_report(str(self.cfg), offline=True)
+        self.assertEqual(
+            next(c for c in checks if c["name"] == "Host source capture")["status"], "NOT_VERIFIED"
+        )
+
     def test_pointer_validates_content_speaker_and_rotation(self):
         sessions = self.root / "sessions"
         sessions.mkdir()

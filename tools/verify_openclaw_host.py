@@ -378,7 +378,32 @@ with storage.writer_lock(root):storage.Transaction(root).commit({'system/host-le
             Transaction(mem).recover()
         assert (mem / "system/host-right.json").read_text() == "right"
         turn("recovery_restores_actual_hook", expected=["amber studio", "legacy teal"])
+        probe = subprocess.run(
+            [
+                sys.executable,
+                str(repo / "setup.py"),
+                "check",
+                "--config",
+                str(root / "compiler.json"),
+                "--offline",
+                "--json",
+            ],
+            capture_output=True,
+            timeout=30,
+        )
+        capture = next(c for c in json.loads(probe.stdout) if c["name"] == "Host source capture")
+        sqlite_present = (root / "host/agents/main/agent/openclaw-agent.sqlite").is_file()
+        jsonl_present = (root / "host/agents/main/sessions").is_dir()
+        assert sqlite_present and not jsonl_present
+        assert probe.returncode == 1 and capture["status"] == "FAIL"
         report = {
+            "source_capture_acceptance": "NOT_MET: SQLite host; legacy autolog requires JSONL",
+            "source_probe": {
+                "sqlite_present": sqlite_present,
+                "jsonl_directory_present": jsonl_present,
+                "exit": probe.returncode,
+                "diagnostic": capture,
+            },
             "host_version": "2026.10.9",
             "kind": "REAL embedded OpenClaw CLI and before_prompt_build hook; deterministic local provider fixture",
             "not_measured": [
