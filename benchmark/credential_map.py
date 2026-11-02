@@ -1,6 +1,6 @@
 """离线凭证归属分析：只输出编号/位置/次数/时间/服务线索，不输出任何密钥材料。
 
-输出：D:/Stellamem/docs/p0/credential-map.json（供报告引用）
+输出：./stellamem-data/docs/p0/credential-map.json（供报告引用）
 """
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-OUT = Path(r"D:/Stellamem/docs/p0")
+OUT = Path(r"./stellamem-data/docs/p0")
 OLD_SHA = "4b82da1d6815dc343129d9ab623bff0a613636d193a3ad231736ace0534e3f01"
 KEY_RE = re.compile(r"sk-[A-Za-z0-9]{24,}")
 # 服务线索词（出现即视为上下文证据）
@@ -30,8 +30,8 @@ SERVICE_HINTS = {
 ROOTS = [
     Path(r"<USER_HOME>/.openclaw"),
     Path(r"<USER_HOME>/.workbuddy/projects"),
-    Path(r"D:/Stellamem"),
-    Path(r"E:/stellamem-p2"),
+    Path(r"./stellamem-data"),
+    Path(r"./stellamem-data-p2"),
 ]
 SKIP_DIR = {".git", "node_modules", "__pycache__", ".venv", "site-packages"}
 SKIP_EXT = {".enc", ".gz", ".zip", ".png", ".jpg", ".jpeg", ".webp", ".gguf",
@@ -49,7 +49,7 @@ def classify_file(p: Path) -> str:
         return "session-log"
     if "/workbuddy/projects/" in s:
         return "transcript"
-    if s.startswith("D:/Stellamem"):
+    if s.startswith("./stellamem-data"):
         return "project"
     if "/workspace/" in s:
         return "workspace"

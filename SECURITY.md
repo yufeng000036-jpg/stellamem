@@ -10,7 +10,7 @@ Stellamem 是一个 Markdown-first、Local-first 的 AI 长期记忆编译器。
 
 请通过私密渠道联系我们（安全邮箱：**2024981488@qq.com**），并提供：
 
-1. 受影响版本（当前 `v0.1.0-alpha`）；
+1. 受影响版本（当前 `v0.2.0-alpha`）；
 2. 复现步骤或 PoC；
 3. 影响范围评估；
 4. 如果你愿意，修复建议。
@@ -118,7 +118,7 @@ Stellamem 遵循 **Single Writer, Multiple Readers**：Memory Compiler 是 canon
 
 ## 当前已知限制（Alpha 阶段）
 
-以下是 `v0.1.0-alpha` 已知、尚未解决的安全边界，请在使用时知悉：
+以下是 `v0.2.0-alpha` 已知、尚未解决的安全边界，请在使用时知悉：
 
 | 限制 | 说明 |
 |---|---|

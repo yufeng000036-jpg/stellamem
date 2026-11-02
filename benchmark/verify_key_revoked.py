@@ -17,7 +17,7 @@ import urllib.request
 from pathlib import Path
 
 MEM = Path(r"<USER_HOME>/.openclaw/workspace/MEMORY.md")
-OUT = Path(r"D:/Stellamem/docs/p0/key-revocation-result.json")
+OUT = Path(r"./stellamem-data/docs/p0/key-revocation-result.json")
 URL = "https://api.deepseek.com/v1/chat/completions"
 
 

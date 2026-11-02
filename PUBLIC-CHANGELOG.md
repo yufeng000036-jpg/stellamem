@@ -136,3 +136,9 @@
   唯一邮箱为作者授权公开的联系方式，见 SECURITY.md。
 - 回滚：公开版如有问题，删除公开版目录、恢复 PATCH2 staging 包即可，
   公开版本身不写生产数据，无需生产回滚。
+
+## 6. 后续修复（2026-11-02，同一公开分支的第二提交）
+
+- benchmark/ 下 5 个历史脚本中的 14 处旧项目路径（D:/Stellamem、E:/stellamem-p2、E:/stellamem-sandbox）已替换为相对占位路径（./stellamem-data、./stellamem-data-p2、./stellamem-data-sandbox）；其中无用户名、无密钥、无真实记忆内容，属清理遗漏，非新增泄露。
+- SECURITY.md 与 THREAT_MODEL.md 中残留的 v0.1.0-alpha 版本标注已统一为 v0.2.0-alpha，与本分支 README 一致。
+- 本次修复只改上述文件与清单，不改代码行为；修复后测试重跑结果见下。

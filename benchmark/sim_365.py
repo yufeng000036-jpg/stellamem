@@ -21,7 +21,7 @@ import search as S
 from indexer import Index
 from storage import Transaction, load_records, render_records
 
-SANDBOX = Path("E:/stellamem-sandbox/sim365")
+SANDBOX = Path("./stellamem-data-sandbox/sim365")
 ROOT = SANDBOX / "memories"
 DB = SANDBOX / "index.db"
 VAULT = SANDBOX / "vault"

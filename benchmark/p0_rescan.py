@@ -15,14 +15,14 @@ import os
 import re
 from pathlib import Path
 
-OUT = Path(r"D:/Stellamem/docs/p0")
+OUT = Path(r"./stellamem-data/docs/p0")
 CODE_EXT = {".py", ".js", ".ts", ".ps1", ".bat", ".cmd", ".mjs", ".cjs"}
 TEXT_EXT = {".md", ".txt", ".json", ".yaml", ".yml", ".ini", ".cfg", ".env", ".csv", ".jsonl"}
 SKIP_DIR = {".git", "node_modules", "__pycache__", ".venv", "site-packages", ".obsidian"}
 MAXB = 64 * 1024 * 1024
 
 ROOTS = {
-    "project": Path(r"D:/Stellamem"),
+    "project": Path(r"./stellamem-data"),
     "workspace": Path(r"<USER_HOME>/.openclaw/workspace"),
     "sessions": Path(r"<USER_HOME>/.openclaw/agents"),
     "transcripts": Path(r"<USER_HOME>/.workbuddy/projects"),
@@ -50,7 +50,7 @@ def old_key() -> str:
     tmp = Path(tempfile.mkdtemp(prefix="p0key-"))
     out = tmp / "m.md"
     try:
-        subprocess.run(["node", r"D:/Stellamem/tools/vault.mjs", "unseal",
+        subprocess.run(["node", r"./stellamem-data/tools/vault.mjs", "unseal",
                         "--key", keyfile, "--in", str(enc), "--out", str(out)],
                        capture_output=True, text=True, timeout=60)
         mm = re.search(r"sk-[A-Za-z0-9]{24,}", out.read_text(encoding="utf-8", errors="ignore"))

@@ -14,7 +14,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-OUT = Path(r"D:/Stellamem/docs/p0")
+OUT = Path(r"./stellamem-data/docs/p0")
 OUT.mkdir(parents=True, exist_ok=True)
 
 PAT = re.compile(r"sk-[A-Za-z0-9]{24,}")
@@ -98,14 +98,14 @@ def main() -> int:
         (Path(r"<USER_HOME>/.openclaw/hooks"), "hooks"),
         (Path(r"<USER_HOME>/.openclaw/extensions"), "extensions"),
         (Path(r"<USER_HOME>/.dsh/memories"), "memories"),
-        (Path(r"D:/Stellamem"), "project"),
+        (Path(r"./stellamem-data"), "project"),
         (Path(r"E:/mem-backup-2026-10-31"), "backup"),
-        (Path(r"E:/stellamem-p2"), "p2-sandbox"),
+        (Path(r"./stellamem-data-p2"), "p2-sandbox"),
     ]
     for root, label in targets:
         if root.exists():
             walk(root, needle, label, rows)
-    git_hits(Path(r"D:/Stellamem"), needle, rows)
+    git_hits(Path(r"./stellamem-data"), needle, rows)
 
     # WorkBuddy 项目转录（会话记录）
     wb = Path(r"<USER_HOME>/.workbuddy/projects")
