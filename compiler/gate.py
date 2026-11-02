@@ -10,8 +10,10 @@
    可能送来没标 weak、但同样没有信号的条目（字面重叠 0 且语义 < MIN_SIM，
    或综合分极低），现在同样按弱信号拦下。阈值见 LOW_SCORE / MIN_SIM，
    文档化在模块常量里，不藏在调用方。
-2. 日志轮转：gate_log.jsonl 超过 1 MB 或 10,000 行时轮转，最多保留
-   3 个旧文件，轮转在写入当前条目前完成，当前写入永不丢失。
+2. 日志轮转：gate_log.jsonl 大小达到 1 MiB（1,048,576 字节）或行数达到
+   10,000 行时轮转，最多保留 3 个旧文件（.1/.2/.3），轮转在写入当前条目前
+   完成，当前写入永不丢失。阈值是“达到即轮转”（>=），大小与行数
+   用同一规则，不再是一边 > 一边 >=（audit D3）。
 """
 
 from __future__ import annotations
@@ -204,7 +206,12 @@ class InjectionGate:
         }
 
     def rotate_if_needed(self) -> bool:
-        """Rotate log_path before the next write if it is too big/long.
+        """Rotate log_path before the next write if it has reached a limit.
+
+        Rotation triggers when size >= max_log_bytes (1 MiB by default)
+        or line count >= max_log_lines (10,000 by default) -- 'reached',
+        not 'exceeded', for both (audit D3). At most max_rotated (3)
+        old files (.1/.2/.3) are kept; the oldest is dropped first.
 
         Order: .3 dropped, .2 -> .3, .1 -> .2, current -> .1.
         Returns True when rotation happened. The current write is never
@@ -216,7 +223,10 @@ class InjectionGate:
             size = self.log_path.stat().st_size
         except OSError:
             return False
-        needs = size > self.max_log_bytes
+        # D3: thresholds are 'reached' (>=) for both size and lines.
+        # Previously size used > while lines used >=, and the docs said
+        # 'exceeds 1 MB or 10,000 lines', which described neither exactly.
+        needs = size >= self.max_log_bytes
         if not needs and self.max_log_lines:
             try:
                 with self.log_path.open("r", encoding="utf-8", errors="replace") as fh:

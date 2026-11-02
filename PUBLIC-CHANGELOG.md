@@ -244,3 +244,48 @@
 - 本步完成后，整体完善方案第 0–7 步的代码部分全部落地为分支 PR；仍未做的事：
   gate 接线到生产调用方、标签写入真实数据、用户库实际写入、落库执行、生产部署，
   这些一律不在开源版内擅自做，需单独批准。
+
+## 15. 剩余审计项修复（D1、D3，本分支，尚未合并到 main）
+
+### D1：`as_of_paged(limit=None, offset)` 丢弃 offset —— 已修
+- 原问题（PATCH1 测试报告 §4 已写明）：`LIMIT/OFFSET` 子句只在 `limit is not None` 时拼接，
+  `limit=None` 时 offset 参数被完全忽略，调用方拿到的是从头开始的全部记录，而不是 offset 之后的部分。
+- 修复（`compiler/search.py`）：`limit=None` 且 `offset>0` 时拼接 `LIMIT -1 OFFSET ?`
+  （SQLite 的不限量分页形式），返回页恒为 `items[offset:offset+limit]`（`limit=None` 时为 `items[offset:]`），
+  `total` 仍为未分页总数；`limit=None` 的页本身已含 offset 之后全部记录，故 `truncated=False`。
+  `offset<0` 仍抛错，`offset` 等于或超过总数时返回 0 项、`truncated=False`。
+- 回归测试（`tests/test_d1d3.py`，合成占位数据）：`limit=None` + offset=50 与完整列表的后 100 项一致；
+  offset=0 为全量；offset=150/200 为 0 项；`limit=100` + offset=100 仍为 50 项。
+
+### D3：gate 日志轮转阈值措辞与运算符不一致 —— 已修（行为有 1 字节边界变化，如实写明）
+- 原问题：文档写“超过 1 MB 或 10,000 行时轮转”，但代码大小用 `>`、行数用 `>=`，
+  恰好 10,000 行时轮转、恰好 1 MiB 时不轮转，文档描述与两者都不完全相符；
+  “最多保留 3 个旧文件”与代码（.1/.2/.3，轮转前先删 .3）本身一致，不是问题。
+- 修复（`compiler/gate.py`，非仅改措辞）：大小阈值由 `>` 改为 `>=`，与行数统一为
+  “达到即轮转”：大小达到 1 MiB（1,048,576 字节）或行数达到 10,000 行时，在写入当前条目前轮转，
+  最多保留 3 个旧文件，当前写入永不丢失。边界变化只有一处：恰好 1,048,576 字节的文件此前不轮转、
+  现在轮转；这是 fail-safe 方向的收紧，无现有测试依赖旧边界（旧测试用 1.1 MB / 2 MB，均远超阈值）。
+- 文档同步（`compiler/gate.py` 模块文档与 `rotate_if_needed` 文档、README、docs/IMPROVED.md、
+  CHANGELOG-IMPROVED.md）：统一改写为“大小达到 1 MiB（1,048,576 字节）或行数达到 10,000 行”。
+  历史性的 PATCH1/PATCH2 报告与公开日志第 4 节保留原措辞不改写，视为历史记录。
+- 回归测试（`tests/test_d1d3.py`）：恰好 1,048,576 字节轮转、1,048,575 字节不轮转；
+  恰好 10,000 行轮转、9,999 行不轮转；轮转后仍最多 3 个旧文件、无 .4。
+
+### D7–D13：内容缺失，无法修复（不要误读为已修）
+- 仓库内搜过的地方：全文 grep `D7`–`D13`、`audit finding`、`audit-claims`（含全部 .md/.py/.txt，
+  排除清单文件本身）；`PATCH1-TEST-REPORT.md` §4、`PATCH2-CHANGELOG-脱敏版.md` §6 与 §8、
+  `PUBLIC-CHANGELOG.md` §4、README“本版是什么”与“当前限制”两节、`compiler/subjects.py`、
+  `tests/test_patch2.py`；仓库内无 `audit-claims.md`、无其他审计报告文件。
+- 搜到的唯一具体内容是 D13 的一处引用：`subjects.py` 注释与 `test_patch2.py` 的
+  `test_invalid_namespace_is_fail_closed`——现有的无效 namespace 不回退到 `subject`、
+  fail-closed 的实现与测试已在 PATCH2 存在，D13 的这一表现已覆盖；但 D13 原始审计文本不在仓库内，
+  无法核对 D13 是否还有除此之外的其他要求，故不能宣称 D13 已彻底修完。
+- D7、D8、D9、D10、D11、D12 在仓库内除“ D7–D13 边界/未修”这类笼统提及外，无任何具体描述、
+  无复现条件、无期望行为。按任务要求不瞎猜、不虚构修复：这六项及 D13 的其余可能要求
+  **均未修复**，需要拿到审计文档（`audit-claims.md` 或等效报告）后才能动手。
+- 本节之后仍未做的事（与此前一致）：gate 接线到生产调用方、标签写入真实数据、
+  用户库实际写入、批量计划落库执行、生产部署；本分支只改开源代码层。
+
+### 本分支校验
+- 测试：新回归测试 9 项全过，全量 347 / 347（基线 338 + 新增 9），0 失败。
+- 清单：SHA256SUMS.txt 已按本分支文件重新生成（见下），解压后 `sha256sum -c` 应全通过。

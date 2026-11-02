@@ -443,6 +443,16 @@ def as_of_paged(con: sqlite3.Connection, moment: str, subject: str | None = None
     Returns {"items", "total", "returned", "limit", "offset", "truncated"}.
     truncated=True exactly when total > offset + returned, so a caller
     can never again mistake a truncated page for the full replay.
+
+    D1 fix: offset is honoured even when limit is None. Previously the
+    LIMIT/OFFSET clause was only added when limit was not None, so
+    as_of_paged(limit=None, offset=50) silently returned all rows from
+    the start instead of rows 50... . Now an offset without a limit is
+    applied as LIMIT -1 OFFSET ? (SQLite's unlimited-page form), so the
+    returned page is always items[offset:offset+limit] (or items[offset:]
+    when limit is None), total is the unpaged count, and truncated is
+    False for a limit=None page because it already contains every row
+    after the offset.
     """
     if limit is not None and limit < 0:
         raise ValueError("limit must be >= 0 or None")
@@ -455,6 +465,11 @@ def as_of_paged(con: sqlite3.Connection, moment: str, subject: str | None = None
     if limit is not None:
         page_sql += " LIMIT ? OFFSET ?"
         page_args += [limit, offset]
+    elif offset:
+        # D1: limit=None must not drop the offset. LIMIT -1 means
+        # "no limit" in SQLite, so OFFSET still applies.
+        page_sql += " LIMIT -1 OFFSET ?"
+        page_args += [offset]
     rows = con.execute(page_sql, page_args).fetchall()
     items = [dict(r) for r in rows]
     return {

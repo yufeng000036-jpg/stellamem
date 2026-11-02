@@ -11,7 +11,7 @@
   在 412 条 active 时静默截断，是 2026-11-02 上线第 10 步的实测缺陷。
 - `compiler/gate.py`：低分非 weak 条目同样拦截（overlap=0 且
   semantic < 0.45，或 score < 0.10）；`allow_weak` 仍可注入并打
-  低置信度标记；`gate_log.jsonl` 超 1 MB 或 10,000 行时轮转，最多 3 个。
+  低置信度标记；`gate_log.jsonl` 大小达到 1 MiB（1,048,576 字节）或行数达到 10,000 行时轮转，最多保留 3 个旧文件。
 - `compiler/reliability.py`：`snapshot()` 先收集路径、查重名，
   重名抛错且不留部分 zip；另增 `_check_duplicate_names()`。
 
