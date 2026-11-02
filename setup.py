@@ -98,6 +98,10 @@ def planned_files(args):
                 "entries": {
                     "stellamem-adapter": {
                         "enabled": True,
+                        # Current OpenClaw requires an explicit conversation
+                        # grant for non-bundled before_prompt_build hooks.
+                        # This is a reviewable snippet, never a live config edit.
+                        "hooks": {"allowConversationAccess": True},
                         "config": {"coreDir": str(root), "maxInjectChars": 4000},
                     }
                 }

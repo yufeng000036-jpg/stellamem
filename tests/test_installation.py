@@ -95,6 +95,18 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(hook.read_text(), "custom content")
         self.assertFalse((host / "openclaw.json").exists())
 
+    def test_host_permission_is_explicit_in_snippet_only(self):
+        host = self.root / "test-host"
+        host.mkdir()
+        live = host / "openclaw.json"
+        live.write_text('{"untouched":true}', encoding="utf-8")
+        self.assertEqual(installer.main(self.args + ["--oc-root", str(host)]), 0)
+        snippet = json.loads((self.root / "report/openclaw.snippet.json").read_text())
+        entry = snippet["plugins"]["entries"]["stellamem-adapter"]
+        self.assertEqual(entry["hooks"], {"allowConversationAccess": True})
+        self.assertNotIn("allowConversationAccess", entry["config"])
+        self.assertEqual(live.read_text(), '{"untouched":true}')
+
     def test_model_http_client_against_actual_local_server(self):
         with FixtureServer() as server:
             cfg = {"server_url": server.url + "/v1", "model_id": "synthetic-fixture"}
