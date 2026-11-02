@@ -15,19 +15,21 @@ Scoring (weights are documented conventions, not measured optima):
 - keep threshold: total >= keep_threshold (default 5.0) -> consolidated;
   below -> forgotten (listed, not deleted by this module).
 
-Grouping: events with the same (subject, scope, predicate) are
-consolidated into one fact whose value is the highest-scoring event's
-value and whose evidence is the list of grouped event ids. Scope is
-part of the grouping key on purpose: the same subject + predicate in
-different scopes (for example "daily chat" preferring concise answers
-versus "technical" preferring detailed answers) must NOT be merged
-into a single fact, or the losing scope's preference would be lost.
-Events without a scope are grouped under the empty scope ("").
+Grouping uses (subject, scope, predicate). Conflicting values are never
+selected by score: all candidate events go to a needs_review conflict list.
+The complete deep-copied source_events retain timestamps, evidence, versions,
+and low-score events. Forgotten means an inactive suggestion, never deletion.
+Text output includes only complete lines that fit; it is not canonical storage.
+This is an experimental pure planner with no production caller.
 Inputs are not mutated and nothing is written; the caller decides
 what to do with the output under its own approval.
 """
 
 from __future__ import annotations
+
+import copy
+import math
+import json
 
 DEFAULT_KEEP_THRESHOLD = 5.0
 
@@ -37,7 +39,9 @@ def score_event(event: dict) -> float:
     age_days = float(event.get("age_days") or 0.0)
     emotion = float(event.get("emotion_weight") or 0.0)
     consequence = float(event.get("consequence_weight") or 0.0)
-    return importance - 0.1 * age_days + emotion + consequence
+    if not all(math.isfinite(v) for v in (importance, age_days, emotion, consequence)):
+        raise ValueError("event scores must be finite")
+    return importance - 0.1 * max(0, age_days) + emotion + consequence
 
 
 def consolidate(
@@ -46,8 +50,11 @@ def consolidate(
     """Group events, score them, split into kept and forgotten lists."""
     if budget_chars is not None and budget_chars < 0:
         raise ValueError("budget_chars must be >= 0")
+    if not math.isfinite(keep_threshold):
+        raise ValueError("keep_threshold must be finite")
+    source_events = copy.deepcopy(list(events or []))
     groups: dict[tuple, list] = {}
-    for event in events or []:
+    for event in source_events:
         key = (
             str(event.get("subject") or ""),
             str(event.get("scope") or ""),
@@ -56,6 +63,7 @@ def consolidate(
         groups.setdefault(key, []).append(event)
     kept = []
     forgotten = []
+    conflicts = []
     for (subject, scope, predicate), members in sorted(groups.items()):
         scored = sorted(members, key=lambda e: (-score_event(e), str(e.get("event_id") or "")))
         best = scored[0]
@@ -69,6 +77,18 @@ def consolidate(
             "evidence_event_ids": [str(e.get("event_id") or "") for e in scored],
             "member_count": len(scored),
         }
+        values = {json.dumps(e.get("value"), sort_keys=True, ensure_ascii=False) for e in scored}
+        if len(values) > 1:
+            conflicts.append(
+                {
+                    "subject": subject,
+                    "scope": scope,
+                    "predicate": predicate,
+                    "status": "needs_review",
+                    "candidates": copy.deepcopy(scored),
+                }
+            )
+            continue
         if total >= keep_threshold:
             kept.append(entry)
         else:
@@ -84,8 +104,17 @@ def consolidate(
         for k in kept
     )
     if budget_chars is not None and len(text) > budget_chars:
-        text = text[:budget_chars]
+        complete = []
+        for line in text.splitlines():
+            if len("\n".join(complete + [line])) > budget_chars:
+                break
+            complete.append(line)
+        text = "\n".join(complete)
     return {
+        "source_events": source_events,
+        "conflicts": conflicts,
+        "conflict_count": len(conflicts),
+        "experimental": True,
         "kept": kept,
         "forgotten": forgotten,
         "kept_count": len(kept),

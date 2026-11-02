@@ -90,14 +90,16 @@ class MemoryStore:
                 old["status"] = "superseded"
                 old["superseded_by"] = rev
                 # 双时间戳：记录"它在什么时候失效"。expired_at 是系统发现它失效的时刻，
-                # valid_to 是它在现实里不再成立的时刻——这里两者取同一时刻，
-                # 因为系统无法回推现实时刻，宁可一致也不猜。
+                # valid_to 使用已核验的较新来源时间；expired_at 保留系统发现时间。
+                # 更精确的历史事实生效时间若来源未给出，不由系统猜测。
                 _now = (
                     __import__("datetime")
                     .datetime.now(__import__("datetime").timezone.utc)
                     .isoformat(timespec="seconds")
                 )
-                old["valid_to"] = _now
+                # Relation engine has verified that this source is newer.
+                # Keep source event time separate from system discovery time.
+                old["valid_to"] = c["provenance"]["timestamp"]
                 old["expired_at"] = _now
                 self.dirty.add(active[0][0])
             c.update(

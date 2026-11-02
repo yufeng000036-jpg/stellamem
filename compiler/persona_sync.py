@@ -34,6 +34,8 @@ def validate_candidate(event: dict) -> list[str]:
         return ["not a dict"]
     if event.get("status") != "reviewed":
         problems.append(f"status is {event.get('status')!r}, not 'reviewed'")
+    if "namespace" in event and event["namespace"] != "persona":
+        problems.append("namespace must agree with persona subject")
     if event.get("subject") != "persona":
         problems.append(f"subject is {event.get('subject')!r}, not 'persona'")
     if not _full_text(event):

@@ -1,0 +1,49 @@
+{
+  "sha": "8430657cd73b2e43554af6d529361f8b9354ae2d",
+  "run_id": 41396619335,
+  "url": "https://github.com/yufeng000036-jpg/stellamem/actions/runs/41396619335",
+  "jobs": [
+    {
+      "id": 125119211218,
+      "name": "tests (macos-latest, 3.12)",
+      "conclusion": "success"
+    },
+    {
+      "id": 125119211224,
+      "name": "quality",
+      "conclusion": "success"
+    },
+    {
+      "id": 125119211256,
+      "name": "tests (windows-latest, 3.12)",
+      "conclusion": "success"
+    },
+    {
+      "id": 125119211289,
+      "name": "tests (windows-latest, 3.10)",
+      "conclusion": "success"
+    },
+    {
+      "id": 125119211297,
+      "name": "tests (ubuntu-latest, 3.12)",
+      "conclusion": "success"
+    },
+    {
+      "id": 125119211419,
+      "name": "tests (macos-latest, 3.10)",
+      "conclusion": "success"
+    },
+    {
+      "id": 125119211460,
+      "name": "tests (ubuntu-latest, 3.10)",
+      "conclusion": "success"
+    }
+  ],
+  "gitleaks_action_version": "8.24.3",
+  "gitleaks_action_scope": "latest commit only (--log-opts=-1)",
+  "local_gitleaks_versions": [
+    "8.24.3",
+    "8.30.1"
+  ],
+  "local_history_scope": "all fetched refs; tree and history pass; eight negative/positive controls pass"
+}

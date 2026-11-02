@@ -166,6 +166,13 @@ def cmd_approve(root, args):
     approved["claim_id"] = claim_id(approved)
     approved["revision_id"] = claim_revision_id(approved)
     approved["relation"] = approved.get("relation", "NEW")
+    if store.active_by_id.get(approved["claim_id"]):
+        # Approving a pending candidate is not a conflict-resolution command.
+        # Preserve both versions for deliberate review; never create a second
+        # active value or silently supersede a prior fact with this generic CLI.
+        raise ValueError(
+            "active claim already occupies this slot; explicit conflict resolution required"
+        )
     target = ROUTE.get(approved.get("kind"), INBOX)
     if target.replace("\\", "/") in PROTECTED:
         raise ValueError("refusing to write a protected core file")

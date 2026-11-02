@@ -20,7 +20,7 @@ Final local result: Python **381/381**, Node **6/6**, offline demo (7 synthetic 
 
 ## Gate / residuals / rollback
 
-B local gate passes. Remote **same-SHA CI is pending** until the branch code update is published; stage C is NOT cleared by baseline CI. The remote action's binary version is not pinned in workflow and must be read from its actual log. The real Gitleaks control script is an explicit local command, not newly wired into workflow (workflows unchanged).
+B local gate passes. B same-SHA CI later completed: all seven jobs SUCCESS at 8430657, run 41396619335 (see phase-b-ci.json). This closes the B gate only; later code requires its own matrix. The remote action uses Gitleaks 8.24.3 and scans only the latest commit. Local 8.24.3 additionally passed all-ref history, current tree and eight controls; 8.30.1 also passed. The action is not full-history evidence. The real Gitleaks control script is an explicit local command, not newly wired into workflow (workflows unchanged).
 
 D7–D13 audit original is absent from repository search; UNKNOWN, NOT FIXED. Bridge concurrency, nightly conflicts, host E2E, fault recovery and frozen memory-quality evaluation remain C–F work. Memory quality improvement: cannot quantify. Current score: 8–9 not supported; no new numerical score while these gates remain open.
 

@@ -32,6 +32,8 @@ def plan_batch(
     for rec in records:
         cid = str(rec.get("claim_id") or rec.get("record_id") or rec.get("id") or "")
         if cid:
+            if cid in by_id:
+                raise ValueError("batch aborted: ambiguous duplicate record id")
             by_id[cid] = rec
     items = []
     seen = set()

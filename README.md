@@ -1,5 +1,9 @@
 # Stellamem · 星忆
 
+> **Reliability development branch (not a deployed release):** see [verification evidence](docs/verification/BASELINE.md), [C safety repairs](docs/verification/STAGE_C.md), [simulated-host lifecycle](docs/verification/STAGE_D.md), and [E/F acceptance limits](docs/verification/STAGES_E_F_STATUS.md). Final local regression: 410 Python / 8 Node; CI evidence is attached to the draft PR for the tested SHA. Older counts below describe historical milestones. Memory-quality acceptance and production validation remain incomplete.
+>
+> **Compatibility:** projection defaults to requester `user` and scope `global`; use explicit `requesterSubject` / `activeScopes` for other namespaces/tasks. An explicit invalid namespace fails closed. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
+
 > **Give AI memory a Git.** ｜ **给 AI 记忆一个 Git。**
 
 Stellamem 是一个**本地优先、可审计的 AI 长期记忆治理层**。

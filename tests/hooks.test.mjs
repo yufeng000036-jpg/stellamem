@@ -85,21 +85,21 @@ test("technical prompt with a port does not drag preference memories in", async 
   // Same preference, asked in plain English with no technical indicator, must surface.
   assert.ok((await project(f.root, "response preference")).includes("concise"));
 });
-test("model-generated and configured scopes do not silently block recall", async () => {
+test("only explicitly configured task scopes broaden default global recall", async () => {
   // Regression: eligible() used to require scope in ["global"], but the model
   // emits free-text scopes like "title". That filtered out every real memory.
   const f = await fixture();
   await mkdir(path.join(f.root, "semantic"));
   const data = [
-    record({ revision_id: "r-title", scope: "title", subject: "project",
+    record({ revision_id: "r-title", scope: "title", subject: "project", namespace: "user",
       predicate: "has title", value: "Startown" }),
     record({ revision_id: "r-global", scope: "global", value: "concise" }),
   ];
   const text = data.map((c) => "```stellamem\n" + JSON.stringify(c) + "\n```\n").join("\n");
   await writeFile(path.join(f.root, "semantic/profile.md"), "\n<!-- stellamem:v2 -->\n" + text);
   const out = await project(f.root, "title");
-  assert.ok(out.includes("Startown"), "free-text scope must still be injectable");
-  // An explicit activeScopes list is an opt-in restriction and still filters.
+  assert.equal(out, "", "model-generated scope alone must not broaden retrieval");
+  // Explicit operator scopes grant access within the selected namespace.
   assert.equal(await project(f.root, "title", { activeScopes: ["other"] }), "");
   assert.ok((await project(f.root, "title", { activeScopes: ["title"] })).includes("Startown"));
 });
@@ -113,4 +113,26 @@ test("runtime rules load without top-level await", async () => {
   );
   assert.ok(!/^await\s/m.test(source), "runtime.mjs must not use top-level await");
   assert.ok(source.includes("readFileSync"), "rules should load synchronously");
+});
+test("projection isolates authoritative subject namespaces and rejects malformed ones", async () => {
+  const f = await fixture(); await mkdir(path.join(f.root, "core"));
+  const data = [record({ value: "user sentinel" }),
+    record({ claim_id: "c-persona", revision_id: "r-persona", subject: "persona", value: "persona sentinel" }),
+    record({ claim_id: "c-viewer", revision_id: "r-viewer", namespace: "viewer", value: "viewer sentinel" }),
+    record({ claim_id: "c-invalid", revision_id: "r-invalid", namespace: null, value: "invalid sentinel" })];
+  await writeFile(path.join(f.root,"core/preferences.md"), "<!-- stellamem:v2 -->\n" + data.map(c => "```stellamem\n"+JSON.stringify(c)+"\n```\n").join("\n"));
+  const user = await project(f.root, "sentinel preference");
+  assert.ok(user.includes("user sentinel"));
+  for (const forbidden of ["persona sentinel", "viewer sentinel", "invalid sentinel"]) assert.ok(!user.includes(forbidden));
+  const persona = await project(f.root, "sentinel preference", { requesterSubject: "persona" });
+  assert.ok(persona.includes("persona sentinel")); assert.ok(!persona.includes("user sentinel"));
+  assert.equal(await project(f.root,"sentinel preference",{requesterSubject:"invalid"}), "");
+});
+test("projection refuses expired facts and ambiguous active revisions", async () => {
+  const f = await fixture(); await mkdir(path.join(f.root, "core"));
+  const data = [record({ valid_to:"2000-01-01T00:00:00Z", value:"expired sentinel" }),
+    record({ revision_id:"r-other", value:"conflicting sentinel" }),
+    record({ revision_id:"r-third", value:"another conflicting sentinel" })];
+  await writeFile(path.join(f.root,"core/preferences.md"), "<!-- stellamem:v2 -->\n" + data.map(c => "```stellamem\n"+JSON.stringify(c)+"\n```\n").join("\n"));
+  assert.equal(await project(f.root,"sentinel preference"), "");
 });

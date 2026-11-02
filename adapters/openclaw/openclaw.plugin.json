@@ -23,7 +23,17 @@
         "items": {
           "type": "string"
         },
-        "description": "Explicit task scopes; global is always eligible."
+        "description": "Explicit task scopes; omitted means global only. No model-driven scope expansion."
+      },
+      "requesterSubject": {
+        "type": "string",
+        "enum": [
+          "user",
+          "persona",
+          "viewer"
+        ],
+        "default": "user",
+        "description": "Trusted operator subject namespace. Invalid values fail closed."
       }
     }
   }
