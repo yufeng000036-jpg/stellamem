@@ -127,6 +127,22 @@ class NamespaceReviewTests(unittest.TestCase):
         )
         self.assertEqual(len(self.active()), 1)
 
+    def test_classified_pending_update_suppresses_old_projection(self):
+        self.seed(
+            kind="preference", subject="Fictional Habitat", value="prefer fictional habitat gardens"
+        )
+        first = self.inbox_records()[0]
+        self.assertEqual(self.cli(["approve", first["revision_id"], "--namespace", "user"]), 0)
+        self.assertIn("gardens", self.project("user", ["global"]))
+        self.seed(
+            kind="preference", subject="Fictional Habitat", value="prefer fictional habitat forests"
+        )
+        candidate = self.inbox_records()[0]
+        self.assertEqual(self.cli(["edit", candidate["revision_id"], "--namespace", "user"]), 0)
+        self.assertEqual(self.inbox_records()[0]["relation"], "UNCERTAIN")
+        self.assertEqual(self.project("user", ["global"]), "")
+        self.assertEqual(len(self.active()), 1)
+
 
 del InboxTests
 

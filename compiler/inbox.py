@@ -97,6 +97,13 @@ def _apply_edits(record, args, root):
     updated.update(edits)
     updated["claim_id"] = claim_id(updated)
     updated["revision_id"] = claim_revision_id(updated)
+    # A human can move a pending topic into an already occupied namespace/slot.
+    # Recheck after edits so projection suppresses the unresolved old value.
+    # This only records uncertainty; it never chooses or overwrites a version.
+    active = MemoryStore(root).active_by_id.get(updated["claim_id"], [])
+    if active:
+        updated["relation_before_edit"] = record.get("relation")
+        updated["relation"] = "UNCERTAIN"
     history = list(record.get("edit_history", []))
     history.append(
         {
