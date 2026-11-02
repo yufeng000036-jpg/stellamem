@@ -106,9 +106,12 @@
 
 - **Asset**：记忆与对话的机密性
 - **Threat**：记忆内容被发送给第三方模型服务商
-- **Attack path**：用户配置远程 API（GPT / Claude / DeepSeek）后，编译或注入的文本被发送到服务商
-- **Mitigation**：默认本地运行；只有用户主动配置远程模型才外发；文档明确数据边界
-- **Remaining risk**：**发送内容未做自动脱敏 / 最小化**；用户配置远程 API 时需自行评估哪些内容可发送
+- **Attack path**：用户配置一个指向远程主机的模型 endpoint
+- **Mitigation**：`compiler/model_client.py` **只接受环回地址**（`127.0.0.1` / `localhost`），
+  拒绝所有远程 endpoint、拒绝重定向（`NoRedirect`）、忽略系统代理（空 `ProxyHandler`）。
+  误填远程地址会在请求前就被拒绝，而非静默外发。
+- **Remaining risk**：若未来版本显式开放托管服务商，发送内容仍**未做自动脱敏 / 最小化**；
+  当前版本不存在该外发路径。
 
 ---
 
@@ -134,4 +137,4 @@
 
 ## 总结
 
-当前 `v0.1.0-alpha` 的缓解以**约定 + 本地优先 + 白盒可回滚**为主，尚未具备企业级自动防护能力（密钥识别、敏感分级、Context Projection、签名、SBOM 等均在 Roadmap）。在无人监管的高敏感场景下，请勿依赖本系统。
+当前 `v0.2.0-alpha` 的缓解以**约定 + 本地优先 + 白盒可回滚**为主，尚未具备企业级自动防护能力（密钥识别、敏感分级、Context Projection、签名、SBOM 等均在 Roadmap）。在无人监管的高敏感场景下，请勿依赖本系统。

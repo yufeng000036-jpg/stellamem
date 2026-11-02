@@ -42,15 +42,20 @@ python setup.py check
 ## 2b. 路径 B：一键安装（OpenClaw 用户，推荐）
 
 ```bash
-python setup.py install --yes --ai-name <AI名字> --mem-root <记忆根目录> --merge-openclaw
+python setup.py install --mem-root <记忆根目录> --config <config.json 路径> --oc-root <OpenClaw 根目录>
 ```
 
 参数说明：
-- `--ai-name`：AI 名字（日记以谁的第一人称写），如 `小助手`
 - `--mem-root`：记忆根目录（绝对路径），如 `D:/my-memory`；不填则用默认 `~/.stellamem`
-- `--model-url`：OpenAI 兼容模型服务地址，如 `http://127.0.0.1:11434`（不填则自动探测 8081/1234/11434）
-- `--merge-openclaw`：自动备份并合并 `openclaw.json`（**只追加 keys，不覆盖已有字段**；冲突字段保留你的原值并写入 `setup-out/openclaw.merge-conflicts.md`）
-- `--yes`：跳过交互确认
+- `--config`：`config.json` 写入路径（默认仓库根目录）
+- `--oc-root`：OpenClaw 根目录；提供时才会安装 hook 与 adapter 副本
+- `--sessions-dir`：会话目录（默认 `<oc-root>/agents/main/sessions`）
+- `--model-url`：OpenAI 兼容模型服务地址，如 `http://127.0.0.1:8081`（**只允许环回地址**）
+- `--tz-offset`：时区偏移小时数（如中国 `8`）
+- `--dry-run`：只打印计划，不写任何文件
+- `--upgrade`：仅当目标文件与安装清单一致时才备份并更新（保护你的自定义）
+
+> ⚠️ 安装器**不会**读写或合并你的 `openclaw.json`；它只输出 `setup-out/openclaw.snippet.json` 供你手动审阅。
 
 ### 路径 A：只装 Compiler（非 OpenClaw 用户）
 
@@ -75,17 +80,17 @@ python compiler/sleep_purify.py --mode observe   # 全量 → inbox（安全，�
 
 | # | 动作 | 产出 |
 |---|------|------|
-| 1 | 探测 OpenClaw 状态目录 | 定位 `~/.openclaw/` |
-| 2 | 探测 sessions 目录 | 定位 `agents/main/sessions`（优先默认 agent） |
-| 3 | 生成记忆根目录 + `config.json` | 记忆路径、模型名、llama_bin |
-| 4 | 创建记忆目录骨架 | `core/ long-term/ semantic/ episodic/ system/ working/ daily/` |
-| 5 | 拷贝模板 | 从 `templates/` 生成空记忆文件（不覆盖已有） |
-| 6 | 安装 hook | 拷贝 `hooks/daily-autolog/` 到 `~/.openclaw/hooks/`，并改**副本**的 `AI_NAME`/`SESSIONS_DIR`/`DAILY_DIR` |
-| 7 | 安装 adapter | 拷贝 `adapters/openclaw/` 到 OpenClaw extensions 目录，并改**副本**的 `ROOT` |
-| 8 | 合并配置 | `--merge-openclaw` 时自动备份 + 合并 `openclaw.json`；否则生成 `setup-out/openclaw.snippet.json` |
-| 9 | 自检 | 跑一遍 `python compiler/memory.py doctor` |
+| 1 | 探测 sessions 目录 | 定位 OpenClaw 的 `agents/main/sessions`（仅在指定 `--oc-root` 时） |
+| 2 | 生成记忆根目录 + `config.json` | 记忆路径、模型 URL、模型 id |
+| 3 | 创建记忆目录骨架 | `core/ long-term/ semantic/ episodic/ system/ working/ daily/` |
+| 4 | 拷贝模板 | 从 `templates/` 生成记忆文件（**已存在的一律不覆盖**） |
+| 5 | 安装 hook（仅 `--oc-root`） | 拷贝 `hooks/daily-autolog/` 到宿主，并替换**副本**中的 `SESSIONS_DIR`/`DAILY_DIR`/`TZ_OFFSET` 占位符 |
+| 6 | 安装 adapter（仅 `--oc-root`） | 拷贝 `adapters/openclaw/` 到宿主 extensions，并替换**副本**的 `ROOT` |
+| 7 | 生成配置片段 | 输出 `setup-out/openclaw.snippet.json`，**不**自动修改 `openclaw.json` |
+| 8 | 写安装报告 | `setup-out/install-report.md`；**安装不自动运行 doctor**，需手动自检 |
 
-> ⚠️ **重要**：安装器**只改拷贝到目标位置的副本，绝不改写仓库源文件**。源文件始终保持模板状态（占位符），可重复分发、重复安装。
+> ⚠️ **重要**：安装器**只改拷贝到目标位置的副本，绝不改写仓库源文件**；也**不读写、不合并** OpenClaw 的 `openclaw.json`。启用宿主集成需你自行审阅 snippet 后手动配置（并重启宿主）。
+> ⚠️ **自定义文件保护**：目标位置若已存在与安装器记录不一致的文件，安装器会**报错退出**（除非用 `--upgrade` 且该文件未被改动）。
 > ⚠️ **config.json 位置**：统一放在**仓库根目录**（`STELLAMEM_CONFIG` 环境变量可覆盖）。`compiler/config_loader.py` 按此顺序查找：环境变量 → 仓库根 → compiler/ 旧位置（兼容）。
 
 ---
@@ -98,7 +103,7 @@ python compiler/sleep_purify.py --mode observe   # 全量 → inbox（安全，�
    > 如果你用的是 Ollama / LM Studio（不走 start_server.py），则这一步也不用额外配置。
 2. **重启 OpenClaw**，使 hook 和 plugin 生效。
 
-> 💡 `openclaw.json` 的合并已由 `--merge-openclaw` 自动完成（自动备份 + 只追加 keys）。
+> 💡 宿主集成的配置片段由安装器输出到 `setup-out/openclaw.snippet.json`；需要你审阅后手动应用（安装器不会自动改 `openclaw.json`）。
 > 如果没加这个参数，install 会在 `setup-out/openclaw.snippet.json` 生成片段，由你（AI）在用户确认后合并——合并前先备份，逐条确认，不要整文件覆盖。
 
 ---
@@ -114,8 +119,17 @@ python compiler/sleep_purify.py --mode observe   # 全量 → inbox（安全，�
 # 3. 编辑 config.json：
 #    - model_name 指向 gguf 路径
 #    - llama_bin 指向 llama-server 可执行文件（留空则自动从 PATH 探测）
+#    - context_size 默认 16384；输入与输出共享这个窗口
+#    - chunk_chars 默认 2500，model_max_tokens 默认 8192
+#    - 8GB 显卡是否能设置 gpu_layers=99 取决于模型与后端，请先用测试数据验证
 python compiler/start_server.py
 ```
+
+`model_max_tokens` 不是服务端总窗口。若 `context_size` 仍是 8192，增大
+`model_max_tokens` 不能解决「输入 + 输出」超过窗口的问题。模型返回
+`finish_reason=length` 时，编译器会按消息/句子边界二分重切并重试；不会补齐残缺
+JSON。完整响应若 JSON 无效，会原块重试一次，再按相同边界重切；达到重试下限仍
+无效时硬失败。任何失败都不会提交部分 Claim，也不会推进来源游标。
 
 ### 方案 B：Ollama（最省事，推荐给新手）
 ```bash
@@ -168,7 +182,7 @@ python compiler/sleep_purify.py --mode observe
 | 组件 | 你要做的 |
 |------|---------|
 | 写入侧 | 自己写一个「对话结束 → 落盘 daily」的钩子。核心是把对话按 `[HH:MM] role: content` 格式写成 `daily/YYYY-MM-DD.md`。 |
-| 注入侧 | 在你的 system prompt 构建处，读 `core/identity.md` + `core/user-core.md` + `core/preferences.md` 拼进去；再按关键词命中读 `long-term/` 和 `semantic/`。可参考 `adapters/openclaw/index.js` 的逻辑，只有 30 行。 |
+| 注入侧 | 在你的 system prompt 构建处，**只注入与当前任务相关的单条 Claim**（来源 `PUBLIC`/`PRIVATE`、`source=user`、`evidence_verified=true`、`status=active`），并设全局字符预算。**不要**直接拼接 `core/user-core.md` 或 legacy 自由文本。可参考 `adapters/openclaw/index.js`（~90 行）。 |
 | 编译侧 | 完全不用改，改 `config.json` 的路径即可。 |
 
 ---
@@ -180,9 +194,10 @@ python compiler/sleep_purify.py --mode observe
 3. **必须开总开关**：`hooks.internal.enabled = true`，没有这行连内置 hook 都不加载。
 4. **归档文件读取**：`/new` 后旧 session 改名 `xxx.jsonl.reset.<时间戳>`，读会话必须用 `includes(".jsonl")` 而非 `endsWith(".jsonl")`，否则漏读历史。
 5. **`config_loader` 找不到 config.json 会直接退出**：先把 `config.example.json` 拷成**仓库根目录**的 `config.json` 填好，再跑 compiler。也可用环境变量 `STELLAMEM_CONFIG` 指向任意位置的配置文件。
-6. **模型端口两处配置**：`config.json` 的 `server_url` 和 `handler.js` 里的 `MODEL_URL` 是两套，改一处不够。
+6. **模型端口只需配置一处**：`config.json` 的 `server_url`（只允许环回地址）。hook 不再调用模型。
 7. **Windows 编码**：脚本已避免 emoji（GBK 控制台会崩）。自己加输出时也注意。
 8. **`memory.py rollback` 默认是干跑**：必须加 `--yes` 才真恢复。
+9. **核心身份文件硬保护**：`core/identity.md` 与 `core/user-core.md` 由事务层拒绝写入；`inbox approve` 对这两类候选会**明确报错**，需你手动编辑该文件。
 
 ---
 
@@ -193,7 +208,7 @@ python compiler/sleep_purify.py --mode observe
 ```
 ① 写入：AI 每天和你聊完 → daily-autolog 自动落盘日记
 ② 编译：定期跑 sleep_purify.py → 从日记提炼出偏好/决策/教训/项目
-③ 注入：每次对话开始 → adapter 把 core/ 记忆喂回 AI 上下文
+③ 注入：每次对话开始 → adapter 按任务相关性**最小**注入 Claim；人工审批待审候选用 `python compiler/inbox.py list`
 ```
 
 **建议的日常节奏**：

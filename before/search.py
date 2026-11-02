@@ -1,0 +1,505 @@
+"""检索与召回：关键词 + 时间 + 人物 + 分层过滤，按预算打包上下文。
+
+三条硬约束
+1. 索引只读：任何查询都不写记忆根。
+2. 模型离线可用：FTS5 trigram 是主路径，向量只是加分项。
+3. 召回有预算：返回多少条、多少字符由调用方给，绝不整库注入。
+"""
+
+from __future__ import annotations
+
+import math
+import os
+import re
+import sqlite3
+import time
+from datetime import datetime, timezone
+
+try:  # 包内导入（compiler.search）与扁平导入（sys.path 加 compiler/）都要能用
+    from . import semantic
+except ImportError:  # pragma: no cover
+    import semantic  # type: ignore
+
+# 字面/语义权重。语义通道默认开启后字面噪声会压住正确项，故可调。
+W_LEX = float(os.environ.get("STELLAMEM_W_LEX", "0.20"))
+W_SEM = float(os.environ.get("STELLAMEM_W_SEM", "0.62"))
+
+KIND_LABEL = {
+    "fact": "事实",
+    "project": "项目",
+    "decision": "决定",
+    "preference": "偏好",
+    "lesson": "教训",
+    "procedure": "流程",
+    "relationship": "关系",
+    "identity": "身份",
+}
+
+LAYER_LABEL = {"core": "核心", "long-term": "长期", "semantic": "语义", "inbox": "待审", "daily": "日记"}
+
+# 意图 → 类型召回。不靠关键词命中，靠类型 + 主题双通道。
+INTENTS = {
+    "project": (r"项目|进度|做到哪|里程碑|交付", ("project",)),
+    "decision": (r"决定|为什么选|改成|定下|放弃", ("decision",)),
+    "preference": (r"偏好|喜欢|习惯|更愿意|讨厌", ("preference",)),
+    "lesson": (r"教训|踩坑|下次|别再|怎么避免", ("lesson", "procedure")),
+    "relationship": (r"关系|朋友|家人|谁|陪", ("relationship",)),
+    "timeline": (r"什么时候|第一次|哪年|多久|变化", ("fact", "project", "decision")),
+}
+
+_TOKEN = re.compile(r"[0-9A-Za-z\u4e00-\u9fff]+")
+
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def fts_expr(query: str) -> str | None:
+    terms = [t for t in _TOKEN.findall(query or "") if len(t) >= 3]
+    if not terms:
+        terms = [t for t in _TOKEN.findall(query or "") if len(t) >= 2]
+    if not terms:
+        return None
+    return " AND ".join(f'"{t}"' for t in terms[:6])
+
+
+# 泛问：只问"我有哪些 X"，没有具体话题。这类问题走类型召回，不走文本匹配。
+BROAD_WORDS = {
+    "preference": ("偏好", "喜好", "习惯", "口味"),
+    "project": ("项目", "手头", "在做"),
+    "decision": ("决定", "选择", "定过"),
+    "lesson": ("教训", "踩过", "坑"),
+    "relationship": ("关系", "朋友", "认识谁"),
+    "identity": ("身份", "我是谁", "情况"),
+}
+
+
+def detect_broad(prompt: str) -> str | None:
+    """短问句 + 类型词 = 泛问。长句说明有具体话题，走文本检索。"""
+    text = (prompt or "").strip()
+    if not text or len(text) > 14:
+        return None
+    for kind, words in BROAD_WORDS.items():
+        if any(w in text for w in words):
+            return kind
+    return None
+
+
+def broad_recall(con, kind: str, limit: int = 8, status=("active", "pending")) -> list[dict]:
+    """按类型取记忆，按可信度 + 时间排序。"""
+    where, params = _filter_sql((kind,), None, status, None)
+    rows = con.execute(
+        f"SELECT * FROM records WHERE {where} ORDER BY redacted ASC, "
+        "CASE status WHEN 'active' THEN 0 ELSE 1 END, occurred_at DESC LIMIT 200",
+        params,
+    ).fetchall()
+    out = []
+    for row in rows:
+        rec = dict(row)
+        if rec.get("redacted") or not rec.get("value"):
+            continue
+        rec["score"] = round(0.9 if rec.get("status") == "active" else 0.55, 3)
+        rec["overlap"] = 1.0
+        rec["match"] = "kind_recall"
+        out.append(rec)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def detect_intent(prompt: str) -> str | None:
+    for name, (pattern, _) in INTENTS.items():
+        if re.search(pattern, prompt or ""):
+            return name
+    return None
+
+
+def _recency_score(occurred: str | None) -> float:
+    if not occurred:
+        return 0.3
+    try:
+        when = datetime.fromisoformat(occurred.replace("Z", "+00:00"))
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return 0.3
+    days = max(0.0, (_now() - when).total_seconds() / 86400)
+    return 1.0 / (1.0 + days / 180.0)
+
+
+def _like_where(query: str):
+    terms = [t for t in _TOKEN.findall(query or "") if len(t) >= 2][:4]
+    if not terms:
+        return None, []
+    clause = " AND ".join(
+        "(subject LIKE ? OR predicate LIKE ? OR value LIKE ? OR evidence LIKE ?)" for _ in terms
+    )
+    params = []
+    for term in terms:
+        params += [f"%{term}%"] * 4
+    return clause, params
+
+
+def bigrams(text: str) -> set:
+    """中文按二元组切分，拉丁按词切分。不依赖分词库。"""
+    raw = (text or "").lower()
+    grams = set()
+    for run in re.findall(r"[\u4e00-\u9fff]+", raw):
+        if len(run) == 1:
+            grams.add(run)
+        for i in range(len(run) - 1):
+            grams.add(run[i : i + 2])
+    for word in re.findall(r"[a-z0-9]{2,}", raw):
+        grams.add(word)
+    return grams
+
+
+def overlap_score(query_grams: set, rec: dict) -> float:
+    if not query_grams:
+        return 0.0
+    # 只比记忆本体，不把 evidence 拼进来：否则一句原文就能把无关记忆拉进结果
+    blob = " ".join(str(rec.get(f) or "") for f in ("subject", "value"))
+    return len(query_grams & bigrams(blob)) / len(query_grams)
+
+
+def _as_tuple(value):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return (value,)
+    return tuple(value)
+
+
+def _filter_sql(kinds, layers, status, person):
+    kinds, layers, status = _as_tuple(kinds), _as_tuple(layers), _as_tuple(status)
+    clause, params = [], []
+    if kinds:
+        clause.append(f"kind IN ({','.join('?' * len(kinds))})")
+        params += list(kinds)
+    if layers:
+        clause.append(f"layer IN ({','.join('?' * len(layers))})")
+        params += list(layers)
+    if status:
+        clause.append(f"status IN ({','.join('?' * len(status))})")
+        params += list(status)
+    if person:
+        clause.append("subject LIKE ?")
+        params.append(f"%{person}%")
+    return (" AND ".join(clause) if clause else "1=1"), params
+
+
+def search(
+    con: sqlite3.Connection,
+    query: str,
+    kinds=None,
+    layers=None,
+    since: str | None = None,
+    until: str | None = None,
+    person: str | None = None,
+    status=("active", "pending"),
+    limit: int = 10,
+    min_overlap: float = 0.5,
+) -> list[dict]:
+    """混合检索：FTS5 候选 + 字符二元组重叠打分。
+
+    纯 FTS 对中文长句无效（trigram 需要 ≥3 字连续命中），
+    纯 LIKE 又无法排序；所以用重叠度做排序信号，FTS 只负责召回候选。
+    """
+    started = time.perf_counter()
+    # 权重随语义通道是否真的可用而切换：降级时必须回到纯字面时代的配比，
+    # 否则字面分只剩 0.20，会被 recency/status 这些次要项盖过（实测 r@1 掉到 0.078）。
+    w_lex = float(os.environ.get("STELLAMEM_W_LEX", W_LEX))
+    w_sem = float(os.environ.get("STELLAMEM_W_SEM", W_SEM))
+    # 泛问走类型召回：问「我有哪些偏好」不该靠文本匹配
+    broad = detect_broad(query)
+    if broad and not kinds:
+        picked = broad_recall(con, broad, limit=limit, status=status or ("active", "pending"))
+        if picked:
+            return picked
+    # 默认只检索可注入状态：quarantined 记录不得被任何读路径搜出。
+    if status is None:
+        status = ("active", "pending")
+    where, params = _filter_sql(kinds, layers, status, person)
+    query_grams = bigrams(query)
+    if not query_grams:
+        return []
+
+    pool: dict[str, dict] = {}
+    fts_ids = set()
+
+    # 候选 1：二元组倒排（中文可用，走索引，不随库变大而线性变慢）
+    grams = [g for g in query_grams if len(g) >= 2][:24]
+    if grams:
+        expr_grams = " OR ".join(f'"{g}"' for g in grams)
+        try:
+            for row in con.execute(
+                "SELECT r.* FROM records_grams JOIN records r ON r.rowid = records_grams.rowid "
+                f"WHERE records_grams MATCH ? AND {where} LIMIT 300",
+                [expr_grams] + params,
+            ):
+                rec = dict(row)
+                pool[rec["id"]] = rec
+                fts_ids.add(rec["id"])
+        except sqlite3.OperationalError:
+            pass
+
+    # 候选 2：trigram 短语（长查询更精确）
+    expr = fts_expr(query)
+    if expr:
+        try:
+            for row in con.execute(
+                "SELECT r.* FROM records_fts JOIN records r ON r.rowid = records_fts.rowid "
+                f"WHERE records_fts MATCH ? AND {where} LIMIT 200",
+                [expr] + params,
+            ):
+                rec = dict(row)
+                pool[rec["id"]] = rec
+                fts_ids.add(rec["id"])
+        except sqlite3.OperationalError:
+            pass
+
+    # 候选 3：精确子串。任何方案都不能比"字符串就在里面"更差。
+    exact_ids = set()
+    like = f"%{query.strip()}%"
+    for row in con.execute(
+        f"SELECT * FROM records WHERE (value LIKE ? OR evidence LIKE ? OR subject LIKE ?) "
+        f"AND {where} LIMIT 200",
+        [like, like, like] + params,
+    ):
+        rec = dict(row)
+        pool[rec["id"]] = rec
+        exact_ids.add(rec["id"])
+
+    # 候选 4：语义通道。字面匹配跨不过「剪辑→剪映」「住哪→海宁」这类词面差异，
+    # 二元组交集为 0 会被直接丢弃，所以必须有一条不依赖字面的召回路径。
+    # 服务不在线时 sem 为 None，整段静默跳过，行为退回纯字面检索。
+    sem = None
+    if os.environ.get("STELLAMEM_SEMANTIC", "1") != "0":
+        try:
+            sem = semantic.semantic_scores(con, query, where, params)
+        except Exception:  # noqa: BLE001 - 语义是增强项，任何异常都不能影响字面检索
+            sem = None
+    if sem:
+        hot = sorted(
+            ((rid, cos) for rid, cos in sem.items() if cos >= semantic.MIN_SIM),
+            key=lambda z: -z[1],
+        )[:60]
+        missing = [rid for rid, _ in hot if rid not in pool]
+        if missing:
+            marks = ",".join("?" * len(missing))
+            for row in con.execute(
+                f"SELECT * FROM records WHERE id IN ({marks}) AND {where}",
+                missing + list(params),
+            ):
+                rec = dict(row)
+                pool[rec["id"]] = rec
+
+    if not sem:
+        # 语义通道不可用（服务未启动 / 库里还没有向量）：权重回到纯字面配比。
+        # 否则字面分只占 0.20，会被 recency/status 盖过，实测 r@1 从 0.33 掉到 0.078。
+        w_lex, w_sem = 0.70, 0.0
+
+    intent = detect_intent(query)
+    intent_kinds = set(INTENTS[intent][1]) if intent else set()
+    want_recent = bool(re.search(r"最近|这几天|最近在|近期", query or ""))
+
+    scored = []
+    for rec in pool.values():
+        if rec.get("redacted"):
+            continue
+        occurred = rec.get("occurred_at") or rec.get("observed_at") or ""
+        if since and occurred and occurred[:10] < since:
+            continue
+        if until and occurred and occurred[:10] > until:
+            continue
+        rec_grams = set((rec.get("grams") or "").split())
+        overlap = (
+            len(query_grams & rec_grams) / len(query_grams) if query_grams and rec_grams else 0.0
+        )
+        if rec["id"] in exact_ids:
+            # 精确命中是最强信号：不受分词差异影响（拉丁片段、专有名词）
+            overlap = 1.0
+        cos = sem.get(rec["id"], 0.0) if sem else 0.0
+        sem_unit = semantic.to_unit_score(cos)
+        if overlap <= 0 and cos < semantic.MIN_SIM and not want_recent:
+            # 两条通道都没有信号才丢。语义够高但字面为 0 的记录必须留下，
+            # 否则「剪辑→剪映」这类正确命中永远进不来。
+            continue
+        if overlap <= 0 and cos < semantic.MIN_SIM and want_recent:
+            # 「最近在做什么」这类时间问句：只取近 30 天，按时间排，不硬凑语义
+            if not occurred or occurred[:10] < (
+                __import__("datetime").date.today() - __import__("datetime").timedelta(days=30)
+            ).isoformat():
+                continue
+        lexical = overlap
+        if rec["id"] in fts_ids:
+            lexical = min(1.0, lexical + 0.15)
+        boost = 0.25 if rec.get("kind") in intent_kinds else (-0.08 if intent_kinds else 0.0)
+        needle = query.strip()
+        if needle and (needle in (rec.get("value") or "") or needle in (rec.get("evidence") or "")):
+            boost += 0.35
+        score = (
+            w_lex * lexical
+            + w_sem * sem_unit
+            + 0.10 * _recency_score(occurred)
+            + 0.05 * (1.0 if rec.get("status") == "active" else 0.25)
+            + 0.03 * min(1.0, len(rec.get("evidence") or "") / 120.0)
+            + boost
+        )
+        rec["score"] = round(score, 4)
+        rec["overlap"] = round(overlap, 3)
+        rec["semantic"] = round(cos, 3)
+        rec["match"] = "hybrid"
+        scored.append(rec)
+
+    scored.sort(key=lambda r: (-r["score"], -len(r.get("value") or "")))
+
+    # 折叠重复正文：同一句话只留最高分
+    seen, out = set(), []
+    for rec in scored:
+        key = re.sub(r"\s+", "", (rec.get("value") or ""))[:48]
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(rec)
+        if len(out) >= limit:
+            break
+
+    for rec in out:
+        rec["elapsed_ms"] = round((time.perf_counter() - started) * 1000, 2)
+    return out
+
+
+def search_docs(con: sqlite3.Connection, query: str, limit: int = 5) -> list[dict]:
+    expr = fts_expr(query)
+    if not expr:
+        return []
+    rows = con.execute(
+        "SELECT d.*, bm25(docs_fts) AS rank FROM docs_fts "
+        "JOIN docs d ON d.rowid = docs_fts.rowid WHERE docs_fts MATCH ? LIMIT ?",
+        (expr, limit),
+    ).fetchall()
+    out = []
+    for row in rows:
+        rec = dict(row)
+        snippet_terms = [t for t in _TOKEN.findall(query or "") if len(t) >= 2]
+        text = rec.get("text") or ""
+        pos = min((text.find(t) for t in snippet_terms if t in text), default=0)
+        rec["snippet"] = text[max(0, pos - 40) : pos + 160]
+        rec["score"] = round(1.0 / (1.0 + max(0.0, float(rec.pop("rank")))), 4)
+        out.append(rec)
+    return out
+
+
+def timeline(con: sqlite3.Connection, since: str | None = None, until: str | None = None, limit: int = 200) -> list[dict]:
+    sql = (
+        "SELECT id, claim_id, kind, subject, value, occurred_at, observed_at, layer, status "
+        "FROM records WHERE occurred_at <> ''"
+    )
+    params = []
+    if since:
+        sql += " AND occurred_at >= ?"
+        params.append(since)
+    if until:
+        sql += " AND occurred_at <= ?"
+        params.append(until + "\uffff")
+    sql += " ORDER BY occurred_at ASC LIMIT ?"
+    params.append(limit)
+    return [dict(row) for row in con.execute(sql, params)]
+
+
+def history(con: sqlite3.Connection, claim_id: str) -> list[dict]:
+    """同一条记忆的所有修订，按时间排列 → 思想演变。"""
+    rows = con.execute(
+        "SELECT id, claim_id, value, status, occurred_at, observed_at, file FROM records "
+        "WHERE claim_id = ? ORDER BY COALESCE(NULLIF(occurred_at,''), observed_at) ASC",
+        (claim_id,),
+    ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def related(con: sqlite3.Connection, record_id: str, limit: int = 8) -> list[dict]:
+    """同主题 / 同类型的关联记忆。"""
+    row = con.execute("SELECT * FROM records WHERE id = ?", (record_id,)).fetchone()
+    if not row:
+        return []
+    base = dict(row)
+    rows = con.execute(
+        "SELECT * FROM records WHERE id <> ? AND (subject = ? OR kind = ?) "
+        "ORDER BY CASE WHEN subject = ? THEN 0 ELSE 1 END, occurred_at DESC LIMIT ?",
+        (record_id, base.get("subject"), base.get("kind"), base.get("subject"), limit),
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def counts(con: sqlite3.Connection) -> dict:
+    def group(column):
+        return {
+            row[0]: row[1]
+            for row in con.execute(
+                f"SELECT {column}, COUNT(*) FROM records WHERE {column} IS NOT NULL GROUP BY {column}"
+            )
+        }
+
+    return {
+        "total": con.execute("SELECT COUNT(*) FROM records").fetchone()[0],
+        "by_layer": group("layer"),
+        "by_kind": group("kind"),
+        "by_status": group("status"),
+    }
+
+
+# --------------------------------------------------------------------------
+# 召回：把结果打包成可注入的上下文，受字符预算约束
+# --------------------------------------------------------------------------
+
+
+def _trim(text: str, width: int) -> str:
+    text = (text or "").replace("\n", " ").strip()
+    return text if len(text) <= width else text[: width - 1] + "…"
+
+
+def recall(
+    con: sqlite3.Connection,
+    prompt: str,
+    budget_chars: int = 1200,
+    max_items: int = 6,
+    min_score: float = 0.18,
+) -> dict:
+    intent = detect_intent(prompt)
+    hits = search(con, prompt, limit=max_items * 3, status=("active",))
+
+    # 去重：同一 claim 只留最高分那条；同值不同 id 也折叠。
+    seen_claims, seen_values, picked = set(), set(), []
+    for rec in hits:
+        if rec["score"] < min_score:
+            continue
+        key = rec.get("claim_id")
+        value_key = re.sub(r"\s+", "", (rec.get("value") or ""))[:40]
+        if key in seen_claims or value_key in seen_values:
+            continue
+        seen_claims.add(key)
+        seen_values.add(value_key)
+        picked.append(rec)
+        if len(picked) >= max_items:
+            break
+
+    lines, used = [], 0
+    for rec in picked:
+        line = f"- [{KIND_LABEL.get(rec.get('kind'), rec.get('kind'))}] {_trim(rec.get('value'), 90)}"
+        if rec.get("occurred_at"):
+            line += f"（{rec['occurred_at'][:10]}）"
+        if len(line) + used + 1 > budget_chars:
+            break
+        lines.append(line)
+        used += len(line) + 1
+
+    return {
+        "prompt": prompt,
+        "intent": intent,
+        "items": picked[: len(lines)],
+        "chars": used,
+        "budget": budget_chars,
+        "dropped": max(0, len(picked) - len(lines)),
+        "text": "\n".join(lines),
+    }

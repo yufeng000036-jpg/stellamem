@@ -1,201 +1,403 @@
-# 星忆（Stellamem）
+# Stellamem · 星忆
 
-### 给 AI 记忆一个 Git。
+> **Give AI memory a Git.** ｜ **给 AI 记忆一个 Git。**
 
-**Stellamem 是一个 Markdown-first、Local-first 的 AI 长期记忆编译器。**
-它让 AI 的记忆可以被查看、解释、版本化和回滚。
+Stellamem 是一个**本地优先、可审计的 AI 长期记忆治理层**。
+它让 AI 的长期记忆可以被**查看、溯源、版本化、复核、回滚** —— 而不是变成一个不可见的黑箱。
 
-本地运行 · 用户拥有数据 · 免费开源
+<p align="center">
+  <b>🚧 Alpha（v0.2.0-alpha）</b> ·
+  🦞 首个一等公民宿主：OpenClaw ·
+  🧩 核心与框架无关 ·
+  🔒 本地优先 ·
+  📝 Markdown 优先
+</p>
 
-Stellamem — Compilable, auditable, local-first long-term memory for AI agents.
-
-> ⚠️ **Alpha 阶段**：当前为 `v0.1.0-alpha`，安全边界仍在完善，使用前请读 [SECURITY.md](SECURITY.md)。
-
+<p align="center">
+  <a href="README.en.md">English</a> ·
+  <a href="docs/QUICKSTART.md">Quick Start</a> ·
+  <a href="docs/ARCHITECTURE.md">架构</a> ·
+  <a href="docs/PHILOSOPHY.md">理念</a> ·
+  <a href="SECURITY.md">安全</a> ·
+  <a href="docs/USE_CASES.md">应用场景</a> ·
+  <a href="CONTRIBUTING.md">参与贡献</a>
+</p>
 ---
+
+## 本版是什么（v0.2.0-alpha，2026-11-02）
+
+本分支是公开清理版，相对旧主分支 v0.1.0-alpha 的变化全部来自 staging 链路：
+生产三项版 187 测试 → 改进版 226 测试 → PATCH1 242 测试 → PATCH2 266 测试，
+公开清理后重跑仍为 **266 / 266 通过**，清单 **188 条**。本版是公开版，
+**不是生产部署包**：不含任何真实记忆内容、真实记忆文件、生产索引、生产备份、生产配置。
+
+### 现在已有的功能
+
+**记忆治理核心（沿用 v0.1.0-alpha，并经回归验证）：**
+- Claim 结构化断言：`kind / subject / scope / predicate / value / confidence / evidence / provenance`；
+- 来源可溯：每条 Claim 带来源指针与内容 hash，来源不可验证时抛错、不伪造；
+- 作用域 scope：同一话题在不同场景可有不同偏好，不互相污染；
+- 版本演化：`SUPERSEDES` 更新旧值，旧版本保留在版本链里；
+- 关系引擎：`NEW / DUPLICATE / REINFORCES / REFINES / COMPATIBLE / SUPERSEDES / CONTRADICTS / UNCERTAIN` 共 8 种；
+- 人工复核收件箱（CLI）：敏感、身份、低置信度、可疑内容进入收件箱，人工 `approve / reject / edit`；
+- 密钥门禁 Secret Gate：密钥在任何模型调用之前被拦截，不写库、不进日志、不外发；
+- 冲突治理：冲突写进冲突日志并保留双方证据，不静默覆盖；
+- 事务与回滚：记忆写入是事务，有日志、可恢复、可回滚；
+- 上下文投影：只向 Agent 注入当前任务相关的已批准 Claim，并有全局字符预算；
+- 只读体检：索引同步、冲突检测、健康检查、版本链校验（`compiler/memory.py doctor`）。
+
+**时间与过期（生产三项版新增）：**
+- 事实带 `valid_to / expired_at`，支持 `as_of()` 时间回放；
+- `as_of()` 默认不再静默截断，新增 `as_of_paged()`，返回总数与是否截断。
+
+**注入安全（改进版 + PATCH1）：**
+- 注入门拦截低分非弱项：字面重叠 0 且语义低于阈值，或综合分极低时不注入；弱信号默认不注入；
+- `gate_log.jsonl` 轮转：1 MB / 10000 行，最多保留 3 份；
+- `snapshot()` 打包前重名检测，重复时报错而不是静默覆盖；
+- append-only 内容保护：已写入内容不被静默改写。
+
+**主体隔离与桥（改进版 + PATCH1 + PATCH2）：**
+- 三个主体 `user / persona / viewer`，默认仅同主体检索，跨主体默认拒绝；
+- 桥默认拒绝，仅关系、方法、结果三种结构化模板可走，全文人工批准，带来源与审批人；
+- 桥批量批准失败整批不通过，单条可撤回，72 小时过期（该值为低置信猜测，需真实使用数据重定）；
+- `namespace` 字段为权威主体字段，无效值 fail-closed，不回退到旧 `subject` 字段；
+- 主体标签补标接口只在内存干跑，不写盘、不改现有 `subject` 字段。
+
+**人格事件与承诺（改进版 + PATCH2）：**
+- 人格适配器：事件先待确认，确认真正说出口后才可见，新增可选持久化 store；
+- 人格事件持久化：SQLite sidecar 只追加事件日志，人工复核后才可导出，不自动写用户库；
+  `export_pack()` 只返回 reviewed 数据；
+- 承诺表：独立 SQLite sidecar，不混进记忆正文，可创建、凭证据完成、过期。
+
+**筛查与宿主（改进版 + PATCH1）：**
+- 只读 pending 筛查报告：只统计、不改状态、不激活；
+- OpenClaw Adapter：隔离真实宿主 E2E 通过（首个一等公民宿主）；
+- AI 自举安装：`AI_BOOTSTRAP.md` + `INSTALL.md` + `setup.py`，支持 `--dry-run`、幂等安装，
+  不覆盖已有自定义文件；离线演示用虚构数据，无需模型。
+
+### 现在没有的功能 / 已知问题（合并前请先读）
+
+- **D4、D5 未修：** `blocked_weak` 口径会误标非弱项，缺 `text` 的注入项会抛 KeyError；
+  且 gate 当前无生产调用方，接线到任何生产调用方之前必须先修 D4、D5。
+- **D1、D3、D7–D13 未修：** 包括 `as_of_paged` 的 offset 缺失组合、轮转阈值措辞等，见公开日志第 4 节。
+- **主体标签只到干跑：** `namespace` 尚未写入任何真实数据；53 行角色 / 系统类 + 30 行含人格 / 观众字样的
+  hold 规则未定，写入前需要全量备份、干跑清单核对、回滚方案与批准人，缺一不可。
+- **人格事件同步到用户库未实现：** `export_pack()` 只返回 reviewed 数据，需另行人工批准的任务才能消费。
+- **桥没有图形界面：** 只有终端文本审批；72 小时 TTL 为低置信猜测；关键词黑名单可被改写绕过，
+  真正边界是人工看全文批准。
+- **语义检索未在本版做：** 端口、健康检查、向量缓存、查询后重排、用自有题集评测均不在本版范围；
+  生产语义服务曾因端口占用离线是生产环境配置问题，本包不含生产配置修复。
+- **生产侧 pending 未激活：** 生产库 3969 条 pending 记录在本版不激活，批量 keep / task / drop
+  清理需单独批准，不能顺手激活；5 个核心身份候选未获批准，不得写入。
+- **通用 Alpha 限制（沿用旧版）：** 无 GUI、无同步、远程云模型仅环回地址、其他宿主适配未完成、
+  Adapter 召回仍偏关键词、本地 4B 模型存在分类漂移、英文临时情绪检测不完整、
+  蒸馏 / 保留释放流程尚未实现、尚未经过大规模外部用户长期验证。
+- **量化口径：** benchmark 仅为 30 篇日记、单一用户的内部实验数据（recall ≈ 0.705 / precision ≈ 0.505），
+  不构成准确率承诺；`False Write = 0` 仅表示在已定义的对抗样本中未观察到该类失败。
+
 
 ## 它解决什么问题
 
-- **给 AI 装消化系统**：每天的对话日记，自动编译成结构化长期记忆（偏好 / 决策 / 教训 / 项目），自动去重、路由、入库。
-- **解决记忆腐烂**：长期运行的 AI 记忆会越积越乱、自相矛盾。本系统已具备**冲突日志、版本链、关系判断组件**（`judge.py` 支持 8 种关系判断）；
-  自动 Relation Engine 接入主流程仍在开发中（见 [ROADMAP.md](ROADMAP.md)），目前冲突裁决由人工确认。
-- **白盒透明**：一切记忆都是 markdown 文件，人能读、Git 能 diff、每次认知变化都有证据链。
-- **不绑定模型**：提取层是标准化的 Claim 抽取任务，换更强的模型，记忆质量更高。4B 是推荐起点，不是天花板。
+今天 AI Memory 的核心问题**不是「AI 记不住」**。
 
----
+而是：
 
-## 核心思路
+> **AI 记住之后，用户不知道它为什么记住、从哪里来的、是不是过期、是不是误解、能不能撤销。**
+
+一个真实场景：
 
 ```text
-AI 对话
-→ 自动日记（hooks/daily-autolog）
-→ 日记 daily/*.md
-→ 编译（compiler/extract.py，本地模型）
-→ 结构化 Claim（kind / subject / scope / predicate / value / confidence）
-→ 路由（compiler/sleep_purify.py）
-→ markdown 记忆（core / long-term / semantic）
-→ adapter 注入 AI 上下文（adapters/openclaw）
+用户：我喜欢简洁回答。
+
+几个月后：
+用户：技术问题请详细回答。
+
+传统 Memory：可能覆盖、重复、矛盾，或者静默出错。
 ```
 
-写入侧和注入侧是两个独立组件，缺一不可：
-`hooks/` 负责「AI 对话 → 日记」，`adapters/` 负责「记忆 → AI 上下文」。
-详见 `docs/INTEGRATION.md`。
-
----
-
-## 目录结构
+Stellamem 的处理方式：
 
 ```text
-compiler/      编译与路由脚本
-hooks/         写入侧：自动日记 hook
-adapters/      注入侧：框架适配器
-templates/     空记忆结构模板
-demo/          虚构用户 7 天日记 + 一键演示
-benchmark/     评测工具
-docs/          文档
-schema.md      Claim 规范
-config.example.json  配置模板
+Conversation
+   ↓
+Claim（结构化断言）
+   ↓  scope        —— 这条偏好属于哪个场景
+   ↓  evidence     —— 原话是什么
+   ↓  relation     —— 和已有记忆是什么关系
+   ↓  revision     —— 产生哪个新版本
+Memory
+   ↓
+Version history —— 旧版本保留，可回滚
 ```
+
+> **Memory should be inspectable infrastructure, not invisible magic.**
+> 记忆应该是可检查的基础设施，而不是看不见的魔法。
 
 ---
 
-## 快速开始（一键安装）
+## Why Stellamem（为什么值得一看）
+
+- **不是聊天记录备份**：对话是「原始素材」，长期记忆是「提炼结果」，两者不能混为一谈。
+- **每条记忆都有来源**：Claim 带 `evidence` + `provenance`；来源无法验证时**报错，不伪造**。
+- **支持 scope（作用域）**：同一个话题在不同场景可以有不同偏好，不互相污染。
+- **支持版本演化**：`SUPERSEDES` 更新旧值，但**旧版本保留在版本链里**。
+- **冲突不消失**：`CONTRADICTS` 会写进冲突日志，**不静默覆盖**。
+- **密钥不进门**：密钥在任何模型调用**之前**被拦截。
+- **敏感内容不自动写**：敏感 / 身份类记忆进入人工复核收件箱。
+- **用户拥有自己的记忆**：看得见、改得动、能拒绝、能删除、能回滚。
+
+---
+
+## 核心理念
+
+| 原则 | 含义 |
+|---|---|
+| **Memory is not a dump** | 聊天记录不是长期记忆。 |
+| **Secret is not Memory** | 凭证永远不应成为长期记忆。 |
+| **Sensitive is not Auto-write** | 值得保留 ≠ 自动允许写入。 |
+| **Memory must have provenance** | AI 应该知道「为什么相信这件事」。 |
+| **Conflict must not disappear** | 冲突不能静默覆盖。 |
+| **Users own their memory** | 用户应能看见 / 修改 / 拒绝 / 删除 / 回滚 / 导出 AI 的记忆。 |
+
+> 展开说明见 [`docs/PHILOSOPHY.md`](docs/PHILOSOPHY.md)。
+
+---
+
+## 核心架构
+
+```mermaid
+flowchart TD
+    A[Agent Conversation] --> B[Source Pointer]
+    B --> C[Claim Extraction]
+    C --> D[Security Policy]
+    D --> E[Relation Engine]
+    E --> F[Human Review Inbox]
+    F --> G[Canonical Memory]
+    G --> H[Context Projection]
+    H --> I[AI Agent]
+```
+
+记忆单元的生命周期：
+
+```text
+Conversation → Claim → Evidence → Scope → Revision → Relation → Memory
+```
+
+> 完整说明见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
+
+---
+
+## Stellamem 能做什么
+
+### Claim-based memory（基于断言，而非整段对话）
+长期记忆被提炼成结构化 Claim：`kind / subject / scope / predicate / value / confidence / evidence / provenance`。
+
+### Provenance（来源可溯）
+每条 Claim 都带来源指针与内容 hash。来源解析失败时**抛错，不编造**。
+
+### Scope（作用域）
+不同场景可以有不同偏好：`global` 的「简洁」与 `technical` 的「详细」并存。
+
+### Revision（版本演化）
+同一事实可以演进；旧版本进入版本链，不直接消失。
+
+### Relation Engine（关系引擎）
+支持 8 种关系：`NEW` / `DUPLICATE` / `REINFORCES` / `REFINES` / `COMPATIBLE` / `SUPERSEDES` / `CONTRADICTS` / `UNCERTAIN`。
+
+### Human Review（人工复核）
+敏感、身份、低置信度、可疑内容进入收件箱，人工 `approve` / `reject` / `edit`。
+
+### Secret Gate（密钥门禁）
+密钥在**任何模型调用之前**被确定性识别并阻断，不写库、不进日志、不外发。
+
+### Conflict Handling（冲突治理）
+冲突写入冲突日志并保留双方证据，**不静默覆盖**。
+
+### Transaction / Rollback（事务与回滚）
+记忆写入是一个事务：有日志、可恢复、可回滚，冲突检测不覆盖后续改动。
+
+### Context Projection（上下文投影）
+只向 Agent 注入**当前任务相关**的已批准 Claim，并有全局字符预算。
+
+---
+
+## 它不是什么
+
+Stellamem **不是**：
+
+- ❌ ChatGPT Memory 的破解工具
+- ❌ 一个聊天记录备份器
+- ❌ 云端用户画像平台
+- ❌ 全量上传用户私人数据的服务
+- ❌ 一个必须依赖 OpenClaw 才存在的项目
+
+**OpenClaw 是「第一个完整验证的宿主」，不是「唯一宿主」。**
+核心编译器是框架无关的。
+
+---
+
+## 状态矩阵
+
+| Capability | Status |
+|---|---|
+| OpenClaw Adapter | ✅ Alpha · 隔离真实宿主 E2E 通过 |
+| Claim compiler | ✅ |
+| Relation Engine | ✅ |
+| Source provenance | ✅ |
+| Human Review Inbox（CLI） | ✅ |
+| Secret Gate | ✅ |
+| Context Projection | ✅ |
+| Transaction / Rollback | ✅ |
+| Crash recovery | ✅ |
+| Local models（llama.cpp 等） | ✅ |
+| Remote cloud models | 🚧 暂不支持（仅环回地址） |
+| Other agent adapters | 🚧 |
+| GUI | 🚧 |
+| Sync | 🚧 |
+
+> 状态**严格来自真实实现**。标 🚧 的尚未实现。
+
+---
+
+## 快速开始
 
 ```bash
 # 1. 环境自检（只读，不改任何文件）
-python setup.py check
+python setup.py check --offline
 
-# 2. 干跑，看清会改什么
-python setup.py install --dry-run
+# 2. 干跑，先看清会创建/修改什么
+python setup.py install --mem-root <记忆根目录> --dry-run
 
-# 3. 真安装（幂等，重复跑安全）
-python setup.py install
+# 3. 真安装（幂等，重复跑安全；不覆盖已有自定义文件）
+python setup.py install --mem-root <记忆根目录> --config <config.json 路径>
+
+# 4. 跑离线演示（虚构数据，无需模型）
+python demo/run_demo.py --offline
+
+# 5. 自检
+python compiler/memory.py doctor
 ```
 
-装完后按 `setup-out/install-report.md` 的「下一步」操作（合并 openclaw.json 片段、配模型服务、重启）。
+要求：**Python 3.10+**（核心只用标准库）。Node 仅在启用 OpenClaw 集成时可选。
 
-> 把整个仓库丢给 AI，让它读 [AI_BOOTSTRAP.md](AI_BOOTSTRAP.md) 也能自动装。
+> 👉 完整步骤见 [`docs/QUICKSTART.md`](docs/QUICKSTART.md)。
+> ⚠️ 需要本地模型服务（llama.cpp / Ollama / LM Studio 等），且**只接受环回地址**。
 
----
+### 用 AI 来安装（不会编程也可以）
 
-## 手工安装（高级用法）
+Stellamem 内建一条「AI 安装路线」。把仓库交给一个能操作电脑的 AI，让它读
+[`AI_BOOTSTRAP.md`](AI_BOOTSTRAP.md) 即可。可以直接把下面这段丢给它：
 
-不想用一键安装，也可以手动逐步来：
-
-1. 复制配置：`cp config.example.json config.json`，填你的路径和模型名。
-2. 建记忆结构：参考 `templates/` 建 `core / long-term / semantic`。
-3. 启动模型服务，运行 `compiler/extract.py` 编译日记。
-4. 装写入侧：`hooks/daily-autolog/`。
-5. 装注入侧：`adapters/openclaw/`。
-
-完整步骤见 `docs/INTEGRATION.md`。
-
----
-
-## 性能上限：模型可替换，上限不封顶
-
-星忆的记忆编译质量不绑定任何单一模型。提取层是标准化 Claim 抽取任务，任何支持 JSON 输出的文本模型都能接。
-
-| 配置 | 模型 | 硬件 | 单篇耗时 | 说明 |
-|------|------|------|---------|------|
-| 当前默认 | Qwen3-4B Q5_K_M | 8GB 显存 | 约 7 秒 | 本地可跑，零成本 |
-| 轻量档 | Qwen3-1.7B Q5 | 4GB 显存 | 约 3 秒 | 低配设备，质量略降 |
-| 进阶档 | Qwen3-14B / 32B | 16–24GB 显存 | 视硬件 | 质量优先 |
-| 云端档 | GPT-4o / Claude / DeepSeek | API | 视网络 | 质量最高（API 鉴权适配开发中，暂需自行加 header） |
-
-上限不固定。模型越强，抽取越准、去重越干净、冲突裁决越可靠。
-整个架构、schema、路由逻辑都是模型无关的——换模型不用改记忆结构。
+```text
+Clone this repository and read AI_BOOTSTRAP.md.
+Install Stellamem in an isolated way.
+Do not modify existing memory or agent configuration without asking me first.
+Run the built-in checks and report whether installation succeeded.
+```
 
 ---
 
-## 当前配置与实测数据
+## 安全与隐私
 
-- 默认模型：Qwen3-4B Q5_K_M（llama.cpp）
-- 推理后端：llama.cpp + CUDA，n_ctx = 8192
-- 实测速度：单篇约 7 秒，73 token/s
-- 显存占用：8GB 可全量 offload
-- 成本：零（本地）
+简版如下，完整版见 [`SECURITY.md`](SECURITY.md)。
 
----
-
-## 硬件门槛
-
-- 推荐：8GB 显存 + llama.cpp，跑 Qwen3-4B Q5_K_M。
-- 进阶：16GB 显存，可上更大模型。
-- 无 GPU：CPU 也能跑，速度慢 10 倍以上；或改用本地 OpenAI 兼容服务（Ollama / LM Studio）。
+- **Local-first** —— 记忆默认保存在你自己的机器上。
+- **不复制原始对话** —— Stellamem 不保存第二份完整 raw conversation；只存来源指针与 hash，原文留在宿主。
+- **Secret before model** —— 密钥在发给任何模型之前被检测阻断。
+- **Sensitive review** —— 敏感与身份信息需要人工确认，且**永远不自动写**。
+- **Provenance or nothing** —— 来源不可验证时，**不伪造**。
 
 ---
 
 ## 量化效果（Benchmark）
 
-30 篇真实日记评测：召回率 0.705，False Write 0。
+> **Benchmark results are experimental and limited to predefined test sets.**
+> 以下是内部版本比较用的实验数据，**不构成准确率承诺**。
 
-> 注：该数据来自早期内部评测，匹配方法仍在迭代，后续会发布可复现的 benchmark 结果，欢迎自行验证。
+- 样本：30 篇日记（单一用户）
+- 指标：recall ≈ 0.705 / precision ≈ 0.505
+- `False Write = 0` **仅**表示在已定义的对抗样本中未观察到该类失败，**不代表真实环境零错误**
 
----
-
-## 适用 / 不适用
-
-适合：本地优先、要审计、要版本控制、长期运行的 AI 助手记忆治理。
-
-不适合：追求开箱即用 SaaS、不想碰命令行、只需短期上下文。
+测试条件与局限已完整记录，详见 [`benchmark/README.md`](benchmark/README.md)。
 
 ---
 
-## FAQ
+## 当前限制（Alpha 的诚实边界）
 
-**能接 Claude / GPT 吗？**
-目前**直接支持本地 OpenAI-compatible 模型服务**（llama.cpp / Ollama / LM Studio 等），
-默认不需要把记忆发送给第三方模型服务。
-远程 API Provider（GPT / Claude / DeepSeek 等）**适配计划中**：当前 `extract.py` 未带
-`Authorization` 头，直连远程 API 会 401。想要远程跑，需要自行加鉴权头，或等官方适配。
-实际质量差异需自行 Benchmark 验证，本仓不声称「某个模型一定最好」。
+- **OpenClaw 是唯一完整 E2E 验证的宿主**（核心与框架无关，但其它宿主适配尚未完成）
+- **远程云模型未正式支持** —— 模型客户端仅允许环回地址
+- **Adapter 召回仍偏关键词** —— 可能漏召回不含同词的自然提问
+- **本地 4B 模型存在分类漂移**（kind 判定不够严谨）
+- **英文临时情绪检测不完整**
+- **蒸馏 / 保留释放流程尚未实现**
+- **尚无 GUI**
+- **尚未经过大规模外部用户长期验证**
 
-**记忆存在哪？会上传吗？**
-默认全本地 markdown 文件，Git 可 diff，不联网。只有你主动配置远程模型 API 时，
-编译所需内容才会发给对应服务商（该能力见上一条，尚未内置）。
+### 本版新增的已知问题（2026-11-02，见上文“本版是什么”一节）
 
-**换更强的模型会更好吗？**
-会。模型越强，召回越高、误写越少。4B 是默认起点，不是上限。
+- D4、D5 未修，gate 当前无生产调用方，接线前必须先修；
+- D1、D3、D7–D13 未修；
+- 主体标签只到干跑，未写入真实数据，hold 规则未定；
+- 人格事件同步到用户库未实现，桥无图形界面，72 小时 TTL 为低置信猜测；
+- 语义检索端口 / 健康检查 / 缓存 / 重排未在本版做；
+- 生产侧 3969 条 pending 未激活，核心身份候选未获批准不得写入。
 
-**和 Mem0 / Zep 有什么区别？**
-markdown-first、可 diff、可回滚、白盒可审计，不是黑盒数据库。
-
-**支持哪些 Agent 框架？**
-第一公民宿主是 **OpenClaw**（有 hooks / plugins / agent workspace 的环境），开箱即用。
-其他框架（Claude Code / Cursor / 自研 Agent）**核心编译器可以直接用**，只需自己实现两个薄适配层：
-
-| 组件 | 非 OpenClaw 用户需要做什么 |
-|------|--------------------------|
-| 编译侧 `compiler/` | **完全不用改**，框架无关。配好 `config.json` 即可跑 `extract.py` → `sleep_purify.py` → markdown 记忆。 |
-| 写入侧 | 自己写「对话结束 → 落盘 daily」的钩子，格式 `[HH:MM] role: content` → `daily/YYYY-MM-DD.md` |
-| 注入侧 | 在 system prompt 构建处读 `core/*.md` 拼进去，按关键词命中读 `long-term/` 和 `semantic/` |
-
-即：**不装 OpenClaw，也能用这份记忆编译器**（写入/注入自实现）。完整说明见 [INSTALL.md 第 6 节](INSTALL.md)。
+这些透明项是设计的一部分，不是缺陷隐瞒。
 
 ---
 
-## 还在持续更新中
+## Roadmap
 
-星忆还在持续更新中，技能还会逐渐增加，还会逐渐变得更完善、更加完美。请持续支持我们。
+### Alpha（当前）
+- 可靠性打磨
+- 召回质量
+- 外部测试
 
-如果觉得有用，欢迎 Star、提 Issue、贡献 adapter 或模型配置。
+### Beta
+- 更多宿主 Adapter
+- 语义检索
+- 迁移稳定性
+- 复核体验改进
+
+### Future
+- 桌面 GUI
+- Companion 集成
+- MCP
+- 加密同步
+- 团队记忆
+- 企业治理
+
+详见 [`ROADMAP.md`](ROADMAP.md)。
+
+---
+
+## 参与贡献
+
+欢迎参与：见 [`CONTRIBUTING.md`](CONTRIBUTING.md)。
+> ⚠️ 任何与记忆行为相关的修改，**必须附回归测试**。
+
+安全问题请勿公开提交 Issue，按 [`SECURITY.md`](SECURITY.md) 的渠道联系。
+
+---
+
+## Vision
+
+未来的 AI 会存在数年甚至更久。如果一个 AI 真正长期陪伴、工作或服务一个人，它就需要回答：
+
+- 我为什么知道这件事？
+- 这是用户什么时候说的？
+- 现在还成立吗？
+- 后来有没有改变？
+- 两条记忆冲突怎么办？
+- 用户能不能撤销？
+- 敏感内容是否应该调用？
+
+Stellamem 希望成为 **AI 长期记忆的治理基础层**。
+
+**OpenClaw 是第一站，不是终点。**
 
 ---
 
 ## License
 
-MIT，见 LICENSE。
-
----
-
-Made by 宇枫
-
----
-
-## 评测口径更正（2026-09-22）
-
-现有 30 篇单用户日记评测得到：标准答案 393 条、命中 277 条、漏检 116 条、多检 272 条；在当前标准答案和单次 LLM 匹配器口径下，召回率为 0.705，精确率为 0.505。
-
-`False Write = 0` 只表示既定对抗样本中未观察到对应错误，不能推出“所有写入都正确”，也不能代表真实运行环境的错误写入率为零。该数据只适合版本内部比较，不能外推为通用准确率。
-
-Scope 说明：Schema 与本地编译器已改为四字段稳定 ID，并兼容读取 legacy 三字段 ID；9 项安全测试已通过，定时任务恢复后的真实编译仍未验证。
+MIT © 宇枫 · 见 [`LICENSE`](LICENSE)

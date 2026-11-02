@@ -1,12 +1,14 @@
 {
+  "schema_version": 2,
   "memories_root": "<YOUR_MEMORIES_PATH>",
-  "scripts_root": "<YOUR_SCRIPTS_PATH>",
-  "model_name": "<YOUR_MODEL_NAME>",
-  "llama_bin": "<YOUR_LLAMA_BIN_OR_EMPTY>",
-  "server_url": "http://127.0.0.1:<PORT>",
-  "daily_dir": "<YOUR_MEMORIES_PATH>/daily",
-  "system_dir": "<YOUR_MEMORIES_PATH>/system",
-  "core_dir": "<YOUR_MEMORIES_PATH>/core",
-  "longterm_dir": "<YOUR_MEMORIES_PATH>/long-term",
-  "semantic_dir": "<YOUR_MEMORIES_PATH>/semantic"
+  "server_url": "http://127.0.0.1:8081",
+  "model_id": "",
+  "model_name": "",
+  "llama_bin": "",
+  "chunk_chars": 2500,
+  "model_max_tokens": 8192,
+  "context_size": 16384,
+  "model_timeout": 90,
+  "gpu_layers": 0,
+  "telemetry": false
 }

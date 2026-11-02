@@ -10,7 +10,7 @@ Stellamem 是一个 Markdown-first、Local-first 的 AI 长期记忆编译器。
 
 请通过私密渠道联系我们（安全邮箱：**2024981488@qq.com**），并提供：
 
-1. 受影响版本（当前 `v0.1.0-alpha`）；
+1. 受影响版本（当前 `v0.2.0-alpha`）；
 2. 复现步骤或 PoC；
 3. 影响范围评估；
 4. 如果你愿意，修复建议。
@@ -54,10 +54,40 @@ secret_ref: env://FEISHU_APP_SECRET
 
 ---
 
+## Privacy guarantees
+
+Stellamem 的隐私设计可以归纳为五条：
+
+### 1. Local-first
+用户记忆**默认保存在用户自己的机器上**。模型客户端只接受环回地址
+（`127.0.0.1` / `localhost`），会拒绝远程/云端 endpoint、拒绝重定向、忽略系统代理。
+
+### 2. No raw conversation duplication
+Stellamem **不复制第二份完整 raw conversation**。它只保存足以重新定位并校验原文的
+**来源指针 + 内容 hash**，原始对话留在宿主（如 OpenClaw）的会话文件里。
+
+### 3. Secret before model
+密钥在**发送给任何编译模型之前**被确定性检测并阻断：不写库、不进收件箱、不进日志、
+不进模型请求体。
+
+### 4. Sensitive review
+敏感与身份类信息**需要人工确认，且永远不自动写入**。它们进入人工复核收件箱，
+由用户 `approve` / `reject` / `edit`。`core/identity.md` 与 `core/user-core.md`
+是硬保护文件，无法被自动写入。
+
+### 5. Provenance or nothing
+来源不可验证时**不伪造**。来源指针无法解析（文件缺失 / 内容被改）时，
+`source_reader` 会报 `SourceError` 并**不消费**该来源，而不是编造内容。
+
+---
+
 ## 数据边界
 
-- **默认可完全本地运行**：使用 llama.cpp / Ollama / LM Studio 等本地模型时，记忆编译过程可以不离开本机。
-- **远程模型 API**：如果你主动配置 GPT / Claude / DeepSeek 等远程模型，与模型交互所需的内容（可能包含日记或记忆片段）会发送给对应服务商。
+- **默认可完全本地运行**：使用 llama.cpp / Ollama / LM Studio 等本地模型时，记忆编译过程不离开本机。
+- **远程模型 API 当前不可用（硬性拒绝）**：`compiler/model_client.py` 只接受环回地址
+  （`127.0.0.1` / `localhost`），会拒绝任何远程/云端 endpoint，并拒绝重定向、忽略系统代理。
+  因此即使误填远程地址，内容也不会被发送出去。若要支持托管服务商，必须显式修改代码与策略，
+  届时与模型交互的内容（可能含日记或记忆片段）才会发往对应服务商。
 - Stellamem **不会**在用户不知情的情况下自动把记忆发送到远程服务。
 
 ---
@@ -88,7 +118,7 @@ Stellamem 遵循 **Single Writer, Multiple Readers**：Memory Compiler 是 canon
 
 ## 当前已知限制（Alpha 阶段）
 
-以下是 `v0.1.0-alpha` 已知、尚未解决的安全边界，请在使用时知悉：
+以下是 `v0.2.0-alpha` 已知、尚未解决的安全边界，请在使用时知悉：
 
 | 限制 | 说明 |
 |---|---|
