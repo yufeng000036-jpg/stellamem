@@ -153,3 +153,77 @@
 - 本次修订只改文档（README、CHANGELOG、PUBLIC-CHANGELOG）与清单，不改代码行为与测试断言；
   修订后测试重跑仍为 266 / 266，清单仍为 188 条。
 - 修订完成后，本分支合并到 main；main 此前为 v0.1.0-alpha，合并后 main 即为本版内容。
+
+## 8. 下一阶段修复（D4/D5，分支阶段，尚未合并到 main）
+
+- D4：`InjectionGate.decide()` 的 `blocked_weak` 现在只计已标记弱信号且实际被拦的项，
+  不再把全部被拦项都算成弱项；新增 `blocked_low_signal`（非弱低信号被拦项）与
+  `blocked_total` 计数；`blocked_low_score` 保留为旧字段别名（计非弱低信号被拦项，
+  并非仅指 score < 0.10 的项），以免破坏已有调用方与测试；空结果提示按
+  “已标记弱信号 / 低信号 / 混合”分别表述，不再把非弱项说成弱信号；
+  日志与审计行同步使用修正后的计数。
+- D5：缺 `text` 的注入项不再抛 KeyError：强信号缺文本按空文本注入，
+  允许弱信号时缺文本按弱信号标签注入，不允许时正常被拦；`text` 为 None 按空处理，
+  非字符串按 `str()` 处理。
+- Gate 接线未做：代码中除测试外仍无 `InjectionGate` 的生产调用方；
+  接线需单独说明调用方与回滚方式，本分支不擅自默认接线到生产调用方。
+- 回归测试：新增 `tests/test_gate_d4d5.py`，11 项；全量测试 277 / 277 通过
+  （基线 266 + 新增 11），清单已按本分支文件重新生成。
+
+## 9. 第 2 步：主体标签 hold 规则 + 干跑验证（分支阶段，尚未合并到 main）
+
+- 新增 `compiler/hold_rules.py`（纯函数，不写盘）：两类 hold 规则——角色/系统类记录
+  （role 为 assistant/system）必须人工抽检；含人格/观众字样但计划 namespace 不是
+  persona/viewer 的记录必须人工抽检；其余计划行保持原动作。
+- 干跑验证（合成占位数据）：user 计划行中普通记录不被 hold；角色/系统类、含人格/观众字样
+  的行被 hold；已计划为 persona 的行不因字样被重复 hold；hold 报告按 claim_id 排序抽样，
+  默认抽样 10 条；输入记录不被修改。
+- 标签写入真实数据仍未做：本模块不打开记忆目录、不打开索引、不写任何真实数据；
+  写入前仍需全量备份、干跑清单核对、回滚方案与批准人，缺一不可。
+- 回归测试：新增 `tests/test_hold_rules.py`，11 项；全量测试 288 / 288 通过
+  （基线 277 + 新增 11），清单已按本分支文件重新生成。
+
+## 10. 第 3 步：人格事件人工复核后同步准备（分支阶段，尚未合并到 main）
+
+- 新增 `compiler/persona_sync.py`（只做候选包准备，不写用户库）：仅 reviewed 事件可进入
+  候选；pending 或仅 confirmed 事件一律拒绝；每条候选必须带 reviewed_by 与 reviewed_at；
+  批准要求非空 approver 且 confirmed_full_text=True；批量批准全有或全无，重复 event_id
+  或任一无效候选都会整批中止；返回的包是数据而非写入，changed_anything 与
+  wrote_anything 均为 False。
+- 实际写入用户库仍未实现、仍未执行：消费该候选包的写入任务需另行明确批准，本步不擅自写库。
+- 回归测试：新增 `tests/test_persona_sync.py`，12 项；全量测试 300 / 300 通过
+  （基线 288 + 新增 12），清单已按本分支文件重新生成。
+
+## 11. 第 4 步：桥接图形审批界面（分支阶段，尚未合并到 main）
+
+- 新增 `compiler/bridge_gui.py`（标准库 http.server）：仅绑定 127.0.0.1，不得对外暴露；
+  队列页显示待审批请求的全文、黑名单标记与到期时间，批准仍走 BridgeStore.approve，
+  要求非空 approver、confirmed_full_text=True，黑名单标记请求另需 acknowledge_flag=True；
+  拒绝与撤回同理；终端审批路径保留为兜底，未删除。
+- 桥 TTL 仍为 72 小时，仍标注低置信猜测，需真实使用数据重定；GUI 页眉明确写出这一点，
+  不得引用为实测最优值；关键词黑名单仍只是噪声过滤，真正边界仍是人工看全文批准。
+- 回归测试：新增 `tests/test_bridge_gui.py`，6 项（含环回 HTTP 批准/拒绝流程、未看全文
+  拒绝批准、非环回绑定拒绝、空队列页）；全量测试 306 / 306 通过
+  （基线 300 + 新增 6），清单已按本分支文件重新生成。
+
+## 12. 第 5 步：语义检索健康检查、缓存、重排与自有评测（分支阶段，尚未合并到 main）
+
+- 新增 `compiler/semantic_health.py`（标准库）：check_service 探活，服务不可用时
+  fail-closed 回字面检索；VectorCache 有界 LRU 缓存（默认内存，显式给路径时只存
+  查询哈希，不存原始文本）；rerank 用公开权重 0.4 字面 + 0.6 语义，缺语义时只用字面，
+  权重为文档约定值，不是实测最优值；evaluate 用自有合成题集算 recall@1/recall@5，
+  不得引用为厂商分数。
+- 本步不修复任何生产端口占用，不含生产配置；服务地址由调用方注入，测试全部用注入的
+  假探活/假向量，不联网、不依赖真实嵌入服务。
+- 回归测试：新增 `tests/test_semantic_health.py`，11 项；全量测试 317 / 317 通过
+  （基线 306 + 新增 11），清单已按本分支文件重新生成。
+
+## 13. 第 6 步：pending 批量计划与审批（分支阶段，尚未合并到 main）
+
+- 新增 `compiler/pending_batch.py`（只做计划与批准记录，不激活、不改状态、不删除）：
+  仅 status 为 pending 的记录可入批；动作限 keep/task/drop；重复 claim_id、未知
+  claim_id、非 pending 记录一律整批中止；批准要求非空 approver 且 confirmed=True
+  （已看完整批清单）；返回的计划 changed_anything 与 activated_anything 均为 False。
+- 实际把计划落到真实库的执行仍未实现、仍未执行：落库任务需另行明确批准，本步不擅自激活。
+- 回归测试：新增 `tests/test_pending_batch.py`，9 项；全量测试 326 / 326 通过
+  （基线 317 + 新增 9），清单已按本分支文件重新生成。
