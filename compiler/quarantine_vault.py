@@ -103,10 +103,14 @@ def propagate(root: Path, probes: list[str], limit: int = 200) -> tuple[list[dic
         for idx, rec in enumerate(records):
             if rec.get("status") == "quarantined" or rec.get("redacted"):
                 continue
-            blob = "\n".join(str(rec.get(f) or "") for f in ("subject", "predicate", "value", "evidence"))
+            blob = "\n".join(
+                str(rec.get(f) or "") for f in ("subject", "predicate", "value", "evidence")
+            )
             if any(p in blob for p in probes):
                 rec = dict(rec, status="quarantined", quarantine_reason="content_propagation")
-                extra.append({"rel": rel_path, "record": rec, "content_sha256": _sha(rec), "index": idx})
+                extra.append(
+                    {"rel": rel_path, "record": rec, "content_sha256": _sha(rec), "index": idx}
+                )
                 if len(extra) >= limit:
                     break
         if len(extra) >= limit:
@@ -201,7 +205,9 @@ def redact_audit(root: Path, ids: set[str], probes: list | None = None) -> dict:
                 rec = json.loads(body.strip())
             except ValueError:
                 continue
-            blob = "\n".join(str(rec.get(f) or "") for f in ("subject", "predicate", "value", "evidence"))
+            blob = "\n".join(
+                str(rec.get(f) or "") for f in ("subject", "predicate", "value", "evidence")
+            )
             if (rec.get("claim_id") in ids or any(p in blob for p in probes)) and blob.strip():
                 rec["value"] = ""
                 rec["evidence"] = ""
@@ -214,7 +220,10 @@ def redact_audit(root: Path, ids: set[str], probes: list | None = None) -> dict:
 
 
 def _restore_audit(root: Path, ids: set[str], payload: dict) -> dict:
-    evidence = {item["record"].get("claim_id"): item["record"].get("evidence", "") for item in payload["records"]}
+    evidence = {
+        item["record"].get("claim_id"): item["record"].get("evidence", "")
+        for item in payload["records"]
+    }
     changes = {}
     vc = root / "system" / "version-chain.json"
     if vc.exists():
@@ -362,10 +371,14 @@ def verify(root: Path, vault_dir: Path, batch: str | None = None) -> dict:
             elif any(rec.get(f) for f in ("value", "evidence")):
                 plaintext.append({"rel": rel_path, "claim_id": rec.get("claim_id")})
 
-    names = [batch] if batch else sorted(
-        p.name.replace(".json.enc", "").replace(".json", "")
-        for p in vault_dir.glob("*.json*")
-        if p.suffix in {".json", ".enc"} and not p.name.startswith("journal")
+    names = (
+        [batch]
+        if batch
+        else sorted(
+            p.name.replace(".json.enc", "").replace(".json", "")
+            for p in vault_dir.glob("*.json*")
+            if p.suffix in {".json", ".enc"} and not p.name.startswith("journal")
+        )
     )
     vaulted = {}
     for name in names:

@@ -68,14 +68,16 @@ def prepare_sync_pack(events, approver: str, confirmed_full_text: bool = False) 
         problems = validate_candidate(event)
         if problems:
             raise ValueError(f"sync pack aborted: event {event_id!r}: {'; '.join(problems)}")
-        candidates.append({
-            "event_id": event_id,
-            "subject": "persona",
-            "text": _full_text(event),
-            "reviewed_by": str(event["reviewed_by"]).strip(),
-            "reviewed_at": str(event["reviewed_at"]).strip(),
-            "source": str(event.get("source") or "").strip(),
-        })
+        candidates.append(
+            {
+                "event_id": event_id,
+                "subject": "persona",
+                "text": _full_text(event),
+                "reviewed_by": str(event["reviewed_by"]).strip(),
+                "reviewed_at": str(event["reviewed_at"]).strip(),
+                "source": str(event.get("source") or "").strip(),
+            }
+        )
     return {
         "status": "approved",
         "approver": str(approver).strip(),

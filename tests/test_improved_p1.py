@@ -2,7 +2,6 @@
 Synthetic placeholder data only (测试用户A / 测试人格B / 测试观众A)."""
 
 import sys
-import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -42,8 +41,14 @@ class SubjectTests(unittest.TestCase):
             self.assertEqual(SU.recall_for_subject(recs, subj), [])
 
     def test_bridge_copy_is_visible_to_target_only(self):
-        copy = {"subject": "persona", "kind": "fact", "value": "测试桥接内容",
-                "bridge_id": "bridge-0001", "origin_id": "orig-1", "status": "active"}
+        copy = {
+            "subject": "persona",
+            "kind": "fact",
+            "value": "测试桥接内容",
+            "bridge_id": "bridge-0001",
+            "origin_id": "orig-1",
+            "status": "active",
+        }
         original = _rec("user", "测试用户A的私人偏好")
         recs = [original, copy]
         self.assertIn(copy, SU.recall_for_subject(recs, "persona"))
@@ -58,16 +63,25 @@ class SubjectTests(unittest.TestCase):
 class BridgeTests(unittest.TestCase):
     def test_before_approval_no_copy(self):
         store = B.BridgeStore()
-        req = store.create("user", "persona", "result",
-                           {"x": "测试项目A", "result": "测试结果A"}, origin_id="orig-1")
+        req = store.create(
+            "user",
+            "persona",
+            "result",
+            {"x": "测试项目A", "result": "测试结果A"},
+            origin_id="orig-1",
+        )
         self.assertEqual(req["status"], "pending")
         self.assertIsNone(store.approved_copy(req["id"]))
 
     def test_after_approval_copy_carries_provenance(self):
         store = B.BridgeStore()
-        req = store.create("user", "persona", "relationship",
-                           {"a": "测试用户A", "b": "测试人格B", "c": "测试关系C"},
-                           origin_id="orig-2")
+        req = store.create(
+            "user",
+            "persona",
+            "relationship",
+            {"a": "测试用户A", "b": "测试人格B", "c": "测试关系C"},
+            origin_id="orig-2",
+        )
         copy = store.approve(req["id"], approver="测试用户A", confirmed_full_text=True)
         self.assertEqual(copy["subject"], "persona")
         self.assertEqual(copy["origin_id"], "orig-2")
@@ -77,8 +91,7 @@ class BridgeTests(unittest.TestCase):
 
     def test_approval_requires_full_text_confirmation(self):
         store = B.BridgeStore()
-        req = store.create("user", "persona", "method",
-                           {"task": "测试任务", "method": "测试方法"})
+        req = store.create("user", "persona", "method", {"task": "测试任务", "method": "测试方法"})
         with self.assertRaises(ValueError):
             store.approve(req["id"], approver="测试用户A", confirmed_full_text=False)
         self.assertEqual(store.get(req["id"])["status"], "pending")
@@ -87,8 +100,9 @@ class BridgeTests(unittest.TestCase):
         # Rephrased content evades the keyword list; the store must still
         # hold it pending and invisible until a human approves full text.
         store = B.BridgeStore()
-        req = store.create("user", "persona", "result",
-                           {"x": "测试项目B", "result": "改写后的测试敏感描述"})
+        req = store.create(
+            "user", "persona", "result", {"x": "测试项目B", "result": "改写后的测试敏感描述"}
+        )
         self.assertFalse(req["blacklist_flagged"])
         self.assertIsNone(store.approved_copy(req["id"]))
         copy = store.approve(req["id"], approver="测试用户A", confirmed_full_text=True)
@@ -96,13 +110,15 @@ class BridgeTests(unittest.TestCase):
 
     def test_blacklist_flagged_requires_acknowledgement(self):
         store = B.BridgeStore()
-        req = store.create("user", "persona", "result",
-                           {"x": "测试项目C", "result": "内含密码字样"})
+        req = store.create(
+            "user", "persona", "result", {"x": "测试项目C", "result": "内含密码字样"}
+        )
         self.assertTrue(req["blacklist_flagged"])
         with self.assertRaises(ValueError):
             store.approve(req["id"], approver="测试用户A", confirmed_full_text=True)
-        copy = store.approve(req["id"], approver="测试用户A",
-                             confirmed_full_text=True, acknowledge_flag=True)
+        copy = store.approve(
+            req["id"], approver="测试用户A", confirmed_full_text=True, acknowledge_flag=True
+        )
         self.assertIsNotNone(copy)
 
     def test_unknown_template_and_same_subject_rejected(self):
@@ -118,16 +134,18 @@ class BridgeTests(unittest.TestCase):
         r2 = store.create("user", "persona", "result", {"x": "测试项目E", "result": "结果E"})
         store.withdraw(r2["id"], by="测试用户A")
         with self.assertRaises(ValueError):
-            store.approve_batch([r1["id"], r2["id"]], approver="测试用户A",
-                                confirmed_full_text=True)
+            store.approve_batch(
+                [r1["id"], r2["id"]], approver="测试用户A", confirmed_full_text=True
+            )
         self.assertEqual(store.get(r1["id"])["status"], "pending")
 
     def test_batch_success(self):
         store = B.BridgeStore()
         r1 = store.create("user", "persona", "result", {"x": "测试项目F", "result": "结果F"})
         r2 = store.create("user", "persona", "result", {"x": "测试项目G", "result": "结果G"})
-        copies = store.approve_batch([r1["id"], r2["id"]], approver="测试用户A",
-                                     confirmed_full_text=True)
+        copies = store.approve_batch(
+            [r1["id"], r2["id"]], approver="测试用户A", confirmed_full_text=True
+        )
         self.assertEqual(len(copies), 2)
 
     def test_withdrawal(self):
@@ -142,8 +160,9 @@ class BridgeTests(unittest.TestCase):
         now = datetime.now(timezone.utc)
         store = B.BridgeStore(now_fn=lambda: now)
         old = now - timedelta(hours=73)  # 72h TTL, created 73h ago
-        req = store.create("user", "persona", "result",
-                           {"x": "测试项目I", "result": "结果I"}, created_at=old)
+        req = store.create(
+            "user", "persona", "result", {"x": "测试项目I", "result": "结果I"}, created_at=old
+        )
         self.assertEqual(store.get(req["id"])["status"], "expired")
         with self.assertRaises(ValueError):
             store.approve(req["id"], approver="测试用户A", confirmed_full_text=True)

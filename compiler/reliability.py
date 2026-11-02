@@ -74,7 +74,9 @@ def enforce_attribution(claim: dict, speaker: str | None = None) -> dict:
             claim["kind"] = "fact"
         claim["injection_policy"] = "recall"
         claim["auto_write"] = False
-        claim["evidence_verified"] = bool(claim.get("evidence_verified")) and claim["source"] == "quoted"
+        claim["evidence_verified"] = (
+            bool(claim.get("evidence_verified")) and claim["source"] == "quoted"
+        )
     return claim
 
 
@@ -288,7 +290,11 @@ class AuditLog:
     def read(self, limit: int = 200) -> list[dict]:
         if not self.path.exists():
             return []
-        rows = [json.loads(line) for line in self.path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        rows = [
+            json.loads(line)
+            for line in self.path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
         return rows[-limit:]
 
     def last_tx(self) -> str | None:
@@ -316,7 +322,6 @@ def undo(root: Path, txid: str | None = None) -> str:
 # --------------------------------------------------------------------------
 
 SNAPSHOT_SKIP = {"transactions", "__pycache__"}
-
 
 
 def _check_duplicate_names(names):
@@ -369,9 +374,7 @@ def snapshot(root: Path, dest: Path, include_raw: bool = False) -> dict:
         "created_at": now_iso(),
         "root": str(root),
         "files": entries,
-        "digest": hashlib.sha256(
-            "".join(e["sha256"] for e in entries).encode("utf-8")
-        ).hexdigest(),
+        "digest": hashlib.sha256("".join(e["sha256"] for e in entries).encode("utf-8")).hexdigest(),
     }
     (dest.with_suffix(dest.suffix + ".json")).write_text(
         json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8"
@@ -459,9 +462,7 @@ class ExternalTransaction:
         entry = json.loads(self.journal.read_text(encoding="utf-8"))
         for rel, item in entry["files"].items():
             path = self._safe(rel)
-            current = (
-                hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
-            )
+            current = hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
             if current not in (item["before_hash"], item["after_hash"]):
                 raise RuntimeError("transaction recovery conflicts with external edits")
         for rel, item in entry["files"].items():
@@ -512,7 +513,10 @@ class ExternalTransaction:
         changes = {}
         for rel, item in entry["files"].items():
             path = self._safe(rel)
-            if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != item["after_hash"]:
+            if (
+                not path.exists()
+                or hashlib.sha256(path.read_bytes()).hexdigest() != item["after_hash"]
+            ):
                 raise RuntimeError("rollback would overwrite later edits")
             changes[rel] = item["before"] if item["before"] is not None else ""
         if yes:

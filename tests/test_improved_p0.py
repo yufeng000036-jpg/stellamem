@@ -20,16 +20,32 @@ def _seed_many(root: Path, n: int):
         day = (i % 28) + 1
         month = 1 + (i // 28) % 11
         ts = f"2026-{month:02d}-{day:02d}T00:00:00+00:00"
-        rows.append({
-            "schema_version": 2, "claim_id": f"c-test-{i:03d}", "revision_id": f"r-test-{i:03d}",
-            "event_id": f"e-test-{i:03d}", "kind": "fact", "scope": "global",
-            "subject": "测试用户A", "predicate": "偏好", "value": f"测试偏好内容{i:03d}",
-            "evidence": f"测试偏好内容{i:03d}", "source": "user", "confidence": 0.9,
-            "importance": 0.5, "sensitivity": "PRIVATE", "write_policy": "allow",
-            "injection_policy": "recall", "evidence_verified": True, "status": "active",
-            "relation": "NEW", "auto_write": True, "observed_at": ts,
-            "provenance": {"timestamp": ts, "record_id": f"rm-test-{i:03d}"},
-        })
+        rows.append(
+            {
+                "schema_version": 2,
+                "claim_id": f"c-test-{i:03d}",
+                "revision_id": f"r-test-{i:03d}",
+                "event_id": f"e-test-{i:03d}",
+                "kind": "fact",
+                "scope": "global",
+                "subject": "测试用户A",
+                "predicate": "偏好",
+                "value": f"测试偏好内容{i:03d}",
+                "evidence": f"测试偏好内容{i:03d}",
+                "source": "user",
+                "confidence": 0.9,
+                "importance": 0.5,
+                "sensitivity": "PRIVATE",
+                "write_policy": "allow",
+                "injection_policy": "recall",
+                "evidence_verified": True,
+                "status": "active",
+                "relation": "NEW",
+                "auto_write": True,
+                "observed_at": ts,
+                "provenance": {"timestamp": ts, "record_id": f"rm-test-{i:03d}"},
+            }
+        )
     target = root / "semantic" / "facts.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(render_records("# 测试事实\n", rows), encoding="utf-8")
@@ -73,10 +89,18 @@ class AsOfTests(unittest.TestCase):
 class GateLowScoreTests(unittest.TestCase):
     def test_blocks_low_score_non_weak(self):
         g = G.InjectionGate()
-        bundle = {"items": [
-            {"text": "测试强信号", "overlap": 0.8, "semantic": 0.7, "score": 0.9, "weak": False},
-            {"text": "测试无信号", "overlap": 0, "semantic": 0.2, "score": 0.05, "weak": False},
-        ]}
+        bundle = {
+            "items": [
+                {
+                    "text": "测试强信号",
+                    "overlap": 0.8,
+                    "semantic": 0.7,
+                    "score": 0.9,
+                    "weak": False,
+                },
+                {"text": "测试无信号", "overlap": 0, "semantic": 0.2, "score": 0.05, "weak": False},
+            ]
+        }
         out = g.decide(bundle, query="测试查询")
         self.assertEqual(out["decision"], "inject_partial")
         self.assertEqual(len(out["inject"]), 1)
@@ -111,8 +135,10 @@ class GateRotationTests(unittest.TestCase):
             log = Path(td) / "gate_log.jsonl"
             log.write_text("x\n" * 2000 + "y" * 1_100_000, encoding="utf-8")
             g = G.InjectionGate(log_path=log)
-            out = g.decide({"items": [{"text": "测试强信号", "overlap": 1.0, "semantic": 1.0}]},
-                           query="测试查询")
+            out = g.decide(
+                {"items": [{"text": "测试强信号", "overlap": 1.0, "semantic": 1.0}]},
+                query="测试查询",
+            )
             self.assertEqual(out["decision"], "inject")
             self.assertTrue((Path(str(log) + ".1")).exists())
             # Current write is never lost: new log holds only the new entry.
@@ -126,8 +152,10 @@ class GateRotationTests(unittest.TestCase):
                 Path(f"{log}.{i}").write_text(f"old{i}\n", encoding="utf-8")
             log.write_text("z" * 2000000, encoding="utf-8")
             g = G.InjectionGate(log_path=log)
-            g.decide({"items": [{"text": "测试强信号", "overlap": 1.0, "semantic": 1.0}]},
-                     query="测试查询")
+            g.decide(
+                {"items": [{"text": "测试强信号", "overlap": 1.0, "semantic": 1.0}]},
+                query="测试查询",
+            )
             self.assertFalse(Path(f"{log}.4").exists())
             self.assertTrue(Path(f"{log}.3").exists())
             self.assertTrue(Path(f"{log}.1").exists())
@@ -152,6 +180,7 @@ class SnapshotDuplicateTests(unittest.TestCase):
         # the same file twice -- the detection code under test is the
         # same code snapshot() runs before writing any zip.
         from unittest.mock import patch
+
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "mem"
             root.mkdir()

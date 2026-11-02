@@ -33,7 +33,6 @@ import hashlib
 import json
 import os
 import re
-import shutil
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -93,9 +92,12 @@ def make_record(session_file, file_sha, entry_index, entry, role, offset_hours):
     # The id must survive an append to the same session file, so the file hash
     # is deliberately NOT part of it: (session, index, message id, role, time)
     # is stable for append-only transcripts.
-    record_id = "rm-" + sha256_bytes(
-        f"{session_file}:{entry_index}:{message_id}:{role}:{timestamp}".encode("utf-8")
-    )[:24]
+    record_id = (
+        "rm-"
+        + sha256_bytes(
+            f"{session_file}:{entry_index}:{message_id}:{role}:{timestamp}".encode("utf-8")
+        )[:24]
+    )
     return {
         "schema_version": SCHEMA,
         "record_id": record_id,
@@ -168,7 +170,9 @@ def rebuild_manifest(root):
     with tmp.open("w", encoding="utf-8") as out:
         for stream in sorted((root / STREAM_DIR).glob("*.jsonl.gz")):
             for record in gz_read(stream):
-                out.write(json.dumps(manifest_entry(record), ensure_ascii=False, sort_keys=True) + "\n")
+                out.write(
+                    json.dumps(manifest_entry(record), ensure_ascii=False, sort_keys=True) + "\n"
+                )
                 count += 1
     os.replace(tmp, path)
     return count
@@ -195,10 +199,18 @@ def ingest(root, sessions, roles=DEFAULT_ROLES, offset_hours=8, dry_run=False, f
     root.mkdir(parents=True, exist_ok=True)
     ledger = read_ledger(root)
     report = {
-        "scanned": 0, "skipped_deleted": 0, "skipped_unchanged": 0,
-        "parsed_files": 0, "added": 0, "deduped_in_source": 0,
-        "excluded_role": 0, "empty_text": 0, "secret_flagged": 0, "pii_flagged": 0,
-        "roles": {}, "dry_run": dry_run,
+        "scanned": 0,
+        "skipped_deleted": 0,
+        "skipped_unchanged": 0,
+        "parsed_files": 0,
+        "added": 0,
+        "deduped_in_source": 0,
+        "excluded_role": 0,
+        "empty_text": 0,
+        "secret_flagged": 0,
+        "pii_flagged": 0,
+        "roles": {},
+        "dry_run": dry_run,
     }
     for source in sorted(sessions.glob("*.jsonl")):
         if ".trajectory" in source.name:
@@ -331,8 +343,13 @@ def verify(root):
             except (OSError, EOFError, ValueError):
                 continue
     return {
-        "ok": (mismatch == 0 and missing_stream == 0 and count_mismatch == 0
-               and bad_lines == 0 and corrupt_stream == 0),
+        "ok": (
+            mismatch == 0
+            and missing_stream == 0
+            and count_mismatch == 0
+            and bad_lines == 0
+            and corrupt_stream == 0
+        ),
         "manifest_records": len(entries),
         "sessions": len(by_file),
         "bad_manifest_lines": bad_lines,
@@ -464,11 +481,13 @@ def forget(root, session):
         os.replace(tmp, manifest_path)
     ledger = read_ledger(root)
     ledger["sources"].pop(name, None)
-    ledger.setdefault("deletions", []).append({
-        "session_file": name,
-        "records": len(removed_ids),
-        "at": datetime.now(timezone.utc).isoformat(),
-    })
+    ledger.setdefault("deletions", []).append(
+        {
+            "session_file": name,
+            "records": len(removed_ids),
+            "at": datetime.now(timezone.utc).isoformat(),
+        }
+    )
     write_json(root / "ledger.json", ledger)
     return {"removed": True, "records": len(removed_ids), "manifest_dropped": dropped}
 
@@ -481,9 +500,17 @@ def orphans(root, memories_root):
     block = _re.compile(r"```stellamem\s*\n(.*?)\n```", _re.S)
     scanned = referencing = 0
     missing = []
-    for rel in ["system/memory-inbox.md", "core/preferences.md", "core/identity.md",
-                "core/user-core.md", "long-term/projects.md", "long-term/decisions.md",
-                "long-term/lessons.md", "semantic/facts.md", "semantic/profile.md"]:
+    for rel in [
+        "system/memory-inbox.md",
+        "core/preferences.md",
+        "core/identity.md",
+        "core/user-core.md",
+        "long-term/projects.md",
+        "long-term/decisions.md",
+        "long-term/lessons.md",
+        "semantic/facts.md",
+        "semantic/profile.md",
+    ]:
         path = Path(memories_root) / rel
         if not path.exists():
             continue
@@ -500,8 +527,14 @@ def orphans(root, memories_root):
                 continue
             referencing += 1
             if not rid or rid not in ids:
-                missing.append({"claim_id": claim.get("claim_id"), "file": rel,
-                                "record_id": rid, "source_ref": prov.get("source_ref")})
+                missing.append(
+                    {
+                        "claim_id": claim.get("claim_id"),
+                        "file": rel,
+                        "record_id": rid,
+                        "source_ref": prov.get("source_ref"),
+                    }
+                )
     return {
         "claims_scanned": scanned,
         "claims_referencing_raw": referencing,
@@ -527,22 +560,28 @@ def _iter_manifest(root):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Stellamem 原始档案层")
-    parser.add_argument("command",
-                        choices=["ingest", "verify", "stats", "export", "forget", "orphans"])
-    parser.add_argument("--root", default=os.environ.get(
-        "STELLAMEM_RAW", r"<USER_HOME>\.dsh\memories\_raw"))
-    parser.add_argument("--memories", default=os.environ.get(
-        "STELLAMEM_MEMORIES", r"<USER_HOME>\.dsh\memories"))
-    parser.add_argument("--sessions", default=os.environ.get(
-        "STELLAMEM_SESSIONS", r"<USER_HOME>\.openclaw\agents\main\sessions"))
+    parser.add_argument(
+        "command", choices=["ingest", "verify", "stats", "export", "forget", "orphans"]
+    )
+    parser.add_argument(
+        "--root", default=os.environ.get("STELLAMEM_RAW", r"<USER_HOME>\.dsh\memories\_raw")
+    )
+    parser.add_argument(
+        "--memories", default=os.environ.get("STELLAMEM_MEMORIES", r"<USER_HOME>\.dsh\memories")
+    )
+    parser.add_argument(
+        "--sessions",
+        default=os.environ.get("STELLAMEM_SESSIONS", r"<USER_HOME>\.openclaw\agents\main\sessions"),
+    )
     parser.add_argument("--roles", default=",".join(DEFAULT_ROLES))
     parser.add_argument("--tz-offset", type=int, default=8)
     parser.add_argument("--day")
     parser.add_argument("--session")
     parser.add_argument("--out")
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--force", action="store_true",
-                        help="忽略 ledger 指纹重新解析（用于修复被损坏的流）")
+    parser.add_argument(
+        "--force", action="store_true", help="忽略 ledger 指纹重新解析（用于修复被损坏的流）"
+    )
     args = parser.parse_args(argv)
 
     root = Path(args.root)

@@ -32,8 +32,7 @@ def screening_report(records) -> dict:
     by_status = dict(Counter(str(r.get("status") or "") for r in records))
     id_counts = Counter(str(r.get("claim_id") or "") for r in pending)
     dup_groups = [
-        {"claim_id": cid, "rows": n}
-        for cid, n in sorted(id_counts.items()) if n > 1 and cid
+        {"claim_id": cid, "rows": n} for cid, n in sorted(id_counts.items()) if n > 1 and cid
     ]
     whens = sorted(w for w in (_when(r) for r in pending) if w)
     return {

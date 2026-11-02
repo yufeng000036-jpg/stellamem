@@ -27,8 +27,14 @@ ROUTE = {
 # never rewritten.
 KIND_RULES = (
     ("preference", r"偏好|喜欢|不喜欢|偏爱|宁愿|讨厌|更愿意|prefer|favorite|preference"),
-    ("decision", r"决定|已定|选定|否决|不采用|改用|采用|迁移到|批准|拍板|decided|chose|rejected|switch(?:ed)? to"),
-    ("lesson", r"教训|踩坑|以后(?:别|不要|不能)|切勿|别再|根因|失败原因|会导致|报错|pitfall|root cause"),
+    (
+        "decision",
+        r"决定|已定|选定|否决|不采用|改用|采用|迁移到|批准|拍板|decided|chose|rejected|switch(?:ed)? to",
+    ),
+    (
+        "lesson",
+        r"教训|踩坑|以后(?:别|不要|不能)|切勿|别再|根因|失败原因|会导致|报错|pitfall|root cause",
+    ),
     ("relationship", r"关系|朋友|家人|姐姐|父母|妈妈|爸爸|同事|伴侣|relationship"),
     ("project", r"项目|进度|已完成|完成度|里程碑|上线|交付|开发中|milestone|feature|功能"),
     ("procedure", r"流程|步骤|先.{0,8}再|workflow|step\s*\d|pipeline|安装步骤"),
@@ -129,7 +135,9 @@ def _decision(text, value, support):
     if _POSITIONING.search(support):
         return True
     naming = _NAMING.search(text) and len(_OPTIONS.findall(value)) >= 1 and len(value) >= 8
-    choice = bool(_STRONG_CHOICE.search(text) or (_CHOICE.search(text) and _RATIONALE.search(support)))
+    choice = bool(
+        _STRONG_CHOICE.search(text) or (_CHOICE.search(text) and _RATIONALE.search(support))
+    )
     return bool(naming or choice)
 
 
@@ -167,8 +175,7 @@ def _project(text, subject):
     if not _PROJECT_STATUS.search(text):
         return False
     object_present = (
-        subject.strip().lower() not in _GENERIC_SUBJECT
-        and len(subject.strip()) >= 2
+        subject.strip().lower() not in _GENERIC_SUBJECT and len(subject.strip()) >= 2
     ) or _OBJECT.search(text)
     return bool(object_present)
 
@@ -188,6 +195,7 @@ def _hard_kind(text, subject, value, evidence):
     if _project(text, subject):
         return "project"
     return "fact"
+
 
 # Operational telemetry that must never become long-term memory. Deliberately
 # narrow: it targets IDs, durations, hashes and bare paths, not every number
@@ -246,6 +254,8 @@ def infer_kind(kind, subject, predicate, value, evidence=""):
             return "decision"
         return "lesson"
     return _hard_kind(text, subject, value, str(evidence or ""))
+
+
 THRESHOLDS = dict(
     project=0.85,
     decision=0.85,

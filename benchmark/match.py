@@ -20,7 +20,6 @@ import json
 import math
 import os
 import re
-import sys
 import unicodedata
 import urllib.request
 from collections import Counter

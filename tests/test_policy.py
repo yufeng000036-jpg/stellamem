@@ -175,11 +175,22 @@ class NoiseFilterTests(unittest.TestCase):
         return is_noise_claim({"subject": subject, "value": value})
 
     def test_operational_telemetry_is_noise(self):
-        for value in ("yes", "PID 1316", "231 seconds", "bf3a5f8", r"E:/video_deep_dive/", "110963 bytes"):
+        for value in (
+            "yes",
+            "PID 1316",
+            "231 seconds",
+            "bf3a5f8",
+            r"E:/video_deep_dive/",
+            "110963 bytes",
+        ):
             self.assertTrue(self.noise(value), value)
 
     def test_durable_facts_survive(self):
-        for value in ("B站粉丝8,973，获赞30.3万，播放714.7万", "偏好二次元、摄影、AI、御姐", "决定以后改用本地模型"):
+        for value in (
+            "B站粉丝8,973，获赞30.3万，播放714.7万",
+            "偏好二次元、摄影、AI、御姐",
+            "决定以后改用本地模型",
+        ):
             self.assertFalse(self.noise(value), value)
 
     def test_must_use_is_a_procedure_not_a_preference(self):
@@ -211,11 +222,17 @@ class KindRuleCoverageTests(unittest.TestCase):
 
     def test_project_completion_with_object(self):
         self.assertEqual(
-            self.k(subject="文稿转录", predicate="has completed", value="10 articles transcription"),
+            self.k(
+                subject="文稿转录", predicate="has completed", value="10 articles transcription"
+            ),
             "project",
         )
         self.assertEqual(
-            self.k(subject="知识文件", predicate="completed", value="10 knowledge files written and stored"),
+            self.k(
+                subject="知识文件",
+                predicate="completed",
+                value="10 knowledge files written and stored",
+            ),
             "project",
         )
 
@@ -230,7 +247,9 @@ class KindRuleCoverageTests(unittest.TestCase):
             ),
             "decision",
         )
-        self.assertEqual(self.k(subject="版本策略", predicate="status", value="not upgraded"), "decision")
+        self.assertEqual(
+            self.k(subject="版本策略", predicate="status", value="not upgraded"), "decision"
+        )
 
     def test_procedures_with_executable_objects(self):
         self.assertEqual(
@@ -246,7 +265,9 @@ class KindRuleCoverageTests(unittest.TestCase):
 
     def test_relationships_need_person_plus_signal(self):
         self.assertEqual(
-            self.k(subject="宇枫与刘阔", predicate="active_caregiver", value="我主动 62%，当照顾者"),
+            self.k(
+                subject="宇枫与刘阔", predicate="active_caregiver", value="我主动 62%，当照顾者"
+            ),
             "relationship",
         )
         self.assertEqual(

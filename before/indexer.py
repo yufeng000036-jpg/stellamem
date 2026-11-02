@@ -223,18 +223,26 @@ class Index:
                 for doc in _split_daily(path):
                     cur = self.con.execute(
                         "INSERT OR REPLACE INTO docs VALUES (?,?,?,?,?,?)",
-                        (doc["id"], "daily", f"daily/{path.name}", doc["heading"], doc["text"], doc["occurred_at"]),
+                        (
+                            doc["id"],
+                            "daily",
+                            f"daily/{path.name}",
+                            doc["heading"],
+                            doc["text"],
+                            doc["occurred_at"],
+                        ),
                     )
                     self.con.execute(
-                        "INSERT INTO docs_fts(rowid, text) VALUES (?,?)", (cur.lastrowid, doc["text"])
+                        "INSERT INTO docs_fts(rowid, text) VALUES (?,?)",
+                        (cur.lastrowid, doc["text"]),
                     )
                     doc_count += 1
 
         self.con.commit()
         meta = {
-            "built_at": __import__("datetime").datetime.now(
-                __import__("datetime").timezone.utc
-            ).isoformat(timespec="seconds"),
+            "built_at": __import__("datetime")
+            .datetime.now(__import__("datetime").timezone.utc)
+            .isoformat(timespec="seconds"),
             "records": total,
             "docs": doc_count,
             "redacted": redacted,
@@ -266,7 +274,11 @@ class Index:
         return result
 
     def stats(self) -> dict:
-        get = lambda key: (self.con.execute("SELECT value FROM meta WHERE key=?", (key,)).fetchone() or [None])[0]
+        def get(key):
+            return (
+                self.con.execute("SELECT value FROM meta WHERE key=?", (key,)).fetchone() or [None]
+            )[0]
+
         by_layer = {
             row["layer"]: row["n"]
             for row in self.con.execute("SELECT layer, COUNT(*) n FROM records GROUP BY layer")
@@ -282,7 +294,9 @@ class Index:
             "records": self.con.execute("SELECT COUNT(*) FROM records").fetchone()[0],
             "docs": self.con.execute("SELECT COUNT(*) FROM docs").fetchone()[0],
             "vectors": self.con.execute("SELECT COUNT(*) FROM vectors").fetchone()[0],
-            "redacted": self.con.execute("SELECT COUNT(*) FROM records WHERE redacted=1").fetchone()[0],
+            "redacted": self.con.execute(
+                "SELECT COUNT(*) FROM records WHERE redacted=1"
+            ).fetchone()[0],
             "by_layer": by_layer,
             "by_kind": by_kind,
             "db_bytes": self.path.stat().st_size if self.path.exists() else 0,

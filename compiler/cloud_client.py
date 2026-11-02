@@ -61,6 +61,7 @@ def redact(text: str) -> tuple[str, dict]:
     out = text
     seq = 0
     for tag, pattern in PATTERNS:
+
         def repl(match):
             nonlocal seq
             seq += 1

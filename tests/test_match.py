@@ -14,7 +14,10 @@ class MatcherTests(unittest.TestCase):
         pairs = [
             ("已完成设计版报告生成并交付", "设计版报告已完成并交付"),
             ("需要sox工具支持", "Qwen TTS语音克隆需要sox工具支持"),
-            ("PowerShell控制台为GBK编码，需输出UTF-8文件", "PowerShell 控制台为 GBK 编码，需要输出 UTF-8 文件"),
+            (
+                "PowerShell控制台为GBK编码，需输出UTF-8文件",
+                "PowerShell 控制台为 GBK 编码，需要输出 UTF-8 文件",
+            ),
             ("喜欢二次元、摄影、AI、御姐", "偏好二次元、摄影、AI 和御姐风格"),
         ]
         for a, b in pairs:

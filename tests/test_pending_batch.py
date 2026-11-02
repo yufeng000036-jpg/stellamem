@@ -26,7 +26,9 @@ class PendingBatchTests(unittest.TestCase):
         self.assertFalse(plan["apply_implemented"])
 
     def test_approved_batch(self):
-        plan = PB.plan_batch([_rec("c1")], {"c1": "task"}, approver="测试批准人", confirmed=True, approve=True)
+        plan = PB.plan_batch(
+            [_rec("c1")], {"c1": "task"}, approver="测试批准人", confirmed=True, approve=True
+        )
         self.assertEqual(plan["status"], "approved")
         self.assertEqual(plan["approver"], "测试批准人")
 

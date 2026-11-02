@@ -18,8 +18,13 @@ import subjects as SU
 
 
 def _rec(subject, value, kind="fact", **extra):
-    row = {"claim_id": f"c-{value}", "subject": subject, "kind": kind,
-           "value": value, "status": "active"}
+    row = {
+        "claim_id": f"c-{value}",
+        "subject": subject,
+        "kind": kind,
+        "value": value,
+        "status": "active",
+    }
     row.update(extra)
     return row
 
@@ -42,8 +47,13 @@ class NamespaceFieldTests(unittest.TestCase):
         self.assertEqual(SU.recall_for_subject([rec], "user"), [])
 
     def test_bridge_copy_without_namespace_still_visible_to_target(self):
-        copy = {"subject": "persona", "value": "测试桥接副本",
-                "bridge_id": "bridge-0001", "origin_id": "orig-1", "status": "active"}
+        copy = {
+            "subject": "persona",
+            "value": "测试桥接副本",
+            "bridge_id": "bridge-0001",
+            "origin_id": "orig-1",
+            "status": "active",
+        }
         self.assertEqual(SU.recall_for_subject([copy], "persona"), [copy])
 
 
@@ -55,11 +65,19 @@ class LegacyTagPlanTests(unittest.TestCase):
         self.assertEqual(LT.classify_record({"subject": "人格"}), ("persona", "manual_hold"))
         self.assertEqual(LT.classify_record({"subject": "观众"}), ("viewer", "manual_hold"))
         self.assertEqual(LT.classify_record({"subject": "persona"}), ("persona", "keep"))
-        self.assertEqual(LT.classify_record({"namespace": "viewer", "subject": "x"}), ("viewer", "keep"))
+        self.assertEqual(
+            LT.classify_record({"namespace": "viewer", "subject": "x"}), ("viewer", "keep")
+        )
 
     def test_plan_counts_and_pure(self):
-        recs = [_rec("测试用户A", "a"), _rec("用户", "b"), _rec("user", "c"),
-                _rec("人格", "d"), _rec("观众", "e"), _rec("观众甲", "f")]
+        recs = [
+            _rec("测试用户A", "a"),
+            _rec("用户", "b"),
+            _rec("user", "c"),
+            _rec("人格", "d"),
+            _rec("观众", "e"),
+            _rec("观众甲", "f"),
+        ]
         before = [dict(r) for r in recs]
         plan = LT.plan_legacy_tags(recs)
         self.assertEqual(plan["total_records"], 6)
@@ -83,7 +101,7 @@ class LegacyTagPlanTests(unittest.TestCase):
         tagged = LT.tagged_records(recs)
         self.assertEqual(tagged[0]["namespace"], "user")
         self.assertNotIn("namespace", tagged[1])  # manual hold is not auto-tagged
-        self.assertNotIn("namespace", recs[0])    # input untouched
+        self.assertNotIn("namespace", recs[0])  # input untouched
         self.assertEqual(tagged[0]["subject"], "测试用户A")  # legacy field unchanged
 
 
@@ -97,8 +115,7 @@ class NamespaceRetrievalParityTests(unittest.TestCase):
         user_view = SU.recall_for_subject(tagged, "user")
         # 20 free-text rows become namespace=user.
         self.assertEqual(len(user_view), 20)
-        self.assertEqual({r["value"] for r in user_view},
-                         {f"自由文本记录{i}" for i in range(20)})
+        self.assertEqual({r["value"] for r in user_view}, {f"自由文本记录{i}" for i in range(20)})
 
     def test_persona_is_empty_without_bridge(self):
         tagged = LT.tagged_records(self.recs)
@@ -106,9 +123,15 @@ class NamespaceRetrievalParityTests(unittest.TestCase):
 
     def test_bridge_copy_visible_to_target_only(self):
         tagged = LT.tagged_records(self.recs)
-        copy = {"claim_id": "c-bridge", "subject": "persona", "namespace": "persona",
-                "value": "测试桥接副本", "bridge_id": "bridge-0009",
-                "origin_id": "c-自由文本记录0", "status": "active"}
+        copy = {
+            "claim_id": "c-bridge",
+            "subject": "persona",
+            "namespace": "persona",
+            "value": "测试桥接副本",
+            "bridge_id": "bridge-0009",
+            "origin_id": "c-自由文本记录0",
+            "status": "active",
+        }
         tagged.append(copy)
         persona_view = SU.recall_for_subject(tagged, "persona")
         user_view = SU.recall_for_subject(tagged, "user")
@@ -232,9 +255,16 @@ class PersonaAdapterPersistentTests(unittest.TestCase):
 
 class BridgeTransactionTests(unittest.TestCase):
     def _reqs(self, store, n=3):
-        return [store.create("user", "persona", "result",
-                             {"x": f"事务{i}", "result": f"结果{i}"},
-                             origin_id=f"orig-t{i}") for i in range(n)]
+        return [
+            store.create(
+                "user",
+                "persona",
+                "result",
+                {"x": f"事务{i}", "result": f"结果{i}"},
+                origin_id=f"orig-t{i}",
+            )
+            for i in range(n)
+        ]
 
     def test_copy_failure_rolls_back_all(self):
         store = B.BridgeStore()
@@ -250,8 +280,9 @@ class BridgeTransactionTests(unittest.TestCase):
 
         store._copy = flaky_copy
         with self.assertRaises(RuntimeError):
-            store.approve_batch([r["id"] for r in reqs],
-                                approver="测试用户A", confirmed_full_text=True)
+            store.approve_batch(
+                [r["id"] for r in reqs], approver="测试用户A", confirmed_full_text=True
+            )
         statuses = [store.get(r["id"])["status"] for r in reqs]
         self.assertEqual(statuses, ["pending", "pending"])
         self.assertEqual([store.get(r["id"])["approver"] for r in reqs], [None, None])
@@ -268,16 +299,18 @@ class BridgeTransactionTests(unittest.TestCase):
 
         store._audit = flaky_audit
         with self.assertRaises(RuntimeError):
-            store.approve_batch([r["id"] for r in reqs],
-                                approver="测试用户A", confirmed_full_text=True)
+            store.approve_batch(
+                [r["id"] for r in reqs], approver="测试用户A", confirmed_full_text=True
+            )
         self.assertEqual([store.get(r["id"])["status"] for r in reqs], ["pending", "pending"])
         self.assertEqual(store.approved_copy(reqs[0]["id"]), None)
 
     def test_normal_batch_still_approves_all(self):
         store = B.BridgeStore()
         reqs = self._reqs(store, 3)
-        copies = store.approve_batch([r["id"] for r in reqs],
-                                     approver="测试用户A", confirmed_full_text=True)
+        copies = store.approve_batch(
+            [r["id"] for r in reqs], approver="测试用户A", confirmed_full_text=True
+        )
         self.assertEqual(len(copies), 3)
         self.assertEqual([store.get(r["id"])["status"] for r in reqs], ["approved"] * 3)
 

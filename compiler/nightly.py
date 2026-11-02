@@ -15,11 +15,16 @@ Scoring (weights are documented conventions, not measured optima):
 - keep threshold: total >= keep_threshold (default 5.0) -> consolidated;
   below -> forgotten (listed, not deleted by this module).
 
-Grouping: events with the same (subject, predicate) are consolidated
-into one fact whose value is the highest-scoring event's value and
-whose evidence is the list of grouped event ids. Inputs are not
-mutated and nothing is written; the caller decides what to do with
-the output under its own approval.
+Grouping: events with the same (subject, scope, predicate) are
+consolidated into one fact whose value is the highest-scoring event's
+value and whose evidence is the list of grouped event ids. Scope is
+part of the grouping key on purpose: the same subject + predicate in
+different scopes (for example "daily chat" preferring concise answers
+versus "technical" preferring detailed answers) must NOT be merged
+into a single fact, or the losing scope's preference would be lost.
+Events without a scope are grouped under the empty scope ("").
+Inputs are not mutated and nothing is written; the caller decides
+what to do with the output under its own approval.
 """
 
 from __future__ import annotations
@@ -35,23 +40,29 @@ def score_event(event: dict) -> float:
     return importance - 0.1 * age_days + emotion + consequence
 
 
-def consolidate(events, keep_threshold: float = DEFAULT_KEEP_THRESHOLD,
-                budget_chars: int = 2000) -> dict:
+def consolidate(
+    events, keep_threshold: float = DEFAULT_KEEP_THRESHOLD, budget_chars: int = 2000
+) -> dict:
     """Group events, score them, split into kept and forgotten lists."""
     if budget_chars is not None and budget_chars < 0:
         raise ValueError("budget_chars must be >= 0")
     groups: dict[tuple, list] = {}
     for event in events or []:
-        key = (str(event.get("subject") or ""), str(event.get("predicate") or ""))
+        key = (
+            str(event.get("subject") or ""),
+            str(event.get("scope") or ""),
+            str(event.get("predicate") or ""),
+        )
         groups.setdefault(key, []).append(event)
     kept = []
     forgotten = []
-    for (subject, predicate), members in sorted(groups.items()):
+    for (subject, scope, predicate), members in sorted(groups.items()):
         scored = sorted(members, key=lambda e: (-score_event(e), str(e.get("event_id") or "")))
         best = scored[0]
         total = score_event(best)
         entry = {
             "subject": subject,
+            "scope": scope,
             "predicate": predicate,
             "value": best.get("value"),
             "score": total,
@@ -62,9 +73,16 @@ def consolidate(events, keep_threshold: float = DEFAULT_KEEP_THRESHOLD,
             kept.append(entry)
         else:
             forgotten.append(entry)
-    kept.sort(key=lambda e: (-e["score"], e["subject"], e["predicate"]))
-    forgotten.sort(key=lambda e: (-e["score"], e["subject"], e["predicate"]))
-    text = "\n".join(f"- {k['subject']} {k['predicate']}: {k['value']}" for k in kept)
+    kept.sort(key=lambda e: (-e["score"], e["subject"], e["scope"], e["predicate"]))
+    forgotten.sort(key=lambda e: (-e["score"], e["subject"], e["scope"], e["predicate"]))
+    text = "\n".join(
+        (
+            f"- {k['subject']} [{k['scope']}] {k['predicate']}: {k['value']}"
+            if k["scope"]
+            else f"- {k['subject']} {k['predicate']}: {k['value']}"
+        )
+        for k in kept
+    )
     if budget_chars is not None and len(text) > budget_chars:
         text = text[:budget_chars]
     return {

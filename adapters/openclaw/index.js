@@ -109,7 +109,14 @@ export async function project(root, prompt, config = {}) {
   const candidates = [];
   // A prompt that mentions ports, versions or file names is a technical
   // question: the word "偏好" in it must not drag preference memories in.
-  const technical = /[a-z0-9]{2,}/.test(prompt.toLowerCase());
+  // Reliability fix: the old test, /[a-z0-9]{2,}/, treated ANY English
+  // word as "technical", so a legitimate English preference query like
+  // "response preference" was blocked even though it mentions no port,
+  // version, or file. Technical now means an actual technical indicator:
+  // a port-like number, a version-like number, a file name/extension,
+  // or a Chinese technical word. Sensitive/secret eligibility checks
+  // are unchanged; only this preference-relevance gate is narrowed.
+  const technical = /(?:\b\d{3,5}\b|:\d+|\b[\w-]+\.(?:js|json|md|py|txt|yml|yaml|toml)\b|端口|版本|文件|路径)/i.test(prompt);
 
   for (const rel of FILES) {
     if (FORBIDDEN.test(rel)) continue;

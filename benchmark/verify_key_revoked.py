@@ -6,6 +6,7 @@
 - 只发起 1 次请求，不做重试
 - 输出只有 HTTP 状态码与错误类型，不含任何密钥片段
 """
+
 from __future__ import annotations
 
 import json
@@ -29,13 +30,16 @@ def main() -> int:
         return 0
     key = m.group(0)
 
-    payload = json.dumps({
-        "model": "deepseek-chat",
-        "messages": [{"role": "user", "content": "hi"}],
-        "max_tokens": 1,
-    }).encode()
+    payload = json.dumps(
+        {
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": "hi"}],
+            "max_tokens": 1,
+        }
+    ).encode()
     req = urllib.request.Request(
-        URL, data=payload,
+        URL,
+        data=payload,
         headers={"Content-Type": "application/json", "Authorization": "Bearer " + key},
         method="POST",
     )
@@ -44,11 +48,13 @@ def main() -> int:
     try:
         with urllib.request.urlopen(req, timeout=20) as r:
             body = r.read(400).decode("utf-8", "ignore")
-            result.update({
-                "http_status": r.status,
-                "verdict": "STILL_VALID",
-                "note": "旧密钥仍可用，未失效",
-            })
+            result.update(
+                {
+                    "http_status": r.status,
+                    "verdict": "STILL_VALID",
+                    "note": "旧密钥仍可用，未失效",
+                }
+            )
     except urllib.error.HTTPError as e:
         body = e.read(400).decode("utf-8", "ignore")
         code = None
@@ -66,11 +72,13 @@ def main() -> int:
             verdict = "RATE_LIMITED"
         elif e.code >= 500:
             verdict = "SERVICE_ERROR"
-        result.update({"http_status": e.code, "error_code": code,
-                       "verdict": verdict, "body_len": len(body)})
+        result.update(
+            {"http_status": e.code, "error_code": code, "verdict": verdict, "body_len": len(body)}
+        )
     except (urllib.error.URLError, socket.timeout, ssl.SSLError) as e:
-        result.update({"http_status": None, "verdict": "NETWORK_ERROR",
-                       "error_type": type(e).__name__})
+        result.update(
+            {"http_status": None, "verdict": "NETWORK_ERROR", "error_type": type(e).__name__}
+        )
 
     # 绝不在输出里出现 key：只保留长度与哈希前缀
     result["key_len"] = len(key)

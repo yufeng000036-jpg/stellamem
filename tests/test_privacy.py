@@ -93,9 +93,13 @@ class VaultTest(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def run_vault(self, *args, expect=0):
-        result = subprocess.run(["node", str(ROOT / "tools" / "vault.mjs"), *args],
-                                capture_output=True, text=True, encoding="utf-8",
-                                errors="replace")
+        result = subprocess.run(
+            ["node", str(ROOT / "tools" / "vault.mjs"), *args],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
         self.assertEqual(result.returncode, expect, result.stderr or result.stdout)
         return result
 
@@ -105,18 +109,30 @@ class VaultTest(unittest.TestCase):
         key = self.tmp / "k.key"
         self.run_vault("keygen", "--key", str(key))
         enc = self.tmp / "p.enc"
-        out = json.loads(self.run_vault("seal", "--key", str(key), "--in", str(plain),
-                                        "--out", str(enc)).stdout)
-        self.assertEqual(out["source_sha256"], pii_audit.hashlib.sha256(plain.read_bytes()).hexdigest())
+        out = json.loads(
+            self.run_vault("seal", "--key", str(key), "--in", str(plain), "--out", str(enc)).stdout
+        )
+        self.assertEqual(
+            out["source_sha256"], pii_audit.hashlib.sha256(plain.read_bytes()).hexdigest()
+        )
         back = self.tmp / "back.txt"
-        info = json.loads(self.run_vault("unseal", "--key", str(key), "--in", str(enc),
-                                         "--out", str(back)).stdout)
+        info = json.loads(
+            self.run_vault("unseal", "--key", str(key), "--in", str(enc), "--out", str(back)).stdout
+        )
         self.assertTrue(info["matches"])
         self.assertEqual(back.read_text(encoding="utf-8"), plain.read_text(encoding="utf-8"))
         wrong = self.tmp / "w.key"
         self.run_vault("keygen", "--key", str(wrong))
-        self.run_vault("unseal", "--key", str(wrong), "--in", str(enc),
-                       "--out", str(self.tmp / "x.txt"), expect=4)
+        self.run_vault(
+            "unseal",
+            "--key",
+            str(wrong),
+            "--in",
+            str(enc),
+            "--out",
+            str(self.tmp / "x.txt"),
+            expect=4,
+        )
         self.assertFalse((self.tmp / "x.txt").exists())
 
 

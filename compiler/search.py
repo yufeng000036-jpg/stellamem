@@ -8,7 +8,6 @@
 
 from __future__ import annotations
 
-import math
 import os
 import re
 import sqlite3
@@ -35,7 +34,13 @@ KIND_LABEL = {
     "identity": "身份",
 }
 
-LAYER_LABEL = {"core": "核心", "long-term": "长期", "semantic": "语义", "inbox": "待审", "daily": "日记"}
+LAYER_LABEL = {
+    "core": "核心",
+    "long-term": "长期",
+    "semantic": "语义",
+    "inbox": "待审",
+    "daily": "日记",
+}
 
 # 意图 → 类型召回。不靠关键词命中，靠类型 + 主题双通道。
 INTENTS = {
@@ -327,9 +332,13 @@ def search(
             continue
         if overlap <= 0 and cos < semantic.MIN_SIM and want_recent:
             # 「最近在做什么」这类时间问句：只取近 30 天，按时间排，不硬凑语义
-            if not occurred or occurred[:10] < (
-                __import__("datetime").date.today() - __import__("datetime").timedelta(days=30)
-            ).isoformat():
+            if (
+                not occurred
+                or occurred[:10]
+                < (
+                    __import__("datetime").date.today() - __import__("datetime").timedelta(days=30)
+                ).isoformat()
+            ):
                 continue
         lexical = overlap
         if rec["id"] in fts_ids:
@@ -412,8 +421,13 @@ def _as_of_base(moment: str, subject: str | None = None, kinds=None):
     return sql, args
 
 
-def as_of(con: sqlite3.Connection, moment: str, subject: str | None = None,
-          kinds=None, limit: int | None = None) -> list[dict]:
+def as_of(
+    con: sqlite3.Connection,
+    moment: str,
+    subject: str | None = None,
+    kinds=None,
+    limit: int | None = None,
+) -> list[dict]:
     """Replay: what this memory set believed at a moment.
 
     occurred_at is the "fact became true" time; empty valid_to means
@@ -436,8 +450,14 @@ def as_of(con: sqlite3.Connection, moment: str, subject: str | None = None,
     return [dict(r) for r in rows]
 
 
-def as_of_paged(con: sqlite3.Connection, moment: str, subject: str | None = None,
-                kinds=None, limit: int | None = 100, offset: int = 0) -> dict:
+def as_of_paged(
+    con: sqlite3.Connection,
+    moment: str,
+    subject: str | None = None,
+    kinds=None,
+    limit: int | None = 100,
+    offset: int = 0,
+) -> dict:
     """Paged as_of(): same filter as as_of(), but truncation is explicit.
 
     Returns {"items", "total", "returned", "limit", "offset", "truncated"}.
@@ -482,7 +502,9 @@ def as_of_paged(con: sqlite3.Connection, moment: str, subject: str | None = None
     }
 
 
-def timeline(con: sqlite3.Connection, since: str | None = None, until: str | None = None, limit: int = 200) -> list[dict]:
+def timeline(
+    con: sqlite3.Connection, since: str | None = None, until: str | None = None, limit: int = 200
+) -> list[dict]:
     sql = (
         "SELECT id, claim_id, kind, subject, value, occurred_at, observed_at, layer, status "
         "FROM records WHERE occurred_at <> ''"
@@ -583,7 +605,9 @@ def recall(
             rec.get("overlap", 0) <= 0
             and rec.get("semantic", 0) < getattr(semantic, "MIN_SIM", 0.45)
         )
-        line = f"- [{KIND_LABEL.get(rec.get('kind'), rec.get('kind'))}] {_trim(rec.get('value'), 90)}"
+        line = (
+            f"- [{KIND_LABEL.get(rec.get('kind'), rec.get('kind'))}] {_trim(rec.get('value'), 90)}"
+        )
         if rec.get("occurred_at"):
             line += f"（{rec['occurred_at'][:10]}）"
         if len(line) + used + 1 > budget_chars:

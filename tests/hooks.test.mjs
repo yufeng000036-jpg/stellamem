@@ -73,6 +73,18 @@ test("projection denies sensitive, secrets, unrelated tasks, legacy and oversize
   await writeFile(path.join(f.root, "system/transaction.json"), "{}");
   assert.equal(await project(f.root, "response preference"), "");
 });
+test("technical prompt with a port does not drag preference memories in", async () => {
+  const f = await fixture();
+  await mkdir(path.join(f.root, "core"));
+  const data = [record()];
+  const text = "<!-- stellamem:v2 -->\n" +
+    data.map((c) => "```stellamem\n" + JSON.stringify(c) + "\n```\n").join("\n");
+  await writeFile(path.join(f.root, "core/preferences.md"), text);
+  // Port-like number makes this technical; preference intent must not surface it.
+  assert.equal(await project(f.root, "偏好 8081 端口"), "");
+  // Same preference, asked in plain English with no technical indicator, must surface.
+  assert.ok((await project(f.root, "response preference")).includes("concise"));
+});
 test("model-generated and configured scopes do not silently block recall", async () => {
   // Regression: eligible() used to require scope in ["global"], but the model
   // emits free-text scopes like "title". That filtered out every real memory.

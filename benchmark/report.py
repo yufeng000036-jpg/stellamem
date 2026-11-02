@@ -39,7 +39,9 @@ def eligible(claim):
         and claim.get("injection_policy") in ("always", "recall")
         and claim.get("sensitivity") in ("PUBLIC", "PRIVATE")
         and claim.get("kind") not in ("identity", "user-core", "relationship")
-        and not any(claim.get(k) for k in ("sensitive", "suspicious", "sarcasm", "temporary", "outdated"))
+        and not any(
+            claim.get(k) for k in ("sensitive", "suspicious", "sarcasm", "temporary", "outdated")
+        )
     )
 
 
@@ -86,14 +88,16 @@ def main():
             if eligible(item["raw"]):
                 written["injectable"] += 1
 
-        per_sample.append({
-            "sample": name,
-            "expected": len(g),
-            "predicted": len(p),
-            "matched": len(pairs),
-            "missed": len(missed),
-            "extra": len(extra),
-        })
+        per_sample.append(
+            {
+                "sample": name,
+                "expected": len(g),
+                "predicted": len(p),
+                "matched": len(pairs),
+                "missed": len(missed),
+                "extra": len(extra),
+            }
+        )
 
     def ratio(a, b):
         return round(a / b, 4) if b else 0.0
@@ -124,7 +128,9 @@ def main():
 
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     if args.out:
-        Path(args.out).write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+        Path(args.out).write_text(
+            json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
         print("written to", args.out)
 
 

@@ -2,6 +2,7 @@
 
 输出：./stellamem-data/docs/p0/credential-map.json（供报告引用）
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -34,8 +35,22 @@ ROOTS = [
     Path(r"./stellamem-data-p2"),
 ]
 SKIP_DIR = {".git", "node_modules", "__pycache__", ".venv", "site-packages"}
-SKIP_EXT = {".enc", ".gz", ".zip", ".png", ".jpg", ".jpeg", ".webp", ".gguf",
-            ".safetensors", ".bin", ".db", ".mp4", ".mp3", ".wav"}
+SKIP_EXT = {
+    ".enc",
+    ".gz",
+    ".zip",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".webp",
+    ".gguf",
+    ".safetensors",
+    ".bin",
+    ".db",
+    ".mp4",
+    ".mp3",
+    ".wav",
+}
 MAXB = 64 * 1024 * 1024
 
 
@@ -57,9 +72,9 @@ def classify_file(p: Path) -> str:
 
 
 def main() -> int:
-    found: dict[str, dict] = defaultdict(lambda: {
-        "occurrences": 0, "files": {}, "services": defaultdict(int), "samples": []
-    })
+    found: dict[str, dict] = defaultdict(
+        lambda: {"occurrences": 0, "files": {}, "services": defaultdict(int), "samples": []}
+    )
 
     for root in ROOTS:
         if not root.exists():
@@ -110,29 +125,48 @@ def main() -> int:
         has_active = "active-credential-store" in kinds
         dates = sorted(v["date"] for v in rec["files"].values() if v["date"] != "UNKNOWN")
         svc = max(rec["services"].items(), key=lambda x: x[1])[0] if rec["services"] else "UNKNOWN"
-        rows.append({
-            "id": f"CRED-{i:02d}",
-            "hash_prefix8": h[:8],            # 8 位哈希前缀：不可逆，仅用于内部核对
-            "service_guess": svc,
-            "service_evidence_count": dict(rec["services"]),
-            "occurrences": rec["occurrences"],
-            "file_count": len(rec["files"]),
-            "files": [{"path": k, "kind": v["kind"], "count": v["count"], "date": v["date"]}
-                      for k, v in sorted(rec["files"].items(), key=lambda kv: -kv[1]["count"])],
-            "first_date": dates[0] if dates else "UNKNOWN",
-            "last_date": dates[-1] if dates else "UNKNOWN",
-            "in_active_store": has_active,
-            "kinds": sorted(kinds),
-        })
+        rows.append(
+            {
+                "id": f"CRED-{i:02d}",
+                "hash_prefix8": h[:8],  # 8 位哈希前缀：不可逆，仅用于内部核对
+                "service_guess": svc,
+                "service_evidence_count": dict(rec["services"]),
+                "occurrences": rec["occurrences"],
+                "file_count": len(rec["files"]),
+                "files": [
+                    {"path": k, "kind": v["kind"], "count": v["count"], "date": v["date"]}
+                    for k, v in sorted(rec["files"].items(), key=lambda kv: -kv[1]["count"])
+                ],
+                "first_date": dates[0] if dates else "UNKNOWN",
+                "last_date": dates[-1] if dates else "UNKNOWN",
+                "in_active_store": has_active,
+                "kinds": sorted(kinds),
+            }
+        )
 
     (OUT / "credential-map.json").write_text(
         json.dumps({"total": len(rows), "rows": rows}, ensure_ascii=False, indent=1),
-        encoding="utf-8")
-    print(json.dumps({"total": len(rows),
-                      "summary": [{"id": r["id"], "svc": r["service_guess"],
-                                   "occ": r["occurrences"], "files": r["file_count"],
-                                   "active": r["in_active_store"]} for r in rows]},
-                     ensure_ascii=False, indent=1))
+        encoding="utf-8",
+    )
+    print(
+        json.dumps(
+            {
+                "total": len(rows),
+                "summary": [
+                    {
+                        "id": r["id"],
+                        "svc": r["service_guess"],
+                        "occ": r["occurrences"],
+                        "files": r["file_count"],
+                        "active": r["in_active_store"],
+                    }
+                    for r in rows
+                ],
+            },
+            ensure_ascii=False,
+            indent=1,
+        )
+    )
     return 0
 
 

@@ -47,8 +47,14 @@ BRIDGE_TTL = timedelta(hours=BRIDGE_TTL_HOURS)
 # noise filter: it flags obvious cases for the approver, it does not
 # decide anything by itself.
 BLACKLIST = (
-    "身份证", "银行卡", "密码", "银行账号", "健康诊断", "医疗记录",
-    "家庭住址", "电话号码",
+    "身份证",
+    "银行卡",
+    "密码",
+    "银行账号",
+    "健康诊断",
+    "医疗记录",
+    "家庭住址",
+    "电话号码",
 )
 
 # Three structured templates ONLY. Fields are the whole content; there
@@ -103,14 +109,17 @@ class BridgeStore:
         self._counter = itertools.count(1)
 
     # -- creation ------------------------------------------------------
-    def create(self, source_subject, target_subject, template, fields,
-               origin_id=None, created_at=None) -> dict:
+    def create(
+        self, source_subject, target_subject, template, fields, origin_id=None, created_at=None
+    ) -> dict:
         source = validate_subject(source_subject)
         target = validate_subject(target_subject)
         if source == target:
             raise ValueError("bridge within the same subject is not a bridge; use a direct copy")
         if template not in TEMPLATES:
-            raise ValueError(f"unknown bridge template: {template!r} (expected one of {sorted(TEMPLATES)})")
+            raise ValueError(
+                f"unknown bridge template: {template!r} (expected one of {sorted(TEMPLATES)})"
+            )
         spec = TEMPLATES[template]
         clean = {}
         for name in spec["fields"]:
@@ -158,8 +167,13 @@ class BridgeStore:
         return dict(self._refresh(req))
 
     # -- approval ------------------------------------------------------
-    def approve(self, req_id: str, approver: str, confirmed_full_text: bool = False,
-                acknowledge_flag: bool = False) -> dict:
+    def approve(
+        self,
+        req_id: str,
+        approver: str,
+        confirmed_full_text: bool = False,
+        acknowledge_flag: bool = False,
+    ) -> dict:
         """Approve one request. Returns the bridge copy dict.
 
         confirmed_full_text=True means the approver has seen the full
@@ -236,8 +250,13 @@ class BridgeStore:
         self._audit("withdrawn", req_id, approver=by)
         return dict(req)
 
-    def approve_batch(self, req_ids, approver: str, confirmed_full_text: bool = False,
-                      acknowledge_flag: bool = False) -> list[dict]:
+    def approve_batch(
+        self,
+        req_ids,
+        approver: str,
+        confirmed_full_text: bool = False,
+        acknowledge_flag: bool = False,
+    ) -> list[dict]:
         """Batch approval: all-or-nothing (PATCH1 made this strictly true).
 
         Phase 1 re-checks EVERY unique item (pending, unexpired, template

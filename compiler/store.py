@@ -92,9 +92,11 @@ class MemoryStore:
                 # 双时间戳：记录"它在什么时候失效"。expired_at 是系统发现它失效的时刻，
                 # valid_to 是它在现实里不再成立的时刻——这里两者取同一时刻，
                 # 因为系统无法回推现实时刻，宁可一致也不猜。
-                _now = __import__("datetime").datetime.now(
-                    __import__("datetime").timezone.utc
-                ).isoformat(timespec="seconds")
+                _now = (
+                    __import__("datetime")
+                    .datetime.now(__import__("datetime").timezone.utc)
+                    .isoformat(timespec="seconds")
+                )
                 old["valid_to"] = _now
                 old["expired_at"] = _now
                 self.dirty.add(active[0][0])
@@ -145,11 +147,18 @@ class MemoryStore:
         moves = state_changes(self._snapshot, self.records)
         if moves:
             audit_path = safe_path(self.root, "system/state-audit.md")
-            head = audit_path.read_text(encoding="utf-8") if audit_path.exists() else "# 状态变更审计\n\n"
+            head = (
+                audit_path.read_text(encoding="utf-8")
+                if audit_path.exists()
+                else "# 状态变更审计\n\n"
+            )
             if not head.endswith("\n"):
                 head += "\n"
-            now = __import__("datetime").datetime.now(
-                __import__("datetime").timezone.utc).isoformat(timespec="seconds")
+            now = (
+                __import__("datetime")
+                .datetime.now(__import__("datetime").timezone.utc)
+                .isoformat(timespec="seconds")
+            )
             lines = "".join(
                 f"- {now}  {m['file']}  {m['claim_id']}  {m['change']}: "
                 f"{m['from']!r} → {m['to']!r}\n"

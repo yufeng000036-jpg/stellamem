@@ -97,9 +97,7 @@ def stats(messages) -> dict:
     usable = [c for c in cleaned if len(c) >= MIN_LEN]
     return {
         "total": total,
-        "packaged": sum(
-            1 for m in messages if "untrusted metadata" in (m.get("text") or "")[:120]
-        ),
+        "packaged": sum(1 for m in messages if "untrusted metadata" in (m.get("text") or "")[:120]),
         "usable": len(usable),
         "usable_ratio": round(len(usable) / total, 3) if total else 0,
         "avg_len": round(sum(len(c) for c in usable) / len(usable), 1) if usable else 0,

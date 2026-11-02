@@ -39,11 +39,30 @@ TARGET_FILES = [
 ]
 QUARANTINE = "system/quarantine.json"
 CSV_FIELDS = [
-    "claim_id", "revision_id", "kind", "status", "file", "source", "speaker",
-    "provider", "source_ref", "record_id", "entry_index", "precision",
-    "timestamp", "observed_at", "confidence", "sensitivity", "injection_policy",
-    "write_policy", "evidence_verified", "subject", "predicate", "value",
-    "evidence", "record_sha256",
+    "claim_id",
+    "revision_id",
+    "kind",
+    "status",
+    "file",
+    "source",
+    "speaker",
+    "provider",
+    "source_ref",
+    "record_id",
+    "entry_index",
+    "precision",
+    "timestamp",
+    "observed_at",
+    "confidence",
+    "sensitivity",
+    "injection_policy",
+    "write_policy",
+    "evidence_verified",
+    "subject",
+    "predicate",
+    "value",
+    "evidence",
+    "record_sha256",
 ]
 
 
@@ -165,7 +184,9 @@ def apply(root, payload):
             events.append(
                 {
                     "event_id": sha256_text(
-                        json.dumps({"id": record.get("claim_id"), "at": now, "action": "quarantine"})
+                        json.dumps(
+                            {"id": record.get("claim_id"), "at": now, "action": "quarantine"}
+                        )
                     ),
                     "id": record.get("claim_id"),
                     "current": record.get("revision_id"),
@@ -224,8 +245,9 @@ def verify(root):
         if record_hash(record) != expected.get(cid):
             hash_mismatch.append({"claim_id": cid, "file": rel})
     csv_path = Path(payload.get("csv") or "")
-    csv_ok = csv_path.exists() and sha256_text(csv_path.read_text(encoding="utf-8-sig")) == payload.get(
-        "csv_sha256")
+    csv_ok = csv_path.exists() and sha256_text(
+        csv_path.read_text(encoding="utf-8-sig")
+    ) == payload.get("csv_sha256")
     return {
         "ok": not missing and wrong_status == 0 and not hash_mismatch and csv_ok,
         "batch": payload.get("batch"),
@@ -257,8 +279,9 @@ def restore(root, ids, batch="restore"):
             moved += 1
             events.append(
                 {
-                    "event_id": sha256_text(json.dumps({"id": record.get("claim_id"), "at": now,
-                                                        "action": "restore"})),
+                    "event_id": sha256_text(
+                        json.dumps({"id": record.get("claim_id"), "at": now, "action": "restore"})
+                    ),
                     "id": record.get("claim_id"),
                     "current": record.get("revision_id"),
                     "relation": "RESTORE",
@@ -293,28 +316,40 @@ def restore(root, ids, batch="restore"):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="旧记忆隔离")
     parser.add_argument("command", choices=["plan", "apply", "verify", "restore", "list"])
-    parser.add_argument("--root", default=os.environ.get(
-        "STELLAMEM_MEMORIES", r"<USER_HOME>\.dsh\memories"))
+    parser.add_argument(
+        "--root", default=os.environ.get("STELLAMEM_MEMORIES", r"<USER_HOME>\.dsh\memories")
+    )
     parser.add_argument("--csv", default=None)
     parser.add_argument("--batch", default="q-20261101")
     parser.add_argument("--reason", default="")
     parser.add_argument("--ids", default="")
-    parser.add_argument("--execute", action="store_true",
-                        help="apply 需要显式加 --execute，避免误跑")
+    parser.add_argument(
+        "--execute", action="store_true", help="apply 需要显式加 --execute，避免误跑"
+    )
     args = parser.parse_args(argv)
     root = Path(args.root)
 
     if args.command == "list":
         rows = [row(rel, r) for rel, r in active_records(root)]
-        print(json.dumps({"active": len(rows), "ids": [r["claim_id"] for r in rows]},
-                         ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"active": len(rows), "ids": [r["claim_id"] for r in rows]},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 0
 
     if args.command == "plan":
         csv_path = Path(args.csv) if args.csv else Path("ACTIVE-33-QUARANTINE.csv")
         rows, payload, csv_sha = plan(root, csv_path, args.batch, args.reason)
-        print(json.dumps({"records": len(rows), "csv": str(csv_path), "csv_sha256": csv_sha},
-                         ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {"records": len(rows), "csv": str(csv_path), "csv_sha256": csv_sha},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 0
 
     if args.command == "apply":
@@ -330,8 +365,12 @@ def main(argv=None):
             payload["claim_ids"] = wanted
             payload["records"] = [r for r in payload.get("records", []) if r["claim_id"] in wanted]
         if not args.execute:
-            print(json.dumps({"dry_run": True, "would_quarantine": len(payload["claim_ids"])},
-                             ensure_ascii=False))
+            print(
+                json.dumps(
+                    {"dry_run": True, "would_quarantine": len(payload["claim_ids"])},
+                    ensure_ascii=False,
+                )
+            )
             return 0
         print(json.dumps(apply(root, payload), ensure_ascii=False, indent=2))
         return 0

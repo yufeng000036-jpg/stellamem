@@ -23,8 +23,9 @@ from __future__ import annotations
 ACTIONS = ("keep", "task", "drop")
 
 
-def plan_batch(records, actions: dict, approver: str = "", confirmed: bool = False,
-               approve: bool = False) -> dict:
+def plan_batch(
+    records, actions: dict, approver: str = "", confirmed: bool = False, approve: bool = False
+) -> dict:
     """Build (and optionally approve) a pending batch plan. No writes."""
     records = list(records or [])
     by_id = {}
