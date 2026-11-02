@@ -39,7 +39,7 @@ class RawArchiveTest(unittest.TestCase):
             [
                 line("user", "我想把记忆底座做成单人本地优先的。", "2026-09-15T02:00:00Z", "m1"),
                 line("assistant", "明白，那就先做原始档案层。", "2026-09-15T02:00:30Z", "m2"),
-                line("toolResult", "{\"exit\":0}", "2026-09-15T02:00:40Z", "m3"),
+                line("toolResult", '{"exit":0}', "2026-09-15T02:00:40Z", "m3"),
                 line("user", "", "2026-09-15T02:01:00Z", "m4"),
             ],
         )
@@ -85,7 +85,9 @@ class RawArchiveTest(unittest.TestCase):
     def test_appended_source_is_picked_up_without_duplicating(self):
         self.ingest()
         with (self.sessions / "s2.jsonl").open("a", encoding="utf-8") as fh:
-            fh.write(line("user", "补充一句：删除要能传播到索引。", "2026-09-16T05:00:00Z", "n2") + "\n")
+            fh.write(
+                line("user", "补充一句：删除要能传播到索引。", "2026-09-16T05:00:00Z", "n2") + "\n"
+            )
         report = self.ingest()
         self.assertEqual(report["added"], 1)
         self.assertEqual(raw_archive.stats(self.root)["records"], 4)
@@ -105,7 +107,9 @@ class RawArchiveTest(unittest.TestCase):
 
     def test_get_record_roundtrip(self):
         self.ingest()
-        rid = raw_source.messages_for_day(self.root, "2026-09-16", ("user",))[0]["provenance"]["record_id"]
+        rid = raw_source.messages_for_day(self.root, "2026-09-16", ("user",))[0]["provenance"][
+            "record_id"
+        ]
         record = raw_source.get_record(self.root, rid)
         self.assertIn("第一次出现", record["text"])
         self.assertEqual(record["role"], "user")
@@ -140,7 +144,9 @@ class AttributionTest(unittest.TestCase):
         write_session(
             sessions / "s1.jsonl",
             [
-                line("user", "我决定以后只看本地模型，因为云端太慢。", "2026-09-15T02:00:00Z", "m1"),
+                line(
+                    "user", "我决定以后只看本地模型，因为云端太慢。", "2026-09-15T02:00:00Z", "m1"
+                ),
                 line("assistant", "我建议把索引层推迟到第二阶段。", "2026-09-15T02:01:00Z", "m2"),
             ],
         )
@@ -168,8 +174,11 @@ class AttributionTest(unittest.TestCase):
                 ensure_ascii=False,
             )
 
-        claims = [c for chunk in compile_messages(messages, {"chunk_chars": 4000}, llm=stub)
-                  for c in chunk["claims"]]
+        claims = [
+            c
+            for chunk in compile_messages(messages, {"chunk_chars": 4000}, llm=stub)
+            for c in chunk["claims"]
+        ]
         self.assertEqual(len(claims), 1)
         return claims[0]
 

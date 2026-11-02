@@ -100,8 +100,14 @@ def collect(root, sessions):
     inbox_path = root / "system" / "memory-inbox.md"
     inbox, inbox_bad = load_blocks(inbox_path) if inbox_path.exists() else ([], 0)
     if inbox_path.exists():
-        inputs.append({"role": "inbox", "path": str(inbox_path),
-                       "bytes": inbox_path.stat().st_size, "sha256": sha256_file(inbox_path)})
+        inputs.append(
+            {
+                "role": "inbox",
+                "path": str(inbox_path),
+                "bytes": inbox_path.stat().st_size,
+                "sha256": sha256_file(inbox_path),
+            }
+        )
     n = len(inbox)
     metrics["inbox"] = {
         "count": n,
@@ -113,10 +119,18 @@ def collect(root, sessions):
         "write_policy": counter(inbox, "write_policy"),
         "provenance_speaker": provenance_speaker(inbox),
         "evidence_present_pct": pct(sum(1 for c in inbox if (c.get("evidence") or "").strip()), n),
-        "evidence_verified_pct": pct(sum(1 for c in inbox if c.get("evidence_verified") is True), n),
-        "sensitive_pct": pct(sum(1 for c in inbox
-                                 if c.get("sensitive")
-                                 or str(c.get("sensitivity")).upper() in ("SENSITIVE", "SECRET")), n),
+        "evidence_verified_pct": pct(
+            sum(1 for c in inbox if c.get("evidence_verified") is True), n
+        ),
+        "sensitive_pct": pct(
+            sum(
+                1
+                for c in inbox
+                if c.get("sensitive")
+                or str(c.get("sensitivity")).upper() in ("SENSITIVE", "SECRET")
+            ),
+            n,
+        ),
         "user_sourced": sum(1 for c in inbox if c.get("source") == "user"),
     }
 
@@ -125,15 +139,23 @@ def collect(root, sessions):
         for f in sorted((root / d).glob("*.md")) if (root / d).exists() else []:
             recs, bad = load_blocks(f)
             if recs:
-                files.append({"file": str(f.relative_to(root)), "records": len(recs), "unparsable": bad})
+                files.append(
+                    {"file": str(f.relative_to(root)), "records": len(recs), "unparsable": bad}
+                )
                 for r in recs:
                     r["_file"] = str(f.relative_to(root))
                     records_all.append(r)
     active = [r for r in records_all if r.get("status") == "active"]
     version_chain = root / "system" / "version-chain.json"
     if version_chain.exists():
-        inputs.append({"role": "version-chain", "path": str(version_chain),
-                       "bytes": version_chain.stat().st_size, "sha256": sha256_file(version_chain)})
+        inputs.append(
+            {
+                "role": "version-chain",
+                "path": str(version_chain),
+                "bytes": version_chain.stat().st_size,
+                "sha256": sha256_file(version_chain),
+            }
+        )
     metrics["memory_records"] = {
         "total": len(records_all),
         "status": counter(records_all, "status"),
@@ -157,14 +179,29 @@ def collect(root, sessions):
                 "records": len(payload.get("records") or []),
                 "file_sha256": sha256_file(quarantine),
             }
-            inputs.append({"role": "quarantine", "path": str(quarantine),
-                           "bytes": quarantine.stat().st_size, "sha256": sha256_file(quarantine)})
+            inputs.append(
+                {
+                    "role": "quarantine",
+                    "path": str(quarantine),
+                    "bytes": quarantine.stat().st_size,
+                    "sha256": sha256_file(quarantine),
+                }
+            )
         except ValueError:
             metrics["quarantine"] = {"error": "unparsable"}
 
-    time_fields = ["valid_from", "valid_to", "occurred_at", "decided_at", "observed_at", "superseded_by"]
-    metrics["time"] = {k: pct(sum(1 for c in active if c.get(k) not in (None, "", [])), len(active))
-                       for k in time_fields}
+    time_fields = [
+        "valid_from",
+        "valid_to",
+        "occurred_at",
+        "decided_at",
+        "observed_at",
+        "superseded_by",
+    ]
+    metrics["time"] = {
+        k: pct(sum(1 for c in active if c.get(k) not in (None, "", [])), len(active))
+        for k in time_fields
+    }
     metrics["time"]["precision"] = counter([c.get("provenance") or {} for c in active], "precision")
 
     # 证据可核验性：字符串是否在源文件内，以及 offset 是否对得上
@@ -221,9 +258,17 @@ def collect(root, sessions):
     daily = root / "daily"
     daily_files = sorted(daily.glob("*.md")) if daily.exists() else []
     if daily_files:
-        inputs.append({"role": "daily", "path": str(daily), "bytes": dir_stats(daily)["bytes"],
-                       "sha256": digest_pairs([(f.name, f.stat().st_size, f.stat().st_mtime) for f in daily_files]),
-                       "method": "sha256(name:size:mtime)"})
+        inputs.append(
+            {
+                "role": "daily",
+                "path": str(daily),
+                "bytes": dir_stats(daily)["bytes"],
+                "sha256": digest_pairs(
+                    [(f.name, f.stat().st_size, f.stat().st_mtime) for f in daily_files]
+                ),
+                "method": "sha256(name:size:mtime)",
+            }
+        )
     labeled = untagged = zero_user = 0
     user_lines = assistant_lines = 0
     for f in daily_files:
@@ -251,14 +296,27 @@ def collect(root, sessions):
         "user_line_share_pct": pct(user_lines, user_lines + assistant_lines),
     }
 
-    session_files = ([f for f in sessions.glob("*.jsonl")
-                      if ".trajectory" not in f.name and ".deleted" not in f.name]
-                     if sessions.exists() else [])
+    session_files = (
+        [
+            f
+            for f in sessions.glob("*.jsonl")
+            if ".trajectory" not in f.name and ".deleted" not in f.name
+        ]
+        if sessions.exists()
+        else []
+    )
     if session_files:
-        inputs.append({"role": "sessions", "path": str(sessions),
-                       "bytes": sum(f.stat().st_size for f in session_files),
-                       "sha256": digest_pairs([(f.name, f.stat().st_size, f.stat().st_mtime) for f in session_files]),
-                       "method": "sha256(name:size:mtime)"})
+        inputs.append(
+            {
+                "role": "sessions",
+                "path": str(sessions),
+                "bytes": sum(f.stat().st_size for f in session_files),
+                "sha256": digest_pairs(
+                    [(f.name, f.stat().st_size, f.stat().st_mtime) for f in session_files]
+                ),
+                "method": "sha256(name:size:mtime)",
+            }
+        )
     roles = collections.Counter()
     real_user = cron_user = short_user = 0
     real_chars = 0
@@ -300,8 +358,10 @@ def collect(root, sessions):
                 real_days.add(ts[:10])
     metrics["sessions"] = {
         "files": len(session_files),
-        "files_excluded_trajectory_or_deleted": len(list(sessions.glob("*.jsonl"))) - len(session_files)
-        if sessions.exists() else 0,
+        "files_excluded_trajectory_or_deleted": len(list(sessions.glob("*.jsonl")))
+        - len(session_files)
+        if sessions.exists()
+        else 0,
         "bytes": sum(f.stat().st_size for f in session_files),
         "roles": dict(roles),
         "user_messages_total": roles.get("user", 0),
@@ -318,8 +378,14 @@ def collect(root, sessions):
     # session jsonl 是逐轮全量快照，按记录数统计会严重虚高（实测 12.3 倍）。
     raw_manifest = root / "_raw" / "MANIFEST.jsonl"
     if raw_manifest.exists():
-        inputs.append({"role": "raw-manifest", "path": str(raw_manifest),
-                       "bytes": raw_manifest.stat().st_size, "sha256": sha256_file(raw_manifest)})
+        inputs.append(
+            {
+                "role": "raw-manifest",
+                "path": str(raw_manifest),
+                "bytes": raw_manifest.stat().st_size,
+                "sha256": sha256_file(raw_manifest),
+            }
+        )
         seen = {}
         pii_records = secret_records = raw_total = 0
         raw_days = set()
@@ -343,10 +409,14 @@ def collect(root, sessions):
                 seen[key] = e
                 if e.get("date_local"):
                     raw_days.add(e["date_local"])
-        unique_user = [e for e in seen.values()
-                       if e.get("role") == "user" and e.get("cjk_len", 0) >= 2
-                       and e.get("char_len", 0) >= 4]
-        stream_bytes = sum(f.stat().st_size for f in (root / "_raw" / "sessions").glob("*.jsonl.gz"))
+        unique_user = [
+            e
+            for e in seen.values()
+            if e.get("role") == "user" and e.get("cjk_len", 0) >= 2 and e.get("char_len", 0) >= 4
+        ]
+        stream_bytes = sum(
+            f.stat().st_size for f in (root / "_raw" / "sessions").glob("*.jsonl.gz")
+        )
         metrics["raw_archive"] = {
             "records": raw_total,
             "unique_texts": len(seen),
@@ -390,22 +460,42 @@ def collect(root, sessions):
     metrics["storage"] = {
         "version_chain_bytes": version_chain.stat().st_size if version_chain.exists() else 0,
         "review_log_bytes": (root / "system" / "review-log.md").stat().st_size
-        if (root / "system" / "review-log.md").exists() else 0,
+        if (root / "system" / "review-log.md").exists()
+        else 0,
         "inbox_bytes": inbox_path.stat().st_size if inbox_path.exists() else 0,
         "transaction_files": len(tx_files),
         "transaction_bytes": sum(f.stat().st_size for f in tx_files),
-        "transaction_avg_bytes": int(sum(f.stat().st_size for f in tx_files) / len(tx_files)) if tx_files else 0,
-        "dirs": {d: dir_stats(root / d) for d in
-                 ["daily", "core", "long-term", "semantic", "episodic", "notes", "archive", "system", "raw", "_raw"]},
+        "transaction_avg_bytes": int(sum(f.stat().st_size for f in tx_files) / len(tx_files))
+        if tx_files
+        else 0,
+        "dirs": {
+            d: dir_stats(root / d)
+            for d in [
+                "daily",
+                "core",
+                "long-term",
+                "semantic",
+                "episodic",
+                "notes",
+                "archive",
+                "system",
+                "raw",
+                "_raw",
+            ]
+        },
     }
     return metrics, inputs
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="P0 可复现度量")
-    parser.add_argument("--root", default=os.environ.get("STELLAMEM_MEMORIES", r"<USER_HOME>\.dsh\memories"))
-    parser.add_argument("--sessions", default=os.environ.get(
-        "STELLAMEM_SESSIONS", r"<USER_HOME>\.openclaw\agents\main\sessions"))
+    parser.add_argument(
+        "--root", default=os.environ.get("STELLAMEM_MEMORIES", r"<USER_HOME>\.dsh\memories")
+    )
+    parser.add_argument(
+        "--sessions",
+        default=os.environ.get("STELLAMEM_SESSIONS", r"<USER_HOME>\.openclaw\agents\main\sessions"),
+    )
     parser.add_argument("--out")
     args = parser.parse_args(argv)
 
@@ -428,36 +518,63 @@ def main(argv=None):
         "inputs": inputs,
         "metrics": metrics,
     }
-    out = Path(args.out) if args.out else (
-        root / "benchmark" / "results" / ("p0_metrics_" + datetime.now(timezone.utc).strftime("%Y%m%d") + ".json")
+    out = (
+        Path(args.out)
+        if args.out
+        else (
+            root
+            / "benchmark"
+            / "results"
+            / ("p0_metrics_" + datetime.now(timezone.utc).strftime("%Y%m%d") + ".json")
+        )
     )
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+    out.write_text(
+        json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8"
+    )
 
     m = metrics
-    print(f"inbox        {m['inbox']['count']} 条  fact={m['inbox']['kind'].get('fact', 0)}  "
-          f"source=user {m['inbox']['user_sourced']}  已验证 {m['inbox']['evidence_verified_pct']}%")
-    print(f"active       {m['active']['count']} 条（全部记录 {m['memory_records']['total']} 条，"
-          f"状态 {m['memory_records']['status']}）")
+    print(
+        f"inbox        {m['inbox']['count']} 条  fact={m['inbox']['kind'].get('fact', 0)}  "
+        f"source=user {m['inbox']['user_sourced']}  已验证 {m['inbox']['evidence_verified_pct']}%"
+    )
+    print(
+        f"active       {m['active']['count']} 条（全部记录 {m['memory_records']['total']} 条，"
+        f"状态 {m['memory_records']['status']}）"
+    )
     if "quarantine" in m:
-        print(f"隔离         批次 {m['quarantine'].get('batch')}  "
-              f"{m['quarantine'].get('claim_ids')} 条在册")
-    print(f"证据         命中 {m['evidence']['found_in_source_pct']}%  偏移精确 {m['evidence']['offset_exact_pct']}%")
+        print(
+            f"隔离         批次 {m['quarantine'].get('batch')}  "
+            f"{m['quarantine'].get('claim_ids')} 条在册"
+        )
+    print(
+        f"证据         命中 {m['evidence']['found_in_source_pct']}%  偏移精确 {m['evidence']['offset_exact_pct']}%"
+    )
     print(f"时间         valid_to {m['time']['valid_to']}%  decided_at {m['time']['decided_at']}%")
-    print(f"daily        {m['daily']['files']} 篇  user 行 {m['daily']['user_lines']} / "
-          f"assistant 行 {m['daily']['assistant_lines']}  ({m['daily']['user_line_share_pct']}%)")
-    print(f"sessions     {m['sessions']['files']} 文件 / {m['sessions']['bytes']/1048576:.1f}MB  "
-          f"user 记录 {m['sessions']['user_messages_total']} 条（含重复快照）")
+    print(
+        f"daily        {m['daily']['files']} 篇  user 行 {m['daily']['user_lines']} / "
+        f"assistant 行 {m['daily']['assistant_lines']}  ({m['daily']['user_line_share_pct']}%)"
+    )
+    print(
+        f"sessions     {m['sessions']['files']} 文件 / {m['sessions']['bytes'] / 1048576:.1f}MB  "
+        f"user 记录 {m['sessions']['user_messages_total']} 条（含重复快照）"
+    )
     if "raw_archive" in m:
         r = m["raw_archive"]
-        print(f"raw 档案     {r['records']} 条记录 → 唯一文本 {r['unique_texts']}"
-              f"（{r['repetition_factor']}× 重复）  "
-              f"唯一发言 {r['unique_user_utterances']} 条 / {r['unique_user_cjk_chars']} 汉字 / "
-              f"{r['unique_days_covered']} 天  {r['compressed_bytes']/1048576:.1f}MB")
-    print(f"隐私         命中文件 {m['privacy']['files_with_pii_pattern']} / {m['privacy']['files_scanned']}  "
-          f"{m['privacy']['by_area']}")
-    print(f"事务         {m['storage']['transaction_files']} 个 / "
-          f"{m['storage']['transaction_bytes']/1048576:.0f}MB  平均 {m['storage']['transaction_avg_bytes']/1048576:.1f}MB")
+        print(
+            f"raw 档案     {r['records']} 条记录 → 唯一文本 {r['unique_texts']}"
+            f"（{r['repetition_factor']}× 重复）  "
+            f"唯一发言 {r['unique_user_utterances']} 条 / {r['unique_user_cjk_chars']} 汉字 / "
+            f"{r['unique_days_covered']} 天  {r['compressed_bytes'] / 1048576:.1f}MB"
+        )
+    print(
+        f"隐私         命中文件 {m['privacy']['files_with_pii_pattern']} / {m['privacy']['files_scanned']}  "
+        f"{m['privacy']['by_area']}"
+    )
+    print(
+        f"事务         {m['storage']['transaction_files']} 个 / "
+        f"{m['storage']['transaction_bytes'] / 1048576:.0f}MB  平均 {m['storage']['transaction_avg_bytes'] / 1048576:.1f}MB"
+    )
     print("输出: " + str(out))
     return 0
 

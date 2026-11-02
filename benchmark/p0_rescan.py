@@ -7,6 +7,7 @@
   D 加密档案      —— vault 中含该证据的密文数量
   E 新密钥暴露    —— 除旧密钥外的其它 sk- 凭证数量
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -50,13 +51,27 @@ def old_key() -> str:
     tmp = Path(tempfile.mkdtemp(prefix="p0key-"))
     out = tmp / "m.md"
     try:
-        subprocess.run(["node", r"./stellamem-data/tools/vault.mjs", "unseal",
-                        "--key", keyfile, "--in", str(enc), "--out", str(out)],
-                       capture_output=True, text=True, timeout=60)
+        subprocess.run(
+            [
+                "node",
+                r"./stellamem-data/tools/vault.mjs",
+                "unseal",
+                "--key",
+                keyfile,
+                "--in",
+                str(enc),
+                "--out",
+                str(out),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
         mm = re.search(r"sk-[A-Za-z0-9]{24,}", out.read_text(encoding="utf-8", errors="ignore"))
         return mm.group(0) if mm else ""
     finally:
         import shutil
+
         shutil.rmtree(tmp, ignore_errors=True)
 
 
@@ -94,8 +109,17 @@ def scan(root: Path, needle: str | None, want_code: bool):
 
 def main() -> int:
     key = old_key()
-    res: dict = {"old_key_recovered": bool(key),
-        "old_key_still_in_memory_md": bool(re.search(r"sk-[A-Za-z0-9]{24,}", Path(r"<USER_HOME>/.openclaw/workspace/MEMORY.md").read_text(encoding="utf-8", errors="ignore")))}
+    res: dict = {
+        "old_key_recovered": bool(key),
+        "old_key_still_in_memory_md": bool(
+            re.search(
+                r"sk-[A-Za-z0-9]{24,}",
+                Path(r"<USER_HOME>/.openclaw/workspace/MEMORY.md").read_text(
+                    encoding="utf-8", errors="ignore"
+                ),
+            )
+        ),
+    }
 
     # A 活动代码（项目 + 工作区）
     a_f = a_h = 0
@@ -104,12 +128,17 @@ def main() -> int:
         if name == "workspace":
             continue
         f, h, o = scan(ROOTS[name], key or None, True)
-        a_f += f; a_h += h; others_all |= o
+        a_f += f
+        a_h += h
+        others_all |= o
     ws_code_f = ws_code_h = 0
     if ROOTS["workspace"].exists():
         f, h, o = scan(ROOTS["workspace"], key or None, True)
-        ws_code_f += f; ws_code_h += h; others_all |= o
-    a_f += ws_code_f; a_h += ws_code_h
+        ws_code_f += f
+        ws_code_h += h
+        others_all |= o
+    a_f += ws_code_f
+    a_h += ws_code_h
 
     # B 工作区文本（非代码）
     b_f = b_h = 0
@@ -125,28 +154,41 @@ def main() -> int:
                 except OSError:
                     continue
                 if key in t:
-                    b_f += 1; b_h += t.count(key)
+                    b_f += 1
+                    b_h += t.count(key)
 
     # C 受限历史
     c_f = c_h = 0
     for name in ("sessions", "transcripts"):
         f, h, o = scan(ROOTS[name], key or None, None)
-        c_f += f; c_h += h; others_all |= o
+        c_f += f
+        c_h += h
+        others_all |= o
 
     # D 加密档案
     vault = Path(r"E:/secure/stellamem-vault")
     d_files = sum(1 for _ in vault.rglob("*.enc")) if vault.exists() else 0
-    d_p0 = sum(1 for _ in (vault / "p0-workspace-20261101").glob("*.enc")) if (vault / "p0-workspace-20261101").exists() else 0
+    d_p0 = (
+        sum(1 for _ in (vault / "p0-workspace-20261101").glob("*.enc"))
+        if (vault / "p0-workspace-20261101").exists()
+        else 0
+    )
 
-    res.update({
-        "A_active_code": {"files": a_f, "occurrences": a_h},
-        "B_active_workspace_text": {"files": b_f, "occurrences": b_h},
-        "C_restricted_history": {"files": c_f, "occurrences": c_h},
-        "D_encrypted_archives": {"total_enc": d_files, "p0_batch_enc": d_p0},
-        "E_new_secret_hashes": {"count": len(others_all),
-                                "hashes_prefix": sorted(x[:12] for x in others_all)},
-    })
-    (OUT / "rescan.json").write_text(json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8")
+    res.update(
+        {
+            "A_active_code": {"files": a_f, "occurrences": a_h},
+            "B_active_workspace_text": {"files": b_f, "occurrences": b_h},
+            "C_restricted_history": {"files": c_f, "occurrences": c_h},
+            "D_encrypted_archives": {"total_enc": d_files, "p0_batch_enc": d_p0},
+            "E_new_secret_hashes": {
+                "count": len(others_all),
+                "hashes_prefix": sorted(x[:12] for x in others_all),
+            },
+        }
+    )
+    (OUT / "rescan.json").write_text(
+        json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
     print(json.dumps(res, ensure_ascii=False, indent=1))
     return 0
 

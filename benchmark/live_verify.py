@@ -25,24 +25,37 @@ PROMPTS = ["我有哪些项目", "我有哪些偏好", "我手头在做什么", 
 
 def sha(path):
     import hashlib
+
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def ps(command):
-    result = subprocess.run(["powershell", "-NoProfile", "-Command", command],
-                            capture_output=True, text=True, encoding="utf-8", errors="replace")
+    result = subprocess.run(
+        ["powershell", "-NoProfile", "-Command", command],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
     return result.stdout.strip()
 
 
 def process_info():
-    out = ps("Get-Process -Name ClawX -ErrorAction SilentlyContinue | "
-             "Sort-Object StartTime | Select-Object -First 1 -ExpandProperty StartTime")
+    out = ps(
+        "Get-Process -Name ClawX -ErrorAction SilentlyContinue | "
+        "Sort-Object StartTime | Select-Object -First 1 -ExpandProperty StartTime"
+    )
     return out
 
 
 def probe(module, root, prompt):
-    result = subprocess.run(["node", str(PROBE), str(module), str(root), prompt],
-                            capture_output=True, text=True, encoding="utf-8", errors="replace")
+    result = subprocess.run(
+        ["node", str(PROBE), str(module), str(root), prompt],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
     if result.returncode != 0:
         return {"prompt": prompt, "error": (result.stderr or result.stdout).strip()[:300]}
     try:
@@ -57,8 +70,11 @@ def build_prev_module(workdir):
     shutil.copytree(PLUGIN, target)
     projection = target / "projection.js"
     text = projection.read_text(encoding="utf-8")
-    gate = re.compile(r"  let blocked;\s*\n  try \{\s*\n    blocked = await quarantinedIds\(root\);\s*\n"
-                      r"  \} catch \{\s*\n    return \"\";\s*\n  \}", re.M)
+    gate = re.compile(
+        r"  let blocked;\s*\n  try \{\s*\n    blocked = await quarantinedIds\(root\);\s*\n"
+        r"  \} catch \{\s*\n    return \"\";\s*\n  \}",
+        re.M,
+    )
     text, count = gate.subn("  const blocked = new Set();", text)
     projection.write_text(text, encoding="utf-8")
     return projection, count
@@ -67,8 +83,11 @@ def build_prev_module(workdir):
 def system_context_chars():
     total = 0
     parts = []
-    for rel, label in [("core/identity.md", "身份"), ("core/user-core.md", "用户核心"),
-                       ("core/工作守则.md", "工作守则")]:
+    for rel, label in [
+        ("core/identity.md", "身份"),
+        ("core/user-core.md", "用户核心"),
+        ("core/工作守则.md", "工作守则"),
+    ]:
         path = MEMORIES / rel
         if not path.exists():
             continue
@@ -81,8 +100,11 @@ def system_context_chars():
         "chars": len(joined),
         "has_identity": "## 身份" in joined,
         "has_rules": "## 工作守则" in joined,
-        "files": [p[0] for p in [("core/identity.md", 0), ("core/user-core.md", 0),
-                                 ("core/工作守则.md", 0)] if (MEMORIES / p[0]).exists()],
+        "files": [
+            p[0]
+            for p in [("core/identity.md", 0), ("core/user-core.md", 0), ("core/工作守则.md", 0)]
+            if (MEMORIES / p[0]).exists()
+        ],
     }
 
 
@@ -106,25 +128,34 @@ def main():
             if lines:
                 last_probe = json.loads(lines[-1])
 
-        quarantine = json.loads((MEMORIES / "system" / "quarantine.json").read_text(encoding="utf-8"))
+        quarantine = json.loads(
+            (MEMORIES / "system" / "quarantine.json").read_text(encoding="utf-8")
+        )
         payload = {
             "schema_version": 1,
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "disk_state": {
-                "index_js": {"path": str(index), "bytes": index.stat().st_size,
-                             "mtime": datetime.fromtimestamp(index.stat().st_mtime).isoformat(),
-                             "sha256": sha(index)},
-                "projection_js": {"path": str(projection), "bytes": projection.stat().st_size,
-                                  "mtime": datetime.fromtimestamp(
-                                      projection.stat().st_mtime).isoformat(),
-                                  "sha256": sha(projection)},
+                "index_js": {
+                    "path": str(index),
+                    "bytes": index.stat().st_size,
+                    "mtime": datetime.fromtimestamp(index.stat().st_mtime).isoformat(),
+                    "sha256": sha(index),
+                },
+                "projection_js": {
+                    "path": str(projection),
+                    "bytes": projection.stat().st_size,
+                    "mtime": datetime.fromtimestamp(projection.stat().st_mtime).isoformat(),
+                    "sha256": sha(projection),
+                },
             },
             "running_process": {
                 "clawx_started_at": started or None,
                 "loaded_version_judgement": (
                     "进程启动早于 projection.js 的修改时间，且 Node 在 import 时缓存模块，"
                     "所以内存里运行的必定是本轮改动之前的版本"
-                    if started else "无法读取进程启动时间"),
+                    if started
+                    else "无法读取进程启动时间"
+                ),
             },
             "quarantine": {
                 "batch": quarantine.get("batch"),
@@ -145,20 +176,27 @@ def main():
         }
         out_json = ROOT / "docs" / "personal-edition" / "QUARANTINE-LIVE-VERIFY.json"
         out_json.parent.mkdir(parents=True, exist_ok=True)
-        out_json.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True),
-                            encoding="utf-8")
-        print(json.dumps({
-            "clawx_started": started,
-            "index_mtime": payload["disk_state"]["index_js"]["mtime"],
-            "projection_mtime": payload["disk_state"]["projection_js"]["mtime"],
-            "stripped_gates": strips,
-            "current_claims": [r.get("claims") for r in current_results],
-            "prev_claims": [r.get("claims") for r in prev_results],
-            "system_chars": payload["system_context"]["chars"],
-            "has_rules": payload["system_context"]["has_rules"],
-            "has_identity": payload["system_context"]["has_identity"],
-            "last_probe": last_probe,
-        }, ensure_ascii=False, indent=2))
+        out_json.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8"
+        )
+        print(
+            json.dumps(
+                {
+                    "clawx_started": started,
+                    "index_mtime": payload["disk_state"]["index_js"]["mtime"],
+                    "projection_mtime": payload["disk_state"]["projection_js"]["mtime"],
+                    "stripped_gates": strips,
+                    "current_claims": [r.get("claims") for r in current_results],
+                    "prev_claims": [r.get("claims") for r in prev_results],
+                    "system_chars": payload["system_context"]["chars"],
+                    "has_rules": payload["system_context"]["has_rules"],
+                    "has_identity": payload["system_context"]["has_identity"],
+                    "last_probe": last_probe,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 0
     finally:
         shutil.rmtree(workdir, ignore_errors=True)

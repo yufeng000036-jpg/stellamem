@@ -137,9 +137,7 @@ class InboxTests(unittest.TestCase):
     def test_edit_then_approve_records_history(self):
         self.seed()
         cid = self.inbox_records()[0]["claim_id"]
-        self.assertEqual(
-            self.cli(["edit", cid, "--value", "决定改用本地模型，因为云端更稳"]), 0
-        )
+        self.assertEqual(self.cli(["edit", cid, "--value", "决定改用本地模型，因为云端更稳"]), 0)
         pending = [r for r in self.inbox_records() if r["status"] == "pending"][0]
         self.assertEqual(pending["value"], "决定改用本地模型，因为云端更稳")
         self.assertTrue(pending["edit_history"])
@@ -155,9 +153,7 @@ class InboxTests(unittest.TestCase):
     def test_approve_with_inline_edit(self):
         self.seed()
         cid = self.inbox_records()[0]["claim_id"]
-        self.assertEqual(
-            self.cli(["approve", cid, "--value", "决定改用本地模型，因为云端太慢"]), 0
-        )
+        self.assertEqual(self.cli(["approve", cid, "--value", "决定改用本地模型，因为云端太慢"]), 0)
         _, records = load_records(self.write_target("decision"))
         self.assertEqual(records[0]["value"], "决定改用本地模型，因为云端太慢")
 

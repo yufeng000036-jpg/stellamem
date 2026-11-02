@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import datetime, timezone
-from pathlib import Path
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS promises (
@@ -67,8 +66,13 @@ class PromiseStore:
             (promise_id, action, _now_iso(), note),
         )
 
-    def create(self, title: str, description: str = "", subject: str = "user",
-               expires_at: str | None = None) -> dict:
+    def create(
+        self,
+        title: str,
+        description: str = "",
+        subject: str = "user",
+        expires_at: str | None = None,
+    ) -> dict:
         if not title or not str(title).strip():
             raise ValueError("promise title is required")
         row = self.con.execute("SELECT COUNT(*) FROM promises").fetchone()[0]
@@ -133,8 +137,11 @@ class PromiseStore:
                 "UPDATE promises SET status='expired', expired_at=? WHERE id = ?",
                 (_now_iso(), promise_id),
             )
-            self._audit(promise_id, "fulfil_refused_expired",
-                        note=f"evidence offered but past due: {evidence}")
+            self._audit(
+                promise_id,
+                "fulfil_refused_expired",
+                note=f"evidence offered but past due: {evidence}",
+            )
             self.con.commit()
             raise ValueError("cannot fulfil an expired promise")
         if not evidence or not str(evidence).strip():

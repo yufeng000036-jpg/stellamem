@@ -26,7 +26,11 @@ def lines_of(sample):
     path = BENCH / "samples" / sample
     if not path.exists():
         return []
-    return [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if len(line.strip()) >= 6]
+    return [
+        line.strip()
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if len(line.strip()) >= 6
+    ]
 
 
 def best_coverage(text, pool):
@@ -60,10 +64,13 @@ def main():
         "buckets": dict(buckets),
         "source_file": str(SOURCE),
     }
-    OUT.write_text(json.dumps({"summary": summary, "items": rows}, ensure_ascii=False, indent=2), encoding="utf-8")
+    OUT.write_text(
+        json.dumps({"summary": summary, "items": rows}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     covered = sum(1 for r in rows if r["coverage"] >= COVERAGE)
-    print(f"能在原文找到依据的: {covered}/{len(rows)} ({covered/len(rows):.1%})")
+    print(f"能在原文找到依据的: {covered}/{len(rows)} ({covered / len(rows):.1%})")
     print("写入", OUT)
 
 

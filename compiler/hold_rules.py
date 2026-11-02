@@ -31,7 +31,12 @@ ROLE_SYSTEM_VALUES = ("assistant", "system")
 # Wording that suggests a persona/viewer boundary case. These are generic
 # category words, not personal data.
 PERSONA_VIEWER_WORDS = (
-    "人格", "观众", "直播", "persona", "viewer", "鲸鱼",
+    "人格",
+    "观众",
+    "直播",
+    "persona",
+    "viewer",
+    "鲸鱼",
 )
 
 DEFAULT_SAMPLE_SIZE = 10
@@ -107,13 +112,15 @@ def hold_report(records, plan: dict, sample_size: int = DEFAULT_SAMPLE_SIZE) -> 
         if not reasons:
             continue
         claim_id = record.get("claim_id") or record.get("record_id") or record.get("id")
-        holds.append({
-            "claim_id": claim_id,
-            "from_subject": record.get("subject"),
-            "to_namespace": namespace,
-            "reasons": reasons,
-            "action": "hold",
-        })
+        holds.append(
+            {
+                "claim_id": claim_id,
+                "from_subject": record.get("subject"),
+                "to_namespace": namespace,
+                "reasons": reasons,
+                "action": "hold",
+            }
+        )
     holds_sorted = sorted(holds, key=lambda h: str(h["claim_id"] or ""))
     if sample_size is None:
         sample = holds_sorted

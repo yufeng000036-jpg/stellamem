@@ -46,10 +46,12 @@ class SemanticHealthTests(unittest.TestCase):
             SH.VectorCache(max_entries=0)
 
     def test_rerank_prefers_semantic(self):
-        ranked = SH.rerank([
-            {"id": "a", "literal": 0.9, "semantic": 0.1},
-            {"id": "b", "literal": 0.2, "semantic": 0.9},
-        ])
+        ranked = SH.rerank(
+            [
+                {"id": "a", "literal": 0.9, "semantic": 0.1},
+                {"id": "b", "literal": 0.2, "semantic": 0.9},
+            ]
+        )
         self.assertEqual(ranked[0]["id"], "b")
         self.assertEqual(ranked[0]["rerank_basis"], "literal_semantic")
 
@@ -59,23 +61,35 @@ class SemanticHealthTests(unittest.TestCase):
         self.assertEqual(ranked[0]["rerank_basis"], "literal_only")
 
     def test_rerank_tie_break_deterministic(self):
-        ranked = SH.rerank([
-            {"id": "b", "literal": 0.5, "semantic": 0.5},
-            {"id": "a", "literal": 0.5, "semantic": 0.5},
-        ])
+        ranked = SH.rerank(
+            [
+                {"id": "b", "literal": 0.5, "semantic": 0.5},
+                {"id": "a", "literal": 0.5, "semantic": 0.5},
+            ]
+        )
         self.assertEqual([c["id"] for c in ranked], ["a", "b"])
 
     def test_evaluate_recall(self):
-        result = SH.evaluate([
-            {"query": "占位查询1", "expected_id": "x", "candidates": [
-                {"id": "x", "literal": 0.9, "semantic": 0.9},
-                {"id": "y", "literal": 0.1, "semantic": 0.1},
-            ]},
-            {"query": "占位查询2", "expected_id": "z", "candidates": [
-                {"id": "y", "literal": 0.9, "semantic": 0.9},
-                {"id": "z", "literal": 0.1, "semantic": 0.1},
-            ]},
-        ])
+        result = SH.evaluate(
+            [
+                {
+                    "query": "占位查询1",
+                    "expected_id": "x",
+                    "candidates": [
+                        {"id": "x", "literal": 0.9, "semantic": 0.9},
+                        {"id": "y", "literal": 0.1, "semantic": 0.1},
+                    ],
+                },
+                {
+                    "query": "占位查询2",
+                    "expected_id": "z",
+                    "candidates": [
+                        {"id": "y", "literal": 0.9, "semantic": 0.9},
+                        {"id": "z", "literal": 0.1, "semantic": 0.1},
+                    ],
+                },
+            ]
+        )
         self.assertEqual(result["cases"], 2)
         self.assertEqual(result["recall_at_1"], 0.5)
         self.assertEqual(result["recall_at_5"], 1.0)

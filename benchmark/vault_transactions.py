@@ -27,8 +27,13 @@ def sha(path):
 
 
 def world(*args):
-    result = subprocess.run(["node", str(VAULT_TOOL), *args],
-                            capture_output=True, text=True, encoding="utf-8", errors="replace")
+    result = subprocess.run(
+        ["node", str(VAULT_TOOL), *args],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
     if result.returncode != 0:
         raise RuntimeError((result.stderr or result.stdout).strip()[:400])
     return json.loads(result.stdout)
@@ -57,14 +62,21 @@ def check_integrity(path):
             after_ok += 1
         else:
             problems.append(f"after_hash mismatch: {rel}")
-    return {"id": data.get("id"), "files": len(files), "before_ok": before_ok,
-            "after_ok": after_ok, "problems": problems, "bytes": path.stat().st_size,
-            "sha256": sha(path)}
+    return {
+        "id": data.get("id"),
+        "files": len(files),
+        "before_ok": before_ok,
+        "after_ok": after_ok,
+        "problems": problems,
+        "bytes": path.stat().st_size,
+        "sha256": sha(path),
+    }
 
 
 def rollback_compat_check(workdir):
     """在沙箱里跑一次真实 commit→rollback，并在旁边放一份密文，确认互不影响。"""
     import sys
+
     sys.path.insert(0, str(ROOT / "compiler"))
     from storage import Transaction
 
@@ -78,8 +90,15 @@ def rollback_compat_check(workdir):
 
     copy = workdir / "copy-for-vault.json"
     shutil.copy2(sandbox / "system" / "transactions" / f"{txid}.json", copy)
-    sealed = world("seal", "--key", str(workdir / "k.key"), "--in", str(copy),
-                   "--out", str(workdir / "copy.enc"))
+    sealed = world(
+        "seal",
+        "--key",
+        str(workdir / "k.key"),
+        "--in",
+        str(copy),
+        "--out",
+        str(workdir / "copy.enc"),
+    )
     again = Transaction(sandbox).rollback(txid, yes=True)
     restored = target.read_text(encoding="utf-8")
     return {
@@ -93,8 +112,9 @@ def rollback_compat_check(workdir):
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--out", default=str(ROOT / "docs" / "personal-edition"
-                                             / "ENCRYPTED-BACKUP-REPORT.json"))
+    parser.add_argument(
+        "--out", default=str(ROOT / "docs" / "personal-edition" / "ENCRYPTED-BACKUP-REPORT.json")
+    )
     parser.add_argument("--keep-vault", action="store_true")
     args = parser.parse_args(argv)
 
@@ -118,12 +138,18 @@ def main(argv=None):
                 errors.append({"file": path.name, "stage": "integrity", "error": str(exc)})
                 continue
             if integrity["problems"]:
-                errors.append({"file": path.name, "stage": "integrity",
-                               "error": "; ".join(integrity["problems"][:3])})
+                errors.append(
+                    {
+                        "file": path.name,
+                        "stage": "integrity",
+                        "error": "; ".join(integrity["problems"][:3]),
+                    }
+                )
                 continue
             sealed_path = VAULT / (path.name + ".enc")
-            sealed = world("seal", "--key", str(key_path), "--in", str(path),
-                           "--out", str(sealed_path))
+            sealed = world(
+                "seal", "--key", str(key_path), "--in", str(path), "--out", str(sealed_path)
+            )
             results.append({"transaction": path.name, "integrity": integrity, "sealed": sealed})
 
         # 恢复到独立临时目录并逐字节比对
@@ -134,9 +160,19 @@ def main(argv=None):
             enc = Path(item["sealed"]["sealed"])
             target = restored_dir / Path(item["sealed"]["source"]).name
             out = world("unseal", "--key", str(key_path), "--in", str(enc), "--out", str(target))
-            same = sha(target) == item["sealed"]["source_sha256"] == sha(Path(item["sealed"]["source"]))
-            restores.append({"file": target.name, "bytes": out["bytes"], "sha256": out["sha256"],
-                             "matches_source": same})
+            same = (
+                sha(target)
+                == item["sealed"]["source_sha256"]
+                == sha(Path(item["sealed"]["source"]))
+            )
+            restores.append(
+                {
+                    "file": target.name,
+                    "bytes": out["bytes"],
+                    "sha256": out["sha256"],
+                    "matches_source": same,
+                }
+            )
         elapsed = round(time.time() - started, 3)
 
         # 错误密钥必须失败
@@ -144,8 +180,15 @@ def main(argv=None):
         world("keygen", "--key", str(wrong_key))
         wrong_key_result = {"rejected": False}
         try:
-            world("unseal", "--key", str(wrong_key), "--in", str(Path(results[0]["sealed"]["sealed"])),
-                  "--out", str(restored_dir / "should-not-exist.json"))
+            world(
+                "unseal",
+                "--key",
+                str(wrong_key),
+                "--in",
+                str(Path(results[0]["sealed"]["sealed"])),
+                "--out",
+                str(restored_dir / "should-not-exist.json"),
+            )
         except RuntimeError as exc:
             wrong_key_result = {"rejected": True, "error": str(exc)[:120]}
 
@@ -154,43 +197,63 @@ def main(argv=None):
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "algorithm": "AES-256-GCM + scrypt(N=16384,r=8,p=1)",
             "tool": "tools/vault.mjs",
-            "key": {"path": str(key_path), "sha256": sha(key_path),
-                    "volume": key_path.drive, "acl": "仅当前用户"},
-            "vault": {"path": str(VAULT), "volume": VAULT.drive,
-                      "files": len(results),
-                      "bytes": sum(Path(r["sealed"]["sealed"]).stat().st_size for r in results)},
+            "key": {
+                "path": str(key_path),
+                "sha256": sha(key_path),
+                "volume": key_path.drive,
+                "acl": "仅当前用户",
+            },
+            "vault": {
+                "path": str(VAULT),
+                "volume": VAULT.drive,
+                "files": len(results),
+                "bytes": sum(Path(r["sealed"]["sealed"]).stat().st_size for r in results),
+            },
             "originals_retained": True,
             "transactions": [
-                {"file": r["transaction"],
-                 "bytes": r["integrity"]["bytes"],
-                 "sha256": r["integrity"]["sha256"],
-                 "files_inside": r["integrity"]["files"],
-                 "before_ok": r["integrity"]["before_ok"],
-                 "after_ok": r["integrity"]["after_ok"],
-                 "sealed": r["sealed"]["sealed"],
-                 "sealed_sha256": r["sealed"]["sealed_sha256"],
-                 "sealed_bytes": r["sealed"]["sealed_bytes"]}
+                {
+                    "file": r["transaction"],
+                    "bytes": r["integrity"]["bytes"],
+                    "sha256": r["integrity"]["sha256"],
+                    "files_inside": r["integrity"]["files"],
+                    "before_ok": r["integrity"]["before_ok"],
+                    "after_ok": r["integrity"]["after_ok"],
+                    "sealed": r["sealed"]["sealed"],
+                    "sealed_sha256": r["sealed"]["sealed_sha256"],
+                    "sealed_bytes": r["sealed"]["sealed_bytes"],
+                }
                 for r in results
             ],
-            "restore": {"directory": str(restored_dir), "elapsed_seconds": elapsed,
-                        "files": restores,
-                        "all_match": all(r["matches_source"] for r in restores)},
+            "restore": {
+                "directory": str(restored_dir),
+                "elapsed_seconds": elapsed,
+                "files": restores,
+                "all_match": all(r["matches_source"] for r in restores),
+            },
             "wrong_key_rejected": wrong_key_result,
             "rollback_compatibility": rollback,
             "errors": errors,
         }
         out = Path(args.out)
-        out.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True),
-                       encoding="utf-8")
-        print(json.dumps({
-            "sealed": len(results), "errors": len(errors),
-            "restore_all_match": payload["restore"]["all_match"],
-            "restore_seconds": elapsed,
-            "wrong_key_rejected": wrong_key_result.get("rejected"),
-            "rollback_ok": rollback["ok"],
-            "vault_bytes": payload["vault"]["bytes"],
-            "key_sha": payload["key"]["sha256"][:16],
-        }, ensure_ascii=False, indent=2))
+        out.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8"
+        )
+        print(
+            json.dumps(
+                {
+                    "sealed": len(results),
+                    "errors": len(errors),
+                    "restore_all_match": payload["restore"]["all_match"],
+                    "restore_seconds": elapsed,
+                    "wrong_key_rejected": wrong_key_result.get("rejected"),
+                    "rollback_ok": rollback["ok"],
+                    "vault_bytes": payload["vault"]["bytes"],
+                    "key_sha": payload["key"]["sha256"][:16],
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 0 if not errors and payload["restore"]["all_match"] else 1
     finally:
         shutil.rmtree(workdir, ignore_errors=True)

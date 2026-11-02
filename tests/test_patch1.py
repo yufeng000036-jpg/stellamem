@@ -39,7 +39,9 @@ class GatePartialSignalTests(unittest.TestCase):
         self.assertFalse(G.is_low_signal({"text": "x", "score": True}))
         self.assertFalse(G.is_low_signal({"text": "x", "overlap": "n/a", "semantic": "n/a"}))
         # ...but a score present as garbage must not crash the gate.
-        self.assertEqual(G.InjectionGate().decide({"items": [{"text": "x", "score": "n/a"}]})["injected"], 1)
+        self.assertEqual(
+            G.InjectionGate().decide({"items": [{"text": "x", "score": "n/a"}]})["injected"], 1
+        )
 
     def test_fieldless_item_still_not_judged(self):
         # Boundary kept: text-only items are not invented into low signal.
@@ -50,10 +52,15 @@ class GatePartialSignalTests(unittest.TestCase):
 
     def test_decide_blocks_partial_signal(self):
         g = G.InjectionGate()
-        out = g.decide({"items": [
-            {"text": "测试强信号", "overlap": 0.9, "semantic": 0.8},
-            {"text": "测试部分字段", "overlap": 0},
-        ]}, query="测试查询")
+        out = g.decide(
+            {
+                "items": [
+                    {"text": "测试强信号", "overlap": 0.9, "semantic": 0.8},
+                    {"text": "测试部分字段", "overlap": 0},
+                ]
+            },
+            query="测试查询",
+        )
         self.assertEqual(out["decision"], "inject_partial")
         self.assertEqual([i["text"] for i in out["inject"]], ["测试强信号"])
         self.assertEqual(out["blocked_low_score"], 1)
@@ -61,16 +68,21 @@ class GatePartialSignalTests(unittest.TestCase):
 
 class BridgeBatchAtomicityTests(unittest.TestCase):
     def _req(self, store, tag="a"):
-        return store.create("user", "persona", "result",
-                            {"x": f"测试{tag}", "result": f"结果{tag}"},
-                            origin_id=f"orig-{tag}")
+        return store.create(
+            "user",
+            "persona",
+            "result",
+            {"x": f"测试{tag}", "result": f"结果{tag}"},
+            origin_id=f"orig-{tag}",
+        )
 
     def test_duplicate_ids_abort_before_any_change(self):
         store = B.BridgeStore()
         req = self._req(store)
         with self.assertRaises(ValueError):
-            store.approve_batch([req["id"], req["id"]],
-                                approver="测试用户A", confirmed_full_text=True)
+            store.approve_batch(
+                [req["id"], req["id"]], approver="测试用户A", confirmed_full_text=True
+            )
         self.assertEqual(store.get(req["id"])["status"], "pending")
         self.assertIsNone(store.approved_copy(req["id"]))
 
@@ -78,8 +90,9 @@ class BridgeBatchAtomicityTests(unittest.TestCase):
         store = B.BridgeStore()
         a, b = self._req(store, "a"), self._req(store, "b")
         with self.assertRaises(ValueError):
-            store.approve_batch([a["id"], b["id"], a["id"]],
-                                approver="测试用户A", confirmed_full_text=True)
+            store.approve_batch(
+                [a["id"], b["id"], a["id"]], approver="测试用户A", confirmed_full_text=True
+            )
         self.assertEqual([store.get(r["id"])["status"] for r in (a, b)], ["pending", "pending"])
 
     def test_clock_jump_inside_phase1_aborts_all(self):
@@ -94,12 +107,21 @@ class BridgeBatchAtomicityTests(unittest.TestCase):
             return t0 if calls["n"] <= 2 else t0 + timedelta(days=3)
 
         store = B.BridgeStore(now_fn=now_fn)
-        reqs = [store.create("user", "persona", "result",
-                             {"x": f"时钟{i}", "result": f"结果{i}"},
-                             origin_id=f"orig-c{i}", created_at=created) for i in range(2)]
+        reqs = [
+            store.create(
+                "user",
+                "persona",
+                "result",
+                {"x": f"时钟{i}", "result": f"结果{i}"},
+                origin_id=f"orig-c{i}",
+                created_at=created,
+            )
+            for i in range(2)
+        ]
         with self.assertRaises(ValueError):
-            store.approve_batch([r["id"] for r in reqs],
-                                approver="测试用户A", confirmed_full_text=True)
+            store.approve_batch(
+                [r["id"] for r in reqs], approver="测试用户A", confirmed_full_text=True
+            )
         statuses = [store.get(r["id"])["status"] for r in reqs]
         self.assertNotIn("approved", statuses, statuses)
 
@@ -107,12 +129,18 @@ class BridgeBatchAtomicityTests(unittest.TestCase):
         store = B.BridgeStore()
         good = self._req(store, "good")
         past = datetime.now(timezone.utc) - timedelta(hours=73)
-        stale = store.create("user", "persona", "result",
-                             {"x": "过期项", "result": "占位"},
-                             origin_id="orig-stale", created_at=past)
+        stale = store.create(
+            "user",
+            "persona",
+            "result",
+            {"x": "过期项", "result": "占位"},
+            origin_id="orig-stale",
+            created_at=past,
+        )
         with self.assertRaises(ValueError):
-            store.approve_batch([good["id"], stale["id"]],
-                                approver="测试用户A", confirmed_full_text=True)
+            store.approve_batch(
+                [good["id"], stale["id"]], approver="测试用户A", confirmed_full_text=True
+            )
         self.assertEqual(store.get(good["id"])["status"], "pending")
         self.assertEqual(store.get(stale["id"])["status"], "expired")
         self.assertIsNone(store.approved_copy(good["id"]))
@@ -120,16 +148,18 @@ class BridgeBatchAtomicityTests(unittest.TestCase):
     def test_batch_uses_one_clock_read(self):
         store = B.BridgeStore()
         reqs = [self._req(store, str(i)) for i in range(2)]
-        copies = store.approve_batch([r["id"] for r in reqs],
-                                     approver="测试用户A", confirmed_full_text=True)
+        copies = store.approve_batch(
+            [r["id"] for r in reqs], approver="测试用户A", confirmed_full_text=True
+        )
         self.assertEqual(len(copies), 2)
         self.assertEqual(len({store.get(r["id"])["approved_at"] for r in reqs}), 1)
 
     def test_successful_batch_returns_copies(self):
         store = B.BridgeStore()
         reqs = [self._req(store, str(i)) for i in range(2)]
-        copies = store.approve_batch([r["id"] for r in reqs],
-                                     approver="测试用户A", confirmed_full_text=True)
+        copies = store.approve_batch(
+            [r["id"] for r in reqs], approver="测试用户A", confirmed_full_text=True
+        )
         self.assertEqual([c["subject"] for c in copies], ["persona", "persona"])
         self.assertEqual(len({c["approver"] for c in copies}), 1)
 

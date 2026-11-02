@@ -30,7 +30,6 @@ import hashlib
 import json
 import os
 import re
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -55,8 +54,37 @@ SECRET = re.compile(
 WEIGHTS = (7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2)
 CHECK = "10X98765432"
 PROVINCES = {
-    11, 12, 13, 14, 15, 21, 22, 23, 31, 32, 33, 34, 35, 36, 37,
-    41, 42, 43, 44, 45, 46, 50, 51, 52, 53, 54, 61, 62, 63, 64, 65,
+    11,
+    12,
+    13,
+    14,
+    15,
+    21,
+    22,
+    23,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    50,
+    51,
+    52,
+    53,
+    54,
+    61,
+    62,
+    63,
+    64,
+    65,
 }
 
 
@@ -151,8 +179,10 @@ def iter_targets(skip_backups):
         base = root / area
         if base.exists():
             for f in base.rglob("*"):
-                if f.is_file() and (f.suffix.lower() in (".md", ".json", ".jsonl")
-                                    or f.name.startswith(".private-profile")):
+                if f.is_file() and (
+                    f.suffix.lower() in (".md", ".json", ".jsonl")
+                    or f.name.startswith(".private-profile")
+                ):
                     yield ("memories/" + area, f)
     raw = root / "_raw"
     if raw.exists():
@@ -180,15 +210,22 @@ def iter_targets(skip_backups):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="PII 全量审计")
-    parser.add_argument("--out", default=str(Path(__file__).resolve().parents[1]
-                                             / "docs" / "personal-edition" / "PII-INVENTORY.csv"))
-    parser.add_argument("--json", default=str(Path(__file__).resolve().parents[1]
-                                              / "docs" / "personal-edition" / "PII-INVENTORY.json"))
+    parser.add_argument(
+        "--out",
+        default=str(
+            Path(__file__).resolve().parents[1] / "docs" / "personal-edition" / "PII-INVENTORY.csv"
+        ),
+    )
+    parser.add_argument(
+        "--json",
+        default=str(
+            Path(__file__).resolve().parents[1] / "docs" / "personal-edition" / "PII-INVENTORY.json"
+        ),
+    )
     parser.add_argument("--skip-backups", action="store_true")
     args = parser.parse_args(argv)
 
-    rows, totals = [], {"phone": 0, "idcard": 0, "disability": 0, "secret": 0,
-                        "idcard_rejected": 0}
+    rows, totals = [], {"phone": 0, "idcard": 0, "disability": 0, "secret": 0, "idcard_rejected": 0}
     by_area = {}
     scanned = 0
     sha_index = {}
@@ -216,22 +253,31 @@ def main(argv=None):
             stat["files_with_hits"] += 1
         if result["sha256"]:
             sha_index.setdefault(result["sha256"], []).append(str(path))
-        rows.append({
-            "area": area,
-            "path": str(path),
-            "bytes": result["bytes"],
-            "sha256": result["sha256"],
-            "phone": result["phone"],
-            "idcard": result["idcard"],
-            "disability": result["disability"],
-            "secret": result["secret"],
-            "total": hits,
-            "duplicate_copies": 0,
-            "action": ("encrypt" if area in ("memories/system", "backup", "raw")
-                       and path.suffix == ".json" and "transactions" in str(path)
-                       else ("redact" if area == "memories/daily" and hits else
-                             ("encrypt" if hits else "keep"))),
-        })
+        rows.append(
+            {
+                "area": area,
+                "path": str(path),
+                "bytes": result["bytes"],
+                "sha256": result["sha256"],
+                "phone": result["phone"],
+                "idcard": result["idcard"],
+                "disability": result["disability"],
+                "secret": result["secret"],
+                "total": hits,
+                "duplicate_copies": 0,
+                "action": (
+                    "encrypt"
+                    if area in ("memories/system", "backup", "raw")
+                    and path.suffix == ".json"
+                    and "transactions" in str(path)
+                    else (
+                        "redact"
+                        if area == "memories/daily" and hits
+                        else ("encrypt" if hits else "keep")
+                    )
+                ),
+            }
+        )
 
     for row in rows:
         if row["sha256"]:
@@ -239,8 +285,19 @@ def main(argv=None):
 
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    fields = ["area", "path", "bytes", "sha256", "phone", "idcard", "disability", "secret",
-              "total", "duplicate_copies", "action"]
+    fields = [
+        "area",
+        "path",
+        "bytes",
+        "sha256",
+        "phone",
+        "idcard",
+        "disability",
+        "secret",
+        "total",
+        "duplicate_copies",
+        "action",
+    ]
     with out.open("w", encoding="utf-8-sig", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=fields)
         writer.writeheader()
@@ -270,11 +327,25 @@ def main(argv=None):
         ],
     }
     json_out = Path(args.json)
-    json_out.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True),
-                        encoding="utf-8")
-    print(json.dumps({k: summary[k] for k in
-                      ("files_scanned", "files_with_hits", "hits", "by_area",
-                       "duplicate_content_groups")}, ensure_ascii=False, indent=2))
+    json_out.write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8"
+    )
+    print(
+        json.dumps(
+            {
+                k: summary[k]
+                for k in (
+                    "files_scanned",
+                    "files_with_hits",
+                    "hits",
+                    "by_area",
+                    "duplicate_content_groups",
+                )
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
     print("csv:", out, "json:", json_out)
     return 0
 

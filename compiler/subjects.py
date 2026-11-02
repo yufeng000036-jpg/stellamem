@@ -86,8 +86,7 @@ def is_bridge_copy(record: dict) -> bool:
 def has_bridge_copy(records, origin_id: str, target_subject: str) -> bool:
     target = validate_subject(target_subject)
     for rec in records or []:
-        if is_bridge_copy(rec) and rec.get("origin_id") == origin_id \
-                and subject_of(rec) == target:
+        if is_bridge_copy(rec) and rec.get("origin_id") == origin_id and subject_of(rec) == target:
             return True
     return False
 
@@ -110,7 +109,9 @@ def recall_for_subject(records, requester_subject: str, kinds=None) -> list[dict
     Unclassified records are excluded from every subject.
     """
     requester = validate_subject(requester_subject)
-    kinds = None if kinds is None else (kinds if isinstance(kinds, (list, tuple, set)) else (kinds,))
+    kinds = (
+        None if kinds is None else (kinds if isinstance(kinds, (list, tuple, set)) else (kinds,))
+    )
     out = []
     for rec in records or []:
         if subject_of(rec) != requester:

@@ -11,8 +11,14 @@ from pending_report import render_text, screening_report
 
 
 def _pending(cid, kind, when):
-    return {"claim_id": cid, "revision_id": f"r-{cid}", "kind": kind,
-            "status": "pending", "observed_at": when, "value": "测试待审内容"}
+    return {
+        "claim_id": cid,
+        "revision_id": f"r-{cid}",
+        "kind": kind,
+        "status": "pending",
+        "observed_at": when,
+        "value": "测试待审内容",
+    }
 
 
 class PendingReportTests(unittest.TestCase):
@@ -21,8 +27,13 @@ class PendingReportTests(unittest.TestCase):
             _pending("c-test-1", "fact", "2026-01-01T00:00:00+00:00"),
             _pending("c-test-1", "fact", "2026-01-02T00:00:00+00:00"),
             _pending("c-test-2", "preference", "2026-02-01T00:00:00+00:00"),
-            {"claim_id": "c-test-3", "kind": "fact", "status": "active",
-             "observed_at": "2026-03-01T00:00:00+00:00", "value": "测试已激活内容"},
+            {
+                "claim_id": "c-test-3",
+                "kind": "fact",
+                "status": "active",
+                "observed_at": "2026-03-01T00:00:00+00:00",
+                "value": "测试已激活内容",
+            },
         ]
         original = [dict(r) for r in records]
         report = screening_report(records)

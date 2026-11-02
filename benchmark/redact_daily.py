@@ -33,9 +33,15 @@ TARGETS = ["2026-10-29.md", "2026-10-31.md"]
 SECURE = Path(r"E:\secure\stellamem-vault\daily-originals")
 KEYS = Path(r"<USER_HOME>\.stellamem-keys")
 VAULT_TOOL = ROOT / "tools" / "vault.mjs"
-CLAIM_FILES = ["system/memory-inbox.md", "core/preferences.md", "long-term/projects.md",
-               "long-term/decisions.md", "long-term/lessons.md", "semantic/facts.md",
-               "semantic/profile.md"]
+CLAIM_FILES = [
+    "system/memory-inbox.md",
+    "core/preferences.md",
+    "long-term/projects.md",
+    "long-term/decisions.md",
+    "long-term/lessons.md",
+    "semantic/facts.md",
+    "semantic/profile.md",
+]
 
 HEX_RUN = re.compile(r"(?=[0-9a-fA-F]*[a-fA-F])[0-9a-fA-F]{16,}")
 PHONE = re.compile(r"(?<![0-9])1[3-9][0-9](?:[0-9]{8}|[ -][0-9]{4}[ -][0-9]{4})(?![0-9])")
@@ -85,8 +91,13 @@ def sha(path):
 
 
 def world(*args):
-    result = subprocess.run(["node", str(VAULT_TOOL), *args], capture_output=True, text=True,
-                            encoding="utf-8", errors="replace")
+    result = subprocess.run(
+        ["node", str(VAULT_TOOL), *args],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
     if result.returncode != 0:
         raise RuntimeError((result.stderr or result.stdout).strip()[:300])
     return json.loads(result.stdout)
@@ -109,9 +120,14 @@ def seal_originals():
         for item in sealed:
             target = workdir / Path(item["source"]).name
             info = world("unseal", "--key", str(key), "--in", item["sealed"], "--out", str(target))
-            checks.append({"file": target.name, "matches": info["matches"],
-                           "sha256": info["sha256"],
-                           "source_sha256": item["source_sha256"]})
+            checks.append(
+                {
+                    "file": target.name,
+                    "matches": info["matches"],
+                    "sha256": info["sha256"],
+                    "source_sha256": item["source_sha256"],
+                }
+            )
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
     return {"key": str(key), "key_sha256": sha(key), "sealed": sealed, "restore_checks": checks}
@@ -137,8 +153,9 @@ def collect_references():
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--apply", action="store_true")
-    parser.add_argument("--out", default=str(ROOT / "docs" / "personal-edition"
-                                             / "PII-REDACTION-REPORT.json"))
+    parser.add_argument(
+        "--out", default=str(ROOT / "docs" / "personal-edition" / "PII-REDACTION-REPORT.json")
+    )
     args = parser.parse_args(argv)
 
     archive = seal_originals()
@@ -152,22 +169,35 @@ def main(argv=None):
         path = MEMORIES / "daily" / name
         original = path.read_text(encoding="utf-8")
         redacted, stats = redact(original)
-        changed_lines = sum(1 for a, b in zip(original.splitlines(), redacted.splitlines()) if a != b)
-        per_file.append({
-            "file": name,
-            "bytes_before": len(original.encode("utf-8")),
-            "bytes_after": len(redacted.encode("utf-8")),
-            "sha256_before": hashlib.sha256(original.encode("utf-8")).hexdigest(),
-            "sha256_after": hashlib.sha256(redacted.encode("utf-8")).hexdigest(),
-            "hits": stats,
-            "lines_total": len(original.splitlines()),
-            "lines_changed": changed_lines,
-        })
+        changed_lines = sum(
+            1 for a, b in zip(original.splitlines(), redacted.splitlines()) if a != b
+        )
+        per_file.append(
+            {
+                "file": name,
+                "bytes_before": len(original.encode("utf-8")),
+                "bytes_after": len(redacted.encode("utf-8")),
+                "sha256_before": hashlib.sha256(original.encode("utf-8")).hexdigest(),
+                "sha256_after": hashlib.sha256(redacted.encode("utf-8")).hexdigest(),
+                "hits": stats,
+                "lines_total": len(original.splitlines()),
+                "lines_changed": changed_lines,
+            }
+        )
 
     if not args.apply:
-        print(json.dumps({"dry_run": True, "archive": archive,
-                          "files": per_file, "affected_claims": affected_claims},
-                         ensure_ascii=False, indent=2))
+        print(
+            json.dumps(
+                {
+                    "dry_run": True,
+                    "archive": archive,
+                    "files": per_file,
+                    "affected_claims": affected_claims,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
         return 0
 
     # 1) 改工作副本
@@ -200,18 +230,22 @@ def main(argv=None):
             mutated = True
             updated += 1
             evidence_hits += 1
-            events.append({
-                "event_id": hashlib.sha256(f"{record.get('claim_id')}:redact:{now}".encode()).hexdigest(),
-                "id": record.get("claim_id"),
-                "current": record.get("revision_id"),
-                "relation": "REDACT",
-                "status": record.get("status"),
-                "date": now,
-                "review_action": "redact",
-                "fields": ["evidence"],
-                "evidence_sha256_before": record["redaction"]["evidence_sha256_before"],
-                "batch": "daily-redact-20261101",
-            })
+            events.append(
+                {
+                    "event_id": hashlib.sha256(
+                        f"{record.get('claim_id')}:redact:{now}".encode()
+                    ).hexdigest(),
+                    "id": record.get("claim_id"),
+                    "current": record.get("revision_id"),
+                    "relation": "REDACT",
+                    "status": record.get("status"),
+                    "date": now,
+                    "review_action": "redact",
+                    "fields": ["evidence"],
+                    "evidence_sha256_before": record["redaction"]["evidence_sha256_before"],
+                    "batch": "daily-redact-20261101",
+                }
+            )
         if mutated:
             changes[rel] = render_records(prefix, records)
 
@@ -219,11 +253,14 @@ def main(argv=None):
     if changes:
         chain_path = safe_path(MEMORIES, "system/version-chain.json")
         chain = json.loads(chain_path.read_text(encoding="utf-8")) if chain_path.exists() else []
-        changes["system/version-chain.json"] = json.dumps(chain + events, ensure_ascii=False, indent=2)
+        changes["system/version-chain.json"] = json.dumps(
+            chain + events, ensure_ascii=False, indent=2
+        )
         review = safe_path(MEMORIES, "system/review-log.md")
         before = review.read_text(encoding="utf-8") if review.exists() else "# Review log\n"
         changes["system/review-log.md"] = before + "".join(
-            "\n" + json.dumps(e, ensure_ascii=False) for e in events)
+            "\n" + json.dumps(e, ensure_ascii=False) for e in events
+        )
         txid = Transaction(MEMORIES).commit(changes)
 
     # 3) 回归：脱敏后文件不再命中；受影响 claim 的证据能在新文件里找到
@@ -231,8 +268,13 @@ def main(argv=None):
     for name in TARGETS:
         text = (MEMORIES / "daily" / name).read_text(encoding="utf-8")
         _, stats = redact(text)
-        post.append({"file": name, "remaining_hits": sum(stats.values()),
-                     "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest()})
+        post.append(
+            {
+                "file": name,
+                "remaining_hits": sum(stats.values()),
+                "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+            }
+        )
     evid_ok = evid_missing = 0
     for rel, (_prefix, records, _hits) in refs.items():
         for record in records:
@@ -253,21 +295,41 @@ def main(argv=None):
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "archive": archive,
         "files": per_file,
-        "references": {"files": list(refs), "affected_claims": affected_claims,
-                       "evidence_updated": updated},
+        "references": {
+            "files": list(refs),
+            "affected_claims": affected_claims,
+            "evidence_updated": updated,
+        },
         "transaction": txid,
         "version_chain_events": len(events),
         "post_scan": post,
         "evidence_relocation": {"found": evid_ok, "missing": evid_missing},
-        "untouched": ["sessions", "system/transactions", "version-chain 历史事件",
-                      "review-log 历史事件", "其他 daily 文件"],
+        "untouched": [
+            "sessions",
+            "system/transactions",
+            "version-chain 历史事件",
+            "review-log 历史事件",
+            "其他 daily 文件",
+        ],
     }
     out = Path(args.out)
-    out.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
-    print(json.dumps({"files": per_file, "affected_claims": affected_claims,
-                      "evidence_updated": updated, "transaction": txid,
-                      "post_scan": post, "evidence_relocation": payload["evidence_relocation"]},
-                     ensure_ascii=False, indent=2))
+    out.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8"
+    )
+    print(
+        json.dumps(
+            {
+                "files": per_file,
+                "affected_claims": affected_claims,
+                "evidence_updated": updated,
+                "transaction": txid,
+                "post_scan": post,
+                "evidence_relocation": payload["evidence_relocation"],
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
     return 0 if all(p["remaining_hits"] == 0 for p in post) and evid_missing == 0 else 1
 
 

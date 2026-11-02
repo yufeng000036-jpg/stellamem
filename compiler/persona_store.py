@@ -28,7 +28,6 @@ Subjects: every event is persona-subject. Passing anything else (notably
 
 from __future__ import annotations
 
-import json
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -87,9 +86,7 @@ class PersonaStore:
 
     def log(self, event_id: str | None = None) -> list[dict]:
         if event_id is None:
-            rows = self.con.execute(
-                "SELECT * FROM persona_event_log ORDER BY id"
-            ).fetchall()
+            rows = self.con.execute("SELECT * FROM persona_event_log ORDER BY id").fetchall()
         else:
             rows = self.con.execute(
                 "SELECT * FROM persona_event_log WHERE event_id=? ORDER BY id", (event_id,)
@@ -106,9 +103,12 @@ class PersonaStore:
         return dict(row)
 
     def exists(self, event_id: str) -> bool:
-        return self.con.execute(
-            "SELECT 1 FROM persona_events WHERE event_id=?", (event_id,)
-        ).fetchone() is not None
+        return (
+            self.con.execute(
+                "SELECT 1 FROM persona_events WHERE event_id=?", (event_id,)
+            ).fetchone()
+            is not None
+        )
 
     def list_status(self, status: str) -> list[dict]:
         if status not in STATUSES:
@@ -128,8 +128,14 @@ class PersonaStore:
         return self.list_status("reviewed")
 
     # -- write ---------------------------------------------------------
-    def record(self, text: str, source: str, event_id: str | None = None,
-               subject: str = PERSONA, created_at: str | None = None) -> dict:
+    def record(
+        self,
+        text: str,
+        source: str,
+        event_id: str | None = None,
+        subject: str = PERSONA,
+        created_at: str | None = None,
+    ) -> dict:
         """Append one event in pending_confirmation. Duplicate id is refused."""
         if subject != PERSONA:
             raise ValueError(
@@ -158,8 +164,9 @@ class PersonaStore:
         self.con.commit()
         return self.get(event_id)
 
-    def confirm_spoken(self, event_id: str, spoken_evidence: str = "",
-                       spoken_at: str | None = None) -> dict:
+    def confirm_spoken(
+        self, event_id: str, spoken_evidence: str = "", spoken_at: str | None = None
+    ) -> dict:
         """pending_confirmation -> confirmed. Explicit confirmation only."""
         rec = self.get(event_id)
         if rec["status"] == "confirmed":

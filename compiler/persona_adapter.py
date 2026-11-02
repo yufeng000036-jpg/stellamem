@@ -63,8 +63,9 @@ class PersonaAdapter:
             raise ValueError("speaker is required")
         self.cards[str(speaker).strip()] = str(card or "").strip()
 
-    def record_event(self, speaker: str, text: str, subject: str = "persona",
-                     source: str | None = None) -> dict:
+    def record_event(
+        self, speaker: str, text: str, subject: str = "persona", source: str | None = None
+    ) -> dict:
         if subject != "persona":
             raise ValueError(
                 "persona_adapter only records persona-subject events; "
@@ -93,8 +94,9 @@ class PersonaAdapter:
         self.events[event_id] = event
         return dict(event)
 
-    def confirm_spoken(self, event_id: str, confirmed: bool = False,
-                       spoken_evidence: str = "") -> dict:
+    def confirm_spoken(
+        self, event_id: str, confirmed: bool = False, spoken_evidence: str = ""
+    ) -> dict:
         """Explicit spoken confirmation only. confirmed=False changes nothing."""
         if self.store is not None:
             if not confirmed:

@@ -14,13 +14,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def git(*args):
-    result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+    result = subprocess.run(
+        ["git", *args], cwd=ROOT, capture_output=True, text=True, encoding="utf-8"
+    )
     return result.stdout.strip(), result.returncode
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--out", default=str(ROOT / "docs" / "personal-edition" / "GIT-DIFF-REPORT.md"))
+    parser.add_argument(
+        "--out", default=str(ROOT / "docs" / "personal-edition" / "GIT-DIFF-REPORT.md")
+    )
     args = parser.parse_args(argv)
 
     branch, _ = git("rev-parse", "--abbrev-ref", "HEAD")
@@ -31,7 +35,7 @@ def main(argv=None):
     diff_text, _ = git("diff")
     staged, _ = git("diff", "--cached", "--numstat")
 
-    modified, added, deleted = [], [], []
+    modified = []
     for line in numstat.splitlines():
         parts = line.split("\t")
         if len(parts) != 3:
@@ -43,7 +47,9 @@ def main(argv=None):
             modified[-1] = f"| `{path}` | 0 | 0（仅权限/换行） |"
 
     untracked = [line[3:] for line in porcelain.splitlines() if line.startswith("??")]
-    dirty = [line[3:] for line in porcelain.splitlines() if line[:2].strip() in ("M", "A", "D", "R")]
+    dirty = [
+        line[3:] for line in porcelain.splitlines() if line[:2].strip() in ("M", "A", "D", "R")
+    ]
 
     body = [
         "# GIT-DIFF-REPORT（自动生成）",

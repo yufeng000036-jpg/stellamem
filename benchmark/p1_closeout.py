@@ -13,7 +13,6 @@
 """
 
 import argparse
-import gzip
 import hashlib
 import json
 import shutil
@@ -49,8 +48,11 @@ def check_corruption(workdir):
     sessions = workdir / "sessions"
     sessions.mkdir(parents=True)
     picks = sorted(
-        [f for f in SESSIONS.glob("*.jsonl")
-         if ".trajectory" not in f.name and ".deleted" not in f.name],
+        [
+            f
+            for f in SESSIONS.glob("*.jsonl")
+            if ".trajectory" not in f.name and ".deleted" not in f.name
+        ],
         key=lambda f: f.stat().st_size,
     )[:3]
     for f in picks:
@@ -97,8 +99,14 @@ def check_append(workdir):
         if e["session_file"] == target.name
     }
     line = json.dumps(
-        {"timestamp": "2026-11-01T12:00:00Z",
-         "message": {"role": "user", "id": "append-probe", "content": "追加一行用于验证指针稳定。"}},
+        {
+            "timestamp": "2026-11-01T12:00:00Z",
+            "message": {
+                "role": "user",
+                "id": "append-probe",
+                "content": "追加一行用于验证指针稳定。",
+            },
+        },
         ensure_ascii=False,
     )
     with target.open("a", encoding="utf-8") as fh:
@@ -131,8 +139,9 @@ def check_export(workdir):
         hashlib.sha256(r["text"].encode("utf-8")).hexdigest() == r["text_sha256"] for r in rows
     )
     ids = {r["record_id"] for r in rows}
-    archived = {e["record_id"] for e in raw_archive._iter_manifest(archive)
-                if e.get("date_local") == day}
+    archived = {
+        e["record_id"] for e in raw_archive._iter_manifest(archive) if e.get("date_local") == day
+    }
     return {
         "ok": count == len(rows) and hashes_ok and ids == archived and count > 0,
         "day": day,
@@ -155,7 +164,9 @@ def check_orphans():
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="P1 收尾验收")
-    parser.add_argument("--out", default=str(ROOT / "docs" / "personal-edition" / "P1-CLOSEOUT-METRICS.json"))
+    parser.add_argument(
+        "--out", default=str(ROOT / "docs" / "personal-edition" / "P1-CLOSEOUT-METRICS.json")
+    )
     args = parser.parse_args(argv)
 
     workdir = Path(tempfile.mkdtemp(prefix="p1close-"))
@@ -186,10 +197,14 @@ def main(argv=None):
     }
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+    out.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8"
+    )
     for name, result in results.items():
-        print(f"{'PASS' if result['ok'] else 'FAIL'}  {name}: " +
-              json.dumps({k: v for k, v in result.items() if k != 'ok'}, ensure_ascii=False))
+        print(
+            f"{'PASS' if result['ok'] else 'FAIL'}  {name}: "
+            + json.dumps({k: v for k, v in result.items() if k != "ok"}, ensure_ascii=False)
+        )
     print(f"\n{payload['passed']}/{payload['total']} 通过 -> {out}")
     return 0 if payload["passed"] == payload["total"] else 1
 

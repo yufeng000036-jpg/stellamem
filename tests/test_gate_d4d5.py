@@ -32,7 +32,8 @@ def low_signal():
 class D4CountTests(unittest.TestCase):
     def test_blocked_weak_counts_only_weak_flagged(self):
         out = G.InjectionGate().decide(
-            {"items": [strong(), weak_flagged(), low_signal()]}, query="占位查询")
+            {"items": [strong(), weak_flagged(), low_signal()]}, query="占位查询"
+        )
         self.assertEqual(out["decision"], "inject_partial")
         self.assertEqual(len(out["blocked"]), 2)
         # D4 fix: blocked_weak is 1, not 2 (it used to count all blocked).
@@ -52,7 +53,8 @@ class D4CountTests(unittest.TestCase):
 
     def test_allow_weak_blocks_nothing(self):
         out = G.InjectionGate().decide(
-            {"items": [weak_flagged(), low_signal()]}, query="占位查询", allow_weak=True)
+            {"items": [weak_flagged(), low_signal()]}, query="占位查询", allow_weak=True
+        )
         self.assertEqual(out["blocked_weak"], 0)
         self.assertEqual(out["blocked_low_signal"], 0)
         self.assertEqual(out["blocked_total"], 0)
@@ -71,8 +73,7 @@ class D4NoteTests(unittest.TestCase):
         self.assertIn("未标记弱信号", out["note"])
 
     def test_mixed_note_names_both_kinds(self):
-        out = G.InjectionGate().decide(
-            {"items": [weak_flagged(), low_signal()]}, query="占位查询")
+        out = G.InjectionGate().decide({"items": [weak_flagged(), low_signal()]}, query="占位查询")
         self.assertIn("1 项已标记弱信号", out["note"])
         self.assertIn("1 项低信号", out["note"])
 
@@ -80,29 +81,37 @@ class D4NoteTests(unittest.TestCase):
 class D5MissingTextTests(unittest.TestCase):
     def test_strong_item_without_text_does_not_raise(self):
         out = G.InjectionGate().decide(
-            {"items": [{"overlap": 0.9, "semantic": 0.8}]}, query="占位查询")
+            {"items": [{"overlap": 0.9, "semantic": 0.8}]}, query="占位查询"
+        )
         self.assertEqual(out["decision"], "inject")
         self.assertEqual(out["injected"], 1)
         self.assertEqual(out["text"], "")
 
     def test_blocked_item_without_text_allow_weak_does_not_raise(self):
         out = G.InjectionGate().decide(
-            {"items": [{"overlap": 0, "semantic": 0.2}]}, query="占位查询", allow_weak=True)
+            {"items": [{"overlap": 0, "semantic": 0.2}]}, query="占位查询", allow_weak=True
+        )
         self.assertEqual(out["injected"], 1)
         self.assertEqual(out["inject"][0]["text"], G.WEAK_LABEL)
 
     def test_blocked_item_without_text_not_allow_does_not_raise(self):
         out = G.InjectionGate().decide(
-            {"items": [{"overlap": 0, "semantic": 0.2}]}, query="占位查询")
+            {"items": [{"overlap": 0, "semantic": 0.2}]}, query="占位查询"
+        )
         self.assertEqual(out["decision"], "empty")
         self.assertEqual(out["text"], "")
         self.assertEqual(len(out["blocked"]), 1)
 
     def test_none_and_numeric_text_do_not_raise(self):
         out = G.InjectionGate().decide(
-            {"items": [{"text": None, "overlap": 0.9, "semantic": 0.8},
-                       {"text": 123, "overlap": 0.9, "semantic": 0.8}]},
-            query="占位查询")
+            {
+                "items": [
+                    {"text": None, "overlap": 0.9, "semantic": 0.8},
+                    {"text": 123, "overlap": 0.9, "semantic": 0.8},
+                ]
+            },
+            query="占位查询",
+        )
         self.assertEqual(out["decision"], "inject")
         self.assertEqual(out["text"], "\n123")
 
@@ -112,8 +121,7 @@ class D4LogEntryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             log = Path(td) / "gate_log.jsonl"
             g = G.InjectionGate(log_path=log)
-            out = g.decide({"items": [strong(), weak_flagged(), low_signal()]},
-                           query="占位查询")
+            out = g.decide({"items": [strong(), weak_flagged(), low_signal()]}, query="占位查询")
             entry = g.recent(1)[0]
             self.assertEqual(entry["blocked_weak"], out["blocked_weak"])
             self.assertEqual(entry["blocked_low_signal"], out["blocked_low_signal"])

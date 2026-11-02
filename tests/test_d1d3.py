@@ -22,18 +22,32 @@ def _seed_many(root: Path, n: int):
         day = (i % 28) + 1
         month = 1 + (i // 28) % 11
         ts = f"2026-{month:02d}-{day:02d}T00:00:00+00:00"
-        rows.append({
-            "schema_version": 2, "claim_id": f"c-d1d3-{i:03d}",
-            "revision_id": f"r-d1d3-{i:03d}", "event_id": f"e-d1d3-{i:03d}",
-            "kind": "fact", "scope": "global", "subject": "测试用户A",
-            "predicate": "偏好", "value": f"测试偏好内容{i:03d}",
-            "evidence": f"测试偏好内容{i:03d}", "source": "user",
-            "confidence": 0.9, "importance": 0.5, "sensitivity": "PRIVATE",
-            "write_policy": "allow", "injection_policy": "recall",
-            "evidence_verified": True, "status": "active", "relation": "NEW",
-            "auto_write": True, "observed_at": ts,
-            "provenance": {"timestamp": ts, "record_id": f"rm-d1d3-{i:03d}"},
-        })
+        rows.append(
+            {
+                "schema_version": 2,
+                "claim_id": f"c-d1d3-{i:03d}",
+                "revision_id": f"r-d1d3-{i:03d}",
+                "event_id": f"e-d1d3-{i:03d}",
+                "kind": "fact",
+                "scope": "global",
+                "subject": "测试用户A",
+                "predicate": "偏好",
+                "value": f"测试偏好内容{i:03d}",
+                "evidence": f"测试偏好内容{i:03d}",
+                "source": "user",
+                "confidence": 0.9,
+                "importance": 0.5,
+                "sensitivity": "PRIVATE",
+                "write_policy": "allow",
+                "injection_policy": "recall",
+                "evidence_verified": True,
+                "status": "active",
+                "relation": "NEW",
+                "auto_write": True,
+                "observed_at": ts,
+                "provenance": {"timestamp": ts, "record_id": f"rm-d1d3-{i:03d}"},
+            }
+        )
     target = root / "semantic" / "facts.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(render_records("# 测试事实\n", rows), encoding="utf-8")
@@ -63,8 +77,7 @@ class D1PagedOffsetTests(unittest.TestCase):
         self.assertEqual(page["offset"], 50)
         self.assertIsNone(page["limit"])
         self.assertFalse(page["truncated"])
-        self.assertEqual([r["claim_id"] for r in page["items"]],
-                         [r["claim_id"] for r in full[50:]])
+        self.assertEqual([r["claim_id"] for r in page["items"]], [r["claim_id"] for r in full[50:]])
 
     def test_limit_none_offset_zero_is_full(self):
         page = S.as_of_paged(self.idx.con, self.moment, limit=None, offset=0)

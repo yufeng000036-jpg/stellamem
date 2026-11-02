@@ -5,11 +5,9 @@
 """
 
 import json
-import random
 import statistics
 import sys
 import time
-import zipfile
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -26,13 +24,28 @@ ROOT = SANDBOX / "memories"
 DB = SANDBOX / "index.db"
 VAULT = SANDBOX / "vault"
 
-TOPICS = ["记忆系统", "视频剪辑", "MBTI 内容", "星契物语", "本地模型", "备份恢复", "知识库", "时间线"]
+TOPICS = [
+    "记忆系统",
+    "视频剪辑",
+    "MBTI 内容",
+    "星契物语",
+    "本地模型",
+    "备份恢复",
+    "知识库",
+    "时间线",
+]
 KINDS = ["project", "decision", "preference", "lesson", "fact", "procedure"]
-VERBS = ["推进到第二阶段", "改用 SQLite 索引", "偏好大白话", "踩了编码的坑", "支持中文检索", "先备份再迁移"]
+VERBS = [
+    "推进到第二阶段",
+    "改用 SQLite 索引",
+    "偏好大白话",
+    "踩了编码的坑",
+    "支持中文检索",
+    "先备份再迁移",
+]
 
 
 def seed_day(day: date, idx: int) -> list[dict]:
-    rnd = random.Random(f"{day.isoformat()}-{idx}")
     out = []
     for n in range(2):
         kind = KINDS[(idx * 2 + n) % len(KINDS)]
@@ -63,7 +76,7 @@ def seed_day(day: date, idx: int) -> list[dict]:
                 "auto_write": True,
                 "observed_at": f"{day.isoformat()}T08:00:00+00:00",
                 "provenance": {
-                    "timestamp": f"{day.isoformat()}T0{8+n}:00:00",
+                    "timestamp": f"{day.isoformat()}T0{8 + n}:00:00",
                     "record_id": f"rm-{day.isoformat()}-{n}",
                 },
             }
@@ -120,7 +133,7 @@ def main():
     # ---------- 3. 索引构建与规模 ----------
     idx = Index(DB)
     t0 = time.time()
-    meta = idx.build(ROOT)
+    _ = idx.build(ROOT)
     build_s = time.time() - t0
     stats = idx.stats()
     result["index"] = {
@@ -131,7 +144,13 @@ def main():
 
     # ---------- 4. 检索延迟 ----------
     lat = []
-    for q in ["记忆系统推进", "视频剪辑偏好", "备份恢复踩坑", "星契物语第二阶段", "本地模型选择"] * 6:
+    for q in [
+        "记忆系统推进",
+        "视频剪辑偏好",
+        "备份恢复踩坑",
+        "星契物语第二阶段",
+        "本地模型选择",
+    ] * 6:
         t = time.perf_counter()
         S.search(idx.con, q, limit=8)
         lat.append((time.perf_counter() - t) * 1000)

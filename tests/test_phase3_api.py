@@ -203,7 +203,10 @@ class APITests(unittest.TestCase):
         self.assertEqual(row["status"], "active")
 
         status, data = self.call(
-            "POST", "/v1/undo", {"txid": data["txid"]}, headers={"Authorization": f"Bearer {self.token}"}
+            "POST",
+            "/v1/undo",
+            {"txid": data["txid"]},
+            headers={"Authorization": f"Bearer {self.token}"},
         )
         self.assertEqual(status, 200, data)
         row = self.svc.index.con.execute(

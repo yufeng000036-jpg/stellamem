@@ -126,7 +126,10 @@ def main():
 
     old = evaluate(lambda q: baseline(rows, q), rows, queries, "baseline_keyword")
     new = evaluate(
-        lambda q: S.search(idx.con, q, limit=5, status=("active", "pending")), rows, queries, "hybrid_index"
+        lambda q: S.search(idx.con, q, limit=5, status=("active", "pending")),
+        rows,
+        queries,
+        "hybrid_index",
     )
 
     # 第二组：打散词序（用户提问不会逐字复述原文）
@@ -142,7 +145,10 @@ def main():
             frag.append((" ".join(tokens[:3]), rec["id"], rec["value"]))
     old_f = evaluate(lambda q: baseline(rows, q), rows, frag, "baseline_keyword")
     new_f = evaluate(
-        lambda q: S.search(idx.con, q, limit=5, status=("active", "pending")), rows, frag, "hybrid_index"
+        lambda q: S.search(idx.con, q, limit=5, status=("active", "pending")),
+        rows,
+        frag,
+        "hybrid_index",
     )
 
     out = {

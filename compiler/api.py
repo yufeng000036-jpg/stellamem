@@ -10,7 +10,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 import secrets
 import threading
@@ -23,7 +22,6 @@ from urllib.parse import parse_qs, urlparse
 import indexer
 import reliability as rel
 import search as S
-import quarantine_vault as vault
 from storage import Transaction, load_records
 
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
@@ -105,7 +103,7 @@ class MemoryService:
 
     def write_status(self, ident: str, status: str) -> dict:
         """把一条待审记忆改成 active/rejected，落事务 + 审计。"""
-        changes, touched = {}, None
+        changes = {}
         for rel_path, _layer in indexer.MANAGED:
             path = self.root / rel_path
             if not path.exists():
@@ -123,9 +121,9 @@ class MemoryService:
                     rec["status"] = status
                     rec["reviewed_at"] = rel.now_iso()
                     hit = True
-                    touched = rec
             if hit:
                 from storage import render_records
+
                 changes[rel_path] = render_records(prefix, records)
         if not changes:
             raise LookupError("pending record not found")
@@ -136,7 +134,12 @@ class MemoryService:
 
     def backup(self, dest: Path) -> dict:
         manifest = rel.snapshot(self.root, dest)
-        return {"ok": True, "archive": str(dest), "files": len(manifest["files"]), "digest": manifest["digest"]}
+        return {
+            "ok": True,
+            "archive": str(dest),
+            "files": len(manifest["files"]),
+            "digest": manifest["digest"],
+        }
 
     def export(self, ns: str = "personal") -> list[dict]:
         rows = []
@@ -231,7 +234,9 @@ class Handler(BaseHTTPRequestHandler):
                     person=(query.get("person") or [None])[0],
                     limit=limit,
                 )
-                return self._send(*_json(HTTPStatus.OK, {"query": q, "count": len(hits), "items": hits}))
+                return self._send(
+                    *_json(HTTPStatus.OK, {"query": q, "count": len(hits), "items": hits})
+                )
 
             if path == "/v1/timeline":
                 rows = S.timeline(
@@ -273,10 +278,14 @@ class Handler(BaseHTTPRequestHandler):
                 else:
                     data = svc.find_record(ident)
                 if not data:
-                    return self._send(*_json(HTTPStatus.NOT_FOUND, {"error": "not found", "id": ident}))
+                    return self._send(
+                        *_json(HTTPStatus.NOT_FOUND, {"error": "not found", "id": ident})
+                    )
                 return self._send(*_json(HTTPStatus.OK, data))
 
-            return self._send(*_json(HTTPStatus.NOT_FOUND, {"error": "unknown endpoint", "path": path}))
+            return self._send(
+                *_json(HTTPStatus.NOT_FOUND, {"error": "unknown endpoint", "path": path})
+            )
         except ValueError as exc:
             return self._send(*_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)}))
 
@@ -304,7 +313,9 @@ class Handler(BaseHTTPRequestHandler):
                 status = "active" if path.endswith("approve") else "rejected"
                 ident = payload.get("claim_id") or payload.get("id")
                 if not ident:
-                    return self._send(*_json(HTTPStatus.BAD_REQUEST, {"error": "claim_id required"}))
+                    return self._send(
+                        *_json(HTTPStatus.BAD_REQUEST, {"error": "claim_id required"})
+                    )
                 return self._send(*_json(HTTPStatus.OK, svc.write_status(ident, status)))
 
             if path == "/v1/rebuild":
@@ -312,7 +323,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(*_json(HTTPStatus.OK, {"ok": True, **meta}))
 
             if path == "/v1/backup":
-                dest = Path(payload.get("dest") or (svc.root.parent / "backups" / f"snap-{int(time.time())}.zip"))
+                dest = Path(
+                    payload.get("dest")
+                    or (svc.root.parent / "backups" / f"snap-{int(time.time())}.zip")
+                )
                 return self._send(*_json(HTTPStatus.OK, svc.backup(dest)))
 
             if path == "/v1/undo":
@@ -320,7 +334,9 @@ class Handler(BaseHTTPRequestHandler):
                 svc.ensure_index(force=True)
                 return self._send(*_json(HTTPStatus.OK, {"ok": True, "undone": txid}))
 
-            return self._send(*_json(HTTPStatus.NOT_FOUND, {"error": "unknown endpoint", "path": path}))
+            return self._send(
+                *_json(HTTPStatus.NOT_FOUND, {"error": "unknown endpoint", "path": path})
+            )
         except LookupError as exc:
             return self._send(*_json(HTTPStatus.NOT_FOUND, {"error": str(exc)}))
         except (ValueError, RuntimeError) as exc:
@@ -355,7 +371,7 @@ def main(argv=None):
 
     httpd, service = make_server(Path(args.root), Path(args.db), args.host, args.port)
     meta = service.ensure_index()
-    token = service.ensure_token()
+    _ = service.ensure_token()
     print(f"[api] http://{args.host}:{args.port}/v1  records={meta.get('records')}")
     print(f"[api] token file: {service.token_path}")
     try:

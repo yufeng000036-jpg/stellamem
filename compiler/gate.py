@@ -105,10 +105,15 @@ def is_low_signal(item: dict) -> bool:
 
 
 class InjectionGate:
-    def __init__(self, log_path=None, audit_path=None, allow_weak=False,
-                 max_log_bytes: int = MAX_LOG_BYTES,
-                 max_log_lines: int = MAX_LOG_LINES,
-                 max_rotated: int = MAX_ROTATED):
+    def __init__(
+        self,
+        log_path=None,
+        audit_path=None,
+        allow_weak=False,
+        max_log_bytes: int = MAX_LOG_BYTES,
+        max_log_lines: int = MAX_LOG_LINES,
+        max_rotated: int = MAX_ROTATED,
+    ):
         self.log_path = Path(log_path) if log_path else None
         self.audit_path = Path(audit_path) if audit_path else None
         self.allow_weak = allow_weak
@@ -143,13 +148,13 @@ class InjectionGate:
         strong = [i for i in bundle.get("items", []) if not is_low_signal(i)]
         blocked = [i for i in bundle.get("items", []) if is_low_signal(i)]
         non_weak_blocked = [i for i in blocked if not i.get("weak")]
-        weak_blocked = [i for i in blocked if i.get("weak")]
 
         injected, blocked_out = list(strong), []
         if blocked:
             if allow:
-                injected += [dict(w, text=_text(w) + WEAK_LABEL, low_confidence=True)
-                             for w in blocked]
+                injected += [
+                    dict(w, text=_text(w) + WEAK_LABEL, low_confidence=True) for w in blocked
+                ]
             else:
                 blocked_out = list(blocked)
 
@@ -169,11 +174,15 @@ class InjectionGate:
             if blocked_weak_count and not blocked_low_signal_count:
                 note = "没有可靠结果：命中的都是已标记弱信号，已拦下，未注入上下文"
             elif blocked_low_signal_count and not blocked_weak_count:
-                note = ("没有可靠结果：命中的都是低信号"
-                        "（未标记弱信号，但字面/语义/综合分不足），已拦下，未注入上下文")
+                note = (
+                    "没有可靠结果：命中的都是低信号"
+                    "（未标记弱信号，但字面/语义/综合分不足），已拦下，未注入上下文"
+                )
             else:
-                note = (f"没有可靠结果：命中的 {blocked_weak_count} 项已标记弱信号、"
-                        f"{blocked_low_signal_count} 项低信号，已拦下，未注入上下文")
+                note = (
+                    f"没有可靠结果：命中的 {blocked_weak_count} 项已标记弱信号、"
+                    f"{blocked_low_signal_count} 项低信号，已拦下，未注入上下文"
+                )
         else:
             note = ""
 
@@ -262,12 +271,14 @@ class InjectionGate:
         if self.audit_path:
             try:
                 self.audit_path.parent.mkdir(parents=True, exist_ok=True)
-                line = (f"- {entry['at']}  gate  decision={entry['decision']}"
-                        f"  injected={entry['injected']}  blocked_weak={entry['blocked_weak']}"
-                        f"  blocked_low_signal={entry['blocked_low_signal']}"
-                        f"  blocked_total={entry['blocked_total']}"
-                        f"  allow_weak={entry['allow_weak']}"
-                        f"  query={entry['query'] or ''}\n")
+                line = (
+                    f"- {entry['at']}  gate  decision={entry['decision']}"
+                    f"  injected={entry['injected']}  blocked_weak={entry['blocked_weak']}"
+                    f"  blocked_low_signal={entry['blocked_low_signal']}"
+                    f"  blocked_total={entry['blocked_total']}"
+                    f"  allow_weak={entry['allow_weak']}"
+                    f"  query={entry['query'] or ''}\n"
+                )
                 if not self.audit_path.exists():
                     self.audit_path.write_text("# 状态变更审计\n\n", encoding="utf-8")
                 with self.audit_path.open("a", encoding="utf-8") as fh:

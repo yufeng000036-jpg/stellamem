@@ -3,6 +3,7 @@
 输出：SECRET-EXPOSURE-INVENTORY.csv + incident.json
 所有位置只报路径/次数/哈希前缀，key 本身只存在于内存。
 """
+
 from __future__ import annotations
 
 import csv
@@ -18,8 +19,23 @@ OUT = Path(r"./stellamem-data/docs/p0")
 OUT.mkdir(parents=True, exist_ok=True)
 
 PAT = re.compile(r"sk-[A-Za-z0-9]{24,}")
-SKIP_EXT = {".enc", ".gz", ".zip", ".7z", ".png", ".jpg", ".jpeg", ".webp",
-            ".mp4", ".mp3", ".wav", ".gguf", ".safetensors", ".bin", ".db"}
+SKIP_EXT = {
+    ".enc",
+    ".gz",
+    ".zip",
+    ".7z",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".webp",
+    ".mp4",
+    ".mp3",
+    ".wav",
+    ".gguf",
+    ".safetensors",
+    ".bin",
+    ".db",
+}
 MAX_BYTES = 64 * 1024 * 1024
 
 
@@ -48,8 +64,11 @@ def scan_file(p: Path, needle: str) -> int:
 def walk(root: Path, needle: str, label: str, rows: list, limit_files: int | None = None):
     n = 0
     for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if d not in
-                       {".git", "node_modules", "__pycache__", ".venv", "site-packages"}]
+        dirnames[:] = [
+            d
+            for d in dirnames
+            if d not in {".git", "node_modules", "__pycache__", ".venv", "site-packages"}
+        ]
         for fn in filenames:
             p = Path(dirpath) / fn
             if p.suffix.lower() in SKIP_EXT:
@@ -64,12 +83,21 @@ def walk(root: Path, needle: str, label: str, rows: list, limit_files: int | Non
 
 def git_hits(root: Path, needle: str, rows: list):
     try:
-        r = subprocess.run(["git", "-C", str(root), "log", "--all", "-S", needle,
-                            "--oneline"], capture_output=True, text=True, timeout=120)
-        hits = [l for l in r.stdout.splitlines() if l.strip()]
+        r = subprocess.run(
+            ["git", "-C", str(root), "log", "--all", "-S", needle, "--oneline"],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        hits = [line for line in r.stdout.splitlines() if line.strip()]
         if hits:
-            rows.append({"area": "git-history", "path": f"{root} ({len(hits)} commits)",
-                         "occurrences": len(hits)})
+            rows.append(
+                {
+                    "area": "git-history",
+                    "path": f"{root} ({len(hits)} commits)",
+                    "occurrences": len(hits),
+                }
+            )
         idx = Path(root) / ".git" / "index"
         if idx.exists():
             c = scan_file(idx, needle)
@@ -130,11 +158,18 @@ def main() -> int:
     }
     for r in rows:
         res["by_area"][r["area"]] = res["by_area"].get(r["area"], 0) + r["occurrences"]
-    (OUT / "incident.json").write_text(json.dumps(res, ensure_ascii=False, indent=1),
-                                       encoding="utf-8")
-    print(json.dumps({k: res[k] for k in
-                      ("keys_found", "keys", "files_with_hit", "total_occurrences", "by_area")},
-                     ensure_ascii=False))
+    (OUT / "incident.json").write_text(
+        json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
+    print(
+        json.dumps(
+            {
+                k: res[k]
+                for k in ("keys_found", "keys", "files_with_hit", "total_occurrences", "by_area")
+            },
+            ensure_ascii=False,
+        )
+    )
     return 0
 
 

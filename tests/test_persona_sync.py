@@ -14,8 +14,12 @@ import persona_sync as SY
 
 def _ev(eid, status="reviewed", **extra):
     row = {
-        "event_id": eid, "subject": "persona", "text": "占位已复核事件",
-        "status": status, "reviewed_by": "测试复核人", "reviewed_at": "2026-11-02T00:00:00+00:00",
+        "event_id": eid,
+        "subject": "persona",
+        "text": "占位已复核事件",
+        "status": status,
+        "reviewed_by": "测试复核人",
+        "reviewed_at": "2026-11-02T00:00:00+00:00",
         "source": "测试平台",
     }
     row.update(extra)
@@ -33,19 +37,27 @@ class PersonaSyncTests(unittest.TestCase):
 
     def test_pending_refused(self):
         with self.assertRaises(ValueError):
-            SY.prepare_sync_pack([_ev("e1", status="pending_confirmation")], approver="x", confirmed_full_text=True)
+            SY.prepare_sync_pack(
+                [_ev("e1", status="pending_confirmation")], approver="x", confirmed_full_text=True
+            )
 
     def test_confirmed_only_refused(self):
         with self.assertRaises(ValueError):
-            SY.prepare_sync_pack([_ev("e1", status="confirmed")], approver="x", confirmed_full_text=True)
+            SY.prepare_sync_pack(
+                [_ev("e1", status="confirmed")], approver="x", confirmed_full_text=True
+            )
 
     def test_missing_reviewer_refused(self):
         with self.assertRaises(ValueError):
-            SY.prepare_sync_pack([_ev("e1", reviewed_by="")], approver="x", confirmed_full_text=True)
+            SY.prepare_sync_pack(
+                [_ev("e1", reviewed_by="")], approver="x", confirmed_full_text=True
+            )
 
     def test_user_subject_refused(self):
         with self.assertRaises(ValueError):
-            SY.prepare_sync_pack([_ev("e1", subject="user")], approver="x", confirmed_full_text=True)
+            SY.prepare_sync_pack(
+                [_ev("e1", subject="user")], approver="x", confirmed_full_text=True
+            )
 
     def test_empty_text_refused(self):
         with self.assertRaises(ValueError):
@@ -65,10 +77,16 @@ class PersonaSyncTests(unittest.TestCase):
 
     def test_one_bad_aborts_all(self):
         with self.assertRaises(ValueError):
-            SY.prepare_sync_pack([_ev("e1"), _ev("e2", status="pending_confirmation")], approver="x", confirmed_full_text=True)
+            SY.prepare_sync_pack(
+                [_ev("e1"), _ev("e2", status="pending_confirmation")],
+                approver="x",
+                confirmed_full_text=True,
+            )
 
     def test_dry_run_counts(self):
-        report = SY.dry_run_report([_ev("e1"), _ev("e2", status="confirmed"), _ev("e3", status="pending_confirmation")])
+        report = SY.dry_run_report(
+            [_ev("e1"), _ev("e2", status="confirmed"), _ev("e3", status="pending_confirmation")]
+        )
         self.assertEqual(report["total_events"], 3)
         self.assertEqual(report["reviewed_and_valid"], 1)
         self.assertFalse(report["changed_anything"])

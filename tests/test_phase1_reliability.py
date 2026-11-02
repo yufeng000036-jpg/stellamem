@@ -1,6 +1,5 @@
 """第一阶段：可靠性与安全回归。fixtures 全部为合成数据。"""
 
-import json
 import sys
 import tempfile
 import unittest
@@ -242,7 +241,9 @@ class VaultTests(unittest.TestCase):
             original = (root / "long-term" / "projects.md").read_text(encoding="utf-8")
             vault.seal(root, vdir, batch="t2")
             vault.unseal(root, vdir, "t2")
-            self.assertEqual((root / "long-term" / "projects.md").read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                (root / "long-term" / "projects.md").read_text(encoding="utf-8"), original
+            )
 
     def test_encrypted_vault_requires_correct_key(self):
         with tempfile.TemporaryDirectory() as tmp:
