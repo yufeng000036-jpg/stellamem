@@ -139,6 +139,11 @@ class PreferenceCardStore:
 
     # -- durable log ---------------------------------------------------
     def _fsync_dir(self, path: Path) -> None:
+        """fsync the directory entry. No-op on Windows, where directory
+        handles cannot be fsynced. POSIX still fsyncs the directory.
+        """
+        if os.name == "nt":
+            return
         try:
             fd = os.open(path, os.O_RDONLY)
         except OSError:
@@ -164,7 +169,12 @@ class PreferenceCardStore:
                     # A crashed writer may have left a torn tail. Terminate it
                     # with a newline so the next record cannot be glued onto it.
                     prefix = b"\n"
-        fd = os.open(self.audit_path, os.O_APPEND | os.O_CREAT | os.O_WRONLY, 0o644)
+        flags = os.O_APPEND | os.O_CREAT | os.O_WRONLY
+        if os.name == "nt":
+            # Writable binary handle: Windows os.fsync rejects read-only
+            # handles, and text mode would rewrite LF as CRLF.
+            flags |= os.O_BINARY
+        fd = os.open(self.audit_path, flags, 0o644)
         try:
             os.write(fd, prefix + payload)
             os.fsync(fd)

@@ -38,7 +38,9 @@
   每次写操作（索引重建、标签写入、pending 落库、approve/reject）前自动触发。
 - 快照先写入 `system/snapshots/.partial-<ts>-<label>/`，文件 fsync、
   manifest 原子写完之后，再把目录改名为 `system/snapshots/<ts>-<label>/`。
-  改名前进程被杀死时，`list_snapshots()` 看不到半份快照。每个文件记 SHA256，
+  文件 fsync 在 Windows 上用可写二进制句柄（`O_RDWR|O_BINARY`）；目录 fsync
+  只在 POSIX 上执行，Windows 不做。改名前进程被杀死时，`list_snapshots()`
+  看不到半份快照。每个文件记 SHA256，
   快照清单本身也记 SHA256；快照/回滚/清理全部写审计日志。
 - `restore_snapshot()` 是显式运维操作：必须传确认短语，否则抛错；
   恢复前先校验 SHA256，不一致拒绝恢复。

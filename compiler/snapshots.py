@@ -112,7 +112,17 @@ def _remove_sidecars(path: Path) -> None:
 
 
 def _fsync_file(path: Path) -> None:
-    fd = os.open(path, os.O_RDONLY)
+    """Flush one file to stable storage.
+
+    POSIX accepts os.fsync on a read-only descriptor. Windows returns
+    Errno 9 (bad file descriptor) for that handle, so the file is opened
+    read/write and binary there. The bytes are not rewritten.
+    """
+    if os.name == "nt":
+        flags = os.O_RDWR | os.O_BINARY
+    else:
+        flags = os.O_RDONLY
+    fd = os.open(path, flags)
     try:
         os.fsync(fd)
     finally:
@@ -120,6 +130,11 @@ def _fsync_file(path: Path) -> None:
 
 
 def _fsync_dir(path: Path) -> None:
+    """fsync a directory so the new name is durable.
+
+    This is a no-op on Windows: a directory cannot be opened and fsynced
+    there. POSIX still fsyncs the directory. File fsync is unchanged.
+    """
     if os.name == "nt":
         return
     try:
@@ -159,7 +174,10 @@ def _fault_point(name: str) -> None:
 
 def _atomic_write(path: Path, data: bytes) -> None:
     tmp = path.with_name(path.name + ".tmp")
-    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+    if os.name == "nt":
+        flags |= os.O_BINARY
+    fd = os.open(tmp, flags, 0o644)
     try:
         os.write(fd, data)
         os.fsync(fd)
@@ -479,6 +497,10 @@ def auto_snapshot(root: Path | str, label: str) -> Path:
     partial = snap_root / f".partial-{name}"
     final = snap_root / name
     partial.mkdir(parents=True, exist_ok=False)
+    # Test hook: hold the child here, after the hidden directory exists and
+    # before anything is published, until SIGKILL / TerminateProcess.
+    # Production calls (env unset) return immediately.
+    _fault_point("backup-before-publish")
     try:
         manifest = {"created_at": _now_ts(), "label": label, "files": []}
         for rel in SNAPSHOT_FILES:
@@ -510,7 +532,6 @@ def auto_snapshot(root: Path | str, label: str) -> Path:
             json.dumps(manifest, ensure_ascii=False, indent=1).encode("utf-8"),
         )
         _fsync_dir(partial)
-        _fault_point("backup-before-publish")
         os.rename(partial, final)
         _fsync_dir(snap_root)
     except Exception as exc:

@@ -11,7 +11,8 @@
 ### 修复
 
 - **偏好卡版本历史**（`compiler/preference_summary.py`）：`audit_path` 不再是可选旁路日志。
-  它是只增 JSONL 账本，每条写入后 `fsync`（目录 fsync 在支持的系统上顺带做），
+  它是只增 JSONL 账本，每条写入后 `fsync`。目录 fsync 只在 POSIX 上做；
+  Windows 不能 fsync 目录，那里是明确的 no-op，文件本身仍用可写二进制句柄 fsync。
   没有覆盖写入。新的 `PreferenceCardStore` 从同一路径重建全部版本、状态、
   批准人和 rollback。最后一行残缺或无法解析时跳过，记 `fail-closed` 日志，
   更早的完整版本保留。批准仍要求非空具名 approver。
@@ -25,7 +26,9 @@
   根名称。OpenClaw `project()` 不再把缺省请求方当成 `user`，缺省或未知返回空。
   偏好卡和规律项仍用原来的自由文本 subject，不跟这条治理主体混用。
 - **快照崩溃窗口**（`compiler/snapshots.py`）：备份写进隐藏的 `.partial-*` 目录，
-  fsync 后再改名发布。`SIGKILL`（Windows 上是 `TerminateProcess`）打在发布前时，
+  fsync 后再改名发布。文件 fsync 在 Windows 上打开 `O_RDWR|O_BINARY`（只读句柄会
+  `Errno 9`）；目录 fsync 仅 POSIX，Windows 是 no-op。测试用的故障点在 `.partial`
+  目录建好后停住，直到 `SIGKILL`（Windows 上是 `TerminateProcess`）打在发布前。
   没有可列出的半份快照，live 库内容不变。恢复先 checkpoint，把校验过的库写到
   暂存文件，清掉 `-wal`/`-shm`，再 `os.replace`。杀死进程后 live 库要么仍是
   恢复前，要么是完整恢复后，`integrity_check` 为 ok。重新打开不会把旧 sidecar
