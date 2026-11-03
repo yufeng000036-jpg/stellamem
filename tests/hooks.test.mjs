@@ -62,16 +62,16 @@ test("projection denies sensitive, secrets, unrelated tasks, legacy and oversize
   const text = "legacy personal details\n<!-- stellamem:v2 -->\n" +
     data.map((c) => "```stellamem\n" + JSON.stringify(c) + "\n```\n").join("\n");
   await writeFile(path.join(f.root, "core/preferences.md"), text);
-  assert.equal(await project(f.root, "weather today"), "");
-  const output = await project(f.root, "response preference");
+  assert.equal(await project(f.root, "weather today", { requesterSubject: "user" }), "");
+  const output = await project(f.root, "response preference", { requesterSubject: "user" });
   assert.ok(output.includes("concise"));
   assert.ok(!output.includes("private"));
   assert.ok(!output.includes("sk-" + "A".repeat(30)));
   assert.ok(!output.includes("legacy personal"));
-  assert.equal(await project(f.root, "response preference", { maxInjectChars: 5 }), "");
+  assert.equal(await project(f.root, "response preference", { maxInjectChars: 5, requesterSubject: "user" }), "");
   await mkdir(path.join(f.root, "system"));
   await writeFile(path.join(f.root, "system/transaction.json"), "{}");
-  assert.equal(await project(f.root, "response preference"), "");
+  assert.equal(await project(f.root, "response preference", { requesterSubject: "user" }), "");
 });
 test("technical prompt with a port does not drag preference memories in", async () => {
   const f = await fixture();
@@ -81,9 +81,9 @@ test("technical prompt with a port does not drag preference memories in", async 
     data.map((c) => "```stellamem\n" + JSON.stringify(c) + "\n```\n").join("\n");
   await writeFile(path.join(f.root, "core/preferences.md"), text);
   // Port-like number makes this technical; preference intent must not surface it.
-  assert.equal(await project(f.root, "偏好 8081 端口"), "");
+  assert.equal(await project(f.root, "偏好 8081 端口", { requesterSubject: "user" }), "");
   // Same preference, asked in plain English with no technical indicator, must surface.
-  assert.ok((await project(f.root, "response preference")).includes("concise"));
+  assert.ok((await project(f.root, "response preference", { requesterSubject: "user" })).includes("concise"));
 });
 test("only explicitly configured task scopes broaden default global recall", async () => {
   // Regression: eligible() used to require scope in ["global"], but the model
@@ -97,11 +97,11 @@ test("only explicitly configured task scopes broaden default global recall", asy
   ];
   const text = data.map((c) => "```stellamem\n" + JSON.stringify(c) + "\n```\n").join("\n");
   await writeFile(path.join(f.root, "semantic/profile.md"), "\n<!-- stellamem:v2 -->\n" + text);
-  const out = await project(f.root, "title");
+  const out = await project(f.root, "title", { requesterSubject: "user" });
   assert.equal(out, "", "model-generated scope alone must not broaden retrieval");
   // Explicit operator scopes grant access within the selected namespace.
-  assert.equal(await project(f.root, "title", { activeScopes: ["other"] }), "");
-  assert.ok((await project(f.root, "title", { activeScopes: ["title"] })).includes("Startown"));
+  assert.equal(await project(f.root, "title", { activeScopes: ["other"], requesterSubject: "user" }), "");
+  assert.ok((await project(f.root, "title", { activeScopes: ["title"], requesterSubject: "user" })).includes("Startown"));
 });
 test("runtime rules load without top-level await", async () => {
   // Regression: a top-level await in runtime.mjs broke OpenClaw's plugin loader
@@ -121,7 +121,7 @@ test("projection isolates authoritative subject namespaces and rejects malformed
     record({ claim_id: "c-viewer", revision_id: "r-viewer", namespace: "viewer", value: "viewer sentinel" }),
     record({ claim_id: "c-invalid", revision_id: "r-invalid", namespace: null, value: "invalid sentinel" })];
   await writeFile(path.join(f.root,"core/preferences.md"), "<!-- stellamem:v2 -->\n" + data.map(c => "```stellamem\n"+JSON.stringify(c)+"\n```\n").join("\n"));
-  const user = await project(f.root, "sentinel preference");
+  const user = await project(f.root, "sentinel preference", { requesterSubject: "user" });
   assert.ok(user.includes("user sentinel"));
   for (const forbidden of ["persona sentinel", "viewer sentinel", "invalid sentinel"]) assert.ok(!user.includes(forbidden));
   const persona = await project(f.root, "sentinel preference", { requesterSubject: "persona" });
@@ -134,5 +134,13 @@ test("projection refuses expired facts and ambiguous active revisions", async ()
     record({ revision_id:"r-other", value:"conflicting sentinel" }),
     record({ revision_id:"r-third", value:"another conflicting sentinel" })];
   await writeFile(path.join(f.root,"core/preferences.md"), "<!-- stellamem:v2 -->\n" + data.map(c => "```stellamem\n"+JSON.stringify(c)+"\n```\n").join("\n"));
-  assert.equal(await project(f.root,"sentinel preference"), "");
+  assert.equal(await project(f.root,"sentinel preference", { requesterSubject: "user" }), "");
+});
+test("missing requesterSubject returns nothing", async () => {
+  const f = await fixture();
+  await mkdir(path.join(f.root, "core"));
+  const text = "<!-- stellamem:v2 -->\n```stellamem\n" + JSON.stringify(record()) + "\n```\n";
+  await writeFile(path.join(f.root, "core/preferences.md"), text);
+  assert.equal(await project(f.root, "response preference"), "");
+  assert.ok((await project(f.root, "response preference", { requesterSubject: "user" })).includes("concise"));
 });

@@ -12,24 +12,28 @@ PATCH1 重新生成过一次；PATCH2 改用 text-mode 清单（见下）。
 ```python
 # make_manifest.py（等价逻辑，跨平台稳定）
 import hashlib
+import subprocess
 from pathlib import Path
 
 root = Path("<包根目录>")
-skip_parts = {"__pycache__", ".git", ".venv", "staging-data"}
+skip_parts = {"__pycache__", ".git", ".venv", "staging-data", ".ruff_cache"}
 skip_prefix = ("docs/personal-edition/", "docs/p0/credential-map.json",
                "memory_service/work/", "memory_service/reports/")
+# 只列已跟踪文件。rglob 会把 .ruff_cache 等未跟踪/忽略路径写进清单，
+# 新鲜克隆上 sha256sum -c 会因为文件不存在而 FAILED。
+raw = subprocess.check_output(["git", "ls-files", "-z"], cwd=root)
+paths = sorted(item.decode("utf-8") for item in raw.split(b"\0") if item)
 lines = []
-for p in sorted(root.rglob("*")):
-    if not p.is_file():
-        continue
-    rel = p.relative_to(root).as_posix()
-    if any(part in skip_parts for part in p.relative_to(root).parts):
+for rel in paths:
+    parts = rel.split("/")
+    if any(part in skip_parts for part in parts):
         continue
     if rel == "SHA256SUMS.txt" or rel.endswith(".pyc"):
         continue
     if any(rel == x or rel.startswith(x) for x in skip_prefix):
         continue
-    lines.append(f"{hashlib.sha256(p.read_bytes()).hexdigest()}  {rel}\n")
+    data = (root / rel).read_bytes()
+    lines.append(f"{hashlib.sha256(data).hexdigest()}  {rel}\n")
 (root / "SHA256SUMS.txt").write_text("".join(lines), encoding="utf-8", newline="\n")
 ```
 
@@ -53,6 +57,8 @@ sha256sum -c SHA256SUMS.txt        # 全部应为 OK
 | `docs/personal-edition/`（36 文件） | 生产机的隐私/审计报告，未随包交付 |
 | `docs/p0/credential-map.json` | 凭据映射（敏感），未随包交付 |
 | `__pycache__/`、`*.pyc` | 运行副产物 |
+| `.ruff_cache/` | ruff 本地缓存，已在 `.gitignore`，不进版本库 |
+| 未跟踪 / 被 gitignore 的路径 | 清单只覆盖 `git ls-files`；工作区里的缓存不能进交接凭据 |
 | `.git/`、`_bak/` | 历史/备份，按交接说明不打包 |
 | `memory_service/work`、`memory_service/reports` | 数据与浏览器 profile，按交接说明不打包 |
 | `staging-data/` | 仅 staging 测试现场，不属于交接包 |

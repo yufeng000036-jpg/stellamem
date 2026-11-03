@@ -19,9 +19,11 @@ from datetime import datetime, timezone
 try:  # 包内导入（compiler.search）与扁平导入（sys.path 加 compiler/）都要能用
     from . import semantic
     from . import rank as rank_mod
+    from . import subjects as subjects_mod
 except ImportError:  # pragma: no cover
     import semantic  # type: ignore
     import rank as rank_mod  # type: ignore
+    import subjects as subjects_mod  # type: ignore
 
 # 字面/语义权重。语义通道默认开启后字面噪声会压住正确项，故可调。
 W_LEX = float(os.environ.get("STELLAMEM_W_LEX", "0.20"))
@@ -94,9 +96,79 @@ def detect_broad(prompt: str) -> str | None:
     return None
 
 
-def broad_recall(con, kind: str, limit: int = 8, status=("active", "pending")) -> list[dict]:
-    """按类型取记忆，按可信度 + 时间排序。"""
+def _record_namespace(explicit: str | None) -> str | None:
+    """Record-retrieval namespace. Missing or unknown is None (fail closed).
+
+    This is user/persona/viewer, not the free-text preference-card subject.
+    """
+    if not isinstance(explicit, str) or not explicit.strip():
+        return None
+    try:
+        return subjects_mod.validate_subject(explicit.strip())
+    except ValueError:
+        return None
+
+
+def _alias_values(namespace: str) -> list[str]:
+    values = [namespace]
+    for alias, canonical in subjects_mod.ALIASES.items():
+        if canonical == namespace:
+            values.append(alias)
+    return values
+
+
+def _record_columns(con: sqlite3.Connection) -> set[str]:
+    try:
+        return {row[1] for row in con.execute("PRAGMA table_info(records)")}
+    except sqlite3.Error:
+        return set()
+
+
+def _namespace_clause(con: sqlite3.Connection, namespace: str) -> tuple[str, list]:
+    aliases = _alias_values(namespace)
+    marks = ",".join("?" * len(aliases))
+    if "namespace" in _record_columns(con):
+        clause = (
+            f"((namespace IS NOT NULL AND namespace IN ({marks}))"
+            f" OR (namespace IS NULL AND subject IN ({marks})))"
+        )
+        return clause, aliases + aliases
+    return f"(subject IN ({marks}))", aliases
+
+
+def _row_for_namespace(rec: dict) -> dict:
+    if not isinstance(rec, dict):
+        return {}
+    if "namespace" in rec and rec.get("namespace") is None:
+        viewed = dict(rec)
+        viewed.pop("namespace", None)
+        return viewed
+    return rec
+
+
+def _row_in_namespace(rec: dict, namespace: str) -> bool:
+    return subjects_mod.subject_of(_row_for_namespace(rec)) == namespace
+
+
+def record_visible(rec: dict, namespace: str | None) -> bool:
+    """True only when rec belongs to a known requester namespace."""
+    ns = _record_namespace(namespace)
+    if ns is None:
+        return False
+    return _row_in_namespace(rec, ns)
+
+
+def broad_recall(
+    con, kind: str, limit: int = 8, status=("active", "pending"), namespace: str | None = None
+) -> list[dict]:
+    """按类型取记忆，按可信度 + 时间排序。没有可信 namespace 时返回空。"""
+    ns = _record_namespace(namespace)
+    if ns is None:
+        return []
     where, params = _filter_sql((kind,), None, status, None)
+    clause, extra = _namespace_clause(con, ns)
+    where = f"({where}) AND {clause}"
+    params = list(params) + extra
     rows = con.execute(
         f"SELECT * FROM records WHERE {where} ORDER BY redacted ASC, "
         "CASE status WHEN 'active' THEN 0 ELSE 1 END, occurred_at DESC LIMIT 200",
@@ -106,6 +178,8 @@ def broad_recall(con, kind: str, limit: int = 8, status=("active", "pending")) -
     for row in rows:
         rec = dict(row)
         if rec.get("redacted") or not rec.get("value"):
+            continue
+        if not _row_in_namespace(rec, ns):
             continue
         rec["score"] = round(0.9 if rec.get("status") == "active" else 0.55, 3)
         rec["overlap"] = 1.0
@@ -208,12 +282,18 @@ def search(
     status=("active", "pending"),
     limit: int = 10,
     min_overlap: float = 0.5,
+    namespace: str | None = None,
 ) -> list[dict]:
     """混合检索：FTS5 候选 + 字符二元组重叠打分。
 
     纯 FTS 对中文长句无效（trigram 需要 ≥3 字连续命中），
     纯 LIKE 又无法排序；所以用重叠度做排序信号，FTS 只负责召回候选。
+    namespace 是请求方主体（user/persona/viewer）。缺失或未知时返回空，
+    并且不会返回其他主体的记录。
     """
+    ns = _record_namespace(namespace)
+    if ns is None:
+        return []
     started = time.perf_counter()
     # 权重随语义通道是否真的可用而切换：降级时必须回到纯字面时代的配比，
     # 否则字面分只剩 0.20，会被 recency/status 这些次要项盖过（实测 r@1 掉到 0.078）。
@@ -222,13 +302,18 @@ def search(
     # 泛问走类型召回：问「我有哪些偏好」不该靠文本匹配
     broad = detect_broad(query)
     if broad and not kinds:
-        picked = broad_recall(con, broad, limit=limit, status=status or ("active", "pending"))
+        picked = broad_recall(
+            con, broad, limit=limit, status=status or ("active", "pending"), namespace=ns
+        )
         if picked:
             return picked
     # 默认只检索可注入状态：quarantined 记录不得被任何读路径搜出。
     if status is None:
         status = ("active", "pending")
     where, params = _filter_sql(kinds, layers, status, person)
+    clause, extra = _namespace_clause(con, ns)
+    where = f"({where}) AND {clause}"
+    params = list(params) + extra
     query_grams = bigrams(query)
     if not query_grams:
         return []
@@ -315,6 +400,8 @@ def search(
     scored = []
     for rec in pool.values():
         if rec.get("redacted"):
+            continue
+        if not _row_in_namespace(rec, ns):
             continue
         occurred = rec.get("occurred_at") or rec.get("observed_at") or ""
         if since and occurred and occurred[:10] < since:
@@ -507,13 +594,21 @@ def as_of_paged(
 
 
 def timeline(
-    con: sqlite3.Connection, since: str | None = None, until: str | None = None, limit: int = 200
+    con: sqlite3.Connection,
+    since: str | None = None,
+    until: str | None = None,
+    limit: int = 200,
+    namespace: str | None = None,
 ) -> list[dict]:
-    sql = (
-        "SELECT id, claim_id, kind, subject, value, occurred_at, observed_at, layer, status "
-        "FROM records WHERE occurred_at <> ''"
-    )
-    params = []
+    ns = _record_namespace(namespace)
+    if ns is None:
+        return []
+    columns = "id, claim_id, kind, subject, value, occurred_at, observed_at, layer, status"
+    if "namespace" in _record_columns(con):
+        columns += ", namespace"
+    clause, extra = _namespace_clause(con, ns)
+    sql = f"SELECT {columns} FROM records WHERE occurred_at <> '' AND {clause}"
+    params = list(extra)
     if since:
         sql += " AND occurred_at >= ?"
         params.append(since)
@@ -522,31 +617,51 @@ def timeline(
         params.append(until + "\uffff")
     sql += " ORDER BY occurred_at ASC LIMIT ?"
     params.append(limit)
-    return [dict(row) for row in con.execute(sql, params)]
+    rows = []
+    for row in con.execute(sql, params):
+        rec = dict(row)
+        if _row_in_namespace(rec, ns):
+            rows.append(rec)
+    return rows
 
 
-def history(con: sqlite3.Connection, claim_id: str) -> list[dict]:
-    """同一条记忆的所有修订，按时间排列 → 思想演变。"""
+def history(con: sqlite3.Connection, claim_id: str, namespace: str | None = None) -> list[dict]:
+    """同一条记忆的所有修订，按时间排列。其他主体的修订不返回。"""
+    ns = _record_namespace(namespace)
+    if ns is None:
+        return []
+    columns = "id, claim_id, value, status, occurred_at, observed_at, file, subject"
+    if "namespace" in _record_columns(con):
+        columns += ", namespace"
+    clause, extra = _namespace_clause(con, ns)
     rows = con.execute(
-        "SELECT id, claim_id, value, status, occurred_at, observed_at, file FROM records "
-        "WHERE claim_id = ? ORDER BY COALESCE(NULLIF(occurred_at,''), observed_at) ASC",
-        (claim_id,),
+        f"SELECT {columns} FROM records WHERE claim_id = ? AND {clause} "
+        "ORDER BY COALESCE(NULLIF(occurred_at,''), observed_at) ASC",
+        [claim_id, *extra],
     ).fetchall()
-    return [dict(row) for row in rows]
+    return [dict(row) for row in rows if _row_in_namespace(dict(row), ns)]
 
 
-def related(con: sqlite3.Connection, record_id: str, limit: int = 8) -> list[dict]:
-    """同主题 / 同类型的关联记忆。"""
+def related(
+    con: sqlite3.Connection, record_id: str, limit: int = 8, namespace: str | None = None
+) -> list[dict]:
+    """同一主体内的同主题 / 同类型关联记忆。不跨主体。"""
+    ns = _record_namespace(namespace)
+    if ns is None:
+        return []
     row = con.execute("SELECT * FROM records WHERE id = ?", (record_id,)).fetchone()
     if not row:
         return []
     base = dict(row)
+    if not _row_in_namespace(base, ns):
+        return []
+    clause, extra = _namespace_clause(con, ns)
     rows = con.execute(
-        "SELECT * FROM records WHERE id <> ? AND (subject = ? OR kind = ?) "
+        f"SELECT * FROM records WHERE id <> ? AND {clause} AND (subject = ? OR kind = ?) "
         "ORDER BY CASE WHEN subject = ? THEN 0 ELSE 1 END, occurred_at DESC LIMIT ?",
-        (record_id, base.get("subject"), base.get("kind"), base.get("subject"), limit),
+        (record_id, *extra, base.get("subject"), base.get("kind"), base.get("subject"), limit),
     ).fetchall()
-    return [dict(r) for r in rows]
+    return [dict(r) for r in rows if _row_in_namespace(dict(r), ns)]
 
 
 def counts(con: sqlite3.Connection) -> dict:
@@ -701,6 +816,7 @@ def recall(
     patterns=None,
     pattern_quota: int = 1,
     usage_tracker=None,
+    namespace: str | None = None,
 ) -> dict:
     """严格召回（F3：可选时效衰减）。
 
@@ -713,6 +829,8 @@ def recall(
     pref_subject: 调用方显式给出的可信主体。request_subject() 里的上下文优先于它。
     两者都没有时，偏好卡和规律项通道失败关闭，返回零条主体范围外的注入，
     绝不把多个主体混进同一次召回。主体不能从 prompt 或卡片文本里推断。
+    namespace 是记录召回的治理主体（user/persona/viewer），与偏好卡的
+    自由文本 subject 分开。缺失或未知时记录通道返回空。
     patterns: 可选的规律项列表（PatternStore.list("active") 的产出），
     得分已乘 0.8 权重（低于原始记录），配额 pattern_quota（默认 1），
     与偏好卡使用同一个可信主体；
@@ -720,7 +838,7 @@ def recall(
     usage_tracker: 可选的 UsageTracker，注入项命中时记一次。
     """
     intent = detect_intent(prompt)
-    hits = search(con, prompt, limit=max_items * 3, status=("active",))
+    hits = search(con, prompt, limit=max_items * 3, status=("active",), namespace=namespace)
 
     if decay:
         # [(record, base, adjusted)] 按 adjusted 降序；min_score 仍按 base 过滤

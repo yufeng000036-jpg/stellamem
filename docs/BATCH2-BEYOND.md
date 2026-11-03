@@ -57,9 +57,11 @@
   `preference_cards`（配额 `pref_quota=2`）、`patterns`（配额 `pattern_quota=1`）、
   `usage_tracker`。
 - 注入项走**独立匹配通道**（bigram overlap），只占 `max_items` 剩余额度；
-  sqlite 候选域（398）不变。偏好卡和规律项共用可信请求主体
+  sqlite 候选的打分方式不变。偏好卡和规律项共用可信请求主体
   （`request_subject()` 优先于 `pref_subject`）：主体未知时两条通道都返回空，
-  不混入其他主体。注入项明确标注 `[偏好]` / `[规律]` 并展示证据链
+  不混入其他主体。记录通道另计：`namespace` 必须是 user/persona/viewer
+  （或中文别名），缺失或未知时记录结果为空，且不返回其他主体的记录。
+  注入项明确标注 `[偏好]` / `[规律]` 并展示证据链
   （偏好卡证据条数 / 规律项 provenance 期数）。
 
 ### 3. 使用频率回流为质量信号（`compiler/usage_signals.py`，新增）

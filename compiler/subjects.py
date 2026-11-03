@@ -20,8 +20,9 @@ Rules, enforced here and nowhere else by accident:
    behaviour -- silently treating a person name as a namespace would
    merge exactly the things this module exists to keep apart. Such
    records must be explicitly tagged before they enter this boundary.
-   This module does NOT rewrite the existing search/recall paths;
-   it is the new boundary for fused use, not a silent change to old reads.
+   search(), recall(), the local HTTP API, and the OpenClaw adapter use
+   the same rule: a missing or unknown requester sees nothing, and a
+   request for one subject never returns another's records.
 """
 
 from __future__ import annotations

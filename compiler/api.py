@@ -23,6 +23,7 @@ import indexer
 import reliability as rel
 import search as S
 import snapshots
+import subjects as SU
 from storage import Transaction, load_records
 
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
@@ -76,14 +77,25 @@ class MemoryService:
             return False
         return secrets.compare_digest(header[7:].strip(), expected)
 
-    def find_record(self, ident: str) -> dict | None:
+    def find_record(self, ident: str, namespace: str | None = None) -> dict | None:
         row = self.index.con.execute(
             "SELECT * FROM records WHERE id = ? OR claim_id = ? OR revision_id = ? LIMIT 1",
             (ident, ident, ident),
         ).fetchone()
-        return dict(row) if row else None
+        if not row:
+            return None
+        rec = dict(row)
+        if not S.record_visible(rec, namespace):
+            return None
+        return rec
 
-    def evidence(self, record_id: str) -> dict | None:
+    def evidence(self, record_id: str, namespace: str | None = None) -> dict | None:
+        row = self.index.con.execute(
+            "SELECT * FROM records WHERE record_id = ? OR id = ? OR claim_id = ? LIMIT 1",
+            (record_id, record_id, record_id),
+        ).fetchone()
+        if row is None or not S.record_visible(dict(row), namespace):
+            return None
         from raw_source import get_record
 
         raw_root = self.root / "_raw"
@@ -104,7 +116,7 @@ class MemoryService:
     def audit(self, action: str, **fields) -> dict:
         return rel.AuditLog(self.root).append(action, self.last_tx(), **fields)
 
-    def write_status(self, ident: str, status: str) -> dict:
+    def write_status(self, ident: str, status: str, namespace: str | None = None) -> dict:
         """把一条待审记忆改成 active/rejected，落事务 + 审计。"""
         # F1：写前快照
         snapshots.auto_snapshot(self.root, f"write-status-{status}")
@@ -123,6 +135,8 @@ class MemoryService:
                 if (rec.get("claim_id") == ident or rec.get("revision_id") == ident) and rec.get(
                     "status"
                 ) == "pending":
+                    if SU.subject_of(rec) != namespace:
+                        continue
                     rec["status"] = status
                     rec["reviewed_at"] = rel.now_iso()
                     hit = True
@@ -146,12 +160,14 @@ class MemoryService:
             "digest": manifest["digest"],
         }
 
-    def export(self, ns: str = "personal") -> list[dict]:
+    def export(self, namespace: str) -> list[dict]:
         rows = []
         for row in self.index.con.execute("SELECT * FROM records ORDER BY occurred_at"):
             rec = dict(row)
+            if not S.record_visible(rec, namespace):
+                continue
             rec.pop("grams", None)
-            rec["namespace"] = ns
+            rec["namespace"] = namespace
             rows.append(rec)
         return rows
 
@@ -192,6 +208,43 @@ class Handler(BaseHTTPRequestHandler):
         host = urlparse(origin).hostname or ""
         return host in LOCAL_HOSTS
 
+    def _identity(self, query=None, payload=None):
+        """Return (namespace, error). Missing, unknown, or disagreeing ids fail closed."""
+        raws = []
+        header = (self.headers.get("X-Stellamem-Subject") or "").strip()
+        if header:
+            raws.append(header)
+        if query is not None:
+            supplied = [
+                str(item).strip() for item in (query.get("subject") or []) if str(item).strip()
+            ]
+            if len(set(supplied)) > 1:
+                return None, "subject mismatch"
+            if supplied:
+                raws.append(supplied[0])
+        if isinstance(payload, dict):
+            raw = payload.get("subject")
+            if isinstance(raw, str) and raw.strip():
+                raws.append(raw.strip())
+        if not raws:
+            return None, "subject required"
+        canon = []
+        for value in raws:
+            try:
+                canon.append(SU.validate_subject(value))
+            except ValueError:
+                return None, "unknown subject"
+        if len(set(canon)) != 1:
+            return None, "subject mismatch"
+        return canon[0], None
+
+    def _subject_or_forbid(self, query=None, payload=None):
+        namespace, error = self._identity(query, payload)
+        if error:
+            self._send(*_json(HTTPStatus.FORBIDDEN, {"error": error}))
+            return None
+        return namespace
+
     def _require_token(self) -> bool:
         if not self.service.check_token(self.headers.get("Authorization")):
             self._send(*_json(HTTPStatus.UNAUTHORIZED, {"error": "unauthorized"}))
@@ -228,6 +281,9 @@ class Handler(BaseHTTPRequestHandler):
                 )
 
             if path == "/v1/search":
+                namespace = self._subject_or_forbid(query)
+                if namespace is None:
+                    return
                 q = (query.get("q") or [""])[0]
                 limit = min(50, int((query.get("limit") or ["10"])[0]))
                 hits = S.search(
@@ -238,17 +294,22 @@ class Handler(BaseHTTPRequestHandler):
                     until=(query.get("until") or [None])[0],
                     person=(query.get("person") or [None])[0],
                     limit=limit,
+                    namespace=namespace,
                 )
                 return self._send(
                     *_json(HTTPStatus.OK, {"query": q, "count": len(hits), "items": hits})
                 )
 
             if path == "/v1/timeline":
+                namespace = self._subject_or_forbid(query)
+                if namespace is None:
+                    return
                 rows = S.timeline(
                     svc.index.con,
                     since=(query.get("since") or [None])[0],
                     until=(query.get("until") or [None])[0],
                     limit=min(500, int((query.get("limit") or ["200"])[0])),
+                    namespace=namespace,
                 )
                 return self._send(*_json(HTTPStatus.OK, {"count": len(rows), "items": rows}))
 
@@ -256,8 +317,15 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(*_json(HTTPStatus.OK, {"items": sorted(svc.namespaces)}))
 
             if path == "/v1/export":
-                ns = (query.get("ns") or ["personal"])[0]
-                rows = svc.export(ns)
+                namespace = self._subject_or_forbid(query)
+                if namespace is None:
+                    return
+                root_name = (query.get("ns") or ["personal"])[0]
+                if root_name not in svc.namespaces:
+                    return self._send(
+                        *_json(HTTPStatus.NOT_FOUND, {"error": "unknown root", "ns": root_name})
+                    )
+                rows = svc.export(namespace)
                 body = ("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n").encode()
                 return self._send(
                     *(
@@ -265,7 +333,7 @@ class Handler(BaseHTTPRequestHandler):
                         {
                             "Content-Type": "application/x-ndjson; charset=utf-8",
                             "Content-Length": str(len(body)),
-                            "Content-Disposition": f'attachment; filename="stellamem-{ns}.jsonl"',
+                            "Content-Disposition": f'attachment; filename="stellamem-{root_name}.jsonl"',
                         },
                         body,
                     )
@@ -274,14 +342,23 @@ class Handler(BaseHTTPRequestHandler):
             match = re.fullmatch(r"/v1/(memory|history|related|evidence)/(.+)", path)
             if match:
                 kind, ident = match.group(1), match.group(2)
+                namespace = self._subject_or_forbid(query)
+                if namespace is None:
+                    return
                 if kind == "evidence":
-                    data = svc.evidence(ident)
+                    data = svc.evidence(ident, namespace)
                 elif kind == "history":
-                    data = {"claim_id": ident, "items": S.history(svc.index.con, ident)}
+                    data = {
+                        "claim_id": ident,
+                        "items": S.history(svc.index.con, ident, namespace=namespace),
+                    }
                 elif kind == "related":
-                    data = {"id": ident, "items": S.related(svc.index.con, ident)}
+                    data = {
+                        "id": ident,
+                        "items": S.related(svc.index.con, ident, namespace=namespace),
+                    }
                 else:
-                    data = svc.find_record(ident)
+                    data = svc.find_record(ident, namespace)
                 if not data:
                     return self._send(
                         *_json(HTTPStatus.NOT_FOUND, {"error": "not found", "id": ident})
@@ -305,6 +382,9 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/v1/recall":
             payload = self._read_json()
+            namespace = self._subject_or_forbid(payload=payload)
+            if namespace is None:
+                return
             budget = int(payload.get("budget") or 1200)
             result = S.recall(
                 svc.index.con,
@@ -312,6 +392,7 @@ class Handler(BaseHTTPRequestHandler):
                 budget_chars=budget,
                 decay=bool(payload.get("decay", True)),
                 explain_decay=bool(payload.get("explain_decay", False)),
+                namespace=namespace,
             )
             return self._send(*_json(HTTPStatus.OK, result))
 
@@ -322,12 +403,15 @@ class Handler(BaseHTTPRequestHandler):
             payload = self._read_json()
             if path in {"/v1/approve", "/v1/reject"}:
                 status = "active" if path.endswith("approve") else "rejected"
+                namespace = self._subject_or_forbid(payload=payload)
+                if namespace is None:
+                    return
                 ident = payload.get("claim_id") or payload.get("id")
                 if not ident:
                     return self._send(
                         *_json(HTTPStatus.BAD_REQUEST, {"error": "claim_id required"})
                     )
-                return self._send(*_json(HTTPStatus.OK, svc.write_status(ident, status)))
+                return self._send(*_json(HTTPStatus.OK, svc.write_status(ident, status, namespace)))
 
             if path == "/v1/rebuild":
                 meta = svc.ensure_index(force=True)

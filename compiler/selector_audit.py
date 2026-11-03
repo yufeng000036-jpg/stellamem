@@ -147,7 +147,13 @@ def audit(
         stages.append({"stage": "status", "pass": True, "detail": "active"})
 
         # 阶段 4：search() 召回
-        hits = S.search(con, prompt, limit=max_items * 3, status=("active",))
+        hits = S.search(
+            con,
+            prompt,
+            limit=max_items * 3,
+            status=("active",),
+            namespace=ns if requester is None else requester_ns,
+        )
         hit = next((h for h in hits if h["id"] == target_id), None)
         if hit is None:
             stages.append(

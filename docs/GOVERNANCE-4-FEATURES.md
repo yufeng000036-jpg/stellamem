@@ -36,7 +36,11 @@
   本功能补的是**轻量写前快照**：只对 `index.db` + 关键配置文件
   （`config.json`、`openclaw.json` 除外——只读红线不碰）做文件级快照，
   每次写操作（索引重建、标签写入、pending 落库、approve/reject）前自动触发。
-- 快照存 `system/snapshots/<ts>-<label>/`，每个文件记 SHA256，
+- 快照先写入 `system/snapshots/.partial-<ts>-<label>/`，文件 fsync、
+  manifest 原子写完之后，再把目录改名为 `system/snapshots/<ts>-<label>/`。
+  文件 fsync 在 Windows 上用可写二进制句柄（`O_RDWR|O_BINARY`）；目录 fsync
+  只在 POSIX 上执行，Windows 不做。改名前进程被杀死时，`list_snapshots()`
+  看不到半份快照。每个文件记 SHA256，
   快照清单本身也记 SHA256；快照/回滚/清理全部写审计日志。
 - `restore_snapshot()` 是显式运维操作：必须传确认短语，否则抛错；
   恢复前先校验 SHA256，不一致拒绝恢复。
@@ -46,10 +50,12 @@
   非 SQLite 的配置文件仍用 `copy2`。
 - manifest 对 SQLite 快照额外记录 `tables`、`row_count`（`records` 行数）
   和 `latest_record_timestamp`（`observed_at` / `occurred_at` 的较新值）。
-- 恢复 SQLite：先确认 live 库和 `-wal`/`-shm` 没有活动连接，否则拒绝且不改文件；
-  然后用 `backup()` 把快照写回 live 库（不是 `copy2`），切到 DELETE 日志模式并
-  删除 sidecar，使旧 WAL 不会被重放。接着做 `integrity_check`，并核对表、行数、
-  最新记录时间。任一失败都把库滚回恢复前的内容。
+- 恢复 SQLite：先确认 live 库和 `-wal`/`-shm` 没有活动连接，否则拒绝且不改文件。
+  先把 live 库 checkpoint 进主文件，再用 `backup()` 把快照写到旁边的暂存文件
+  （不是 `copy2`，也不先删掉 live 库），切到 DELETE 日志模式，做 `integrity_check`
+  并核对表、行数、最新记录时间。通过之后清掉 live 的 `-wal`/`-shm`，再原子替换。
+  校验失败不替换 live 库。进程在替换前被杀死时，live 库仍是恢复前的完整内容；
+  替换本身不会留下半个库。重新打开时 integrity_check 为 ok。
 - **不绕过 append-only**：快照恢复针对的是"运维事故"（如索引重建写坏），
   不是常规记忆修改路径；记忆内容的修改仍走事务 + `valid_to` 过期，
   快照恢复的每一次调用都有审计记录、可追溯。

@@ -57,7 +57,8 @@ CREATE TABLE IF NOT EXISTS records (
   redacted     INTEGER DEFAULT 0,
   grams        TEXT,
   valid_to     TEXT,
-  expired_at   TEXT
+  expired_at   TEXT,
+  namespace    TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_records_layer ON records(layer);
 CREATE INDEX IF NOT EXISTS idx_records_kind ON records(kind);
@@ -142,17 +143,30 @@ class Index:
         self.con.executescript(SCHEMA)
 
     def _migrate(self):
-        """索引不是权威库：结构变了就整表重建，不做在线迁移。"""
+        """索引不是权威库：schema 版本变了就整表重建。
+
+        namespace 是可空列。旧库缺这列时只 ALTER 补上，不丢已有行；
+        值为 NULL 表示记录没有单独的 namespace，检索回退到 subject。
+        """
         self.con.executescript(
             "CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);"
         )
         row = self.con.execute("SELECT value FROM meta WHERE key='schema'").fetchone()
-        if row and row[0] == "3":
+        if not (row and row[0] == "3"):
+            for table in ("records", "records_fts", "records_grams", "docs", "docs_fts", "vectors"):
+                self.con.execute(f"DROP TABLE IF EXISTS {table}")
+            self.con.execute("INSERT OR REPLACE INTO meta VALUES ('schema','3')")
+            self.con.commit()
+        self._ensure_namespace_column()
+
+    def _ensure_namespace_column(self):
+        try:
+            cols = [item[1] for item in self.con.execute("PRAGMA table_info(records)")]
+        except sqlite3.Error:
             return
-        for table in ("records", "records_fts", "records_grams", "docs", "docs_fts", "vectors"):
-            self.con.execute(f"DROP TABLE IF EXISTS {table}")
-        self.con.execute("INSERT OR REPLACE INTO meta VALUES ('schema','3')")
-        self.con.commit()
+        if cols and "namespace" not in cols:
+            self.con.execute("ALTER TABLE records ADD COLUMN namespace TEXT")
+            self.con.commit()
 
     # ---------------- 构建 ----------------
 
@@ -205,9 +219,14 @@ class Index:
                     is_redacted,
                 )
                 grams = _grams_str(row[7] + " " + row[8] + " " + row[5] + " " + row[6])
+                if "namespace" not in rec:
+                    stored_namespace = None
+                else:
+                    raw_namespace = rec.get("namespace")
+                    stored_namespace = raw_namespace if isinstance(raw_namespace, str) else ""
                 cur = self.con.execute(
-                    "INSERT OR REPLACE INTO records VALUES (%s)" % ",".join("?" * 21),
-                    row + (grams, rec.get("valid_to"), rec.get("expired_at")),
+                    "INSERT OR REPLACE INTO records VALUES (%s)" % ",".join("?" * 22),
+                    row + (grams, rec.get("valid_to"), rec.get("expired_at"), stored_namespace),
                 )
                 self.con.execute(
                     "INSERT INTO records_fts(rowid, subject, predicate, value, evidence) VALUES (?,?,?,?,?)",

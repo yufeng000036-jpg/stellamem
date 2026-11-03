@@ -28,15 +28,20 @@ transferable personalisation》(EMNLP 2026) 的"可读记忆"主张 ——
 本模块不做：
     - 不做语义忠实度自动判定（不可靠，不硬上）；
     - 不接 recall/注入（召回侧另见 search.py；这里只产卡片对象）；
-    - 不碰生产、不写用户库，只做内存对象 + 可选的 JSONL 审计。
+    - 不碰生产、不写用户库。给出 audit_path 时，版本历史是该路径上的
+      只增 JSONL：每条写入后 fsync，启动时从磁盘重建全部版本。
 """
 
 from __future__ import annotations
 
 import copy
 import json
+import logging
+import os
 from datetime import datetime, timezone
 from pathlib import Path
+
+logger = logging.getLogger("stellamem.preference_summary")
 
 PREFERENCE_SUMMARY_KIND = "preference_summary"
 
@@ -107,13 +112,18 @@ def validate_card(card: dict) -> dict:
     }
 
 
+_STATE_ACTIONS = {"created", "updated", "approved", "withdrawn", "rolled_back"}
+
+
 class PreferenceCardStore:
-    """偏好卡的内存存储 + 只增审计 + 只增版本历史。
+    """偏好卡的只增版本历史。
 
     新建和更新都进入 pending，须具名人类 approve 后才变 active。
     每个版本的正文单独保存，只追加、不改旧版本；rollback 追加一条新的
-    pending 版本，内容来自指定旧版本。审计记下操作、版本和正文。
-    不管用户库、不碰生产。拒绝写入同样记审计（action=rejected）。
+    pending 版本，内容来自指定旧版本。audit_path 是这份历史的唯一账本：
+    追加 JSONL，写完 fsync，从不覆盖已写字节。新实例从同一路径重建
+    全部版本、状态和批准。拒绝写入同样记审计（action=rejected）。
+    不管用户库、不碰生产。
     """
 
     def __init__(self, audit_path=None, now_fn=None):
@@ -121,11 +131,122 @@ class PreferenceCardStore:
         self.now_fn = now_fn or _now_iso
         self.cards: dict[str, dict] = {}
         self._history: dict[str, list[dict]] = {}
+        self._replaying = False
         if self.audit_path:
             self.audit_path.parent.mkdir(parents=True, exist_ok=True)
+            if self.audit_path.exists():
+                self._load()
 
-    # -- audit ---------------------------------------------------------
-    def _audit(self, action: str, subject: str, version=None, note: str = "", content=None) -> None:
+    # -- durable log ---------------------------------------------------
+    def _fsync_dir(self, path: Path) -> None:
+        """fsync the directory entry. No-op on Windows, where directory
+        handles cannot be fsynced. POSIX still fsyncs the directory.
+        """
+        if os.name == "nt":
+            return
+        try:
+            fd = os.open(path, os.O_RDONLY)
+        except OSError:
+            return
+        try:
+            os.fsync(fd)
+        except OSError:
+            pass
+        finally:
+            os.close(fd)
+
+    def _append_line(self, entry: dict) -> None:
+        """Append one JSON line and fsync it. Never rewrites earlier bytes."""
+        if not self.audit_path or self._replaying:
+            return
+        payload = (json.dumps(entry, ensure_ascii=False) + "\n").encode("utf-8")
+        self.audit_path.parent.mkdir(parents=True, exist_ok=True)
+        prefix = b""
+        if self.audit_path.exists() and self.audit_path.stat().st_size:
+            with self.audit_path.open("rb") as fh:
+                fh.seek(-1, os.SEEK_END)
+                if fh.read(1) != b"\n":
+                    # A crashed writer may have left a torn tail. Terminate it
+                    # with a newline so the next record cannot be glued onto it.
+                    prefix = b"\n"
+        flags = os.O_APPEND | os.O_CREAT | os.O_WRONLY
+        if os.name == "nt":
+            # Writable binary handle: Windows os.fsync rejects read-only
+            # handles, and text mode would rewrite LF as CRLF.
+            flags |= os.O_BINARY
+        fd = os.open(self.audit_path, flags, 0o644)
+        try:
+            os.write(fd, prefix + payload)
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+        self._fsync_dir(self.audit_path.parent)
+
+    def _load(self) -> None:
+        raw = self.audit_path.read_bytes()
+        if not raw:
+            return
+        skipped = 0
+        if not raw.endswith(b"\n"):
+            cut = raw.rfind(b"\n")
+            raw = raw[: cut + 1] if cut >= 0 else b""
+            skipped += 1
+        entries = []
+        if raw:
+            for line in raw.decode("utf-8").splitlines():
+                if not line.strip():
+                    continue
+                try:
+                    entries.append(json.loads(line))
+                except json.JSONDecodeError:
+                    skipped += 1
+        self._replaying = True
+        try:
+            for entry in entries:
+                self._apply(entry)
+        finally:
+            self._replaying = False
+        if skipped:
+            logger.warning(
+                "preference history fail-closed: skipped %d partial or unreadable "
+                "record(s) in %s; earlier complete versions were kept",
+                skipped,
+                self.audit_path,
+            )
+
+    def _apply(self, entry: dict) -> None:
+        if entry.get("action") not in _STATE_ACTIONS:
+            return
+        snap = entry.get("snapshot")
+        if not isinstance(snap, dict):
+            content = entry.get("content") if isinstance(entry.get("content"), dict) else {}
+            snap = {
+                "kind": entry.get("kind") or PREFERENCE_SUMMARY_KIND,
+                "subject": entry.get("subject"),
+                "text": content.get("text"),
+                "evidence": copy.deepcopy(content.get("evidence") or []),
+                "version": entry.get("version"),
+                "status": content.get("status") or "pending",
+                "updated_at": content.get("updated_at") or entry.get("ts"),
+            }
+            if content.get("approved_by"):
+                snap["approved_by"] = content["approved_by"]
+                snap["approved_at"] = content.get("approved_at")
+        subject = snap.get("subject")
+        if not subject:
+            return
+        self._history.setdefault(subject, []).append(copy.deepcopy(snap))
+        self.cards[subject] = copy.deepcopy(snap)
+
+    def _audit(
+        self,
+        action: str,
+        subject: str,
+        version=None,
+        note: str = "",
+        content=None,
+        snapshot=None,
+    ) -> None:
         entry = {
             "ts": self.now_fn(),
             "action": action,
@@ -136,19 +257,24 @@ class PreferenceCardStore:
         }
         if content is not None:
             entry["content"] = copy.deepcopy(content)
-        if self.audit_path:
-            with open(self.audit_path, "a", encoding="utf-8") as f:
-                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        if snapshot is not None:
+            entry["snapshot"] = copy.deepcopy(snapshot)
+        self._append_line(entry)
 
     def _content(self, card: dict) -> dict:
-        return {
+        content = {
             "text": card.get("text"),
             "evidence": copy.deepcopy(card.get("evidence")),
             "status": card.get("status"),
+            "updated_at": card.get("updated_at"),
         }
+        if card.get("approved_by"):
+            content["approved_by"] = card["approved_by"]
+            content["approved_at"] = card.get("approved_at")
+        return content
 
     def _commit(self, card: dict, action: str, note: str = "") -> dict:
-        """追加不可变快照。不修改已有版本。"""
+        """追加不可变快照。不修改已有版本，不覆盖已落盘的行。"""
         snap = copy.deepcopy(card)
         self._history.setdefault(snap["subject"], []).append(snap)
         self.cards[snap["subject"]] = copy.deepcopy(snap)
@@ -158,6 +284,7 @@ class PreferenceCardStore:
             version=snap["version"],
             note=note,
             content=self._content(snap),
+            snapshot=snap,
         )
         return copy.deepcopy(snap)
 

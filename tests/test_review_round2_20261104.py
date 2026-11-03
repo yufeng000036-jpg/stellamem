@@ -409,7 +409,7 @@ class IndexerDashboardNamespaceTests(unittest.TestCase):
         con = sqlite3.connect(db)
         columns = [row[1] for row in con.execute("PRAGMA table_info(records)")]
         con.close()
-        self.assertNotIn("namespace", columns)
+        self.assertIn("namespace", columns)
         board = TD.dashboard(db)
         self.assertEqual(board["by_namespace"].get("viewer"), 1)
         self.assertEqual(board["by_namespace"].get("persona"), 1)
