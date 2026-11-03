@@ -8,10 +8,12 @@
 
 from __future__ import annotations
 
+import contextvars
 import os
 import re
 import sqlite3
 import time
+from contextlib import contextmanager
 from datetime import datetime, timezone
 
 try:  # 包内导入（compiler.search）与扁平导入（sys.path 加 compiler/）都要能用
@@ -574,12 +576,40 @@ def _trim(text: str, width: int) -> str:
     return text if len(text) <= width else text[: width - 1] + "…"
 
 
+# 可信请求主体。只能由服务端在鉴权之后设置，不能从 prompt 或卡片内容里推断。
+_REQUEST_SUBJECT: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "stellamem_request_subject", default=None
+)
+
+
+@contextmanager
+def request_subject(subject: str | None):
+    """在当前上下文绑定可信请求主体。嵌套调用按 contextvars 恢复。"""
+    token = _REQUEST_SUBJECT.set(subject)
+    try:
+        yield
+    finally:
+        _REQUEST_SUBJECT.reset(token)
+
+
+def _trusted_subject(explicit: str | None) -> str | None:
+    """主体只来自可信上下文或调用方显式参数。上下文优先，空值视为未知。"""
+    current = _REQUEST_SUBJECT.get()
+    if isinstance(current, str) and current.strip():
+        return current.strip()
+    if explicit is None:
+        return None
+    text = str(explicit).strip()
+    return text or None
+
+
 def _match_pref_cards(prompt_grams, cards, quota, min_score, subject=None):
     """偏好卡独立匹配通道：按 subject+text 的 bigram overlap 打分。
 
-    subject 非空时只匹配该主体的卡（主体隔离：老 recall 通道的 namespace
-    规则在新偏好卡通道的等价边界）。多主体调用方必须传 subject。
+    没有可信 subject 时返回空（失败关闭），绝不把多个主体的卡混进同一次召回。
     """
+    if subject is None or not str(subject).strip():
+        return []
     scored = []
     for card in cards or []:
         if not isinstance(card, dict):
@@ -615,14 +645,26 @@ def _match_pref_cards(prompt_grams, cards, quota, min_score, subject=None):
     return out
 
 
-def _match_patterns(prompt, patterns, quota, min_score):
-    """规律项独立匹配通道：得分已乘 PATTERN_WEIGHT(<1)，低于原始记录。"""
+def _match_patterns(prompt, patterns, quota, min_score, subject=None):
+    """规律项独立匹配通道：得分已乘 PATTERN_WEIGHT(<1)，低于原始记录。
+
+    与偏好卡同一条主体边界：没有可信 subject 就返回空；只返回该 subject 的规律项。
+    配额在主体过滤之后计算，避免其他主体占掉名额。
+    """
+    if subject is None or not str(subject).strip():
+        return []
     try:
         from sleep_consolidation import pattern_candidates
     except ImportError:
         return []
+    matched = []
+    for hit in pattern_candidates(patterns, prompt, min_score=min_score):
+        pat = hit["pattern"]
+        if str(pat.get("subject") or "") != str(subject):
+            continue
+        matched.append(hit)
     out = []
-    for hit in pattern_candidates(patterns, prompt, min_score=min_score)[: max(0, quota)]:
+    for hit in matched[: max(0, quota)]:
         pat = hit["pattern"]
         rec = {
             "kind": "pattern",
@@ -668,12 +710,13 @@ def recall(
     explain_decay=True 时每个 item 附带 decay 诊断信息（调试用）。
     preference_cards: 可选的偏好卡列表（PreferenceCardStore.list_active() 的产出），
     走独立匹配通道注入，配额 pref_quota（默认 2），只占 max_items 剩余额度；
-    pref_subject: 可选的主体过滤——非空时偏好卡通道只匹配该 subject 的卡。
-    主体隔离红线：多主体场景（如直播间多位观众）的调用方必须传 pref_subject，
-    否则一张 prompt 可能召回其他主体的偏好卡。不传 = 不过滤（保持旧行为）。
+    pref_subject: 调用方显式给出的可信主体。request_subject() 里的上下文优先于它。
+    两者都没有时，偏好卡和规律项通道失败关闭，返回零条主体范围外的注入，
+    绝不把多个主体混进同一次召回。主体不能从 prompt 或卡片文本里推断。
     patterns: 可选的规律项列表（PatternStore.list("active") 的产出），
-    得分已乘 0.8 权重（低于原始记录），配额 pattern_quota（默认 1）；
-    注入项明确标注 kind，不破坏 398 候选域语义，namespace 规则不变；
+    得分已乘 0.8 权重（低于原始记录），配额 pattern_quota（默认 1），
+    与偏好卡使用同一个可信主体；
+    注入项明确标注 kind，不破坏 398 候选域语义；
     usage_tracker: 可选的 UsageTracker，注入项命中时记一次。
     """
     intent = detect_intent(prompt)
@@ -701,23 +744,32 @@ def recall(
             break
 
     # 可选注入：偏好卡 / 规律项（带配额、有证据链）。独立匹配通道，
-    # 只占 max_items 剩余额度；sqlite 候选域（398）与 namespace 规则原样不动。
+    # 只占 max_items 剩余额度。主体来自可信请求上下文，未知则失败关闭。
+    trusted = _trusted_subject(pref_subject)
     prompt_grams = bigrams(prompt)
     slots_left = max(0, max_items - len(picked))
     extras = []
-    if slots_left > 0:
+    if slots_left > 0 and trusted is not None:
         extras.extend(
             _match_pref_cards(
                 prompt_grams,
                 preference_cards,
                 min(pref_quota, slots_left),
                 min_score,
-                subject=pref_subject,
+                subject=trusted,
             )
         )
         slots_left = max(0, max_items - len(picked) - len(extras))
-    if slots_left > 0:
-        extras.extend(_match_patterns(prompt, patterns, min(pattern_quota, slots_left), min_score))
+    if slots_left > 0 and trusted is not None:
+        extras.extend(
+            _match_patterns(
+                prompt,
+                patterns,
+                min(pattern_quota, slots_left),
+                min_score,
+                subject=trusted,
+            )
+        )
     picked = picked + extras
 
     lines, used = [], 0

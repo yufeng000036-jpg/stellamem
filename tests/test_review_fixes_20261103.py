@@ -103,11 +103,10 @@ class PrefSubjectFilterTests(unittest.TestCase):
         self.assertNotIn("测试观众B", subjects)
 
     def test_no_subject_keeps_old_behavior(self):
-        # 不传 pref_subject = 不过滤（保持旧行为，调用方自行负责）
+        # 2026-11-04：不传主体不再放行。失败关闭，零条主体范围内的偏好卡。
+        # 这是比「不传 = 不过滤」更严的边界，旧断言已替换。
         r = self._recall()
-        subjects = {i.get("subject") for i in r["items"]}
-        self.assertIn("测试观众A", subjects)
-        self.assertIn("测试观众B", subjects)
+        self.assertEqual(r["items"], [])
 
     def test_match_pref_cards_direct_subject_filter(self):
         import search as S
@@ -140,6 +139,7 @@ class UsageCountAfterBudgetTests(unittest.TestCase):
                 budget_chars=budget,
                 preference_cards=cards,
                 usage_tracker=tracker,
+                pref_subject="测试观众A",
                 **kw,
             )
             return r, tracker
