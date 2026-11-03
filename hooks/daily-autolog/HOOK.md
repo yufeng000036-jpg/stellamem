@@ -15,6 +15,12 @@ metadata:
 
 # Daily Autolog Hook（来源指针记录）
 
+**Legacy / opt-in:** the installer leaves this hook disabled. It reads JSONL
+files only; SQLite-backed OpenClaw sessions are unsupported. Directory presence
+or successful plugin injection does not prove source capture. Enable only after
+checking a fresh host message against its source pointer. Existing public exports
+and legacy recovery behavior remain available; no host database is modified.
+
 在 `/new` / `/reset` 时，把当天会话的**来源指针**写入 `daily/YYYY-MM-DD.sources.json`，并写一份简短活动摘要到 `daily/YYYY-MM-DD.md`。**这是「写入侧」——没有它，对话就不会进入记忆系统的来源清单。**
 
 ## What It Does

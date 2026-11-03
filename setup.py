@@ -91,13 +91,15 @@ def planned_files(args):
                     files[target / "shared" / src.name] = src.read_bytes()
             files[target / "package.json"] = b'{"private":true,"type":"module"}\n'
         snippet = {
-            "hooks": {
-                "internal": {"enabled": True, "entries": {"daily-autolog": {"enabled": True}}}
-            },
+            "hooks": {"internal": {"entries": {"daily-autolog": {"enabled": False}}}},
             "plugins": {
                 "entries": {
                     "stellamem-adapter": {
                         "enabled": True,
+                        # Current OpenClaw requires an explicit conversation
+                        # grant for non-bundled before_prompt_build hooks.
+                        # This is a reviewable snippet, never a live config edit.
+                        "hooks": {"allowConversationAccess": True},
                         "config": {"coreDir": str(root), "maxInjectChars": 4000},
                     }
                 }
@@ -147,6 +149,8 @@ def cmd_install(args):
         "# Installation report\n\nFiles installed; runtime verification remains required.\n"
         "Config: " + str(config_path) + "\nMemory root: " + str(root) + "\n"
         "OpenClaw config was not read or changed. If installing host integration,\n"
+        "Legacy JSONL daily-autolog is disabled in the snippet by default.\n"
+        "SQLite-backed hosts need a supported source adapter; automatic intake is not ready.\n"
         "review setup snippet and obtain authorization before enabling/restarting host.\n"
         "Run check --config <path>, demo --offline, and a local-model smoke test.\n"
     )
@@ -244,6 +248,31 @@ def check_report(config_path=None, offline=False):
             "Interrupted write",
             "Re-run compiler to recover before projection",
         )
+    if cfg.get("sessions_dir"):
+        sessions = Path(cfg["sessions_dir"])
+        database = sessions.parent / "agent/openclaw-agent.sqlite"
+        if database.is_file():
+            add(
+                "Host source capture",
+                "FAIL",
+                "SQLite-backed OpenClaw detected; daily-autolog only supports legacy JSONL",
+                "Keep legacy autolog disabled. A reviewed host source adapter is required; "
+                "do not change the database or fabricate missing source text",
+            )
+        elif not sessions.is_dir():
+            add(
+                "Host source capture",
+                "FAIL",
+                "Configured JSONL directory is unavailable",
+                "Verify the host storage format and explicit sessions_dir before enabling intake",
+            )
+        else:
+            add(
+                "Host source capture",
+                "NOT_VERIFIED",
+                "JSONL directory exists; capture not exercised",
+                "Verify a new host message and its source pointer before opting in",
+            )
     if offline:
         add("Model server", "SKIP", "Offline check requested")
     else:

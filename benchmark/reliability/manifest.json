@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "seed": "no RNG; fixed family/variant enumeration",
+  "cases": 300,
+  "functional": 200,
+  "adversarial": 100,
+  "holdout": 90,
+  "sha256": "d20453b038a4cbd86e4a39aa652337c323838287f0d99b9b122e3e7b3d3555ac",
+  "label_author": "AI-authored explicit labels; NOT independently human-reviewed",
+  "purpose": "projection contract only; NOT extraction or answer-generation quality"
+}

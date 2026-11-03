@@ -22,6 +22,9 @@ approved and never produces a copy.
 from __future__ import annotations
 
 import itertools
+import copy
+import functools
+import threading
 import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -126,6 +129,29 @@ def raw_source_hits(fields: dict) -> list[str]:
     return hits
 
 
+def _serialized(method):
+    """Serialize prototype operations and restore in-memory state on failure.
+
+    Persistent audit failures propagate: a returned approval must never pretend
+    it was audited. A partially appended disk audit remains an attempt record;
+    this ephemeral planner is not a durable memory store.
+    """
+
+    @functools.wraps(method)
+    def run(self, *args, **kwargs):
+        with self._lock:
+            before_requests = copy.deepcopy(self.requests)
+            before_audit = copy.deepcopy(self.audit)
+            try:
+                return method(self, *args, **kwargs)
+            except Exception:
+                self.requests = before_requests
+                self.audit = before_audit
+                raise
+
+    return run
+
+
 class BridgeStore:
     """In-memory bridge requests with an audited decision log.
 
@@ -135,6 +161,7 @@ class BridgeStore:
     """
 
     def __init__(self, audit_path=None, now_fn=None):
+        self._lock = threading.RLock()
         self.audit_path = Path(audit_path) if audit_path else None
         self.now_fn = now_fn or _now
         self.requests: dict[str, dict] = {}
@@ -142,6 +169,7 @@ class BridgeStore:
         self._counter = itertools.count(1)
 
     # -- creation ------------------------------------------------------
+    @_serialized
     def create(
         self, source_subject, target_subject, template, fields, origin_id=None, created_at=None
     ) -> dict:
@@ -184,22 +212,24 @@ class BridgeStore:
         }
         self.requests[req_id] = req
         self._audit("created", req_id, note="pending; default-deny")
-        return dict(req)
+        return copy.deepcopy(req)
 
     # -- expiry --------------------------------------------------------
     def _refresh(self, req: dict) -> dict:
-        if req["status"] == "pending" and self.now_fn() > _parse(req["expires_at"]):
+        if req["status"] in ("pending", "approved") and self.now_fn() >= _parse(req["expires_at"]):
             req["status"] = "expired"
             self._audit("expired", req["id"], note="TTL elapsed; fail-closed")
         return req
 
+    @_serialized
     def get(self, req_id: str) -> dict:
         req = self.requests.get(req_id)
         if req is None:
             raise KeyError(req_id)
-        return dict(self._refresh(req))
+        return copy.deepcopy(self._refresh(req))
 
     # -- approval ------------------------------------------------------
+    @_serialized
     def approve(
         self,
         req_id: str,
@@ -250,6 +280,7 @@ class BridgeStore:
             "status": "active",
         }
 
+    @_serialized
     def approved_copy(self, req_id: str):
         """Copy only if approved and not expired; otherwise None."""
         req = self.requests.get(req_id)
@@ -260,6 +291,7 @@ class BridgeStore:
             return None
         return self._copy(req)
 
+    @_serialized
     def deny(self, req_id: str, approver: str, reason: str = "") -> dict:
         req = self.requests.get(req_id)
         if req is None:
@@ -269,8 +301,9 @@ class BridgeStore:
             raise ValueError(f"cannot deny request in status {req['status']!r}")
         req["status"] = "denied"
         self._audit("denied", req_id, approver=approver, note=reason)
-        return dict(req)
+        return copy.deepcopy(req)
 
+    @_serialized
     def withdraw(self, req_id: str, by: str = "") -> dict:
         """Single-item withdrawal: only pending requests can be withdrawn."""
         req = self.requests.get(req_id)
@@ -281,8 +314,9 @@ class BridgeStore:
             raise ValueError(f"cannot withdraw request in status {req['status']!r}")
         req["status"] = "withdrawn"
         self._audit("withdrawn", req_id, approver=by)
-        return dict(req)
+        return copy.deepcopy(req)
 
+    @_serialized
     def approve_batch(
         self,
         req_ids,
@@ -348,12 +382,13 @@ class BridgeStore:
                 req["approved_at"] = old_approved_at
             raise
 
+    @_serialized
     def list_pending(self) -> list[dict]:
         out = []
         for req in self.requests.values():
             refreshed = self._refresh(req)
             if refreshed["status"] == "pending":
-                out.append(dict(refreshed))
+                out.append(copy.deepcopy(refreshed))
         return out
 
     # -- audit ---------------------------------------------------------
@@ -367,10 +402,8 @@ class BridgeStore:
         }
         self.audit.append(entry)
         if self.audit_path:
-            try:
-                self.audit_path.parent.mkdir(parents=True, exist_ok=True)
-                with self.audit_path.open("a", encoding="utf-8") as fh:
-                    fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
-            except OSError:
-                pass
+            self.audit_path.parent.mkdir(parents=True, exist_ok=True)
+            with self.audit_path.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+                fh.flush()
         return entry

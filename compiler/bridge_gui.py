@@ -26,7 +26,7 @@ Reliability hardening (this round, loopback alone is NOT enough):
   ``token`` field. Without the correct token the server answers 401
   and, for GET, does NOT render the pending queue's full text.
 - Origin/Referer check on POST: if an Origin or Referer header is
-  present, its host must be 127.0.0.1 or localhost, otherwise the
+  present, its HTTP origin must use 127.0.0.1 or localhost and this server port; otherwise the
   request is rejected with 403. This blocks a malicious web page on
   another origin from forging an approval POST in the approver's
   browser. A header-less request (curl, urllib, a same-origin form
@@ -112,36 +112,56 @@ def render_queue_html(store: BridgeStore, token: str | None = None) -> str:
     )
 
 
-def _loopback_origin(value: str | None) -> bool:
-    """True if an Origin/Referer header, when present, is loopback-only."""
-    if not value:
-        return True
-    try:
-        host = urllib.parse.urlparse(value).hostname
-    except Exception:
-        return False
-    return host in ("127.0.0.1", "localhost", "::1")
-
-
 def make_handler(store: BridgeStore, token: str | None = None):
+    if not isinstance(token, str) or not token or not token.isascii():
+        raise ValueError("a non-empty ASCII review token is required")
+    mutation_lock = threading.RLock()
+
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):  # keep test output quiet
             pass
+
+        def setup(self):
+            super().setup()
+            self.connection.settimeout(2.0)
+
+        def _host_ok(self):
+            return self.headers.get("Host") in (
+                f"127.0.0.1:{self.server.server_port}",
+                f"localhost:{self.server.server_port}",
+            )
+
+        def _origin_ok(self, value):
+            if not value:
+                return True  # non-browser callers still require the random token
+            try:
+                parsed = urllib.parse.urlparse(value)
+                return (
+                    parsed.scheme == "http"
+                    and parsed.hostname in ("127.0.0.1", "localhost")
+                    and parsed.port == self.server.server_port
+                    and not parsed.username
+                    and not parsed.password
+                )
+            except ValueError:
+                return False
 
         def _send(self, text: str, status: int = 200):
             data = text.encode("utf-8")
             self.send_response(status)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(data)))
+            self.send_header("Referrer-Policy", "no-referrer")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("Content-Security-Policy", "default-src 'none'; form-action 'self'")
             self.end_headers()
             self.wfile.write(data)
 
         def _token_ok(self, presented: str | None) -> bool:
-            if token is None:
-                return True
             if not presented:
                 return False
-            return hmac.compare_digest(presented, token)
+            return hmac.compare_digest(presented.encode("utf-8"), token.encode("ascii"))
 
         def _queue_link(self) -> str:
             if token:
@@ -149,6 +169,9 @@ def make_handler(store: BridgeStore, token: str | None = None):
             return "<p><a href='/'>回队列</a></p>"
 
         def do_GET(self):
+            if not self._host_ok():
+                self._send("<p>来源无效</p>", status=403)
+                return
             parsed = urllib.parse.urlparse(self.path)
             if parsed.path in ("/", "/queue"):
                 query = urllib.parse.parse_qs(parsed.query)
@@ -157,13 +180,43 @@ def make_handler(store: BridgeStore, token: str | None = None):
                     # Never render the pending queue's full text unauthenticated.
                     self._send("<p>需要令牌</p>", status=401)
                     return
-                self._send(render_queue_html(store, token=token))
+                with mutation_lock:
+                    self._send(render_queue_html(store, token=token))
             else:
                 self._send("<p>未找到</p>", status=404)
 
         def do_POST(self):
-            length = int(self.headers.get("Content-Length") or 0)
-            fields = urllib.parse.parse_qs(self.rfile.read(length).decode("utf-8"))
+            if not self._host_ok():
+                self._send("<p>来源无效</p>", status=403)
+                return
+            try:
+                lengths = self.headers.get_all("Content-Length") or []
+                if len(lengths) != 1 or self.headers.get("Transfer-Encoding"):
+                    raise ValueError("invalid framing")
+                length = int(lengths[0])
+                if length < 0:
+                    raise ValueError("negative length")
+                if length > 16384:
+                    self._send("<p>请求过大</p>", status=413)
+                    return
+                body = self.rfile.read(length)
+                if len(body) != length:
+                    raise ValueError("incomplete body")
+                fields = urllib.parse.parse_qs(
+                    body.decode("utf-8", errors="strict"),
+                    keep_blank_values=True,
+                    encoding="utf-8",
+                    errors="strict",
+                    max_num_fields=16,
+                )
+                if any(len(values) != 1 for values in fields.values()):
+                    raise ValueError("ambiguous field")
+            except TimeoutError:
+                self._send("<p>读取超时</p>", status=408)
+                return
+            except (ValueError, UnicodeError):
+                self._send("<p>无效请求</p>", status=400)
+                return
 
             def get(k):
                 return (fields.get(k) or [""])[0]
@@ -171,32 +224,35 @@ def make_handler(store: BridgeStore, token: str | None = None):
             if not self._token_ok(get("token")):
                 self._send("<p>需要令牌</p>", status=401)
                 return
-            if not _loopback_origin(self.headers.get("Origin")) or not _loopback_origin(
+            if not self._origin_ok(self.headers.get("Origin")) or not self._origin_ok(
                 self.headers.get("Referer")
             ):
                 self._send("<p>来源不是环回地址，已拒绝</p>", status=403)
                 return
             req_id = get("id")
             approver = get("approver")
-            try:
-                if self.path == "/approve":
-                    store.approve(
-                        req_id,
-                        approver,
-                        confirmed_full_text=_truthy(get("confirmed_full_text")),
-                        acknowledge_flag=_truthy(get("acknowledge_flag")),
-                    )
-                    self._send("<p>已批准</p>" + self._queue_link())
-                elif self.path == "/deny":
-                    store.deny(req_id, approver)
-                    self._send("<p>已拒绝</p>" + self._queue_link())
-                elif self.path == "/withdraw":
-                    store.withdraw(req_id, by=approver)
-                    self._send("<p>已撤回</p>" + self._queue_link())
-                else:
-                    self._send("<p>未找到</p>", status=404)
-            except (KeyError, ValueError) as exc:
-                self._send(f"<p>失败：{html.escape(str(exc))}</p>", status=400)
+            with mutation_lock:
+                try:
+                    if self.path == "/approve":
+                        store.approve(
+                            req_id,
+                            approver,
+                            confirmed_full_text=_truthy(get("confirmed_full_text")),
+                            acknowledge_flag=_truthy(get("acknowledge_flag")),
+                        )
+                        self._send("<p>已批准</p>" + self._queue_link())
+                    elif self.path == "/deny":
+                        store.deny(req_id, approver)
+                        self._send("<p>已拒绝</p>" + self._queue_link())
+                    elif self.path == "/withdraw":
+                        store.withdraw(req_id, by=approver)
+                        self._send("<p>已撤回</p>" + self._queue_link())
+                    else:
+                        self._send("<p>未找到</p>", status=404)
+                except (KeyError, ValueError):
+                    self._send("<p>审批失败，请核对请求状态</p>", status=400)
+                except OSError:
+                    self._send("<p>审计不可用，未批准</p>", status=503)
 
     return Handler
 

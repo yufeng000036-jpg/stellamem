@@ -1,0 +1,74 @@
+[
+  {
+    "rule": "jwt",
+    "file": "tools/secret_scan.py",
+    "line": 38,
+    "commit": "d56b568240a7376b67c83d79251d1e40d54e8adf",
+    "sha256": "7c5b0229189828de2e99ca33b64d64b3430252dcfbf4b55a344f5cfdb1d1f1b1",
+    "length": 92
+  },
+  {
+    "rule": "jwt",
+    "file": "tools/secret_scan.py",
+    "line": 38,
+    "commit": "04208c057834b17ba2b9dab5eaef952a36d7d735",
+    "sha256": "7c5b0229189828de2e99ca33b64d64b3430252dcfbf4b55a344f5cfdb1d1f1b1",
+    "length": 92
+  },
+  {
+    "rule": "jwt",
+    "file": "tests/test_secret_gate.py",
+    "line": 29,
+    "commit": "d56b568240a7376b67c83d79251d1e40d54e8adf",
+    "sha256": "7c5b0229189828de2e99ca33b64d64b3430252dcfbf4b55a344f5cfdb1d1f1b1",
+    "length": 92
+  },
+  {
+    "rule": "jwt",
+    "file": "tests/test_secret_gate.py",
+    "line": 29,
+    "commit": "eaedcabed2c332f260cc71ebe9eb6a27a5713117",
+    "sha256": "7c5b0229189828de2e99ca33b64d64b3430252dcfbf4b55a344f5cfdb1d1f1b1",
+    "length": 92
+  },
+  {
+    "rule": "private-key",
+    "file": "tests/test_secret_gate.py",
+    "line": 30,
+    "commit": "eaedcabed2c332f260cc71ebe9eb6a27a5713117",
+    "sha256": "16c95a768c075d9b96a76f37e22345f6ba37f3fb6ded333b465fc513e7e6718f",
+    "length": 1870
+  },
+  {
+    "rule": "generic-api-key",
+    "file": "tests/test_secret_gate.py",
+    "line": 148,
+    "commit": "eaedcabed2c332f260cc71ebe9eb6a27a5713117",
+    "sha256": "bec9d3275db8e10acf0a3cdfb252874201f4ec308deee07af2e0124a98f960ac",
+    "length": 13
+  },
+  {
+    "rule": "generic-api-key",
+    "file": "tests/test_secret_gate.py",
+    "line": 148,
+    "commit": "04208c057834b17ba2b9dab5eaef952a36d7d735",
+    "sha256": "bec9d3275db8e10acf0a3cdfb252874201f4ec308deee07af2e0124a98f960ac",
+    "length": 13
+  },
+  {
+    "rule": "jwt",
+    "file": "tests/test_secret_gate.py",
+    "line": 29,
+    "commit": "04208c057834b17ba2b9dab5eaef952a36d7d735",
+    "sha256": "7c5b0229189828de2e99ca33b64d64b3430252dcfbf4b55a344f5cfdb1d1f1b1",
+    "length": 92
+  },
+  {
+    "rule": "private-key",
+    "file": "tests/test_secret_gate.py",
+    "line": 30,
+    "commit": "04208c057834b17ba2b9dab5eaef952a36d7d735",
+    "sha256": "8c09ac5e6444b231ac5db5cc7dabfa4aeebb317ea3dd9f9ef2c3b0f66700524e",
+    "length": 1896
+  }
+]

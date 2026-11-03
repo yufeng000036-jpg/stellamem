@@ -92,23 +92,25 @@ class NightlyTests(unittest.TestCase):
         self.assertFalse(result["cloud_called"])
         self.assertFalse(result["changed_anything"])
 
-    def test_grouping_keeps_best_value(self):
+    def test_grouping_keeps_conflicts_for_review(self):
         result = NI.consolidate(
             [
                 self._ev("e1", "占位主题", "喜欢", "低分值", importance=2),
                 self._ev("e2", "占位主题", "喜欢", "高分值", importance=9),
             ]
         )
-        self.assertEqual(result["kept_count"], 1)
-        self.assertEqual(result["kept"][0]["value"], "高分值")
-        self.assertEqual(result["kept"][0]["member_count"], 2)
-        self.assertEqual(result["kept"][0]["evidence_event_ids"], ["e2", "e1"])
+        self.assertEqual(result["kept_count"], 0)
+        self.assertEqual(result["conflict_count"], 1)
+        self.assertEqual(
+            [e["event_id"] for e in result["conflicts"][0]["candidates"]], ["e2", "e1"]
+        )
 
     def test_budget_truncates_text(self):
         result = NI.consolidate(
             [self._ev("e1", "占位主题", "喜欢", "很长占位值" * 20, importance=9)], budget_chars=10
         )
-        self.assertEqual(result["chars"], 10)
+        self.assertEqual(result["chars"], 0)
+        self.assertEqual(len(result["source_events"]), 1)
 
     def test_negative_budget_rejected(self):
         with self.assertRaises(ValueError):
@@ -143,16 +145,16 @@ class NightlyTests(unittest.TestCase):
         self.assertEqual(result["kept_count"], 2)
         self.assertEqual({k["scope"] for k in result["kept"]}, {"", "daily"})
 
-    def test_same_scope_still_merges(self):
+    def test_same_scope_conflicts_never_silently_merge(self):
         result = NI.consolidate(
             [
                 self._ev("e1", "占位主题", "喜欢", "低分值", scope="daily", importance=2),
                 self._ev("e2", "占位主题", "喜欢", "高分值", scope="daily", importance=9),
             ]
         )
-        self.assertEqual(result["kept_count"], 1)
-        self.assertEqual(result["kept"][0]["value"], "高分值")
-        self.assertEqual(result["kept"][0]["scope"], "daily")
+        self.assertEqual(result["kept_count"], 0)
+        self.assertEqual(result["conflict_count"], 1)
+        self.assertEqual(result["conflicts"][0]["scope"], "daily")
 
 
 if __name__ == "__main__":

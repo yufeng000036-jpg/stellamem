@@ -1,22 +1,54 @@
-# Gitleaks allowlist for Stellamem. Default rules are kept (useDefault);
-# nothing here disables a rule, a path globally, or the scan itself.
-#
-# Why this entry exists: commit 04208c0 introduced tests/test_privacy.py:56,
-# a detector fixture whose first token runs sequentially a-x (a textbook
-# synthetic string, not a random credential) and whose second token is
-# split in source and repeated-character at runtime. The current file no
-# longer contains either token contiguously, but gitleaks scans history,
-# so the old commit would still be flagged without this narrow entry.
-# The regex below is a pattern, not a credential value: it matches only
-# the sequential a-x shape, and only in that one test file's path.
-# No real credential is allowlisted here; a genuinely suspicious finding
-# must never be added to this file.
-title = "Stellamem gitleaks allowlist"
+# All default rules remain enabled. No marker / directory / standalone path bypass.
+# Negative tests: python tools/verify_gitleaks.py --gitleaks /path/to/gitleaks
+# Default v8.30.1 history scan: 9 findings, all audited synthetic fixtures.
+# The old sequential a-x fixture does NOT trigger defaults; no exemption for it.
+# PEM findings are oversized false matches spanning escaped test source: these
+# regexes match the WHOLE observed finding, including its exact source suffix.
+# Changing one byte or adding any credential cannot match these exemptions.
+# Evidence and tradeoff: docs/verification/SECURITY.md.
+title = "Stellamem exact synthetic findings"
 
 [extend]
 useDefault = true
 
-[allowlist]
-description = "Synthetic detector fixture in tests/test_privacy.py only (sequential a-x token, verified in commit 04208c0)"
-paths = ['''tests/test_privacy\.py''']
-regexes = ['''sk-[a-x]{24}''']
+# Rule-scoped lists avoid the global directory prefilter, which can skip an
+# entire path before evaluating AND. Real negative controls verify this.
+
+[[rules]]
+id = "jwt"
+
+[[rules.allowlists]]
+description = "Audited jwt test fixture; exact full finding and exact path"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^tests/test_secret_gate\.py$''', '''^tools/secret_scan\.py$''']
+regexes = ['''(?s)^eyJhbGciOiJIUzI1NiJ9\.eyJzdWIiOiIxMjM0NTY3ODkwIn0\.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U$''']
+
+
+[[rules]]
+id = "private-key"
+
+[[rules.allowlists]]
+description = "Audited private-key test fixture; exact full finding and exact path"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^tests/test_secret_gate\.py$''']
+regexes = ['''(?s)^[-][-][-][-][-]BEGIN PRIVATE KEY-----\\nMIIEfakefakefake\\n[-][-][-][-][-]END PRIVATE KEY-----",\n    "password": "password=fictional-hunter2",\n    "cookie": "Cookie: session=synthetic-session-token",\n    "refresh": "refresh_token=synthetic-refresh-value",\n\}\n\n\nclass RecordingModel:\n    """Stand-in for the local model; records every payload it is asked to process\."""\n\n    def __init__\(self\):\n        self\.payloads = \[\]\n\n    def __call__\(self, system, user\):\n        self\.payloads\.append\(user\)\n        return "\[\]"\n\n\nclass SecretGateTests\(unittest\.TestCase\):\n    def setUp\(self\):\n        self\.tmp = tempfile\.TemporaryDirectory\(\)\n        self\.root = Path\(self\.tmp\.name\)\n        \(self\.root / "daily"\)\.mkdir\(\)\n        self\.config = \{"memories_root": str\(self\.root\), "chunk_chars": 512\}\n\n    def tearDown\(self\):\n        self\.tmp\.cleanup\(\)\n\n    def test_every_secret_family_is_detected_and_redacted\(self\):\n        for name, value in SECRETS\.items\(\):\n            with self\.subTest\(family=name\):\n                self\.assertTrue\(contains_secret\(value\), name\)\n                self\.assertNotIn\(value, redact\(value\), name\)\n\n    def test_secret_never_reaches_the_model_request_body\(self\):\n        for name, value in SECRETS\.items\(\):\n            with self\.subTest\(family=name\):\n                messages = parse_messages\(\n                    "\[15:32:01\] user: here is my key " \+ value \+ "\\n"\n                    "\[15:32:20\] user: please keep replies concise\\n",\n                    "2026-01-01\.md",\n                \)\n                model = RecordingModel\(\)\n                list\(compile_messages\(messages, self\.config, model\)\)\n                for payload in model\.payloads:\n                    self\.assertNotIn\(value, payload, name\)\n                    self\.assertNotIn\("hunter2", payload, name\)\n\n    def test_whole_secret_message_is_omitted_not_truncated\(self\):\n        value = "[-][-][-][-][-]BEGIN PRIVATE KEY-----$''']
+
+
+[[rules.allowlists]]
+description = "Audited private-key test fixture; exact full finding and exact path"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^tests/test_secret_gate\.py$''']
+regexes = ['''(?s)^[-][-][-][-][-]BEGIN PRIVATE KEY-----\\nMIIEfakefakefake\\n[-][-][-][-][-]END PRIVATE KEY-----",  # secret-scan: synthetic\n    "password": "password=fictional-hunter2",\n    "cookie": "Cookie: session=synthetic-session-token",\n    "refresh": "refresh_token=synthetic-refresh-value",\n\}\n\n\nclass RecordingModel:\n    """Stand-in for the local model; records every payload it is asked to process\."""\n\n    def __init__\(self\):\n        self\.payloads = \[\]\n\n    def __call__\(self, system, user\):\n        self\.payloads\.append\(user\)\n        return "\[\]"\n\n\nclass SecretGateTests\(unittest\.TestCase\):\n    def setUp\(self\):\n        self\.tmp = tempfile\.TemporaryDirectory\(\)\n        self\.root = Path\(self\.tmp\.name\)\n        \(self\.root / "daily"\)\.mkdir\(\)\n        self\.config = \{"memories_root": str\(self\.root\), "chunk_chars": 512\}\n\n    def tearDown\(self\):\n        self\.tmp\.cleanup\(\)\n\n    def test_every_secret_family_is_detected_and_redacted\(self\):\n        for name, value in SECRETS\.items\(\):\n            with self\.subTest\(family=name\):\n                self\.assertTrue\(contains_secret\(value\), name\)\n                self\.assertNotIn\(value, redact\(value\), name\)\n\n    def test_secret_never_reaches_the_model_request_body\(self\):\n        for name, value in SECRETS\.items\(\):\n            with self\.subTest\(family=name\):\n                messages = parse_messages\(\n                    "\[15:32:01\] user: here is my key " \+ value \+ "\\n"\n                    "\[15:32:20\] user: please keep replies concise\\n",\n                    "2026-01-01\.md",\n                \)\n                model = RecordingModel\(\)\n                list\(compile_messages\(messages, self\.config, model\)\)\n                for payload in model\.payloads:\n                    self\.assertNotIn\(value, payload, name\)\n                    self\.assertNotIn\("hunter2", payload, name\)\n\n    def test_whole_secret_message_is_omitted_not_truncated\(self\):\n        value = "[-][-][-][-][-]BEGIN PRIVATE KEY-----$''']
+
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "Audited generic-api-key test fixture; exact full finding and exact path"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^tests/test_secret_gate\.py$''']
+regexes = ['''(?s)^synthetic-123$''']

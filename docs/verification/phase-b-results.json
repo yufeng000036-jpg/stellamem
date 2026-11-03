@@ -1,0 +1,42 @@
+{
+  "python": {
+    "command": "python -m unittest discover -s tests -v",
+    "exit_code": 0
+  },
+  "node": {
+    "command": "node --test tests/hooks.test.mjs",
+    "exit_code": 0
+  },
+  "demo": {
+    "command": "python demo/run_demo.py --offline",
+    "exit_code": 0
+  },
+  "lint": {
+    "command": "ruff check .",
+    "exit_code": 0
+  },
+  "format": {
+    "command": "ruff format --check .",
+    "exit_code": 0
+  },
+  "secrets": {
+    "command": "python tools/secret_scan.py",
+    "exit_code": 0
+  },
+  "history": {
+    "command": "python tools/secret_scan.py --history",
+    "exit_code": 0
+  },
+  "controls": {
+    "command": "python tools/verify_gitleaks.py --gitleaks gitleaks",
+    "exit_code": 0
+  },
+  "gitleaks-history": {
+    "command": "gitleaks git --log-opts=--all --redact=100 --no-banner --report-path=<evidence>/final-gitleaks-history.json --report-format=json",
+    "exit_code": 0
+  },
+  "gitleaks-tree": {
+    "command": "git checkout-index -a --prefix=<temp>/; gitleaks dir . --config=<reviewed config> --redact=100",
+    "exit_code": 0
+  }
+}

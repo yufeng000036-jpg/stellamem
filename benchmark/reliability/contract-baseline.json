@@ -1,0 +1,3958 @@
+{
+  "corpus_sha256": "d20453b038a4cbd86e4a39aa652337c323838287f0d99b9b122e3e7b3d3555ac",
+  "adapter": "baseline@8430657",
+  "warning": "projection contract only; NOT extraction or answer-generation quality",
+  "label_author": "AI-authored explicit labels; NOT independently human-reviewed",
+  "overall": {
+    "cases": 300,
+    "passed": 140,
+    "positive_denominator": 80,
+    "recall_at_1": 0.5,
+    "recall_at_5": 1,
+    "mrr": 0.75,
+    "unexpected_projections": 180
+  },
+  "holdout": {
+    "cases": 90,
+    "passed": 42,
+    "positive_denominator": 24,
+    "recall_at_1": 0.5,
+    "recall_at_5": 1,
+    "mrr": 0.75,
+    "unexpected_projections": 54
+  },
+  "adversarial": {
+    "cases": 100,
+    "passed": 60,
+    "positive_denominator": 0,
+    "recall_at_1": null,
+    "recall_at_5": null,
+    "mrr": null,
+    "unexpected_projections": 40
+  },
+  "extraction_quality": "NOT MEASURED",
+  "answer_evidence_support": "NOT MEASURED",
+  "source_link_completeness": "NOT MEASURED",
+  "results": [
+    {
+      "id": "F00-00",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F00-00"
+      ],
+      "actual_ids": [
+        "F00-00"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 3.9229250000000064
+    },
+    {
+      "id": "F00-01",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F00-01"
+      ],
+      "actual_ids": [
+        "F00-01"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 2.4996289999999988
+    },
+    {
+      "id": "F00-02",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F00-02"
+      ],
+      "actual_ids": [
+        "F00-02"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 3.024991
+    },
+    {
+      "id": "F00-03",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F00-03"
+      ],
+      "actual_ids": [
+        "F00-03"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.3013320000000022
+    },
+    {
+      "id": "F00-04",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F00-04"
+      ],
+      "actual_ids": [
+        "F00-04"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.3473319999999944
+    },
+    {
+      "id": "F00-05",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F00-05"
+      ],
+      "actual_ids": [
+        "F00-05"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.1793879999999888
+    },
+    {
+      "id": "F00-06",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F00-06"
+      ],
+      "actual_ids": [
+        "F00-06"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.173688999999996
+    },
+    {
+      "id": "F00-07",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F00-07"
+      ],
+      "actual_ids": [
+        "F00-07"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 17.813625000000002
+    },
+    {
+      "id": "F00-08",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F00-08"
+      ],
+      "actual_ids": [
+        "F00-08"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.3651079999999922
+    },
+    {
+      "id": "F00-09",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F00-09"
+      ],
+      "actual_ids": [
+        "F00-09"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.6906239999999997
+    },
+    {
+      "id": "F00-10",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F00-10"
+      ],
+      "actual_ids": [
+        "F00-10"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.3045669999999916
+    },
+    {
+      "id": "F00-11",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F00-11"
+      ],
+      "actual_ids": [
+        "F00-11"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.6610039999999913
+    },
+    {
+      "id": "F00-12",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F00-12"
+      ],
+      "actual_ids": [
+        "F00-12"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.349443999999977
+    },
+    {
+      "id": "F00-13",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F00-13"
+      ],
+      "actual_ids": [
+        "F00-13"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 2.507815999999991
+    },
+    {
+      "id": "F00-14",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F00-14"
+      ],
+      "actual_ids": [
+        "F00-14"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.1661789999999996
+    },
+    {
+      "id": "F00-15",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F00-15"
+      ],
+      "actual_ids": [
+        "F00-15"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 2.5948029999999846
+    },
+    {
+      "id": "F00-16",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F00-16"
+      ],
+      "actual_ids": [
+        "F00-16"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.399140000000017
+    },
+    {
+      "id": "F00-17",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F00-17"
+      ],
+      "actual_ids": [
+        "F00-17"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.5643489999999929
+    },
+    {
+      "id": "F00-18",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F00-18"
+      ],
+      "actual_ids": [
+        "F00-18"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9970130000000097
+    },
+    {
+      "id": "F00-19",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F00-19"
+      ],
+      "actual_ids": [
+        "F00-19"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.0712549999999794
+    },
+    {
+      "id": "F01-00",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F01-00"
+      ],
+      "actual_ids": [
+        "F01-00-foreign",
+        "F01-00"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1676710000000128
+    },
+    {
+      "id": "F01-01",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F01-01"
+      ],
+      "actual_ids": [
+        "F01-01-foreign",
+        "F01-01"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.9844420000000014
+    },
+    {
+      "id": "F01-02",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F01-02"
+      ],
+      "actual_ids": [
+        "F01-02-foreign",
+        "F01-02"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.971463
+    },
+    {
+      "id": "F01-03",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F01-03"
+      ],
+      "actual_ids": [
+        "F01-03-foreign",
+        "F01-03"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.9075060000000121
+    },
+    {
+      "id": "F01-04",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F01-04"
+      ],
+      "actual_ids": [
+        "F01-04-foreign",
+        "F01-04"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.6686960000000113
+    },
+    {
+      "id": "F01-05",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F01-05"
+      ],
+      "actual_ids": [
+        "F01-05-foreign",
+        "F01-05"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.5013639999999953
+    },
+    {
+      "id": "F01-06",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F01-06"
+      ],
+      "actual_ids": [
+        "F01-06-foreign",
+        "F01-06"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3965259999999944
+    },
+    {
+      "id": "F01-07",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F01-07"
+      ],
+      "actual_ids": [
+        "F01-07-foreign",
+        "F01-07"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3826249999999902
+    },
+    {
+      "id": "F01-08",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F01-08"
+      ],
+      "actual_ids": [
+        "F01-08-foreign",
+        "F01-08"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3264599999999973
+    },
+    {
+      "id": "F01-09",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F01-09"
+      ],
+      "actual_ids": [
+        "F01-09-foreign",
+        "F01-09"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.375033000000002
+    },
+    {
+      "id": "F01-10",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F01-10"
+      ],
+      "actual_ids": [
+        "F01-10-foreign",
+        "F01-10"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.356755000000021
+    },
+    {
+      "id": "F01-11",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F01-11"
+      ],
+      "actual_ids": [
+        "F01-11-foreign",
+        "F01-11"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.8894710000000146
+    },
+    {
+      "id": "F01-12",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F01-12"
+      ],
+      "actual_ids": [
+        "F01-12-foreign",
+        "F01-12"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1601699999999937
+    },
+    {
+      "id": "F01-13",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F01-13"
+      ],
+      "actual_ids": [
+        "F01-13-foreign",
+        "F01-13"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.0805900000000008
+    },
+    {
+      "id": "F01-14",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F01-14"
+      ],
+      "actual_ids": [
+        "F01-14-foreign",
+        "F01-14"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1442849999999964
+    },
+    {
+      "id": "F01-15",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F01-15"
+      ],
+      "actual_ids": [
+        "F01-15-foreign",
+        "F01-15"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.8381940000000156
+    },
+    {
+      "id": "F01-16",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F01-16"
+      ],
+      "actual_ids": [
+        "F01-16-foreign",
+        "F01-16"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1444259999999815
+    },
+    {
+      "id": "F01-17",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F01-17"
+      ],
+      "actual_ids": [
+        "F01-17-foreign",
+        "F01-17"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.0654659999999865
+    },
+    {
+      "id": "F01-18",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F01-18"
+      ],
+      "actual_ids": [
+        "F01-18-foreign",
+        "F01-18"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7312530000000095
+    },
+    {
+      "id": "F01-19",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F01-19"
+      ],
+      "actual_ids": [
+        "F01-19-foreign",
+        "F01-19"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3340120000000013
+    },
+    {
+      "id": "F02-00",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F02-00"
+      ],
+      "actual_ids": [
+        "F02-00-foreign",
+        "F02-00"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.8680370000000153
+    },
+    {
+      "id": "F02-01",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F02-01"
+      ],
+      "actual_ids": [
+        "F02-01-foreign",
+        "F02-01"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3073710000000176
+    },
+    {
+      "id": "F02-02",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F02-02"
+      ],
+      "actual_ids": [
+        "F02-02-foreign",
+        "F02-02"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.2334390000000042
+    },
+    {
+      "id": "F02-03",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F02-03"
+      ],
+      "actual_ids": [
+        "F02-03-foreign",
+        "F02-03"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3997310000000027
+    },
+    {
+      "id": "F02-04",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F02-04"
+      ],
+      "actual_ids": [
+        "F02-04-foreign",
+        "F02-04"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.2525490000000161
+    },
+    {
+      "id": "F02-05",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F02-05"
+      ],
+      "actual_ids": [
+        "F02-05-foreign",
+        "F02-05"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 3.722662999999983
+    },
+    {
+      "id": "F02-06",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F02-06"
+      ],
+      "actual_ids": [
+        "F02-06-foreign",
+        "F02-06"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.2618229999999926
+    },
+    {
+      "id": "F02-07",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F02-07"
+      ],
+      "actual_ids": [
+        "F02-07-foreign",
+        "F02-07"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.2898649999999918
+    },
+    {
+      "id": "F02-08",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F02-08"
+      ],
+      "actual_ids": [
+        "F02-08-foreign",
+        "F02-08"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3206209999999885
+    },
+    {
+      "id": "F02-09",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F02-09"
+      ],
+      "actual_ids": [
+        "F02-09-foreign",
+        "F02-09"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.313018999999997
+    },
+    {
+      "id": "F02-10",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F02-10"
+      ],
+      "actual_ids": [
+        "F02-10-foreign",
+        "F02-10"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3043560000000127
+    },
+    {
+      "id": "F02-11",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F02-11"
+      ],
+      "actual_ids": [
+        "F02-11-foreign",
+        "F02-11"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.6029670000000067
+    },
+    {
+      "id": "F02-12",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F02-12"
+      ],
+      "actual_ids": [
+        "F02-12-foreign",
+        "F02-12"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.2969160000000102
+    },
+    {
+      "id": "F02-13",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F02-13"
+      ],
+      "actual_ids": [
+        "F02-13-foreign",
+        "F02-13"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.2425780000000088
+    },
+    {
+      "id": "F02-14",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F02-14"
+      ],
+      "actual_ids": [
+        "F02-14-foreign",
+        "F02-14"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.8553479999999922
+    },
+    {
+      "id": "F02-15",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F02-15"
+      ],
+      "actual_ids": [
+        "F02-15-foreign",
+        "F02-15"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1579250000000059
+    },
+    {
+      "id": "F02-16",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F02-16"
+      ],
+      "actual_ids": [
+        "F02-16-foreign",
+        "F02-16"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 2.538238000000007
+    },
+    {
+      "id": "F02-17",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F02-17"
+      ],
+      "actual_ids": [
+        "F02-17-foreign",
+        "F02-17"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 2.481186000000008
+    },
+    {
+      "id": "F02-18",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F02-18"
+      ],
+      "actual_ids": [
+        "F02-18-foreign",
+        "F02-18"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.4122799999999813
+    },
+    {
+      "id": "F02-19",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F02-19"
+      ],
+      "actual_ids": [
+        "F02-19-foreign",
+        "F02-19"
+      ],
+      "rank": 2,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.5577490000000012
+    },
+    {
+      "id": "F03-00",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F03-00"
+      ],
+      "actual_ids": [
+        "F03-00"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.313461000000018
+    },
+    {
+      "id": "F03-01",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F03-01"
+      ],
+      "actual_ids": [
+        "F03-01"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.2551320000000032
+    },
+    {
+      "id": "F03-02",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F03-02"
+      ],
+      "actual_ids": [
+        "F03-02"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 3.6279309999999896
+    },
+    {
+      "id": "F03-03",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F03-03"
+      ],
+      "actual_ids": [
+        "F03-03"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.1656570000000102
+    },
+    {
+      "id": "F03-04",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F03-04"
+      ],
+      "actual_ids": [
+        "F03-04"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9642039999999952
+    },
+    {
+      "id": "F03-05",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [
+        "F03-05"
+      ],
+      "actual_ids": [
+        "F03-05"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.6712220000000002
+    },
+    {
+      "id": "F03-06",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F03-06"
+      ],
+      "actual_ids": [
+        "F03-06"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.7783739999999852
+    },
+    {
+      "id": "F03-07",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F03-07"
+      ],
+      "actual_ids": [
+        "F03-07"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9589259999999626
+    },
+    {
+      "id": "F03-08",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F03-08"
+      ],
+      "actual_ids": [
+        "F03-08"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.7450829999999655
+    },
+    {
+      "id": "F03-09",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F03-09"
+      ],
+      "actual_ids": [
+        "F03-09"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.237955999999997
+    },
+    {
+      "id": "F03-10",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F03-10"
+      ],
+      "actual_ids": [
+        "F03-10"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.8492909999999938
+    },
+    {
+      "id": "F03-11",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [
+        "F03-11"
+      ],
+      "actual_ids": [
+        "F03-11"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.8316140000000019
+    },
+    {
+      "id": "F03-12",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F03-12"
+      ],
+      "actual_ids": [
+        "F03-12"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.282303000000013
+    },
+    {
+      "id": "F03-13",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F03-13"
+      ],
+      "actual_ids": [
+        "F03-13"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.7272970000000214
+    },
+    {
+      "id": "F03-14",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F03-14"
+      ],
+      "actual_ids": [
+        "F03-14"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.4589799999999968
+    },
+    {
+      "id": "F03-15",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F03-15"
+      ],
+      "actual_ids": [
+        "F03-15"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.0150810000000092
+    },
+    {
+      "id": "F03-16",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F03-16"
+      ],
+      "actual_ids": [
+        "F03-16"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 4.639115000000004
+    },
+    {
+      "id": "F03-17",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F03-17"
+      ],
+      "actual_ids": [
+        "F03-17"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 2.7629360000000247
+    },
+    {
+      "id": "F03-18",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F03-18"
+      ],
+      "actual_ids": [
+        "F03-18"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.2935400000000072
+    },
+    {
+      "id": "F03-19",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [
+        "F03-19"
+      ],
+      "actual_ids": [
+        "F03-19"
+      ],
+      "rank": 1,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 4.55958099999998
+    },
+    {
+      "id": "F04-00",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-00"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3014819999999645
+    },
+    {
+      "id": "F04-01",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-01"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3195890000000077
+    },
+    {
+      "id": "F04-02",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-02"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.2784679999999753
+    },
+    {
+      "id": "F04-03",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-03"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.34759200000002
+    },
+    {
+      "id": "F04-04",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-04"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.0253260000000068
+    },
+    {
+      "id": "F04-05",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-05"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7254540000000134
+    },
+    {
+      "id": "F04-06",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-06"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 2.0835309999999936
+    },
+    {
+      "id": "F04-07",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-07"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 5.54139600000002
+    },
+    {
+      "id": "F04-08",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-08"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.9509739999999738
+    },
+    {
+      "id": "F04-09",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-09"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.92873000000003
+    },
+    {
+      "id": "F04-10",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-10"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.9523460000000341
+    },
+    {
+      "id": "F04-11",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-11"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.9137379999999666
+    },
+    {
+      "id": "F04-12",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-12"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7138659999999959
+    },
+    {
+      "id": "F04-13",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-13"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.87301599999995
+    },
+    {
+      "id": "F04-14",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-14"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7678369999999859
+    },
+    {
+      "id": "F04-15",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-15"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.9928260000000364
+    },
+    {
+      "id": "F04-16",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-16"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.6834399999999619
+    },
+    {
+      "id": "F04-17",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-17"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7526550000000043
+    },
+    {
+      "id": "F04-18",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-18"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.9032720000000154
+    },
+    {
+      "id": "F04-19",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F04-19"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1954230000000052
+    },
+    {
+      "id": "F05-00",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-00",
+        "F05-00"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 0.9802480000000173
+    },
+    {
+      "id": "F05-01",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-01",
+        "F05-01"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 1.0330880000000207
+    },
+    {
+      "id": "F05-02",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-02",
+        "F05-02"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 0.795078999999987
+    },
+    {
+      "id": "F05-03",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-03",
+        "F05-03"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 1.4762960000000476
+    },
+    {
+      "id": "F05-04",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-04",
+        "F05-04"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 1.1044650000000047
+    },
+    {
+      "id": "F05-05",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-05",
+        "F05-05"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 0.7111319999999637
+    },
+    {
+      "id": "F05-06",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-06",
+        "F05-06"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 0.7380929999999921
+    },
+    {
+      "id": "F05-07",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-07",
+        "F05-07"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 0.7538359999999784
+    },
+    {
+      "id": "F05-08",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-08",
+        "F05-08"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 1.2450870000000123
+    },
+    {
+      "id": "F05-09",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-09",
+        "F05-09"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 0.990113000000008
+    },
+    {
+      "id": "F05-10",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-10",
+        "F05-10"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 1.0987969999999905
+    },
+    {
+      "id": "F05-11",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-11",
+        "F05-11"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 0.9788360000000011
+    },
+    {
+      "id": "F05-12",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-12",
+        "F05-12"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 1.294651999999985
+    },
+    {
+      "id": "F05-13",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-13",
+        "F05-13"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 1.1530539999999974
+    },
+    {
+      "id": "F05-14",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-14",
+        "F05-14"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 1.4247379999999907
+    },
+    {
+      "id": "F05-15",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-15",
+        "F05-15"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 1.3085329999999544
+    },
+    {
+      "id": "F05-16",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-16",
+        "F05-16"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 0.9067770000000337
+    },
+    {
+      "id": "F05-17",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-17",
+        "F05-17"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 0.8457349999999906
+    },
+    {
+      "id": "F05-18",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-18",
+        "F05-18"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 1.2007409999999936
+    },
+    {
+      "id": "F05-19",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F05-19",
+        "F05-19"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 2,
+      "latency_ms": 1.382745
+    },
+    {
+      "id": "F06-00",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-00"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.2298440000000141
+    },
+    {
+      "id": "F06-01",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-01"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1310359999999946
+    },
+    {
+      "id": "F06-02",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-02"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.9755610000000274
+    },
+    {
+      "id": "F06-03",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-03"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7886690000000272
+    },
+    {
+      "id": "F06-04",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-04"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7463349999999878
+    },
+    {
+      "id": "F06-05",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-05"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.0528169999999477
+    },
+    {
+      "id": "F06-06",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-06"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.942530999999974
+    },
+    {
+      "id": "F06-07",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-07"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.9614590000000476
+    },
+    {
+      "id": "F06-08",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-08"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.0551009999999792
+    },
+    {
+      "id": "F06-09",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-09"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7267059999999788
+    },
+    {
+      "id": "F06-10",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-10"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.9582450000000335
+    },
+    {
+      "id": "F06-11",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-11"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.6610069999999837
+    },
+    {
+      "id": "F06-12",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-12"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3932400000000484
+    },
+    {
+      "id": "F06-13",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-13"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.8830310000000168
+    },
+    {
+      "id": "F06-14",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-14"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7563099999999849
+    },
+    {
+      "id": "F06-15",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-15"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7375319999999874
+    },
+    {
+      "id": "F06-16",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-16"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1530079999999998
+    },
+    {
+      "id": "F06-17",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-17"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.8228110000000015
+    },
+    {
+      "id": "F06-18",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-18"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.086638999999991
+    },
+    {
+      "id": "F06-19",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F06-19"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.9847750000000133
+    },
+    {
+      "id": "F07-00",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-00"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.8535069999999791
+    },
+    {
+      "id": "F07-01",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-01"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.5298569999999927
+    },
+    {
+      "id": "F07-02",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-02"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.2179669999999874
+    },
+    {
+      "id": "F07-03",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-03"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.8199970000000008
+    },
+    {
+      "id": "F07-04",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-04"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7546179999999936
+    },
+    {
+      "id": "F07-05",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-05"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.6214749999999754
+    },
+    {
+      "id": "F07-06",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-06"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.4705579999999827
+    },
+    {
+      "id": "F07-07",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-07"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7616590000000087
+    },
+    {
+      "id": "F07-08",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-08"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3191590000000133
+    },
+    {
+      "id": "F07-09",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-09"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7037209999999732
+    },
+    {
+      "id": "F07-10",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-10"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7539970000000267
+    },
+    {
+      "id": "F07-11",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-11"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.8453850000000216
+    },
+    {
+      "id": "F07-12",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-12"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.6769909999999868
+    },
+    {
+      "id": "F07-13",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-13"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7487890000000448
+    },
+    {
+      "id": "F07-14",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-14"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.6334059999999795
+    },
+    {
+      "id": "F07-15",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-15"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.000188000000037
+    },
+    {
+      "id": "F07-16",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-16"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.8301120000000424
+    },
+    {
+      "id": "F07-17",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-17"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.9237530000000334
+    },
+    {
+      "id": "F07-18",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-18"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1188070000000039
+    },
+    {
+      "id": "F07-19",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "F07-19"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7240519999999719
+    },
+    {
+      "id": "F08-00",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9685900000000061
+    },
+    {
+      "id": "F08-01",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.8012689999999907
+    },
+    {
+      "id": "F08-02",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.8182639999999992
+    },
+    {
+      "id": "F08-03",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.81816299999997
+    },
+    {
+      "id": "F08-04",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9318450000000098
+    },
+    {
+      "id": "F08-05",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.7146579999999858
+    },
+    {
+      "id": "F08-06",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.5739360000000033
+    },
+    {
+      "id": "F08-07",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.8953809999999862
+    },
+    {
+      "id": "F08-08",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9074489999999855
+    },
+    {
+      "id": "F08-09",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9631119999999669
+    },
+    {
+      "id": "F08-10",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9194759999999746
+    },
+    {
+      "id": "F08-11",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.3555129999999735
+    },
+    {
+      "id": "F08-12",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.395873999999992
+    },
+    {
+      "id": "F08-13",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.754698000000019
+    },
+    {
+      "id": "F08-14",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.7152389999999968
+    },
+    {
+      "id": "F08-15",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.6437510000000088
+    },
+    {
+      "id": "F08-16",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.6566710000000171
+    },
+    {
+      "id": "F08-17",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.5598939999999857
+    },
+    {
+      "id": "F08-18",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.5610859999999889
+    },
+    {
+      "id": "F08-19",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.2344969999999762
+    },
+    {
+      "id": "F09-00",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.0968229999999721
+    },
+    {
+      "id": "F09-01",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.2012110000000575
+    },
+    {
+      "id": "F09-02",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.8542159999999512
+    },
+    {
+      "id": "F09-03",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9671280000000024
+    },
+    {
+      "id": "F09-04",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.001170000000002
+    },
+    {
+      "id": "F09-05",
+      "kind": "functional",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.097485000000006
+    },
+    {
+      "id": "F09-06",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.1222320000000536
+    },
+    {
+      "id": "F09-07",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.2545320000000402
+    },
+    {
+      "id": "F09-08",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.3109559999999192
+    },
+    {
+      "id": "F09-09",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.4757150000000365
+    },
+    {
+      "id": "F09-10",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.3625349999999798
+    },
+    {
+      "id": "F09-11",
+      "kind": "functional",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.3301950000000033
+    },
+    {
+      "id": "F09-12",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.5647189999999682
+    },
+    {
+      "id": "F09-13",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.288772999999992
+    },
+    {
+      "id": "F09-14",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 2.0472469999999703
+    },
+    {
+      "id": "F09-15",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.0284310000000687
+    },
+    {
+      "id": "F09-16",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 3.4935779999999568
+    },
+    {
+      "id": "F09-17",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.4465810000000374
+    },
+    {
+      "id": "F09-18",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.0539189999999508
+    },
+    {
+      "id": "F09-19",
+      "kind": "functional",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.5759070000000293
+    },
+    {
+      "id": "A00-00",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "A00-00"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3976969999999937
+    },
+    {
+      "id": "A00-01",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "A00-01"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.4716489999999567
+    },
+    {
+      "id": "A00-02",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "A00-02"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.649267000000009
+    },
+    {
+      "id": "A00-03",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "A00-03"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.2100550000000112
+    },
+    {
+      "id": "A00-04",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "A00-04"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.4035460000000057
+    },
+    {
+      "id": "A00-05",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "A00-05"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.7645899999999983
+    },
+    {
+      "id": "A00-06",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A00-06"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.2911770000000615
+    },
+    {
+      "id": "A00-07",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A00-07"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1732589999999163
+    },
+    {
+      "id": "A00-08",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A00-08"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1146210000000565
+    },
+    {
+      "id": "A00-09",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A00-09"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.5474329999999554
+    },
+    {
+      "id": "A01-00",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "A01-00"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.465720000000033
+    },
+    {
+      "id": "A01-01",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "A01-01"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.303735999999958
+    },
+    {
+      "id": "A01-02",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "A01-02"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.8684490000000551
+    },
+    {
+      "id": "A01-03",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "A01-03"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.7743480000000318
+    },
+    {
+      "id": "A01-04",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "A01-04"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 2.1605580000000373
+    },
+    {
+      "id": "A01-05",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "A01-05"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3259799999999586
+    },
+    {
+      "id": "A01-06",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A01-06"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3965460000000576
+    },
+    {
+      "id": "A01-07",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A01-07"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.5326709999999366
+    },
+    {
+      "id": "A01-08",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A01-08"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.4121089999999867
+    },
+    {
+      "id": "A01-09",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A01-09"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3727400000000216
+    },
+    {
+      "id": "A02-00",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.8419389999999112
+    },
+    {
+      "id": "A02-01",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.8305220000000872
+    },
+    {
+      "id": "A02-02",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9848650000000134
+    },
+    {
+      "id": "A02-03",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9260360000000674
+    },
+    {
+      "id": "A02-04",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9562519999999495
+    },
+    {
+      "id": "A02-05",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.0726680000000215
+    },
+    {
+      "id": "A02-06",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.957493999999997
+    },
+    {
+      "id": "A02-07",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 16.848244999999906
+    },
+    {
+      "id": "A02-08",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.1025019999999586
+    },
+    {
+      "id": "A02-09",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.322292999999945
+    },
+    {
+      "id": "A03-00",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.1993479999999863
+    },
+    {
+      "id": "A03-01",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9911939999999504
+    },
+    {
+      "id": "A03-02",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.1958130000000438
+    },
+    {
+      "id": "A03-03",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.1537799999999834
+    },
+    {
+      "id": "A03-04",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.8864370000000008
+    },
+    {
+      "id": "A03-05",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.7242919999999913
+    },
+    {
+      "id": "A03-06",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.09676300000001
+    },
+    {
+      "id": "A03-07",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9835430000000542
+    },
+    {
+      "id": "A03-08",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.1391369999998915
+    },
+    {
+      "id": "A03-09",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.1577160000000504
+    },
+    {
+      "id": "A04-00",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.192839000000049
+    },
+    {
+      "id": "A04-01",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9631630000000087
+    },
+    {
+      "id": "A04-02",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.1881819999999834
+    },
+    {
+      "id": "A04-03",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.0017709999999624
+    },
+    {
+      "id": "A04-04",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.0143699999999853
+    },
+    {
+      "id": "A04-05",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9895219999999654
+    },
+    {
+      "id": "A04-06",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.8862259999999651
+    },
+    {
+      "id": "A04-07",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.1360130000000481
+    },
+    {
+      "id": "A04-08",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.8351800000000367
+    },
+    {
+      "id": "A04-09",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.4279129999999896
+    },
+    {
+      "id": "A05-00",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9578040000000101
+    },
+    {
+      "id": "A05-01",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.9982949999999846
+    },
+    {
+      "id": "A05-02",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.7355190000000675
+    },
+    {
+      "id": "A05-03",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.2423129999999674
+    },
+    {
+      "id": "A05-04",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.1653670000000602
+    },
+    {
+      "id": "A05-05",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.0103739999999561
+    },
+    {
+      "id": "A05-06",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.6605359999999791
+    },
+    {
+      "id": "A05-07",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.6044219999999996
+    },
+    {
+      "id": "A05-08",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.7225999999999431
+    },
+    {
+      "id": "A05-09",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 2.004623000000038
+    },
+    {
+      "id": "A06-00",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.7851439999999457
+    },
+    {
+      "id": "A06-01",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.6132939999999962
+    },
+    {
+      "id": "A06-02",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.6415250000000015
+    },
+    {
+      "id": "A06-03",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.0385049999999865
+    },
+    {
+      "id": "A06-04",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.7730940000000146
+    },
+    {
+      "id": "A06-05",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.8470069999999623
+    },
+    {
+      "id": "A06-06",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.120204000000058
+    },
+    {
+      "id": "A06-07",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.8622810000000527
+    },
+    {
+      "id": "A06-08",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.0204589999999598
+    },
+    {
+      "id": "A06-09",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 1.2252579999999398
+    },
+    {
+      "id": "A07-00",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "A07-00"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.4087240000000065
+    },
+    {
+      "id": "A07-01",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "A07-01"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3408719999999903
+    },
+    {
+      "id": "A07-02",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "A07-02"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1356329999999843
+    },
+    {
+      "id": "A07-03",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "A07-03"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.8284089999999651
+    },
+    {
+      "id": "A07-04",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "A07-04"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.2913169999999354
+    },
+    {
+      "id": "A07-05",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "A07-05"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.0545199999999113
+    },
+    {
+      "id": "A07-06",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A07-06"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.4844690000001037
+    },
+    {
+      "id": "A07-07",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A07-07"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.296055000000024
+    },
+    {
+      "id": "A07-08",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A07-08"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1615419999999403
+    },
+    {
+      "id": "A07-09",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A07-09"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1492729999999938
+    },
+    {
+      "id": "A08-00",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "A08-00"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1728479999999308
+    },
+    {
+      "id": "A08-01",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "A08-01"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1299739999999474
+    },
+    {
+      "id": "A08-02",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [
+        "A08-02"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.3310669999999618
+    },
+    {
+      "id": "A08-03",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "A08-03"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.1612410000000182
+    },
+    {
+      "id": "A08-04",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "A08-04"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.5504280000000108
+    },
+    {
+      "id": "A08-05",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [
+        "A08-05"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.2272009999999227
+    },
+    {
+      "id": "A08-06",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A08-06"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.013278000000014
+    },
+    {
+      "id": "A08-07",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A08-07"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.356525999999917
+    },
+    {
+      "id": "A08-08",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A08-08"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 1.0913759999999684
+    },
+    {
+      "id": "A08-09",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [
+        "A08-09"
+      ],
+      "rank": null,
+      "passed": false,
+      "unexpected": 1,
+      "latency_ms": 0.9627320000000736
+    },
+    {
+      "id": "A09-00",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.5539659999999458
+    },
+    {
+      "id": "A09-01",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.3691870000000108
+    },
+    {
+      "id": "A09-02",
+      "kind": "adversarial",
+      "split": "holdout",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.22037199999999757
+    },
+    {
+      "id": "A09-03",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.27876000000003387
+    },
+    {
+      "id": "A09-04",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.20629200000007586
+    },
+    {
+      "id": "A09-05",
+      "kind": "adversarial",
+      "split": "train",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.21781800000007934
+    },
+    {
+      "id": "A09-06",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.20925599999998212
+    },
+    {
+      "id": "A09-07",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.2695370000000139
+    },
+    {
+      "id": "A09-08",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.25551599999994323
+    },
+    {
+      "id": "A09-09",
+      "kind": "adversarial",
+      "split": "dev",
+      "expected_ids": [],
+      "actual_ids": [],
+      "rank": null,
+      "passed": true,
+      "unexpected": 0,
+      "latency_ms": 0.25502499999993233
+    }
+  ]
+}

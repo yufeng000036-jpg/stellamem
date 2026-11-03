@@ -172,7 +172,7 @@ class BridgeGuiTests(unittest.TestCase):
             status, _ = _post(
                 srv.url + "/approve",
                 {"token": TOKEN, "id": "bridge-0001", "approver": "x", "confirmed_full_text": "1"},
-                headers={"Origin": "http://127.0.0.1:9999"},
+                headers={"Origin": srv.url},
             )
             self.assertEqual(status, 200)
         self.assertEqual(store.get("bridge-0001")["status"], "approved")

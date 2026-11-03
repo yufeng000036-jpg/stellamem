@@ -44,6 +44,8 @@ ALIASES = {
 
 def validate_subject(subject) -> str:
     """Return the canonical namespace, or raise ValueError."""
+    if not isinstance(subject, str):
+        raise ValueError("subject namespace must be text")
     if subject in SUBJECTS:
         return subject
     if subject in ALIASES:
@@ -64,14 +66,18 @@ def subject_of(record: dict) -> str | None:
     """
     if not isinstance(record, dict):
         return None
-    if "namespace" in record and record.get("namespace") is not None:
+    if "namespace" in record:
         value = record.get("namespace")
+        if not isinstance(value, str):
+            return None
         if value in SUBJECTS:
             return value
         if value in ALIASES:
             return ALIASES[value]
         return None
     value = record.get("subject")
+    if not isinstance(value, str):
+        return None
     if value in SUBJECTS:
         return value
     if value in ALIASES:

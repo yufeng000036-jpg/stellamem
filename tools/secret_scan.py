@@ -25,10 +25,6 @@ VALUE_RULES = [
     for pattern in RULES["secret"]
     if not pattern.endswith(r"[^\r\n,}]+") or "PRIVATE KEY" in pattern
 ]
-# Rule/definition files legitimately contain the patterns themselves.
-SKIP_FILES = {"shared/policy-rules.json", "tools/secret_scan.py"}
-# Marker lets a test declare a synthetic value that must not fail the scan.
-ALLOW_MARKERS = ("secret-scan: synthetic", "gitleaks:allow", "synthetic", "fictional", "<YOUR_")
 # Known synthetic detection fixtures committed before the allowlist marker existed.
 # These are fabricated strings used to test the detector itself; no real credential
 # is present. Git history is intentionally not rewritten, so they are allowlisted by
@@ -51,21 +47,29 @@ HISTORY_ALLOWLIST = (
 SYNTHETIC_PRIVATE_KEY_BODIES = ("fake", "FAKEBODYLINE", "MIIEfakefakefake")
 
 
-def _is_allowlisted(line):
-    lowered = line.lower()
-    if any(marker.lower() in lowered for marker in ALLOW_MARKERS):
-        return True
-    if "PRIVATE KEY" in line and any(body in line for body in SYNTHETIC_PRIVATE_KEY_BODIES):
-        return True
-    return any(fixture in line for fixture in HISTORY_ALLOWLIST)
-
-
 def scan_text(text):
-    return [
-        i
-        for i, line in enumerate(text.splitlines(), 1)
-        if not _is_allowlisted(line) and any(rule.search(line) for rule in VALUE_RULES)
-    ]
+    # Exempt exact *matches*, never an entire line or a marker word. Removing a
+    # verified complete fake PEM block first keeps unrelated matches visible.
+    findings = []
+    for i, line in enumerate(text.splitlines(), 1):
+        candidate = line
+        for body in SYNTHETIC_PRIVATE_KEY_BODIES:
+            for separator in (r"\n", r"\\n"):
+                block = (
+                    ("-----BEGIN " + "PRIVATE KEY-----")
+                    + separator
+                    + body
+                    + separator
+                    + "-----END PRIVATE KEY-----"
+                )
+                candidate = candidate.replace(block, "")
+        if any(
+            match.group(0) not in HISTORY_ALLOWLIST
+            for rule in VALUE_RULES
+            for match in rule.finditer(candidate)
+        ):
+            findings.append(i)
+    return findings
 
 
 def main():
@@ -80,7 +84,7 @@ def main():
     files = subprocess.check_output(["git", "ls-files", "-z"], cwd=ROOT).decode().split("\0")
     findings = []
     for name in files:
-        if not name or name in SKIP_FILES:
+        if not name:
             continue
         path = ROOT / name
         if path.is_file():

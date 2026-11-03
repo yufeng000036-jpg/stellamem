@@ -1,0 +1,275 @@
+{
+  "source_capture_acceptance": "NOT_MET: SQLite host; legacy autolog requires JSONL",
+  "source_probe": {
+    "sqlite_present": true,
+    "jsonl_directory_present": false,
+    "exit": 1,
+    "diagnostic": {
+      "name": "Host source capture",
+      "status": "FAIL",
+      "cause": "SQLite-backed OpenClaw detected; daily-autolog only supports legacy JSONL",
+      "fix": "Keep legacy autolog disabled. A reviewed host source adapter is required; do not change the database or fabricate missing source text"
+    }
+  },
+  "host_version": "2026.10.9",
+  "kind": "REAL embedded OpenClaw CLI and before_prompt_build hook; deterministic local provider fixture",
+  "not_measured": [
+    "model answer intelligence",
+    "production gateway service",
+    "daily-autolog capture",
+    "OS reboot"
+  ],
+  "results": [
+    {
+      "case": "first_install",
+      "pass": true
+    },
+    {
+      "case": "repeat_install",
+      "pass": true
+    },
+    {
+      "case": "pending_not_injected",
+      "pass": true,
+      "exit": 0,
+      "provider_calls": 1,
+      "seconds": 19.79724346599994
+    },
+    {
+      "case": "missing_host_permission_negative_control",
+      "pass": true,
+      "exit": 0,
+      "provider_calls": 1,
+      "seconds": 15.136220428000001
+    },
+    {
+      "case": "approved_actual_hook",
+      "pass": true,
+      "exit": 0,
+      "provider_calls": 1,
+      "seconds": 14.005320589999997
+    },
+    {
+      "case": "fresh_host_process_recall",
+      "pass": true,
+      "exit": 0,
+      "provider_calls": 1,
+      "seconds": 14.811371835000045
+    },
+    {
+      "case": "approval_rollback",
+      "pass": true,
+      "exit": 0,
+      "provider_calls": 1,
+      "seconds": 15.606709574000092
+    },
+    {
+      "case": "same_user_two_explicit_scopes",
+      "pass": true,
+      "exit": 0,
+      "provider_calls": 1,
+      "seconds": 14.641494025999918
+    },
+    {
+      "case": "ungranted_scopes",
+      "pass": true,
+      "exit": 0,
+      "provider_calls": 1,
+      "seconds": 13.96035723
+    },
+    {
+      "case": "user_isolation",
+      "pass": true,
+      "exit": 0,
+      "provider_calls": 1,
+      "seconds": 14.621935921000045
+    },
+    {
+      "case": "persona_isolation",
+      "pass": true,
+      "exit": 0,
+      "provider_calls": 1,
+      "seconds": 14.444841587000042
+    },
+    {
+      "case": "viewer_isolation",
+      "pass": true,
+      "exit": 0,
+      "provider_calls": 1,
+      "seconds": 15.513084107000054
+    },
+    {
+      "case": "unresolved_conflict",
+      "pass": true,
+      "exit": 0,
+      "provider_calls": 1,
+      "seconds": 14.731670940000072
+    },
+    {
+      "case": "expired_fact",
+      "pass": true,
+      "exit": 0,
+      "provider_calls": 1,
+      "seconds": 14.835237560999985
+    },
+    {
+      "case": "legacy_v2_and_prose",
+      "pass": true,
+      "exit": 0,
+      "provider_calls": 1,
+      "seconds": 14.949703187999944
+    },
+    {
+      "case": "invalid_config_fail_closed",
+      "pass": true,
+      "exit": 1,
+      "provider_calls": 0,
+      "seconds": 2.9120433680000133
+    },
+    {
+      "case": "interrupted_transaction_blocks_hook",
+      "pass": true,
+      "exit": 0,
+      "provider_calls": 1,
+      "seconds": 15.928446927999971
+    },
+    {
+      "case": "recovery_restores_actual_hook",
+      "pass": true,
+      "exit": 0,
+      "provider_calls": 1,
+      "seconds": 15.356254313999898
+    }
+  ],
+  "logs": [
+    {
+      "case": "pending_not_injected",
+      "exit": 0,
+      "final_prompt": "fictional habitat preference",
+      "runner": "embedded",
+      "effective_model": "transport-fixture",
+      "stderr": "[plugins] stellamem-adapter: OpenClaw can't verify where this plugin came from. Review it with 'openclaw plugins inspect stellamem-adapter'. Adding it to plugins.allow lets it load, but does not make it trusted. If it's an official plugin, reinstall it from its official npm package or its official ClawHub listing to enable trusted features. reason=record-missing; registryPath=\"<ISOLATED>/host/state/openclaw.sqlite\"; origin=\"global\"; installSource=null; installSpec=null. (<ISOLATED>/host/extensions/stellamem-adapter/index.js)\n[agents/agent-command] [agent] run 07c25813-73b2-4ab1-b64c-90cadaf85313 ended with stopReason=stop\n[state/agent-db] agent database clean-close receipt: active-leases\n[state/agent-db] agent database clean-close receipt: written\n"
+    },
+    {
+      "case": "missing_host_permission_negative_control",
+      "exit": 0,
+      "final_prompt": "fictional habitat preference",
+      "runner": "embedded",
+      "effective_model": "transport-fixture",
+      "stderr": "[plugins] stellamem-adapter: OpenClaw can't verify where this plugin came from. Review it with 'openclaw plugins inspect stellamem-adapter'. Adding it to plugins.allow lets it load, but does not make it trusted. If it's an official plugin, reinstall it from its official npm package or its official ClawHub listing to enable trusted features. reason=record-missing; registryPath=\"<ISOLATED>/host/state/openclaw.sqlite\"; origin=\"global\"; installSource=null; installSpec=null. (<ISOLATED>/host/extensions/stellamem-adapter/index.js)\n[state/agent-db] agent database integrity gate\n[agents/agent-command] [agent] run 36a7514f-e128-4d29-bc99-46597670d609 ended with stopReason=stop\n[state/agent-db] agent database clean-close receipt: active-leases\n[state/agent-db] agent database clean-close receipt: written\n"
+    },
+    {
+      "case": "approved_actual_hook",
+      "exit": 0,
+      "final_prompt": "fictional habitat preference",
+      "runner": "embedded",
+      "effective_model": "transport-fixture",
+      "stderr": "[plugins] stellamem-adapter: OpenClaw can't verify where this plugin came from. Review it with 'openclaw plugins inspect stellamem-adapter'. Adding it to plugins.allow lets it load, but does not make it trusted. If it's an official plugin, reinstall it from its official npm package or its official ClawHub listing to enable trusted features. reason=record-missing; registryPath=\"<ISOLATED>/host/state/openclaw.sqlite\"; origin=\"global\"; installSource=null; installSpec=null. (<ISOLATED>/host/extensions/stellamem-adapter/index.js)\n[state/agent-db] agent database integrity gate\n[agents/agent-command] [agent] run 28295ac7-e321-4062-8faa-e95fca750533 ended with stopReason=stop\n[state/agent-db] agent database clean-close receipt: active-leases\n[state/agent-db] agent database clean-close receipt: written\n"
+    },
+    {
+      "case": "fresh_host_process_recall",
+      "exit": 0,
+      "final_prompt": "fictional habitat preference",
+      "runner": "embedded",
+      "effective_model": "transport-fixture",
+      "stderr": "[plugins] stellamem-adapter: OpenClaw can't verify where this plugin came from. Review it with 'openclaw plugins inspect stellamem-adapter'. Adding it to plugins.allow lets it load, but does not make it trusted. If it's an official plugin, reinstall it from its official npm package or its official ClawHub listing to enable trusted features. reason=record-missing; registryPath=\"<ISOLATED>/host/state/openclaw.sqlite\"; origin=\"global\"; installSource=null; installSpec=null. (<ISOLATED>/host/extensions/stellamem-adapter/index.js)\n[state/agent-db] agent database integrity gate\n[agents/agent-command] [agent] run bb8f7c81-cdb0-4e10-b166-4cc9416c6f18 ended with stopReason=stop\n[state/agent-db] agent database clean-close receipt: active-leases\n[state/agent-db] agent database clean-close receipt: written\n"
+    },
+    {
+      "case": "approval_rollback",
+      "exit": 0,
+      "final_prompt": "fictional habitat preference",
+      "runner": "embedded",
+      "effective_model": "transport-fixture",
+      "stderr": "[plugins] stellamem-adapter: OpenClaw can't verify where this plugin came from. Review it with 'openclaw plugins inspect stellamem-adapter'. Adding it to plugins.allow lets it load, but does not make it trusted. If it's an official plugin, reinstall it from its official npm package or its official ClawHub listing to enable trusted features. reason=record-missing; registryPath=\"<ISOLATED>/host/state/openclaw.sqlite\"; origin=\"global\"; installSource=null; installSpec=null. (<ISOLATED>/host/extensions/stellamem-adapter/index.js)\n[state/agent-db] agent database integrity gate\n[agents/agent-command] [agent] run 5528ded6-c0cf-4fec-9858-812fd04385d1 ended with stopReason=stop\n[state/agent-db] agent database clean-close receipt: active-leases\n[state/agent-db] agent database clean-close receipt: written\n"
+    },
+    {
+      "case": "same_user_two_explicit_scopes",
+      "exit": 0,
+      "final_prompt": "fictional habitat preference",
+      "runner": "embedded",
+      "effective_model": "transport-fixture",
+      "stderr": "[plugins] stellamem-adapter: OpenClaw can't verify where this plugin came from. Review it with 'openclaw plugins inspect stellamem-adapter'. Adding it to plugins.allow lets it load, but does not make it trusted. If it's an official plugin, reinstall it from its official npm package or its official ClawHub listing to enable trusted features. reason=record-missing; registryPath=\"<ISOLATED>/host/state/openclaw.sqlite\"; origin=\"global\"; installSource=null; installSpec=null. (<ISOLATED>/host/extensions/stellamem-adapter/index.js)\n[state/agent-db] agent database integrity gate\n[agents/agent-command] [agent] run fe1ce79d-b9fb-4f12-b033-2edfa7a36d23 ended with stopReason=stop\n[state/agent-db] agent database clean-close receipt: active-leases\n[state/agent-db] agent database clean-close receipt: written\n"
+    },
+    {
+      "case": "ungranted_scopes",
+      "exit": 0,
+      "final_prompt": "fictional habitat preference",
+      "runner": "embedded",
+      "effective_model": "transport-fixture",
+      "stderr": "[plugins] stellamem-adapter: OpenClaw can't verify where this plugin came from. Review it with 'openclaw plugins inspect stellamem-adapter'. Adding it to plugins.allow lets it load, but does not make it trusted. If it's an official plugin, reinstall it from its official npm package or its official ClawHub listing to enable trusted features. reason=record-missing; registryPath=\"<ISOLATED>/host/state/openclaw.sqlite\"; origin=\"global\"; installSource=null; installSpec=null. (<ISOLATED>/host/extensions/stellamem-adapter/index.js)\n[state/agent-db] agent database integrity gate\n[agents/agent-command] [agent] run 3c92a274-63e3-4186-b9ba-2afe228a6b67 ended with stopReason=stop\n[state/agent-db] agent database clean-close receipt: active-leases\n[state/agent-db] agent database clean-close receipt: written\n"
+    },
+    {
+      "case": "user_isolation",
+      "exit": 0,
+      "final_prompt": "fictional habitat preference",
+      "runner": "embedded",
+      "effective_model": "transport-fixture",
+      "stderr": "[plugins] stellamem-adapter: OpenClaw can't verify where this plugin came from. Review it with 'openclaw plugins inspect stellamem-adapter'. Adding it to plugins.allow lets it load, but does not make it trusted. If it's an official plugin, reinstall it from its official npm package or its official ClawHub listing to enable trusted features. reason=record-missing; registryPath=\"<ISOLATED>/host/state/openclaw.sqlite\"; origin=\"global\"; installSource=null; installSpec=null. (<ISOLATED>/host/extensions/stellamem-adapter/index.js)\n[state/agent-db] agent database integrity gate\n[agents/agent-command] [agent] run 8009b670-a0cc-4730-980f-f346c9f9694d ended with stopReason=stop\n[state/agent-db] agent database clean-close receipt: active-leases\n[state/agent-db] agent database clean-close receipt: written\n"
+    },
+    {
+      "case": "persona_isolation",
+      "exit": 0,
+      "final_prompt": "fictional habitat preference",
+      "runner": "embedded",
+      "effective_model": "transport-fixture",
+      "stderr": "[plugins] stellamem-adapter: OpenClaw can't verify where this plugin came from. Review it with 'openclaw plugins inspect stellamem-adapter'. Adding it to plugins.allow lets it load, but does not make it trusted. If it's an official plugin, reinstall it from its official npm package or its official ClawHub listing to enable trusted features. reason=record-missing; registryPath=\"<ISOLATED>/host/state/openclaw.sqlite\"; origin=\"global\"; installSource=null; installSpec=null. (<ISOLATED>/host/extensions/stellamem-adapter/index.js)\n[state/agent-db] agent database integrity gate\n[agents/agent-command] [agent] run b504fc07-036f-418d-8efc-d92a4f6e9fe9 ended with stopReason=stop\n[state/agent-db] agent database clean-close receipt: active-leases\n[state/agent-db] agent database clean-close receipt: written\n"
+    },
+    {
+      "case": "viewer_isolation",
+      "exit": 0,
+      "final_prompt": "fictional habitat preference",
+      "runner": "embedded",
+      "effective_model": "transport-fixture",
+      "stderr": "[plugins] stellamem-adapter: OpenClaw can't verify where this plugin came from. Review it with 'openclaw plugins inspect stellamem-adapter'. Adding it to plugins.allow lets it load, but does not make it trusted. If it's an official plugin, reinstall it from its official npm package or its official ClawHub listing to enable trusted features. reason=record-missing; registryPath=\"<ISOLATED>/host/state/openclaw.sqlite\"; origin=\"global\"; installSource=null; installSpec=null. (<ISOLATED>/host/extensions/stellamem-adapter/index.js)\n[state/agent-db] agent database integrity gate\n[agents/agent-command] [agent] run 1fd228b7-a946-4055-a13b-f1ad92286be7 ended with stopReason=stop\n[state/agent-db] agent database clean-close receipt: active-leases\n[state/agent-db] agent database clean-close receipt: written\n"
+    },
+    {
+      "case": "unresolved_conflict",
+      "exit": 0,
+      "final_prompt": "fictional habitat preference",
+      "runner": "embedded",
+      "effective_model": "transport-fixture",
+      "stderr": "[plugins] stellamem-adapter: OpenClaw can't verify where this plugin came from. Review it with 'openclaw plugins inspect stellamem-adapter'. Adding it to plugins.allow lets it load, but does not make it trusted. If it's an official plugin, reinstall it from its official npm package or its official ClawHub listing to enable trusted features. reason=record-missing; registryPath=\"<ISOLATED>/host/state/openclaw.sqlite\"; origin=\"global\"; installSource=null; installSpec=null. (<ISOLATED>/host/extensions/stellamem-adapter/index.js)\n[state/agent-db] agent database integrity gate\n[agents/agent-command] [agent] run 6f113a6f-057b-45e5-afd3-0e686321e408 ended with stopReason=stop\n[state/agent-db] agent database clean-close receipt: active-leases\n[state/agent-db] agent database clean-close receipt: written\n"
+    },
+    {
+      "case": "expired_fact",
+      "exit": 0,
+      "final_prompt": "fictional habitat preference",
+      "runner": "embedded",
+      "effective_model": "transport-fixture",
+      "stderr": "[plugins] stellamem-adapter: OpenClaw can't verify where this plugin came from. Review it with 'openclaw plugins inspect stellamem-adapter'. Adding it to plugins.allow lets it load, but does not make it trusted. If it's an official plugin, reinstall it from its official npm package or its official ClawHub listing to enable trusted features. reason=record-missing; registryPath=\"<ISOLATED>/host/state/openclaw.sqlite\"; origin=\"global\"; installSource=null; installSpec=null. (<ISOLATED>/host/extensions/stellamem-adapter/index.js)\n[state/agent-db] agent database integrity gate\n[agents/agent-command] [agent] run be4c2bac-fe11-41d4-b6ed-f3d2b4753858 ended with stopReason=stop\n[state/agent-db] agent database clean-close receipt: active-leases\n[state/agent-db] agent database clean-close receipt: written\n"
+    },
+    {
+      "case": "legacy_v2_and_prose",
+      "exit": 0,
+      "final_prompt": "fictional habitat preference",
+      "runner": "embedded",
+      "effective_model": "transport-fixture",
+      "stderr": "[plugins] stellamem-adapter: OpenClaw can't verify where this plugin came from. Review it with 'openclaw plugins inspect stellamem-adapter'. Adding it to plugins.allow lets it load, but does not make it trusted. If it's an official plugin, reinstall it from its official npm package or its official ClawHub listing to enable trusted features. reason=record-missing; registryPath=\"<ISOLATED>/host/state/openclaw.sqlite\"; origin=\"global\"; installSource=null; installSpec=null. (<ISOLATED>/host/extensions/stellamem-adapter/index.js)\n[state/agent-db] agent database integrity gate\n[agents/agent-command] [agent] run c205cea8-0c19-44a5-9854-7bc287ae1cb8 ended with stopReason=stop\n[state/agent-db] agent database clean-close receipt: active-leases\n[state/agent-db] agent database clean-close receipt: written\n"
+    },
+    {
+      "case": "invalid_config_fail_closed",
+      "exit": 1,
+      "final_prompt": null,
+      "runner": null,
+      "effective_model": null,
+      "stderr": "OpenClaw config is invalid\nFile: <ISOLATED>/host.json\nProblem:\n  - plugins.entries.stellamem-adapter.config.requesterSubject: invalid config: must be equal to one of the allowed values (allowed: \"user\", \"persona\", \"viewer\")\nLegacy config keys detected:\n  - agents.defaults.models: Legacy agents.defaults.models restricts model overrides; run \"openclaw doctor --fix\" to migrate valid refs to agents.defaults.modelPolicy.allow.\n\nFix: openclaw doctor --fix\nInspect: openclaw config validate\nAudit, status, health, logs, and doctor commands still run with invalid config.\n"
+    },
+    {
+      "case": "interrupted_transaction_blocks_hook",
+      "exit": 0,
+      "final_prompt": "fictional habitat preference",
+      "runner": "embedded",
+      "effective_model": "transport-fixture",
+      "stderr": "[plugins] stellamem-adapter: OpenClaw can't verify where this plugin came from. Review it with 'openclaw plugins inspect stellamem-adapter'. Adding it to plugins.allow lets it load, but does not make it trusted. If it's an official plugin, reinstall it from its official npm package or its official ClawHub listing to enable trusted features. reason=record-missing; registryPath=\"<ISOLATED>/host/state/openclaw.sqlite\"; origin=\"global\"; installSource=null; installSpec=null. (<ISOLATED>/host/extensions/stellamem-adapter/index.js)\n[state/agent-db] agent database integrity gate\n[agents/agent-command] [agent] run 27a9edf6-d9b7-49b0-9a1e-4dbe25de9864 ended with stopReason=stop\n[state/agent-db] agent database clean-close receipt: active-leases\n[state/agent-db] agent database clean-close receipt: written\n"
+    },
+    {
+      "case": "recovery_restores_actual_hook",
+      "exit": 0,
+      "final_prompt": "fictional habitat preference",
+      "runner": "embedded",
+      "effective_model": "transport-fixture",
+      "stderr": "[plugins] stellamem-adapter: OpenClaw can't verify where this plugin came from. Review it with 'openclaw plugins inspect stellamem-adapter'. Adding it to plugins.allow lets it load, but does not make it trusted. If it's an official plugin, reinstall it from its official npm package or its official ClawHub listing to enable trusted features. reason=record-missing; registryPath=\"<ISOLATED>/host/state/openclaw.sqlite\"; origin=\"global\"; installSource=null; installSpec=null. (<ISOLATED>/host/extensions/stellamem-adapter/index.js)\n[state/agent-db] agent database integrity gate\n[agents/agent-command] [agent] run 3c52450a-bffe-4f11-9683-7b9b70c4650b ended with stopReason=stop\n[state/agent-db] agent database clean-close receipt: active-leases\n[state/agent-db] agent database clean-close receipt: written\n"
+    }
+  ],
+  "model_calls": 15
+}

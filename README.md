@@ -1,5 +1,9 @@
 # Stellamem · 星忆
 
+> **Reliability development branch (not a deployed release):** see [latest automation boundaries](docs/verification/AUTOLOG_BOUNDARY.md), [real host transport evidence](docs/verification/REAL_OPENCLAW.md), and [frozen independent evaluation](benchmark/longmemeval/PROTOCOL.md). Local regression: 426 Python / 8 Node; exact-SHA CI evidence is attached to draft PR #15. Older counts below describe historical milestones. Memory-quality acceptance and full host intake remain incomplete; no 9/10 claim.
+>
+> **Compatibility:** projection defaults to requester `user` and scope `global`; use explicit `requesterSubject` / `activeScopes` for other namespaces/tasks. An explicit invalid namespace fails closed. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
+
 > **Give AI memory a Git.** ｜ **给 AI 记忆一个 Git。**
 
 Stellamem 是一个**本地优先、可审计的 AI 长期记忆治理层**。
@@ -82,7 +86,7 @@ D4/D5 与步骤 2–7 合并后 338 测试 → D1/D3 合并后 347 测试 →
 
 **筛查与宿主（改进版 + PATCH1）：**
 - 只读 pending 筛查报告：只统计、不改状态、不激活；
-- OpenClaw Adapter：隔离真实宿主 E2E 通过（首个一等公民宿主）；
+- OpenClaw Adapter：隔离真实宿主的读取/注入检查通过；SQLite 会话自动采集尚未接通，完整 E2E 未验收；
 - AI 自举安装：`AI_BOOTSTRAP.md` + `INSTALL.md` + `setup.py`，支持 `--dry-run`、幂等安装，
   不覆盖已有自定义文件；离线演示用虚构数据，无需模型。
 
@@ -304,6 +308,10 @@ python compiler/memory.py doctor
 ```
 
 要求：**Python 3.10+**（核心只用标准库）。Node 仅在启用 OpenClaw 集成时可选。
+
+**自动采集边界：** 安装片段默认关闭旧版 `daily-autolog`，不改变已有宿主配置。
+它仅支持经过验证的 JSONL 会话来源；OpenClaw 2026.10.9 的 SQLite 会话采集尚未适配。
+`setup.py check` 会明确报告这一阻碍。已批准记忆的真实宿主注入已验证，但不能据此声称新对话会自动记住。
 
 > 👉 完整步骤见 [`docs/QUICKSTART.md`](docs/QUICKSTART.md)。
 > ⚠️ 需要本地模型服务（llama.cpp / Ollama / LM Studio 等），且**只接受环回地址**。

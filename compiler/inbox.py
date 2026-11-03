@@ -26,8 +26,9 @@ from security import contains_secret
 from storage import PROTECTED, Transaction, load_records, render_records, safe_path, writer_lock
 from store import INBOX, MemoryStore
 from cli_output import ensure_utf8_stdout
+from subjects import validate_subject
 
-EDITABLE = ("kind", "subject", "scope", "predicate", "value")
+EDITABLE = ("kind", "subject", "namespace", "scope", "predicate", "value")
 
 
 def _load_inbox(root):
@@ -89,13 +90,20 @@ def _apply_edits(record, args, root):
     for field in EDITABLE:
         value = getattr(args, field, None)
         if value is not None:
-            edits[field] = value
+            edits[field] = validate_subject(value) if field == "namespace" else value
     if not edits:
         return record, None
     updated = dict(record)
     updated.update(edits)
     updated["claim_id"] = claim_id(updated)
     updated["revision_id"] = claim_revision_id(updated)
+    # A human can move a pending topic into an already occupied namespace/slot.
+    # Recheck after edits so projection suppresses the unresolved old value.
+    # This only records uncertainty; it never chooses or overwrites a version.
+    active = MemoryStore(root).active_by_id.get(updated["claim_id"], [])
+    if active:
+        updated["relation_before_edit"] = record.get("relation")
+        updated["relation"] = "UNCERTAIN"
     history = list(record.get("edit_history", []))
     history.append(
         {
@@ -166,6 +174,13 @@ def cmd_approve(root, args):
     approved["claim_id"] = claim_id(approved)
     approved["revision_id"] = claim_revision_id(approved)
     approved["relation"] = approved.get("relation", "NEW")
+    if store.active_by_id.get(approved["claim_id"]):
+        # Approving a pending candidate is not a conflict-resolution command.
+        # Preserve both versions for deliberate review; never create a second
+        # active value or silently supersede a prior fact with this generic CLI.
+        raise ValueError(
+            "active claim already occupies this slot; explicit conflict resolution required"
+        )
     target = ROUTE.get(approved.get("kind"), INBOX)
     if target.replace("\\", "/") in PROTECTED:
         raise ValueError("refusing to write a protected core file")
@@ -197,6 +212,8 @@ def cmd_approve(root, args):
             "evidence": decided_record.get("evidence", ""),
             "review_action": "approve",
             "edited": bool(edit),
+            "namespace": approved.get("namespace"),
+            "namespace_before_review": record.get("namespace"),
         }
     ]
     store.dirty.add(INBOX)
@@ -257,7 +274,9 @@ def cmd_edit(root, args):
         raise ValueError("candidate is not pending")
     updated, edit = _apply_edits(record, args, root)
     if edit is None:
-        raise ValueError("no fields to edit; pass --value/--predicate/--subject/--kind/--scope")
+        raise ValueError(
+            "no fields to edit; pass --value/--predicate/--subject/--namespace/--kind/--scope"
+        )
     if contains_secret(updated):
         raise ValueError("edit introduces a secret; refused")
     records[records.index(record)] = updated
@@ -269,6 +288,11 @@ def cmd_edit(root, args):
 def add_edit_flags(parser):
     parser.add_argument("--kind")
     parser.add_argument("--subject")
+    parser.add_argument(
+        "--namespace",
+        choices=("user", "persona", "viewer"),
+        help="explicit human classification; keeps the topic/person subject unchanged",
+    )
     parser.add_argument("--scope")
     parser.add_argument("--predicate")
     parser.add_argument("--value")
