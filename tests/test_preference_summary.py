@@ -42,7 +42,8 @@ class ValidateCardTests(unittest.TestCase):
         )
         self.assertEqual(card["subject"], "钟丽潭")
         self.assertEqual(card["version"], 1)
-        self.assertEqual(card["status"], "active")
+        # 未写 status 时默认 pending，不能靠省略字段直接变成 active。
+        self.assertEqual(card["status"], "pending")
         self.assertIn("updated_at", card)
 
     def test_wrong_kind_rejected(self):
