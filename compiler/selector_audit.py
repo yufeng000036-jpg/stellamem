@@ -45,6 +45,7 @@ def audit(
     max_items: int = 6,
     min_score: float = 0.18,
     decay: bool = True,
+    namespace: str | None = None,
 ) -> dict:
     """诊断单条记录在 recall 链路各阶段的命运。"""
     db_path = Path(db_path)
@@ -77,18 +78,60 @@ def audit(
             }
         )
 
-        # 阶段 2：namespace 主体隔离
-        try:
-            ns = SU.subject_of(rec)
-            stages.append({"stage": "namespace", "pass": True, "namespace": ns})
-        except ValueError as exc:
-            stages.append({"stage": "namespace", "pass": False, "detail": str(exc)})
+        # 阶段 2：namespace 主体隔离。subject_of 返回 None 是未分类，必须失败关闭。
+        ns = SU.subject_of(rec)
+        requester = namespace.strip() if isinstance(namespace, str) else namespace
+        if requester == "":
+            requester = None
+        if ns is None:
+            stages.append(
+                {
+                    "stage": "namespace",
+                    "pass": False,
+                    "namespace": "unknown",
+                    "detail": "subject_of returned None; unclassified records are blocked",
+                }
+            )
             return {
                 "id": ident,
                 "prompt": prompt,
                 "stages": stages,
                 "verdict": "blocked_by_namespace",
             }
+        if requester is not None:
+            try:
+                requester_ns = SU.validate_subject(requester)
+            except ValueError as exc:
+                stages.append(
+                    {
+                        "stage": "namespace",
+                        "pass": False,
+                        "namespace": ns,
+                        "detail": str(exc),
+                    }
+                )
+                return {
+                    "id": ident,
+                    "prompt": prompt,
+                    "stages": stages,
+                    "verdict": "blocked_by_namespace",
+                }
+            if ns != requester_ns:
+                stages.append(
+                    {
+                        "stage": "namespace",
+                        "pass": False,
+                        "namespace": ns,
+                        "detail": f"requester {requester_ns} does not match record namespace {ns}",
+                    }
+                )
+                return {
+                    "id": ident,
+                    "prompt": prompt,
+                    "stages": stages,
+                    "verdict": "blocked_by_namespace",
+                }
+        stages.append({"stage": "namespace", "pass": True, "namespace": ns})
 
         # 阶段 3：status
         status = rec.get("status")
@@ -207,12 +250,25 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Stellamem selector-audit (read-only)")
     parser.add_argument("--db", required=True)
     parser.add_argument("--id", required=True, help="记录 id / claim_id / revision_id")
-    parser.add_argument("--prompt", required=True, help="召回查询串")
+    parser.add_argument("--prompt", "--query", required=True, help="召回查询串")
+    parser.add_argument(
+        "--namespace",
+        default=None,
+        help="请求方 namespace（user/persona/viewer）；与记录不一致则 blocked_by_namespace",
+    )
+    parser.add_argument(
+        "--subject",
+        default=None,
+        help="--namespace 的别名，请求方主体",
+    )
     parser.add_argument("--budget", type=int, default=1200)
     parser.add_argument("--max-items", type=int, default=6)
     parser.add_argument("--min-score", type=float, default=0.18)
     parser.add_argument("--no-decay", action="store_true")
     args = parser.parse_args(argv)
+    requester = args.namespace if args.namespace is not None else args.subject
+    if args.namespace is not None and args.subject is not None and args.namespace != args.subject:
+        parser.error("--namespace and --subject disagree")
 
     result = audit(
         args.db,
@@ -222,6 +278,7 @@ def main(argv=None):
         max_items=args.max_items,
         min_score=args.min_score,
         decay=not args.no_decay,
+        namespace=requester,
     )
     print(json.dumps(result, ensure_ascii=False, indent=1))
 
