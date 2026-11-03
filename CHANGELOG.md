@@ -6,7 +6,7 @@
 
 ## Unreleased - attribution（外部致谢表述规范化）
 
-- 将文档与注释中的非正式表述（"偷/抄"）全部改写为正式外部致谢：
+- 将文档与注释中的非正式口语表述全部改写为正式外部致谢：
   `docs/GOVERNANCE-4-FEATURES.md`、`docs/MEMSKILL-LITE.md`、
   `docs/READABLE-MEMORY.md` 新增"外部致谢"小节（来源项目/采用功能/
   采用原因/适配差异四要素），`compiler/skills.py`、`benchmark/pii_audit.py`、
