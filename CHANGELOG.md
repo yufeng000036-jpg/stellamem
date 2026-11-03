@@ -4,10 +4,19 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased - attribution（外部致谢表述规范化）
+
+- 将文档与注释中的非正式表述（"偷/抄"）全部改写为正式外部致谢：
+  `docs/GOVERNANCE-4-FEATURES.md`、`docs/MEMSKILL-LITE.md`、
+  `docs/READABLE-MEMORY.md` 新增"外部致谢"小节（来源项目/采用功能/
+  采用原因/适配差异四要素），`compiler/skills.py`、`benchmark/pii_audit.py`、
+  `docs/LAUNCH_COPY.md`、`CHANGELOG.md`、`PUBLIC-CHANGELOG.md` 同步改写。
+  功能代码零改动。
+
 ## Unreleased - governance-4-features（借鉴记忆管家 V4.0.6）
 
-设计文档：`docs/GOVERNANCE-4-FEATURES.md`。4 个功能按 Stellamem 架构适配，
-不是照抄；铁律：衰减只降可检索性不删除、快照/回滚为显式运维操作、
+设计文档：`docs/GOVERNANCE-4-FEATURES.md`。4 个功能按 Stellamem 架构独立实现，
+而非简单复制；铁律：衰减只降可检索性不删除、快照/回滚为显式运维操作、
 core 画像与 pinned 记录不参与衰减。
 
 ### 新增

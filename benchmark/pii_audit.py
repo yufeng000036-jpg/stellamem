@@ -142,7 +142,7 @@ def scan_text(text):
         "idcard_rejected": len(raw_ids) - len(valid_ids),
         "disability": len(dis),
         "secret": len(secrets),
-        # 只保留不可逆短指纹，用于区分"一个号码被抄了很多份"与"真的有很多号码"
+        # 只保留不可逆短指纹，用于区分"一个号码被复制了很多份"与"真的有很多号码"
         "u_phone": {_tag(v) for v in phones},
         "u_idcard": {_tag(v) for v in valid_ids},
         "u_disability": {_tag(v) for v in dis},

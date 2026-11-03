@@ -1,7 +1,7 @@
 """Skill Bank：把"怎么记"做成命名、版本化、可审计的记忆技能。
 
-设计来源：MemSkill 论文（arXiv:2602.02474）的轻量适配——只偷"技能表示法"
-和"记法可进化"的思想，不偷 RL 训练闭环（见 docs/MEMSKILL-LITE.md）。
+设计来源：MemSkill 论文（arXiv:2602.02474）的轻量适配——采用其"技能表示法"
+和"记法可进化"的思想，未采用其 RL 训练闭环（见 docs/MEMSKILL-LITE.md）。
 
 一个 skill 描述的是一套可复用的记忆操作：何时用、怎么用、约束是什么。
 初始 skill 集 = MemSkill 的 INSERT/UPDATE/DELETE/SKIP 四原语 +
