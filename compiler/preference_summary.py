@@ -20,14 +20,20 @@ transferable personalisation》(EMNLP 2026) 的"可读记忆"主张 ——
 （忠实度）是人工评审的判断 —— 模块管"有没有"，人管"对不对"，
 与桥接"AI 起草、人拍板"的治理哲学一致。
 
+写入：
+    - create / update 的 status 是 pending，具名人类 approve 之后才是 active；
+    - 每个版本的 text/evidence/status 追加进历史，不覆盖旧版本；
+    - rollback(version, by) 再追加一条 pending，正文来自那个旧版本。
+
 本模块不做：
     - 不做语义忠实度自动判定（不可靠，不硬上）；
-    - 不接 recall/注入（后续可做，见 docs/READABLE-MEMORY.md）；
+    - 不接 recall/注入（召回侧另见 search.py；这里只产卡片对象）；
     - 不碰生产、不写用户库，只做内存对象 + 可选的 JSONL 审计。
 """
 
 from __future__ import annotations
 
+import copy
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -86,9 +92,10 @@ def validate_card(card: dict) -> dict:
     version = card.get("version", 1)
     if not isinstance(version, int) or version < 1:
         raise PreferenceEvidenceError("version 必须是 >= 1 的整数")
-    status = card.get("status", "active")
-    if status not in ("active", "withdrawn"):
-        raise PreferenceEvidenceError("status 只能是 active/withdrawn")
+    # 未写 status 时默认 pending：新建/改写都要等人审，不能直接 active。
+    status = card.get("status", "pending")
+    if status not in ("pending", "active", "withdrawn"):
+        raise PreferenceEvidenceError("status 只能是 pending/active/withdrawn")
     return {
         "kind": PREFERENCE_SUMMARY_KIND,
         "subject": subject,
@@ -101,21 +108,24 @@ def validate_card(card: dict) -> dict:
 
 
 class PreferenceCardStore:
-    """偏好卡的内存存储 + 只增审计。
+    """偏好卡的内存存储 + 只增审计 + 只增版本历史。
 
-    只管卡片对象本身，不写用户库、不碰生产。审计日志是 JSONL 只增文件，
-    拒绝写入同样记审计（action=rejected），可回查"这条为什么没写进去"。
+    新建和更新都进入 pending，须具名人类 approve 后才变 active。
+    每个版本的正文单独保存，只追加、不改旧版本；rollback 追加一条新的
+    pending 版本，内容来自指定旧版本。审计记下操作、版本和正文。
+    不管用户库、不碰生产。拒绝写入同样记审计（action=rejected）。
     """
 
     def __init__(self, audit_path=None, now_fn=None):
         self.audit_path = Path(audit_path) if audit_path else None
         self.now_fn = now_fn or _now_iso
         self.cards: dict[str, dict] = {}
+        self._history: dict[str, list[dict]] = {}
         if self.audit_path:
             self.audit_path.parent.mkdir(parents=True, exist_ok=True)
 
     # -- audit ---------------------------------------------------------
-    def _audit(self, action: str, subject: str, version=None, note: str = "") -> None:
+    def _audit(self, action: str, subject: str, version=None, note: str = "", content=None) -> None:
         entry = {
             "ts": self.now_fn(),
             "action": action,
@@ -124,13 +134,44 @@ class PreferenceCardStore:
             "version": version,
             "note": note,
         }
+        if content is not None:
+            entry["content"] = copy.deepcopy(content)
         if self.audit_path:
             with open(self.audit_path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
+    def _content(self, card: dict) -> dict:
+        return {
+            "text": card.get("text"),
+            "evidence": copy.deepcopy(card.get("evidence")),
+            "status": card.get("status"),
+        }
+
+    def _commit(self, card: dict, action: str, note: str = "") -> dict:
+        """追加不可变快照。不修改已有版本。"""
+        snap = copy.deepcopy(card)
+        self._history.setdefault(snap["subject"], []).append(snap)
+        self.cards[snap["subject"]] = copy.deepcopy(snap)
+        self._audit(
+            action,
+            snap["subject"],
+            version=snap["version"],
+            note=note,
+            content=self._content(snap),
+        )
+        return copy.deepcopy(snap)
+
+    def _named(self, by: str, action: str) -> str:
+        name = (by or "").strip()
+        if not name:
+            raise ValueError(f"{action} 需要具名人类（by 非空）")
+        return name
+
     # -- write ---------------------------------------------------------
     def create(self, subject: str, text: str, evidence: list[dict]) -> dict:
-        """新建偏好卡（version=1）。证据缺失即拒绝 + 记审计。"""
+        """新建偏好卡（version=1, status=pending）。证据缺失即拒绝 + 记审计。"""
+        if subject in self.cards:
+            raise KeyError(f"card already exists: {subject!r}")
         try:
             card = validate_card(
                 {
@@ -139,21 +180,19 @@ class PreferenceCardStore:
                     "text": text,
                     "evidence": evidence,
                     "version": 1,
-                    "status": "active",
+                    "status": "pending",
                     "updated_at": self.now_fn(),
                 }
             )
         except PreferenceEvidenceError as e:
             self._audit("rejected", str(subject), version=1, note=f"create: {e}")
             raise
-        self.cards[card["subject"]] = card
-        self._audit("created", card["subject"], version=1)
-        return dict(card)
+        return self._commit(card, "created")
 
     def update(
         self, subject: str, text: str | None = None, evidence: list[dict] | None = None
     ) -> dict:
-        """更新偏好卡：version+1，updated_at 刷新。证据规则同样强制。"""
+        """更新偏好卡：version+1，status 回到 pending，旧版本保留。"""
         old = self.cards.get(subject)
         if old is None:
             raise KeyError(f"no such card: {subject!r}")
@@ -165,34 +204,97 @@ class PreferenceCardStore:
             "text": text if text is not None else old["text"],
             "evidence": evidence if evidence is not None else old["evidence"],
             "version": old["version"] + 1,
-            "status": "active",
+            "status": "pending",
             "updated_at": self.now_fn(),
         }
         try:
             card = validate_card(merged)
         except PreferenceEvidenceError as e:
-            self._audit("rejected", subject, version=merged["version"], note=f"update: {e}")
+            self._audit(
+                "rejected",
+                subject,
+                version=merged["version"],
+                note=f"update: {e}",
+                content=self._content(old),
+            )
             raise
-        self.cards[subject] = card
-        self._audit("updated", subject, version=card["version"])
-        return dict(card)
+        return self._commit(card, "updated")
 
-    def withdraw(self, subject: str, reason: str = "") -> dict:
-        """撤回偏好卡：status=withdrawn，历史保留，可回查。"""
+    def approve(self, subject: str, by: str) -> dict:
+        """具名人类批准：pending -> active。正文不变，版本 +1，历史只追加。"""
+        name = self._named(by, "approve")
         old = self.cards.get(subject)
         if old is None:
             raise KeyError(f"no such card: {subject!r}")
-        card = dict(old)
-        card["status"] = "withdrawn"
-        card["updated_at"] = self.now_fn()
-        self.cards[subject] = card
-        self._audit("withdrawn", subject, version=card["version"], note=reason)
-        return dict(card)
+        if old["status"] != "pending":
+            raise PreferenceEvidenceError(f"status {old['status']!r} 不能批准，只有 pending 可以")
+        card = validate_card(
+            {
+                "kind": PREFERENCE_SUMMARY_KIND,
+                "subject": subject,
+                "text": old["text"],
+                "evidence": old["evidence"],
+                "version": old["version"] + 1,
+                "status": "active",
+                "updated_at": self.now_fn(),
+            }
+        )
+        card["approved_by"] = name
+        card["approved_at"] = self.now_fn()
+        return self._commit(card, "approved", note=f"by={name}")
+
+    def withdraw(self, subject: str, reason: str = "") -> dict:
+        """撤回偏好卡：追加 status=withdrawn 的新版本，旧版本保留。"""
+        old = self.cards.get(subject)
+        if old is None:
+            raise KeyError(f"no such card: {subject!r}")
+        card = validate_card(
+            {
+                "kind": PREFERENCE_SUMMARY_KIND,
+                "subject": subject,
+                "text": old["text"],
+                "evidence": old["evidence"],
+                "version": old["version"] + 1,
+                "status": "withdrawn",
+                "updated_at": self.now_fn(),
+            }
+        )
+        return self._commit(card, "withdrawn", note=reason)
+
+    def rollback(self, subject: str, version: int, by: str) -> dict:
+        """追加一条 pending 新版本，正文来自指定历史版本。不改旧记录。"""
+        name = self._named(by, "rollback")
+        old = self.cards.get(subject)
+        if old is None:
+            raise KeyError(f"no such card: {subject!r}")
+        prior = None
+        for snap in self._history.get(subject, []):
+            if snap.get("version") == version:
+                prior = snap
+                break
+        if prior is None:
+            raise KeyError(f"no version {version} for {subject!r}")
+        card = validate_card(
+            {
+                "kind": PREFERENCE_SUMMARY_KIND,
+                "subject": subject,
+                "text": prior["text"],
+                "evidence": prior["evidence"],
+                "version": old["version"] + 1,
+                "status": "pending",
+                "updated_at": self.now_fn(),
+            }
+        )
+        return self._commit(card, "rolled_back", note=f"by={name} to_version={version}")
 
     # -- read ----------------------------------------------------------
     def get(self, subject: str) -> dict | None:
         card = self.cards.get(subject)
-        return dict(card) if card else None
+        return copy.deepcopy(card) if card else None
+
+    def history(self, subject: str) -> list[dict]:
+        """按时间顺序返回该主体的全部版本（深拷贝）。"""
+        return [copy.deepcopy(snap) for snap in self._history.get(subject, [])]
 
     def list_active(self) -> list[dict]:
-        return [dict(c) for c in self.cards.values() if c["status"] == "active"]
+        return [copy.deepcopy(c) for c in self.cards.values() if c["status"] == "active"]

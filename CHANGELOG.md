@@ -170,6 +170,17 @@ core 画像与 pinned 记录不参与衰减。
 
 ---
 
+## Unreleased - pref-card-review（偏好卡进入人工复核 + 全量版本历史）
+
+- **偏好卡**（`compiler/preference_summary.py`）：`create` / `update` 不再直接
+  `status=active`。新卡和改写后的卡是 `pending`，`list_active()` 看不到，
+  直到具名人类 `approve(subject, by)`。`withdraw` 仍追加撤回版本。
+- 版本历史按主体只追加：每个版本保留当时的 text、evidence、status。
+  `rollback(subject, version, by)` 再追加一条 pending，正文来自该旧版本，
+  不改已经写下的记录。审计条目带 `content`（正文与证据），不只是操作和版本号。
+- `validate_card` 未写 status 时默认为 `pending`，允许 `pending` / `active` /
+  `withdrawn`。
+
 ## Unreleased - large diary reliability
 
 - 新增 MemSkill 轻量适配（`compiler/skills.py` + `compiler/designer_review.py`，见 `docs/MEMSKILL-LITE.md`）：Skill Bank 把记忆提取/整理/修剪收敛为命名、版本化、可审计的技能（INSERT/UPDATE/DELETE/SKIP 四原语 + 从现有流程提炼的 8 个领域技能）；Designer 只收集 hard cases 并生成 pending 提案，**永不自动生效**——新增/修改/删除 skill 必须具名人类批准。刻意未做 RL 训练闭环（原因见文档）。
@@ -179,6 +190,7 @@ core 画像与 pinned 记录不参与衰减。
   - 新增一等记忆类型 `preference_summary`（compiler/preference_summary.py）：
     subject/text/evidence/updated_at/version/status；每条陈述强制有证据，
     缺证据拒绝写入 + 记审计；支持更新（version+1）与撤回。
+    pref-card-review 起，新建和更新为 pending，批准后才 active，并保留逐版本正文。
   - 未采用 AlignXplore+ 两阶段训练（模型不开源、训练管线太重，文档留了原因）。
 - 默认编译分块调整为 2500 字符，llama.cpp 上下文窗口调整为 16384。
 - 将 `finish_reason=length` 与连接、超时错误分开；输出截断时递归重切。
