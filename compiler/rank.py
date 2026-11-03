@@ -53,6 +53,42 @@ DEFAULT_STABILITY_DAYS = 30.0
 # 衰减强度：1.0 = 按公式原样；<1 更温和；0 = 关闭
 DECAY_STRENGTH = 1.0
 
+# 全局半衰期覆盖（天）：None = 沿用按 kind 的稳定度；
+# 设为数字（如 90）则所有 kind 统一用该半衰期。configure_decay() 修改它。
+HALFLIFE_OVERRIDE_DAYS: float | None = None
+
+
+def configure_decay(halflife_days: float | None = None, strength: float = 1.0) -> dict:
+    """配置时效衰减。
+
+    halflife_days: 全局半衰期（天），如 90；None = 按 kind 的稳定度表；
+    strength: 衰减强度，0 = 关闭衰减。
+    返回当前配置（便于审计/测试）。
+    """
+    global HALFLIFE_OVERRIDE_DAYS, DECAY_STRENGTH
+    if halflife_days is not None and halflife_days <= 0:
+        raise ValueError("halflife_days must be positive or None")
+    HALFLIFE_OVERRIDE_DAYS = halflife_days
+    DECAY_STRENGTH = float(strength)
+    return {"halflife_days": HALFLIFE_OVERRIDE_DAYS, "strength": DECAY_STRENGTH}
+
+
+def _is_pinned(record: dict[str, Any]) -> bool:
+    """pinned 记录（core 画像、常客）不参与衰减。"""
+    return bool(record.get("pinned"))
+
+
+def _effective_stability_days(kind: str) -> float | None:
+    """生效的稳定度（天）；None = 永不衰减。
+
+    全局半衰期覆盖只作用于"会衰减"的 kind，identity / user-core / core
+    这类永不衰减的不受影响。
+    """
+    s = stability_days(kind)
+    if s is None:
+        return None
+    return HALFLIFE_OVERRIDE_DAYS if HALFLIFE_OVERRIDE_DAYS else s
+
 
 # ---------------------------------------------------------------- 工具
 
@@ -78,7 +114,10 @@ def stability_days(kind: str) -> float | None:
 def _timestamp_ms(record: dict[str, Any]) -> int | None:
     """取"最后提及时间"的近似值（毫秒）。
 
-    优先级：last_at / lastAt / hit_at > updated_at > ts > created_at > since
+    优先级：last_at / lastAt / hit_at > updated_at > occurred_at > observed_at
+            > ts > created_at > since
+    （occurred_at / observed_at 是索引表 records 的实际字段，必须在列，
+    否则真实数据上衰减会静默失效。）
     支持 int/float 毫秒、秒级时间戳，以及 ISO 字符串。
     """
     for key in (
@@ -87,6 +126,8 @@ def _timestamp_ms(record: dict[str, Any]) -> int | None:
         "hit_at",
         "updated_at",
         "updatedAt",
+        "occurred_at",
+        "observed_at",
         "ts",
         "created_at",
         "createdAt",
@@ -132,10 +173,12 @@ def _to_ms(value: Any) -> int | None:
 
 
 def retention(record: dict[str, Any], now_ms: int | None = None) -> float:
-    """保持度 R ∈ (0, 1]。永不衰减的 kind 返回 1.0。"""
+    """保持度 R ∈ (0, 1]。永不衰减的 kind / pinned 记录返回 1.0。"""
     if DECAY_STRENGTH <= 0:
         return 1.0
-    s_days = stability_days(_kind_of(record))
+    if _is_pinned(record):
+        return 1.0
+    s_days = _effective_stability_days(_kind_of(record))
     if s_days is None:
         return 1.0
     ts = _timestamp_ms(record)
@@ -187,10 +230,12 @@ def rank(
 def explain(record: dict[str, Any], now_ms: int | None = None) -> dict[str, Any]:
     """单条记忆的时效诊断，给排查用。"""
     kind = _kind_of(record)
-    s = stability_days(kind)
+    s = _effective_stability_days(kind)
     return {
         "kind": kind or "(unknown)",
         "stability_days": "inf" if s is None else s,
+        "halflife_override_days": HALFLIFE_OVERRIDE_DAYS,
+        "pinned": _is_pinned(record),
         "age_days": age_days(record, now_ms),
         "retention": round(retention(record, now_ms), 4),
         "decay_strength": DECAY_STRENGTH,

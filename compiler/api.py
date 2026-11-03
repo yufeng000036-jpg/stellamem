@@ -22,6 +22,7 @@ from urllib.parse import parse_qs, urlparse
 import indexer
 import reliability as rel
 import search as S
+import snapshots
 from storage import Transaction, load_records
 
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
@@ -54,6 +55,8 @@ class MemoryService:
         with self.lock:
             stats = self.index.stats()
             if force or not stats["records"]:
+                # F1：索引重建是写操作，先做轻量快照
+                snapshots.auto_snapshot(self.root, "index-rebuild")
                 meta = self.index.build(self.root)
                 self.rebuilt_at = meta["built_at"]
                 return meta
@@ -103,6 +106,8 @@ class MemoryService:
 
     def write_status(self, ident: str, status: str) -> dict:
         """把一条待审记忆改成 active/rejected，落事务 + 审计。"""
+        # F1：写前快照
+        snapshots.auto_snapshot(self.root, f"write-status-{status}")
         changes = {}
         for rel_path, _layer in indexer.MANAGED:
             path = self.root / rel_path
@@ -301,7 +306,13 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/v1/recall":
             payload = self._read_json()
             budget = int(payload.get("budget") or 1200)
-            result = S.recall(svc.index.con, payload.get("prompt") or "", budget_chars=budget)
+            result = S.recall(
+                svc.index.con,
+                payload.get("prompt") or "",
+                budget_chars=budget,
+                decay=bool(payload.get("decay", True)),
+                explain_decay=bool(payload.get("explain_decay", False)),
+            )
             return self._send(*_json(HTTPStatus.OK, result))
 
         # 以下为写操作

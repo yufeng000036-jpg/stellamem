@@ -96,6 +96,39 @@ def blacklist_hits(fields: dict) -> list[str]:
     return [w for w in BLACKLIST if w in blob]
 
 
+# 原始来源模式：疑似"原文/原始日志混入摘要"的噪音信号。
+# 与 BLACKLIST 同级 —— 只是给审批人的提示，不是安全边界。
+# 真正的边界永远是：人工看完全文后批准（见 docs/adr/0004-summary-only-bridge.md）。
+_RAW_PATTERNS = (
+    # 系统日志行：[时间] [INFO] ... / [2026-11-03 20:31:02] ...
+    (r"\[\d{2}:\d{2}:\d{2}\]\s*\[", "疑似系统日志行"),
+    (r"\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}", "疑似带时间戳的原始行"),
+    # 聊天 JSONL 原始行：{"type":"chat",...,"userId":...}
+    (r'\{[^{}]*"userId"\s*:', "疑似聊天原始 JSON 行"),
+    (r'\{[^{}]*"type"\s*:\s*"chat"', "疑似聊天原始 JSON 行"),
+    # 礼物事件原始格式：昵称(id=...) -> 物品 xN
+    (r"\(id=[^)]*\)\s*->", "疑似礼物事件原始行"),
+)
+
+
+def raw_source_hits(fields: dict) -> list[str]:
+    """检查桥接字段里是否混入了原始日志/原文。
+
+    返回命中的提示列表（去重）。这是噪音过滤器：命中只提醒审批人
+    逐条核对，不自动拒绝；没命中也不代表干净 —— 原文改写后同样可能
+    混入，人工看全文才是边界。
+    """
+    import re
+
+    blob = " ".join(str(v) for v in fields.values())
+    hits = []
+    for pattern, label in _RAW_PATTERNS:
+        if re.search(pattern, blob):
+            if label not in hits:
+                hits.append(label)
+    return hits
+
+
 def _serialized(method):
     """Serialize prototype operations and restore in-memory state on failure.
 
