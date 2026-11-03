@@ -1,6 +1,5 @@
 """F2 测试：Token 看板（只读）。合成数据，不碰真实记忆。"""
 
-import json
 import sqlite3
 import sys
 import tempfile

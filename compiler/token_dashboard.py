@@ -59,7 +59,6 @@ def dashboard(db_path: Path | str, budget_tokens: int = DEFAULT_BUDGET_TOKENS,
     con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
     con.row_factory = sqlite3.Row
     try:
-        cols = {r[1] for r in con.execute("PRAGMA table_info(records)").fetchall()}
         rows = [dict(r) for r in con.execute("SELECT * FROM records")]
     finally:
         con.close()

@@ -4,6 +4,37 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased - review-fixes（外部代码审查 4 项逻辑修复 + ruff）
+
+来源：第三方代码审查报告（2026-11-03），4 项问题已在 `b0de0c9` 源码中逐条核实属实，
+逐项修复并配回归测试（`tests/test_review_fixes_20261103.py`，10 项）。
+
+### 修复
+
+- **WAL 快照不一致**（`compiler/snapshots.py`）：`auto_snapshot()` 对 `.db` 文件改用
+  `sqlite3.Connection.backup()` 在线备份——生产 `index.db` 是 WAL 模式
+ （`indexer.py: PRAGMA journal_mode=WAL`），此前 `shutil.copy2` 只拷主文件会丢
+  `-wal` 里最近提交的数据。非 db 文件保持 `copy2`；manifest 新增 `method` 字段
+  注明备份方式；备份失败回退 `copy2`（旧行为）。
+- **偏好卡跨主体混入**（`compiler/search.py`）：`recall()` 新增可选参数 `pref_subject`，
+  `_match_pref_cards()` 在指定时只匹配该 subject 的卡——此前新偏好卡通道纯按文本
+  bigram 匹配、无请求者过滤，老 recall 通道的 namespace 规则在新通道没有等价边界。
+  多主体调用方必须传 `pref_subject`；不传 = 不过滤（保持旧行为）。
+- **Skill 选择移到提取之前**（`compiler/pipeline.py`）：`extract_chunks` 每个 chunk
+  提取**前**调 `select_skills`，选出的 skill `instructions` 拼入 `_extract_group` 的
+  system prompt（含递归重试路径），真正指导本次提取；此前是提取后才选、只做事后
+  标记。`SkillBank` 不可用时降级为纯 SYSTEM 提取。`docs/MEMSKILL-LITE.md` 补"诚实注记"。
+- **使用计数虚高**（`compiler/search.py`）：`usage_tracker.record_hit` 移到 budget
+  裁剪循环之后，只对实际进入注入文本的 extras 计数——此前在裁剪前计数，
+  被 budget 截掉没注入的卡也被记了命中（`budget_chars=0` 时旧代码会计 2 次）。
+
+### 杂项
+
+- Ruff：`compiler/token_dashboard.py:62` F841（`cols` 未使用，删除）、
+  `tests/test_governance_f2_dashboard.py` F401（未用的 `json` import，删除）——
+  `ruff check .` 现已全过，CI quality 门恢复绿色。
+- 全量测试：528 passed + 37 subtests（基线 518 零下跌）。
+
 ## Unreleased - batch2（外部借鉴+超越：Skill 接线 / 偏好卡注入 / 三件套 / 睡眠巩固）
 
 设计文档：`docs/BATCH2-BEYOND.md`；ADR：`docs/adr/0005-sleep-consolidation-text.md`。
