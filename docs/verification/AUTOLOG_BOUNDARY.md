@@ -1,5 +1,14 @@
 # Automatic intake boundary — 2026-11-03
 
+> Status note (2026-11-04): PR #15 is on main, and current main is `e732da5`
+> (also includes #28 and #29). Merge is not a production deployment. Stage E
+> remains NOT MET and Stage F remains CLOSED. Counts in this file (423 / 426
+> Python, 8 Node) are this run's evidence. The recount on `803df0d` was 563
+> Python tests + 42 subtests. The recount after #28 and #29 is 577 + 42, with
+> 8 Node tests. See README. LongMemEval v2 is still running and has no score.
+
+
+
 Resume baseline: PR #15 head 353e5e0, main 910f27d. All seven baseline jobs in
 run 41405907440 succeeded; all logs checked (423 Python / 8 Node per matrix job).
 The prior temporary environment was unavailable after interruption. Published

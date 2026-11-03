@@ -1,5 +1,10 @@
 # Stage C — safety repairs and module status
 
+> Status note (2026-11-04): this stage is on main. Current main is `e732da5`
+> (PR #15, #28, and #29). The counts below belong to that stage's CI run.
+> Merge is not production deployment. Stage E remains NOT MET and Stage F
+> remains CLOSED.
+
 Branch: `fix/reliability-evidence-20261102`. Input B code SHA `8430657cd73b2e43554af6d529361f8b9354ae2d`; [run 41396619335](https://github.com/yufeng000036-jpg/stellamem/actions/runs/41396619335) is all seven jobs SUCCESS, same SHA, six OS/Python groups each 381 Python/6 Node tests. Logs read for every job. CI uses Gitleaks 8.24.3 on the latest commit, not entire history; additionally verified local 8.24.3 and 8.30.1 tree/history and eight real controls. No workflow permissions needed.
 
 ## Reproduced defects and changes

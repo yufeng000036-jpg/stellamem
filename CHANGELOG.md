@@ -4,6 +4,31 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## 2026-11-04 - 文档对齐 main `e732da5`（PR #28 / #29 已合入）
+
+只改文档，外加 `compiler/preference_summary.py` 模块说明里一句过时的「不接 recall」。不改行为。
+
+### 合入
+
+- PR #28（`302128e`）与 PR #29（`e732da5`，当前 main）已在 main。合入不是生产部署。Stage E 仍是 NOT MET，Stage F 仍关闭。
+- 此前 #26（`83e4e9a`）与 #15（`803df0d`）也在 main。#26 合入后的 Engineering checks [run 41667719093](https://github.com/yufeng000036-jpg/stellamem/actions/runs/41667719093) 不是全绿（`tests (macos-latest, 3.10)` cancelled）。
+
+### 测试（在含 #28 / #29 的合并树上重跑）
+
+- Python 3.12.3：`python -m unittest discover -s tests` → **577 passed + 42 subtests**，0 失败。
+- Node.js 22.23.4：`node --test tests/hooks.test.mjs` → **8 passed**。
+- `803df0d` 上的 563 passed + 42 subtests 是 #28 / #29 之前的测量，不再代表当前 main。
+- 下文更早的 528、518、472 仍是那些改动当时的次数。
+
+### 状态
+
+- 对 `803df0d` 的五项代码缺口已在仓库里修好。回归测试：`tests/test_review_round2_20261104.py`（#28）、`tests/test_pref_card_review_20261104.py`（#29）。真实记忆库上的核验还没有做，需要所有者批准。
+- 外部审阅对 `803df0d` 的主观判断仍是 7.8/10。这不是基准分数，也不是对 `e732da5` 的新评分。Stage E / F 不因此改变。
+- LongMemEval v2 仍在跑，仓库里没有结果，因此没有分数。
+- `compiler/preference_summary.py` 的模块说明原先写「不接 recall」。召回注入在 `compiler/search.py`，说明已改成与代码一致。
+
+## 2026-11-04 - review-round2（PR #28，`302128e`）与 pref-card-review（PR #29，`e732da5`）
+
 ## Unreleased - review-round2（外部审查第二轮，快照 / 主体隔离 / 看板 / selector-audit）
 
 来源：对 main `803df0d` 的外部审查。四项均先用失败测试复现，再在根上修复，测试保留为回归。
@@ -28,6 +53,8 @@
   时 namespace 阶段失败，`namespace` 为 `unknown`，verdict 为
   `blocked_by_namespace`。CLI 补上文档里的 `--namespace` / `--subject` 和
   `--query`（`--prompt` 的别名）。
+- 回归：`tests/test_review_round2_20261104.py`。偏好卡复核在下一节，回归是
+  `tests/test_pref_card_review_20261104.py`。合成数据。真实记忆库未核验，需要所有者批准。
 
 ## Unreleased - review-fixes（外部代码审查 4 项逻辑修复 + ruff）
 
@@ -59,7 +86,7 @@
 - Ruff：`compiler/token_dashboard.py:62` F841（`cols` 未使用，删除）、
   `tests/test_governance_f2_dashboard.py` F401（未用的 `json` import，删除）——
   `ruff check .` 现已全过，CI quality 门恢复绿色。
-- 全量测试：528 passed + 37 subtests（基线 518 零下跌）。
+- 当时测量：528 passed + 37 subtests（相对当时的 518）。这不是当前 main 的次数。
 
 ## Unreleased - batch2（外部借鉴+超越：Skill 接线 / 偏好卡注入 / 三件套 / 睡眠巩固）
 
@@ -95,8 +122,8 @@
 
 ### 测试
 
-- 新增 46 项（`tests/test_batch2_*.py` ×5）；全量 518 passed + 37 subtests，
-  基线零下跌；`ruff` 通过；`tools/secret_scan.py` 干净。
+- 新增 46 项（`tests/test_batch2_*.py` ×5）。当时测量：518 passed + 37 subtests，
+  相对当时基线零下跌。这不是当前 main 的次数。当时 `ruff` 通过，`tools/secret_scan.py` 干净。
 
 ---
 
@@ -135,11 +162,11 @@
 
 ### 测试
 
-- 全量回归 **472 passed + 37 subtests**，基线全程零下跌；`tools/secret_scan.py` 干净。
+- 当时测量：**472 passed + 37 subtests**。这不是当前 main 的次数。当时 `tools/secret_scan.py` 干净。
 
 ### 已合入
 
-- PR #22（`feat/attribution-20261103`，`608acd11`）：外部致谢文档（"偷"表述改为正式致谢）。
+- PR #22（`feat/attribution-20261103`，`608acd11`）：外部致谢文档（口语来源表述改为正式致谢）。
 
 ### 待合入（draft）
 

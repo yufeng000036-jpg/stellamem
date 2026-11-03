@@ -1,16 +1,39 @@
 # Stellamem · 星忆
 
-> **Give AI memory a Git.**
+> **Give AI memory a Git.** Traceable, reviewable, revertible.
 
-A **local-first, auditable memory governance layer** for AI agents.
-Stellamem makes an AI's long-term memory **inspectable, traceable, versioned,
-reviewable and reversible** — instead of an opaque black box.
+Stellamem is an AI memory system that keeps memory on the machine and turns
+conversation into claims with evidence, relations, and human review. The
+model client accepts loopback endpoints only (`compiler/model_client.py`).
+The four goals are: remember, remember accurately, do not mix subjects, and
+do not leak. They are goals, not a completed acceptance.
+
+Running locally and retrieving text are not the differentiator. The MemOS
+README (notes dated 2026-11-04) already describes a local OpenClaw plugin
+with SQLite, FTS5, and vectors, and it self-reports LoCoMo 88.83 and
+LongMemEval 89.20. Those figures are theirs. **Stellamem has no public
+benchmark score.** The difference is governance: source hashes, pre-write
+snapshots, a human review inbox, a secret gate, and subject namespaces.
+Chinese status and the 9-point list: [`README.md`](README.md).
+
+Code on `main` (`e732da5`, including PR #15, #26, #28, and #29) is **not** a
+production deployment. Stage E is NOT MET. Stage F is CLOSED. See
+[`docs/verification/STAGES_E_F_STATUS.md`](docs/verification/STAGES_E_F_STATUS.md).
+An external reviewer's subjective rating of the earlier main `803df0d` was
+7.8/10. That is not a benchmark, not a new rating of `e732da5`, and it does
+not pass Stage E or open Stage F. The five code gaps from that review are
+fixed in #28 and #29. Real-data verification is still pending and needs the
+owner's approval. LongMemEval v2 is still running and has no result, so there
+is no score.
+
+Current recount on this tree: **577 passed + 42 subtests** (Python 3.12.3),
+**8** Node tests. The 563 on `803df0d` is the previous recount.
 
 <p align="center">
   <b>🚧 Alpha (v0.2.0-alpha)</b> ·
-  🦞 First fully validated host: OpenClaw ·
+  🦞 First host: OpenClaw ·
   🧩 Framework-agnostic core ·
-  🔒 Local-first ·
+  🔒 Memory stays on the machine ·
   📝 Markdown-first
 </p>
 
@@ -175,7 +198,7 @@ Stellamem is **not**:
 - ❌ a service that uploads all of your private data
 - ❌ a project that only exists if you use OpenClaw
 
-**OpenClaw is the first fully validated host, not the only host.**
+**OpenClaw is the first host wired in this tree, not the only possible host.** Isolated-host injection transport has evidence. Stage E is not passed.
 The core compiler is framework-agnostic.
 
 ---
@@ -184,7 +207,7 @@ The core compiler is framework-agnostic.
 
 | Capability | Status |
 |---|---|
-| OpenClaw Adapter | ✅ Alpha · isolated real-host E2E passed |
+| OpenClaw Adapter | Alpha · isolated-host injection transport has evidence; SQLite auto-intake is not adapted; Stage E is NOT MET |
 | Claim compiler | ✅ |
 | Relation Engine | ✅ |
 | Source provenance | ✅ |
@@ -196,7 +219,7 @@ The core compiler is framework-agnostic.
 | Local models (llama.cpp etc.) | ✅ |
 | Remote cloud models | 🚧 not supported (loopback only) |
 | Other agent adapters | 🚧 |
-| GUI | 🚧 |
+| GUI | 🚧 No desktop product GUI. Bridge loopback page exists and is test-imported only |
 | Sync | 🚧 |
 
 > Status reflects the **real implementation** only. 🚧 means not yet built.
@@ -247,10 +270,11 @@ Run the built-in checks and report whether installation succeeded.
 
 Short version below; full version in [`SECURITY.md`](SECURITY.md).
 
-- **Local-first** — your memory lives on your own machine by default.
-- **No raw conversation duplication** — Stellamem does not keep a second full copy
-  of the raw conversation. It stores source pointers and hashes; the original
-  stays in the host.
+- **On this machine** — memory is stored locally by default. That is where the
+  files live, not a claim that no other project runs locally.
+- **Original text** — the compile path stores source pointers and content hashes.
+  Optional `compiler/raw_archive.py` writes a second, append-only copy under
+  `<memories_root>/_raw/`. Do not read this as "a second copy is never stored."
 - **Secret before model** — secrets are detected and blocked before any model call.
 - **Sensitive review** — sensitive and identity content needs human confirmation
   and is **never auto-written**.
@@ -261,30 +285,30 @@ Short version below; full version in [`SECURITY.md`](SECURITY.md).
 
 ## Benchmark
 
-> **Benchmark results are experimental and limited to predefined test sets.**
-> These are internal version-comparison numbers, not an accuracy claim.
-
-- Samples: 30 diaries (single user)
-- Metrics: recall ≈ 0.705 / precision ≈ 0.505
-- `False Write = 0` **only** means no such failure was observed on the defined
-  adversarial samples; it does **not** mean the real-world error rate is zero.
-
-Full conditions and limitations: [`benchmark/README.md`](benchmark/README.md).
+**There is no public benchmark score.** MemOS README figures are not Stellamem
+scores. The old 30-diary recall ≈ 0.705 / precision ≈ 0.505 cannot be reproduced
+with the current matcher (`benchmark/README.md`). `False Write = 0` only means
+that failure was not observed on the defined adversarial samples. Stage E's
+reader Recall@1 of 1.00 is a synthetic projection contract and does not pass
+acceptance. The evaluation plan is unverified:
+[`docs/evaluation-plan.md`](docs/evaluation-plan.md).
 
 ---
 
 ## Current limitations
 
-- **OpenClaw is the only fully validated host** (core is framework-agnostic, but
-  other host adapters are not done)
+- **OpenClaw is the only host with an isolated transport trial** (core is
+  framework-agnostic; SQLite auto-intake is not adapted; other adapters are not done)
 - **Remote cloud models are not supported** — the model client is loopback-only
 - **Adapter retrieval is still keyword-based** — it can under-recall natural
   questions that share no token with a stored claim
 - **The local 4B model shows kind-classification drift**
 - **English temporary-emotion detection is incomplete**
-- **Distillation / retention release is not implemented**
-- **No GUI yet**
+- **`distill.py` is not in the tree.** Text sleep-consolidation is on main and is
+  not candidate A (candidate A is planned, not implemented; see the Chinese README)
+- **No desktop product GUI** (the bridge loopback page is not on the production call path)
 - **Not yet validated by a large external user base over time**
+- **Merged to main is not deployed to production.** Stage E is NOT MET. Stage F is CLOSED
 
 This transparency is part of the design, not a hidden defect.
 
@@ -329,9 +353,10 @@ with, or serve a person over time, it must be able to answer:
 - Can the user undo it?
 - Should sensitive content be recalled at all?
 
-Stellamem aims to become **the governance foundation for long-term AI memory**.
+The aim is a Git-like history for AI memory: traceable, reviewable, revertible.
+Governance is the differentiator. Local execution and retrieval are not.
 
-**OpenClaw is the first stop, not the destination.**
+**OpenClaw is the first stop, not the destination.** Code on main is not a production release.
 
 ---
 

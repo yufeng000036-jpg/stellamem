@@ -66,6 +66,6 @@ personalisation》（EMNLP 2026，Senior Area Chair Highlight Award）提出
 
 ## 后续可做（不阻塞本次）
 
-- `preference_summary` 接入 recall/注入（排序与展示）；
-- 偏好卡的使用频率回流为质量信号（轻量版"压力测试"）；
+- `preference_summary` 的 recall 通道在 `compiler/search.py`。#28 起，没有可信主体时偏好卡和规律项都返回空。#29 起，新建和更新是 pending，具名批准后才 active，历史只追加。真实数据核验还没有做，需要所有者批准。
+- 偏好卡的使用频率回流已有 `compiler/usage_signals.py`（只记信号）。把它用作质量判决仍未做。
 - 桥接摘要的忠实度抽查流程（人工抽检比例）。

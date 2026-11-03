@@ -33,9 +33,10 @@
 
 **Stellamem 适配**（注意 append-only 语义）：
 - Stellamem 已有 `reliability.snapshot()`（整树 zip）和事务级 `undo()`。
-  本功能补的是**轻量写前快照**：只对 `index.db` + 关键配置文件
-  （`config.json`、`openclaw.json` 除外——只读红线不碰）做文件级快照，
-  每次写操作（索引重建、标签写入、pending 落库、approve/reject）前自动触发。
+  本功能补的是**轻量写前快照**。`SNAPSHOT_FILES` 实际是
+  `stellamem-data/index.db` 与 `config.json`。`openclaw.json` 不在这份清单里。
+  自动调用点目前在 `compiler/api.py` 的索引重建和 `write_status`，
+  不是每一次写路径（标签写入、收件箱 CLI、`store.commit` 不会自动拍这份快照）。
 - 快照存 `system/snapshots/<ts>-<label>/`，每个文件记 SHA256，
   快照清单本身也记 SHA256；快照/回滚/清理全部写审计日志。
 - `restore_snapshot()` 是显式运维操作：必须传确认短语，否则抛错；
