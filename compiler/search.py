@@ -574,19 +574,25 @@ def _trim(text: str, width: int) -> str:
     return text if len(text) <= width else text[: width - 1] + "…"
 
 
-def _match_pref_cards(prompt_grams, cards, quota, min_score):
-    """偏好卡独立匹配通道：按 subject+text 的 bigram overlap 打分。"""
+def _match_pref_cards(prompt_grams, cards, quota, min_score, subject=None):
+    """偏好卡独立匹配通道：按 subject+text 的 bigram overlap 打分。
+
+    subject 非空时只匹配该主体的卡（主体隔离：老 recall 通道的 namespace
+    规则在新偏好卡通道的等价边界）。多主体调用方必须传 subject。
+    """
     scored = []
     for card in cards or []:
         if not isinstance(card, dict):
             continue
         if card.get("status") not in (None, "active"):
             continue
-        subject = str(card.get("subject") or "")
-        text = str(card.get("text") or "")
-        if not subject or not text:
+        card_subject = str(card.get("subject") or "")
+        if subject is not None and card_subject != str(subject):
             continue
-        score = overlap_score(prompt_grams, {"subject": subject, "value": text})
+        text = str(card.get("text") or "")
+        if not card_subject or not text:
+            continue
+        score = overlap_score(prompt_grams, {"subject": card_subject, "value": text})
         if score >= min_score:
             scored.append((score, card))
     scored.sort(key=lambda t: (-t[0], str(t[1].get("subject"))))
@@ -649,6 +655,7 @@ def recall(
     explain_decay: bool = False,
     preference_cards=None,
     pref_quota: int = 2,
+    pref_subject: str | None = None,
     patterns=None,
     pattern_quota: int = 1,
     usage_tracker=None,
@@ -661,6 +668,9 @@ def recall(
     explain_decay=True 时每个 item 附带 decay 诊断信息（调试用）。
     preference_cards: 可选的偏好卡列表（PreferenceCardStore.list_active() 的产出），
     走独立匹配通道注入，配额 pref_quota（默认 2），只占 max_items 剩余额度；
+    pref_subject: 可选的主体过滤——非空时偏好卡通道只匹配该 subject 的卡。
+    主体隔离红线：多主体场景（如直播间多位观众）的调用方必须传 pref_subject，
+    否则一张 prompt 可能召回其他主体的偏好卡。不传 = 不过滤（保持旧行为）。
     patterns: 可选的规律项列表（PatternStore.list("active") 的产出），
     得分已乘 0.8 权重（低于原始记录），配额 pattern_quota（默认 1）；
     注入项明确标注 kind，不破坏 398 候选域语义，namespace 规则不变；
@@ -698,21 +708,20 @@ def recall(
     if slots_left > 0:
         extras.extend(
             _match_pref_cards(
-                prompt_grams, preference_cards, min(pref_quota, slots_left), min_score
+                prompt_grams,
+                preference_cards,
+                min(pref_quota, slots_left),
+                min_score,
+                subject=pref_subject,
             )
         )
         slots_left = max(0, max_items - len(picked) - len(extras))
     if slots_left > 0:
         extras.extend(_match_patterns(prompt, patterns, min(pattern_quota, slots_left), min_score))
-    if usage_tracker is not None:
-        for ex in extras:
-            try:
-                usage_tracker.record_hit(ex["_usage_id"], kind=ex.get("kind", ""))
-            except Exception:
-                pass
     picked = picked + extras
 
     lines, used = [], 0
+    injected = []  # 实际进入注入文本的 extras（budget 裁剪后），用于使用计数
     for rec in picked:
         if "_extra_line" in rec:
             # 注入项（偏好卡/规律项）：行已预拼，有证据链，不参与 weak 判定。
@@ -721,6 +730,8 @@ def recall(
                 break
             lines.append(line)
             used += len(line) + 1
+            if "_usage_id" in rec:
+                injected.append(rec)
             continue
         # weak = 字面与语义都没有信号，纯粹按时间/重要性兜底出来的条目。
         # 上层据此决定"宁可说不知道"，不要拿它去误导。
@@ -737,6 +748,15 @@ def recall(
             break
         lines.append(line)
         used += len(line) + 1
+
+    # 使用计数：只对实际进入注入文本的 extras 计数（budget 裁剪之后）。
+    # 被 budget 截掉、没注入的卡不计——否则"被想起次数"虚高，污染质量信号。
+    if usage_tracker is not None:
+        for rec in injected:
+            try:
+                usage_tracker.record_hit(rec["_usage_id"], kind=rec.get("kind", ""))
+            except Exception:
+                pass
 
     return {
         "prompt": prompt,

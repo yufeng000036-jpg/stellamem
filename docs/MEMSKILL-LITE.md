@@ -102,6 +102,18 @@ python compiler/designer_review.py apply sp-20261103-001 --proposals system/skil
 
 ## 后续可做（不阻塞本次）
 
-- 把 `pipeline.py` 提取路径接入 `select_skills`（运行时选技能，目前 skills 只是注册表+文档）；
+- ~~把 `pipeline.py` 提取路径接入 `select_skills`（运行时选技能，目前 skills 只是注册表+文档）~~
+  → 已实现（PR #25）：`extract_chunks` 每个 chunk **提取前**调 `select_skills`，
+  选出的 skill 指令拼入提取 system prompt，真正指导本次提取（2026-11-03 修复：
+  此前实现是提取之后才选、只做事后标记，名不副实，已修正；另见下文"诚实注记"）。
 - hard-case 的自动收集（从 selector-audit / 召回失败日志里沉淀）；
 - 跨 skill 的组合策略（目前一次选多个，顺序无关）。
+
+## 诚实注记（2026-11-03）
+
+PR #25 的验收报告曾写"提取前调用 select_skills"，但当时代码实际是**提取之后**
+才选 skill、只记入 `skills_used` 元数据——描述与实现不符。已在此后修复：
+选择移到提取之前，skill 指令（`instructions` 字段）拼入 `_extract_group` 的
+system prompt（含递归重试路径），`SkillBank` 不可用时降级为纯 SYSTEM 提取。
+回归测试 `tests/test_review_fixes_20261103.py::SkillBeforeExtractTests`
+断言 skill 指令进了 prompt。

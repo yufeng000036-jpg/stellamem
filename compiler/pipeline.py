@@ -132,8 +132,11 @@ def _parse_claims(raw, safe, chunk_id):
     return claims, blocked
 
 
-def _extract_group(messages, chunk_id, config, llm, budget):
+def _extract_group(messages, chunk_id, config, llm, budget, system_prompt=None):
     """Extract claims for one group of messages, shrinking on truncation.
+
+    system_prompt: 可选的提取 system prompt（默认 SYSTEM）。SkillBank 选出的
+    skill 指令会拼在这里，真正指导本次提取（而不是事后标记）。
 
     A truncated response means the model ran out of output budget, so the same
     input is split on message/sentence boundaries and each part retried. Only
@@ -158,10 +161,11 @@ def _extract_group(messages, chunk_id, config, llm, budget):
         for i, m in enumerate(safe)
     ]
     encoded = json.dumps(payload, ensure_ascii=False)
+    sys_prompt = system_prompt or SYSTEM
     try:
         for attempt in range(2):
             try:
-                raw = parse_json(llm(SYSTEM, encoded))
+                raw = parse_json(llm(sys_prompt, encoded))
                 claims, extra = _parse_claims(raw, safe, chunk_id)
                 return claims, blocked + extra
             except InvalidModelOutput:
@@ -185,17 +189,36 @@ def _extract_group(messages, chunk_id, config, llm, budget):
                     for m in piece
                 ]
             )
-            part, extra = _extract_group(piece, sub_id, config, llm, next_budget)
+            part, extra = _extract_group(
+                piece, sub_id, config, llm, next_budget, system_prompt=system_prompt
+            )
             claims.extend(part)
             merged += extra
         return claims, merged
+
+
+def _skill_guidance(bank, picked) -> str:
+    """把选出的 skill 指令拼成提取 prompt 的指引段。取不到指令时只列名字。"""
+    parts = []
+    for p in picked:
+        name = p["skill"]
+        try:
+            sk = bank.get(name)
+            parts.append(f"- {sk.name}（v{sk.version}）：{sk.instructions}")
+        except Exception:
+            parts.append(f"- {name}")
+    if not parts:
+        return ""
+    return "\n\n本次提取请遵循以下记忆技能指引：\n" + "\n".join(parts)
 
 
 def extract_chunks(messages, config=None, llm=None, skill_bank=None):
     config = config or {}
     llm = llm or (lambda system, user: call_llm(system, user, config=config or None))
     chunk_chars = config.get("chunk_chars", DEFAULT_CHUNK_CHARS)
-    # Skill 运行时接线（PR #18 的后续）：提取任务按上下文选 skill，
+    # Skill 运行时接线：每个 chunk 提取**之前**按上下文选 skill，
+    # 选出的 skill 指令拼入提取 system prompt，真正指导本次提取
+    # （2026-11-03 修复：此前是提取之后才选、只做事后标记，名不副实）。
     # 安全网（evidence_verify + secret_gate + injection_screen）默认带上，
     # 每次选用记审计（SkillBank 内部）。规则选择，不引入 RL 训练。
     bank = skill_bank
@@ -205,17 +228,21 @@ def extract_chunks(messages, config=None, llm=None, skill_bank=None):
         chunk_id = digest(
             [{"text": m["text"], "pointer": m["provenance"], "offset": m["offset"]} for m in chunk]
         )
-        try:
-            claims, blocked = _extract_group(chunk, chunk_id, config, llm, chunk_chars)
-        except Exception as exc:
-            raise ChunkFailure(index, type(exc).__name__, chunk_id) from None
-        skills_used = []
+        skills_used, guidance = [], ""
         if bank is not None:
             sample = " ".join(m["text"][:200] for m in chunk[:3])
             picked = bank.select_skills(
                 {"task": "extract compile", "tags": ["extraction"], "text": sample}
             )
             skills_used = [p["skill"] for p in picked]
+            guidance = _skill_guidance(bank, picked)
+        system_prompt = SYSTEM + guidance if guidance else None
+        try:
+            claims, blocked = _extract_group(
+                chunk, chunk_id, config, llm, chunk_chars, system_prompt=system_prompt
+            )
+        except Exception as exc:
+            raise ChunkFailure(index, type(exc).__name__, chunk_id) from None
         yield {
             "index": index,
             "id": chunk_id,
