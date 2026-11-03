@@ -60,12 +60,18 @@ class SelectorAuditTests(unittest.TestCase):
     def test_injected_happy_path(self):
         db = _make_db()
         _insert(db, "c-hit", "测试诊断关键词 unique 太阳能板之详情")
-        r = SA.audit(db, "c-hit", "测试诊断关键词 unique 太阳能板",
-                     min_score=0.0)
+        r = SA.audit(db, "c-hit", "测试诊断关键词 unique 太阳能板", min_score=0.0)
         self.assertEqual(r["verdict"], "injected")
         stage_names = [s["stage"] for s in r["stages"]]
-        for expected in ("exists", "namespace", "status", "search", "decay",
-                         "dedup_topk", "budget"):
+        for expected in (
+            "exists",
+            "namespace",
+            "status",
+            "search",
+            "decay",
+            "dedup_topk",
+            "budget",
+        ):
             self.assertIn(expected, stage_names)
 
     def test_filtered_by_min_score(self):
@@ -79,8 +85,7 @@ class SelectorAuditTests(unittest.TestCase):
         for i in range(5):
             _insert(db, f"c-{i}", f"测试诊断关键词公共部分 filler{i} 区分")
         # max_items=2：5 条都进候选池，前 2 条被选中，c-4 被 top-k 截断
-        r = SA.audit(db, "c-4", "测试诊断关键词公共部分", min_score=0.0,
-                     max_items=2)
+        r = SA.audit(db, "c-4", "测试诊断关键词公共部分", min_score=0.0, max_items=2)
         self.assertEqual(r["verdict"], "cut_by_top_k")
         pos = [s for s in r["stages"] if s["stage"] == "dedup_topk"][0]
         self.assertIsNone(pos["position"])
@@ -90,8 +95,7 @@ class SelectorAuditTests(unittest.TestCase):
         # 前 40 字符相同 -> recall 去重折叠；但 48 字符内不同 -> search 不折叠
         _insert(db, "c-a", "去重目标关键词" + "x" * 33 + "甲乙丙丁")
         _insert(db, "c-b", "去重目标关键词" + "x" * 33 + "戊己庚辛")
-        r = SA.audit(db, "c-b", "去重目标关键词", min_score=0.0,
-                     max_items=10)
+        r = SA.audit(db, "c-b", "去重目标关键词", min_score=0.0, max_items=10)
         self.assertEqual(r["verdict"], "folded_by_dedup")
 
     def test_readonly(self):

@@ -189,8 +189,9 @@ def _extract_group(messages, chunk_id, config, llm, budget, system_prompt=None):
                     for m in piece
                 ]
             )
-            part, extra = _extract_group(piece, sub_id, config, llm, next_budget,
-                                          system_prompt=system_prompt)
+            part, extra = _extract_group(
+                piece, sub_id, config, llm, next_budget, system_prompt=system_prompt
+            )
             claims.extend(part)
             merged += extra
         return claims, merged
@@ -231,17 +232,24 @@ def extract_chunks(messages, config=None, llm=None, skill_bank=None):
         if bank is not None:
             sample = " ".join(m["text"][:200] for m in chunk[:3])
             picked = bank.select_skills(
-                {"task": "extract compile", "tags": ["extraction"], "text": sample})
+                {"task": "extract compile", "tags": ["extraction"], "text": sample}
+            )
             skills_used = [p["skill"] for p in picked]
             guidance = _skill_guidance(bank, picked)
         system_prompt = SYSTEM + guidance if guidance else None
         try:
-            claims, blocked = _extract_group(chunk, chunk_id, config, llm, chunk_chars,
-                                             system_prompt=system_prompt)
+            claims, blocked = _extract_group(
+                chunk, chunk_id, config, llm, chunk_chars, system_prompt=system_prompt
+            )
         except Exception as exc:
             raise ChunkFailure(index, type(exc).__name__, chunk_id) from None
-        yield {"index": index, "id": chunk_id, "claims": claims,
-               "secret_messages": blocked, "skills_used": skills_used}
+        yield {
+            "index": index,
+            "id": chunk_id,
+            "claims": claims,
+            "secret_messages": blocked,
+            "skills_used": skills_used,
+        }
 
 
 def compile_messages(messages, config=None, llm=None, skill_bank=None):

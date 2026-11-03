@@ -607,8 +607,8 @@ def _match_pref_cards(prompt_grams, cards, quota, min_score, subject=None):
             "score": score,
             "weak": False,
             "injected": "preference_card",
-            "_extra_line": "- [\u504f\u597d] %s: %s\uff08\u8bc1\u636e%d\u6761\uff09" % (
-                card.get("subject"), _trim(card.get("text"), 90), len(ev)),
+            "_extra_line": "- [\u504f\u597d] %s: %s\uff08\u8bc1\u636e%d\u6761\uff09"
+            % (card.get("subject"), _trim(card.get("text"), 90), len(ev)),
             "_usage_id": "pref:" + str(card.get("subject")),
         }
         out.append(rec)
@@ -632,9 +632,13 @@ def _match_patterns(prompt, patterns, quota, min_score):
             "score": hit["score"],
             "weak": False,
             "injected": "pattern",
-            "_extra_line": "- [\u89c4\u5f8b] %s %s: %s\uff08%d\u671f\u4f50\u8bc1\uff0c\u6743\u91cd\u00d70.8\uff09" % (
-                pat.get("subject"), pat.get("predicate"),
-                _trim(pat.get("value"), 90), pat.get("support") or 0),
+            "_extra_line": "- [\u89c4\u5f8b] %s %s: %s\uff08%d\u671f\u4f50\u8bc1\uff0c\u6743\u91cd\u00d70.8\uff09"
+            % (
+                pat.get("subject"),
+                pat.get("predicate"),
+                _trim(pat.get("value"), 90),
+                pat.get("support") or 0,
+            ),
             "_usage_id": "pattern:" + str(pat.get("id") or ""),
         }
         out.append(rec)
@@ -702,13 +706,18 @@ def recall(
     slots_left = max(0, max_items - len(picked))
     extras = []
     if slots_left > 0:
-        extras.extend(_match_pref_cards(prompt_grams, preference_cards,
-                                       min(pref_quota, slots_left), min_score,
-                                       subject=pref_subject))
+        extras.extend(
+            _match_pref_cards(
+                prompt_grams,
+                preference_cards,
+                min(pref_quota, slots_left),
+                min_score,
+                subject=pref_subject,
+            )
+        )
         slots_left = max(0, max_items - len(picked) - len(extras))
     if slots_left > 0:
-        extras.extend(_match_patterns(prompt, patterns,
-                                      min(pattern_quota, slots_left), min_score))
+        extras.extend(_match_patterns(prompt, patterns, min(pattern_quota, slots_left), min_score))
     picked = picked + extras
 
     lines, used = [], 0

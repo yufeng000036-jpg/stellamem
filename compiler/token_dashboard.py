@@ -40,9 +40,15 @@ def estimate_tokens(text: str) -> tuple[int, bool]:
     if counter is not None:
         return counter(text), False
     # 启发式：CJK 字符按 1.5 token，ASCII 按 4 字符 1 token
-    cjk = sum(1 for ch in text if "\u4e00" <= ch <= "\u9fff" or "\u3400" <= ch <= "\u4dbf"
-              or "\uf900" <= ch <= "\ufaff" or "\u3040" <= ch <= "\u30ff"
-              or "\uac00" <= ch <= "\ud7af")
+    cjk = sum(
+        1
+        for ch in text
+        if "\u4e00" <= ch <= "\u9fff"
+        or "\u3400" <= ch <= "\u4dbf"
+        or "\uf900" <= ch <= "\ufaff"
+        or "\u3040" <= ch <= "\u30ff"
+        or "\uac00" <= ch <= "\ud7af"
+    )
     ascii_chars = max(0, len(text) - cjk)
     return int(cjk * 1.5 + ascii_chars / 4), True
 
@@ -52,8 +58,9 @@ def _record_text(rec: dict) -> str:
     return "\n".join(p for p in parts if p)
 
 
-def dashboard(db_path: Path | str, budget_tokens: int = DEFAULT_BUDGET_TOKENS,
-              top_n: int = 10) -> dict:
+def dashboard(
+    db_path: Path | str, budget_tokens: int = DEFAULT_BUDGET_TOKENS, top_n: int = 10
+) -> dict:
     """只读统计。返回看板数据；不写库、不改文件。"""
     db_path = Path(db_path)
     con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
@@ -111,9 +118,7 @@ def dashboard(db_path: Path | str, budget_tokens: int = DEFAULT_BUDGET_TOKENS,
         },
         "top_consumers": token_rows[:top_n],
         # 超预算时的只读建议：优先复核这些大户（不自动删、不自动压）
-        "review_suggestions": (
-            [r["id"] for r in token_rows[:top_n]] if level == "red" else []
-        ),
+        "review_suggestions": ([r["id"] for r in token_rows[:top_n]] if level == "red" else []),
         "note": "只读看板；压实/删除必须走人工复核，本工具不执行。",
     }
 
@@ -137,8 +142,10 @@ def main(argv=None):
     print(f"记录总数: {data['records']}")
     print(f"按 namespace: {json.dumps(data['by_namespace'], ensure_ascii=False)}")
     print(f"按 status:    {json.dumps(data['by_status'], ensure_ascii=False)}")
-    print(f"Token 总量: {t['total']}{est} / 预算 {t['budget']}"
-          f"（{t['usage_ratio'] * 100:.1f}%）[{t['alert']}]")
+    print(
+        f"Token 总量: {t['total']}{est} / 预算 {t['budget']}"
+        f"（{t['usage_ratio'] * 100:.1f}%）[{t['alert']}]"
+    )
     print("Top 消耗:")
     for r in data["top_consumers"][:5]:
         print(f"  {r['tokens']:>6}  {r['id']}  [{r['namespace']}/{r['kind']}]")

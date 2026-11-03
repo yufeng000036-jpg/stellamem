@@ -200,9 +200,7 @@ class BridgeGuiBoundaryTests(unittest.TestCase):
         store = _store()
         with _server(store) as srv:
             for path in ("/deny", "/withdraw"):
-                code, body = self._post_error(
-                    srv, path, {"id": "bridge-0001", "approver": "x"}
-                )
+                code, body = self._post_error(srv, path, {"id": "bridge-0001", "approver": "x"})
                 self.assertEqual(code, 401)
                 self.assertNotIn(TOKEN, body)
         self.assertEqual(store.get("bridge-0001")["status"], "pending")

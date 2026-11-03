@@ -15,7 +15,10 @@ from bridge import raw_source_hits
 
 class RawSourceHitsTests(unittest.TestCase):
     def test_raw_gift_log_line_flagged(self):
-        fields = {"x": "钟丽潭", "result": "[20:31:02] [INFO] 礼物: 钟丽潭(id=277***94) -> 小心心 x235 (235音浪)"}
+        fields = {
+            "x": "钟丽潭",
+            "result": "[20:31:02] [INFO] 礼物: 钟丽潭(id=277***94) -> 小心心 x235 (235音浪)",
+        }
         hits = raw_source_hits(fields)
         self.assertTrue(hits, "原始礼物日志行应当被标记")
 

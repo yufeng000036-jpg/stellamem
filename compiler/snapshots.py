@@ -104,8 +104,12 @@ def auto_snapshot(root: Path | str, label: str) -> Path:
             shutil.copy2(src, target)
             method = "copy2"
         manifest["files"].append(
-            {"path": rel, "bytes": target.stat().st_size, "sha256": _sha256(target),
-             "method": method}
+            {
+                "path": rel,
+                "bytes": target.stat().st_size,
+                "sha256": _sha256(target),
+                "method": method,
+            }
         )
     manifest["digest"] = hashlib.sha256(
         "".join(e["sha256"] for e in manifest["files"]).encode("utf-8")
@@ -168,8 +172,7 @@ def restore_snapshot(
     """
     if confirm != CONFIRM_PHRASE:
         raise PermissionError(
-            "snapshot restore requires explicit confirmation "
-            f"(confirm={CONFIRM_PHRASE!r}); refused"
+            f"snapshot restore requires explicit confirmation (confirm={CONFIRM_PHRASE!r}); refused"
         )
     root = Path(root)
     snap_path = _snap_dir(root) / name

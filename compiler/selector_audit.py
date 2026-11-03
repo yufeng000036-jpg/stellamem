@@ -59,13 +59,23 @@ def audit(
             return {
                 "id": ident,
                 "prompt": prompt,
-                "stages": [{"stage": "exists", "pass": False,
-                            "detail": "索引中无此 id/claim_id/revision_id"}],
+                "stages": [
+                    {
+                        "stage": "exists",
+                        "pass": False,
+                        "detail": "索引中无此 id/claim_id/revision_id",
+                    }
+                ],
                 "verdict": "not_in_index",
             }
         target_id = rec["id"]
-        stages.append({"stage": "exists", "pass": True,
-                       "detail": f"claim_id={rec.get('claim_id')}, kind={rec.get('kind')}"})
+        stages.append(
+            {
+                "stage": "exists",
+                "pass": True,
+                "detail": f"claim_id={rec.get('claim_id')}, kind={rec.get('kind')}",
+            }
+        )
 
         # 阶段 2：namespace 主体隔离
         try:
@@ -73,34 +83,50 @@ def audit(
             stages.append({"stage": "namespace", "pass": True, "namespace": ns})
         except ValueError as exc:
             stages.append({"stage": "namespace", "pass": False, "detail": str(exc)})
-            return {"id": ident, "prompt": prompt, "stages": stages,
-                    "verdict": "blocked_by_namespace"}
+            return {
+                "id": ident,
+                "prompt": prompt,
+                "stages": stages,
+                "verdict": "blocked_by_namespace",
+            }
 
         # 阶段 3：status
         status = rec.get("status")
         if status != "active":
-            stages.append({"stage": "status", "pass": False,
-                           "detail": f"status={status!r}，recall 只取 active"})
-            return {"id": ident, "prompt": prompt, "stages": stages,
-                    "verdict": "blocked_by_status"}
+            stages.append(
+                {
+                    "stage": "status",
+                    "pass": False,
+                    "detail": f"status={status!r}，recall 只取 active",
+                }
+            )
+            return {"id": ident, "prompt": prompt, "stages": stages, "verdict": "blocked_by_status"}
         stages.append({"stage": "status", "pass": True, "detail": "active"})
 
         # 阶段 4：search() 召回
         hits = S.search(con, prompt, limit=max_items * 3, status=("active",))
         hit = next((h for h in hits if h["id"] == target_id), None)
         if hit is None:
-            stages.append({"stage": "search", "pass": False,
-                           "detail": f"未进候选池（共 {len(hits)} 条命中）"})
-            return {"id": ident, "prompt": prompt, "stages": stages,
-                    "verdict": "not_recalled_by_search"}
-        stages.append({
-            "stage": "search", "pass": True,
-            "score": round(hit["score"], 4),
-            "overlap": round(hit.get("overlap", 0), 4),
-            "semantic": round(hit.get("semantic", 0), 4),
-            "rank_in_hits": [h["id"] for h in hits].index(target_id) + 1,
-            "hits_total": len(hits),
-        })
+            stages.append(
+                {"stage": "search", "pass": False, "detail": f"未进候选池（共 {len(hits)} 条命中）"}
+            )
+            return {
+                "id": ident,
+                "prompt": prompt,
+                "stages": stages,
+                "verdict": "not_recalled_by_search",
+            }
+        stages.append(
+            {
+                "stage": "search",
+                "pass": True,
+                "score": round(hit["score"], 4),
+                "overlap": round(hit.get("overlap", 0), 4),
+                "semantic": round(hit.get("semantic", 0), 4),
+                "rank_in_hits": [h["id"] for h in hits].index(target_id) + 1,
+                "hits_total": len(hits),
+            }
+        )
 
         # 阶段 5：decay 重排（信息性）
         ordered = hits
@@ -137,11 +163,16 @@ def audit(
         if fate is None:
             if not any(p["id"] == target_id for p in picked):
                 fate = "cut_by_top_k"
-        stages.append({"stage": "dedup_topk", "pass": fate is None,
-                       "detail": fate or f"进入 top-{len(picked)}",
-                       "position": next(
-                           (i + 1 for i, p in enumerate(picked) if p["id"] == target_id),
-                           None)})
+        stages.append(
+            {
+                "stage": "dedup_topk",
+                "pass": fate is None,
+                "detail": fate or f"进入 top-{len(picked)}",
+                "position": next(
+                    (i + 1 for i, p in enumerate(picked) if p["id"] == target_id), None
+                ),
+            }
+        )
 
         # 阶段 8：budget
         if fate is None:
@@ -154,8 +185,13 @@ def audit(
                         survived = False
                     break
                 used += line_len + 1
-            stages.append({"stage": "budget", "pass": survived,
-                           "detail": "budget 内" if survived else "被 budget 截断"})
+            stages.append(
+                {
+                    "stage": "budget",
+                    "pass": survived,
+                    "detail": "budget 内" if survived else "被 budget 截断",
+                }
+            )
             if not survived:
                 fate = "cut_by_budget"
 
@@ -178,9 +214,15 @@ def main(argv=None):
     parser.add_argument("--no-decay", action="store_true")
     args = parser.parse_args(argv)
 
-    result = audit(args.db, args.id, args.prompt, budget_chars=args.budget,
-                   max_items=args.max_items, min_score=args.min_score,
-                   decay=not args.no_decay)
+    result = audit(
+        args.db,
+        args.id,
+        args.prompt,
+        budget_chars=args.budget,
+        max_items=args.max_items,
+        min_score=args.min_score,
+        decay=not args.no_decay,
+    )
     print(json.dumps(result, ensure_ascii=False, indent=1))
 
 

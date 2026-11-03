@@ -22,9 +22,15 @@ def _make_db(rows):
     for i, r in enumerate(rows):
         con.execute(
             "INSERT INTO records VALUES (?,?,?,?,?,?,?)",
-            (f"id-{i}", r.get("claim_id", f"c-{i}"), r.get("kind", "fact"),
-             r.get("subject", "s"), r.get("value", "v"),
-             r.get("status", "active"), r.get("namespace", "user")),
+            (
+                f"id-{i}",
+                r.get("claim_id", f"c-{i}"),
+                r.get("kind", "fact"),
+                r.get("subject", "s"),
+                r.get("value", "v"),
+                r.get("status", "active"),
+                r.get("namespace", "user"),
+            ),
         )
     con.commit()
     con.close()
@@ -37,11 +43,13 @@ def _rec(**kw):
 
 class DashboardTests(unittest.TestCase):
     def test_counts_by_namespace_status_kind(self):
-        db = _make_db([
-            _rec(kind="fact", namespace="user", status="active", value="a" * 100),
-            _rec(kind="fact", namespace="user", status="pending", value="b" * 100),
-            _rec(kind="preference", namespace="persona", status="active", value="c" * 100),
-        ])
+        db = _make_db(
+            [
+                _rec(kind="fact", namespace="user", status="active", value="a" * 100),
+                _rec(kind="fact", namespace="user", status="pending", value="b" * 100),
+                _rec(kind="preference", namespace="persona", status="active", value="c" * 100),
+            ]
+        )
         d = TD.dashboard(db)
         self.assertEqual(d["records"], 3)
         self.assertEqual(d["by_namespace"], {"user": 2, "persona": 1})
@@ -78,10 +86,12 @@ class DashboardTests(unittest.TestCase):
         self.assertIsInstance(is_est, bool)
 
     def test_top_consumers_sorted(self):
-        db = _make_db([
-            _rec(value="s", claim_id="small"),
-            _rec(value="L" * 5000, claim_id="large"),
-        ])
+        db = _make_db(
+            [
+                _rec(value="s", claim_id="small"),
+                _rec(value="L" * 5000, claim_id="large"),
+            ]
+        )
         d = TD.dashboard(db)
         self.assertEqual(d["top_consumers"][0]["id"], "large")
 
