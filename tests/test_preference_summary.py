@@ -32,12 +32,14 @@ def make_store():
 
 class ValidateCardTests(unittest.TestCase):
     def test_valid_card(self):
-        card = validate_card({
-            "kind": PREFERENCE_SUMMARY_KIND,
-            "subject": "钟丽潭",
-            "text": "常客，送礼积极",
-            "evidence": GOOD_EVIDENCE,
-        })
+        card = validate_card(
+            {
+                "kind": PREFERENCE_SUMMARY_KIND,
+                "subject": "钟丽潭",
+                "text": "常客，送礼积极",
+                "evidence": GOOD_EVIDENCE,
+            }
+        )
         self.assertEqual(card["subject"], "钟丽潭")
         self.assertEqual(card["version"], 1)
         self.assertEqual(card["status"], "active")
@@ -45,61 +47,92 @@ class ValidateCardTests(unittest.TestCase):
 
     def test_wrong_kind_rejected(self):
         with self.assertRaises(PreferenceEvidenceError):
-            validate_card({
-                "kind": "fact", "subject": "x", "text": "y",
-                "evidence": GOOD_EVIDENCE,
-            })
+            validate_card(
+                {
+                    "kind": "fact",
+                    "subject": "x",
+                    "text": "y",
+                    "evidence": GOOD_EVIDENCE,
+                }
+            )
 
     def test_empty_evidence_list_rejected(self):
         with self.assertRaises(PreferenceEvidenceError):
-            validate_card({
-                "kind": PREFERENCE_SUMMARY_KIND, "subject": "x",
-                "text": "y", "evidence": [],
-            })
+            validate_card(
+                {
+                    "kind": PREFERENCE_SUMMARY_KIND,
+                    "subject": "x",
+                    "text": "y",
+                    "evidence": [],
+                }
+            )
 
     def test_statement_without_evidence_rejected(self):
         with self.assertRaises(PreferenceEvidenceError):
-            validate_card({
-                "kind": PREFERENCE_SUMMARY_KIND, "subject": "x", "text": "y",
-                "evidence": [{"statement": "喜欢小心心特效", "evidence": ""}],
-            })
+            validate_card(
+                {
+                    "kind": PREFERENCE_SUMMARY_KIND,
+                    "subject": "x",
+                    "text": "y",
+                    "evidence": [{"statement": "喜欢小心心特效", "evidence": ""}],
+                }
+            )
 
     def test_statement_missing_evidence_key_rejected(self):
         with self.assertRaises(PreferenceEvidenceError):
-            validate_card({
-                "kind": PREFERENCE_SUMMARY_KIND, "subject": "x", "text": "y",
-                "evidence": [{"statement": "喜欢小心心特效"}],
-            })
+            validate_card(
+                {
+                    "kind": PREFERENCE_SUMMARY_KIND,
+                    "subject": "x",
+                    "text": "y",
+                    "evidence": [{"statement": "喜欢小心心特效"}],
+                }
+            )
 
     def test_empty_statement_rejected(self):
         with self.assertRaises(PreferenceEvidenceError):
-            validate_card({
-                "kind": PREFERENCE_SUMMARY_KIND, "subject": "x", "text": "y",
-                "evidence": [{"statement": "  ", "evidence": "某日志"}],
-            })
+            validate_card(
+                {
+                    "kind": PREFERENCE_SUMMARY_KIND,
+                    "subject": "x",
+                    "text": "y",
+                    "evidence": [{"statement": "  ", "evidence": "某日志"}],
+                }
+            )
 
     def test_text_too_long_rejected(self):
         with self.assertRaises(PreferenceEvidenceError):
-            validate_card({
-                "kind": PREFERENCE_SUMMARY_KIND, "subject": "x",
-                "text": "长" * (MAX_TEXT_CHARS + 1),
-                "evidence": GOOD_EVIDENCE,
-            })
+            validate_card(
+                {
+                    "kind": PREFERENCE_SUMMARY_KIND,
+                    "subject": "x",
+                    "text": "长" * (MAX_TEXT_CHARS + 1),
+                    "evidence": GOOD_EVIDENCE,
+                }
+            )
 
     def test_empty_subject_rejected(self):
         with self.assertRaises(PreferenceEvidenceError):
-            validate_card({
-                "kind": PREFERENCE_SUMMARY_KIND, "subject": "  ",
-                "text": "y", "evidence": GOOD_EVIDENCE,
-            })
+            validate_card(
+                {
+                    "kind": PREFERENCE_SUMMARY_KIND,
+                    "subject": "  ",
+                    "text": "y",
+                    "evidence": GOOD_EVIDENCE,
+                }
+            )
 
     def test_evidence_is_quote_not_raw_dump(self):
         # evidence 是引用，不是原文搬运：超长引用被拒绝
         with self.assertRaises(PreferenceEvidenceError):
-            validate_card({
-                "kind": PREFERENCE_SUMMARY_KIND, "subject": "x", "text": "y",
-                "evidence": [{"statement": "s", "evidence": "原" * 301}],
-            })
+            validate_card(
+                {
+                    "kind": PREFERENCE_SUMMARY_KIND,
+                    "subject": "x",
+                    "text": "y",
+                    "evidence": [{"statement": "s", "evidence": "原" * 301}],
+                }
+            )
 
 
 class StoreTests(unittest.TestCase):

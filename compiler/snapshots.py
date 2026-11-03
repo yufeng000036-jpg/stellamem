@@ -19,6 +19,7 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -57,10 +58,35 @@ def _snap_dir(root: Path) -> Path:
     return d
 
 
+def _backup_db(src: Path, target: Path) -> str:
+    """WAL-safe 在线备份 .db 文件，返回所用方法名。
+
+    生产 index.db 用 WAL 模式（indexer.py: PRAGMA journal_mode=WAL），
+    直接 shutil.copy2 只拷主文件会丢 -wal 里最近提交的数据。
+    sqlite3 Connection.backup() 是官方在线备份 API，能正确处理 WAL。
+    备份失败时回退到 copy2（旧行为），并在返回值中注明。
+    """
+    try:
+        src_con = sqlite3.connect(f"file:{src}?mode=ro", uri=True)
+        try:
+            dst_con = sqlite3.connect(target)
+            try:
+                src_con.backup(dst_con)
+            finally:
+                dst_con.close()
+        finally:
+            src_con.close()
+        return "sqlite-backup"
+    except Exception:
+        shutil.copy2(src, target)
+        return "copy2-fallback"
+
+
 def auto_snapshot(root: Path | str, label: str) -> Path:
     """写操作前调用：对 SNAPSHOT_FILES 做文件级快照，返回快照目录。
 
     不存在的文件跳过（不报错），以便在部分初始化的环境里也能用。
+    .db 文件走 WAL-safe 的 sqlite3 在线备份，其余文件走 copy2。
     """
     root = Path(root)
     dest = _snap_dir(root) / f"{_now_ts()}-{label}"
@@ -72,9 +98,18 @@ def auto_snapshot(root: Path | str, label: str) -> Path:
             continue
         target = dest / rel
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, target)
+        if src.suffix.lower() in (".db", ".sqlite", ".sqlite3"):
+            method = _backup_db(src, target)
+        else:
+            shutil.copy2(src, target)
+            method = "copy2"
         manifest["files"].append(
-            {"path": rel, "bytes": target.stat().st_size, "sha256": _sha256(target)}
+            {
+                "path": rel,
+                "bytes": target.stat().st_size,
+                "sha256": _sha256(target),
+                "method": method,
+            }
         )
     manifest["digest"] = hashlib.sha256(
         "".join(e["sha256"] for e in manifest["files"]).encode("utf-8")
@@ -137,8 +172,7 @@ def restore_snapshot(
     """
     if confirm != CONFIRM_PHRASE:
         raise PermissionError(
-            "snapshot restore requires explicit confirmation "
-            f"(confirm={CONFIRM_PHRASE!r}); refused"
+            f"snapshot restore requires explicit confirmation (confirm={CONFIRM_PHRASE!r}); refused"
         )
     root = Path(root)
     snap_path = _snap_dir(root) / name

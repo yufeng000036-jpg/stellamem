@@ -120,9 +120,19 @@ def _timestamp_ms(record: dict[str, Any]) -> int | None:
     否则真实数据上衰减会静默失效。）
     支持 int/float 毫秒、秒级时间戳，以及 ISO 字符串。
     """
-    for key in ("last_at", "lastAt", "hit_at", "updated_at", "updatedAt",
-                "occurred_at", "observed_at", "ts", "created_at", "createdAt",
-                "since"):
+    for key in (
+        "last_at",
+        "lastAt",
+        "hit_at",
+        "updated_at",
+        "updatedAt",
+        "occurred_at",
+        "observed_at",
+        "ts",
+        "created_at",
+        "createdAt",
+        "since",
+    ):
         v = record.get(key)
         ms = _to_ms(v)
         if ms is not None:

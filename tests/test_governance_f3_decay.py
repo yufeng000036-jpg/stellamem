@@ -106,8 +106,18 @@ class RecallDecayWiringTests(unittest.TestCase):
             "INSERT INTO records (id, claim_id, layer, kind, subject, value, evidence,"
             " status, occurred_at, grams)"
             " VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (claim_id, claim_id, "memory", kind, "s", value, "", status,
-             occurred_at or _old_ts(0), ""),
+            (
+                claim_id,
+                claim_id,
+                "memory",
+                kind,
+                "s",
+                value,
+                "",
+                status,
+                occurred_at or _old_ts(0),
+                "",
+            ),
         )
         self.con.commit()
 
@@ -132,8 +142,9 @@ class RecallDecayWiringTests(unittest.TestCase):
 
     def test_explain_decay_attaches_info(self):
         self._insert("c-1", "测试关键词 gamma", occurred_at=_old_ts(10))
-        res = S.recall(self.con, "测试关键词", decay=True, explain_decay=True,
-                       min_score=0.0, max_items=10)
+        res = S.recall(
+            self.con, "测试关键词", decay=True, explain_decay=True, min_score=0.0, max_items=10
+        )
         self.assertTrue(res["items"])
         self.assertIn("decay", res["items"][0])
         self.assertIn("retention", res["items"][0]["decay"])

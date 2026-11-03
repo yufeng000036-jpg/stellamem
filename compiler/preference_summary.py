@@ -62,8 +62,7 @@ def validate_evidence_item(item: dict, index: int) -> dict:
     evidence = _nonempty_str(item.get("evidence"), f"evidence[{index}].evidence")
     if len(evidence) > MAX_EVIDENCE_CHARS:
         raise PreferenceEvidenceError(
-            f"evidence[{index}].evidence 超过 {MAX_EVIDENCE_CHARS} 字："
-            "引用，不是原文搬运"
+            f"evidence[{index}].evidence 超过 {MAX_EVIDENCE_CHARS} 字：引用，不是原文搬运"
         )
     return {"statement": statement, "evidence": evidence}
 
@@ -79,9 +78,7 @@ def validate_card(card: dict) -> dict:
     subject = _nonempty_str(card.get("subject"), "subject")
     text = _nonempty_str(card.get("text"), "text")
     if len(text) > MAX_TEXT_CHARS:
-        raise PreferenceEvidenceError(
-            f"text 超过 {MAX_TEXT_CHARS} 字：偏好摘要要短，不是小作文"
-        )
+        raise PreferenceEvidenceError(f"text 超过 {MAX_TEXT_CHARS} 字：偏好摘要要短，不是小作文")
     evidence = card.get("evidence")
     if not isinstance(evidence, list) or not evidence:
         raise PreferenceEvidenceError("evidence 必须是非空列表：每条陈述都要有证据")
@@ -153,8 +150,9 @@ class PreferenceCardStore:
         self._audit("created", card["subject"], version=1)
         return dict(card)
 
-    def update(self, subject: str, text: str | None = None,
-               evidence: list[dict] | None = None) -> dict:
+    def update(
+        self, subject: str, text: str | None = None, evidence: list[dict] | None = None
+    ) -> dict:
         """更新偏好卡：version+1，updated_at 刷新。证据规则同样强制。"""
         old = self.cards.get(subject)
         if old is None:
@@ -173,8 +171,7 @@ class PreferenceCardStore:
         try:
             card = validate_card(merged)
         except PreferenceEvidenceError as e:
-            self._audit("rejected", subject, version=merged["version"],
-                        note=f"update: {e}")
+            self._audit("rejected", subject, version=merged["version"], note=f"update: {e}")
             raise
         self.cards[subject] = card
         self._audit("updated", subject, version=card["version"])
