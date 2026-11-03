@@ -22,7 +22,7 @@ Claim 字段：`kind / subject / scope / predicate / value / confidence / eviden
  日记→Claim      NEW/强化/矛盾    core/ long-term/ semantic/
 ```
 
-1. **extract**：把日记编译成 Claim（9 种类型：preference/decision/lesson/project/fact/relationship/procedure/identity/user-core）
+1. **extract**：把日记编译成 Claim（10 种类型：preference/preference_summary/decision/lesson/project/fact/relationship/procedure/identity/user-core；`preference_summary` 为 2026-11-03 新增的一等偏好类型，每条陈述强制带证据）。提取经 Skill Bank（`compiler/skills.py`）按上下文选择记忆技能，安全网默认带上，每次选用记审计
 2. **judge**：判断新 Claim 与已有记忆的关系（NEW / DUPLICATE / REINFORCES / REFINES / COMPATIBLE / SUPERSEDES / CONTRADICTS / UNCERTAIN）
 3. **store**：按类型路由到对应文件（preference→core/preferences.md，lesson→long-term/lessons.md 等）
 
