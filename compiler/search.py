@@ -574,6 +574,67 @@ def _trim(text: str, width: int) -> str:
     return text if len(text) <= width else text[: width - 1] + "…"
 
 
+def _match_pref_cards(prompt_grams, cards, quota, min_score):
+    """偏好卡独立匹配通道：按 subject+text 的 bigram overlap 打分。"""
+    scored = []
+    for card in cards or []:
+        if not isinstance(card, dict):
+            continue
+        if card.get("status") not in (None, "active"):
+            continue
+        subject = str(card.get("subject") or "")
+        text = str(card.get("text") or "")
+        if not subject or not text:
+            continue
+        score = overlap_score(prompt_grams, {"subject": subject, "value": text})
+        if score >= min_score:
+            scored.append((score, card))
+    scored.sort(key=lambda t: (-t[0], str(t[1].get("subject"))))
+    out = []
+    for score, card in scored[: max(0, quota)]:
+        ev = card.get("evidence") or []
+        rec = {
+            "kind": "preference_summary",
+            "subject": card.get("subject"),
+            "value": card.get("text"),
+            "evidence": ev,
+            "score": score,
+            "weak": False,
+            "injected": "preference_card",
+            "_extra_line": "- [\u504f\u597d] %s: %s\uff08\u8bc1\u636e%d\u6761\uff09" % (
+                card.get("subject"), _trim(card.get("text"), 90), len(ev)),
+            "_usage_id": "pref:" + str(card.get("subject")),
+        }
+        out.append(rec)
+    return out
+
+
+def _match_patterns(prompt, patterns, quota, min_score):
+    """规律项独立匹配通道：得分已乘 PATTERN_WEIGHT(<1)，低于原始记录。"""
+    try:
+        from sleep_consolidation import pattern_candidates
+    except ImportError:
+        return []
+    out = []
+    for hit in pattern_candidates(patterns, prompt, min_score=min_score)[: max(0, quota)]:
+        pat = hit["pattern"]
+        rec = {
+            "kind": "pattern",
+            "subject": pat.get("subject"),
+            "value": pat.get("value"),
+            "provenance": pat.get("provenance"),
+            "score": hit["score"],
+            "weak": False,
+            "injected": "pattern",
+            "_extra_line": "- [\u89c4\u5f8b] %s %s: %s\uff08%d\u671f\u4f50\u8bc1\uff0c\u6743\u91cd\u00d70.8\uff09" % (
+                pat.get("subject"), pat.get("predicate"),
+                _trim(pat.get("value"), 90), pat.get("support") or 0),
+            "_usage_id": "pattern:" + str(pat.get("id") or ""),
+        }
+        out.append(rec)
+    return out
+
+
 def recall(
     con: sqlite3.Connection,
     prompt: str,
@@ -582,6 +643,11 @@ def recall(
     min_score: float = 0.18,
     decay: bool = True,
     explain_decay: bool = False,
+    preference_cards=None,
+    pref_quota: int = 2,
+    patterns=None,
+    pattern_quota: int = 1,
+    usage_tracker=None,
 ) -> dict:
     """严格召回（F3：可选时效衰减）。
 
@@ -589,6 +655,12 @@ def recall(
     再走去重/top-k/budget。衰减只影响排序，不删除任何条目、不改 status；
     identity/user-core/core 与 pinned 记录不参与衰减。
     explain_decay=True 时每个 item 附带 decay 诊断信息（调试用）。
+    preference_cards: 可选的偏好卡列表（PreferenceCardStore.list_active() 的产出），
+    走独立匹配通道注入，配额 pref_quota（默认 2），只占 max_items 剩余额度；
+    patterns: 可选的规律项列表（PatternStore.list("active") 的产出），
+    得分已乘 0.8 权重（低于原始记录），配额 pattern_quota（默认 1）；
+    注入项明确标注 kind，不破坏 398 候选域语义，namespace 规则不变；
+    usage_tracker: 可选的 UsageTracker，注入项命中时记一次。
     """
     intent = detect_intent(prompt)
     hits = search(con, prompt, limit=max_items * 3, status=("active",))
@@ -614,8 +686,36 @@ def recall(
         if len(picked) >= max_items:
             break
 
+    # 可选注入：偏好卡 / 规律项（带配额、有证据链）。独立匹配通道，
+    # 只占 max_items 剩余额度；sqlite 候选域（398）与 namespace 规则原样不动。
+    prompt_grams = bigrams(prompt)
+    slots_left = max(0, max_items - len(picked))
+    extras = []
+    if slots_left > 0:
+        extras.extend(_match_pref_cards(prompt_grams, preference_cards,
+                                       min(pref_quota, slots_left), min_score))
+        slots_left = max(0, max_items - len(picked) - len(extras))
+    if slots_left > 0:
+        extras.extend(_match_patterns(prompt, patterns,
+                                      min(pattern_quota, slots_left), min_score))
+    if usage_tracker is not None:
+        for ex in extras:
+            try:
+                usage_tracker.record_hit(ex["_usage_id"], kind=ex.get("kind", ""))
+            except Exception:
+                pass
+    picked = picked + extras
+
     lines, used = [], 0
     for rec in picked:
+        if "_extra_line" in rec:
+            # 注入项（偏好卡/规律项）：行已预拼，有证据链，不参与 weak 判定。
+            line = rec["_extra_line"]
+            if len(line) + used + 1 > budget_chars:
+                break
+            lines.append(line)
+            used += len(line) + 1
+            continue
         # weak = 字面与语义都没有信号，纯粹按时间/重要性兜底出来的条目。
         # 上层据此决定"宁可说不知道"，不要拿它去误导。
         rec["weak"] = bool(

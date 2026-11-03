@@ -4,6 +4,42 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased - batch2（偷来+超越：Skill 接线 / 偏好卡注入 / 三件套 / 睡眠巩固）
+
+设计文档：`docs/BATCH2-BEYOND.md`；ADR：`docs/adr/0005-sleep-consolidation-text.md`。
+把 PR #18/#19/#20 里"刻意没做、列为后续"的项全部实现，外加用户拍板转入
+实现队列的 SenseNova 三件套与睡眠巩固（文本版）。
+
+### 新增
+
+- **Skill 运行时接线**（`compiler/pipeline.py`）：提取路径真正接入
+  `skills.select_skills`；每个 chunk 结果带 `skills_used`；安全网
+  （`evidence_verify` + `secret_gate` + `injection_screen`）默认带上，
+  每次选用记审计；保持规则选择，不引入 RL 训练。
+- **偏好卡 / 规律项注入 recall**（`compiler/search.py`）：`recall()` 新增可选参数
+  `preference_cards`（配额 `pref_quota=2`）、`patterns`（配额 `pattern_quota=1`）、
+  `usage_tracker`；注入项走独立匹配通道，只占 `max_items` 剩余额度，
+  明确标注 `[偏好]` / `[规律]` 并展示证据链；398 候选域语义与 namespace 规则不变。
+- **使用频率回流**（`compiler/usage_signals.py`，新增）：`UsageTracker` 记录偏好卡 /
+  规律项被 recall 命中的次数与首末时间，只读看板；只增信号，不碰内容，
+  无任何删除 / 降权 / 自动清理路径。
+- **SenseNova 三件套**（`compiler/proactive.py`，新增；本地、可审计、可关闭）：
+  ①主动提醒（矛盾 / 过期 → pending 草稿，具名确认，无推送路径，不自动打扰）；
+  ②跨会话任务接续（纯函数简报，无副作用）；
+  ③冲突消解（双方证据并列的冲突报告，具名裁决，只记录不执行）。
+  三个开关可独立关闭。
+- **睡眠巩固（文本版）**（`compiler/sleep_consolidation.py`，新增）：
+  `mine_patterns` 从近 N 期 episode 小结挖反复出现的规律（带 provenance，
+  可追溯、可删除）；`PatternStore` 批准 / 撤回须具名人类；
+  `pattern_candidates` 得分乘 0.8 权重（低于原始记录）。
+  权重版（LoRA/MEMIT）明确不做：API 模型摸不着权重、成本超预算、
+  不可逆 vs "能撤回"要求冲突（见 ADR 0005）。
+
+### 测试
+
+- 新增 46 项（`tests/test_batch2_*.py` ×5）；全量 518 passed + 37 subtests，
+  基线零下跌；`ruff` 通过；`tools/secret_scan.py` 干净。
+
 ## Unreleased - governance-4-features（借鉴记忆管家 V4.0.6）
 
 设计文档：`docs/GOVERNANCE-4-FEATURES.md`。4 个功能按 Stellamem 架构适配，
