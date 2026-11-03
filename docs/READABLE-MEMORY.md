@@ -1,12 +1,27 @@
-# 可读记忆：这次偷了什么、没偷什么
+# 可读记忆：外部致谢与采用说明
 
 背景：Ant International《Text as a universal interface for transferable
-personalisation》(EMNLP 2026, SAC Highlight Award) 提出"可读 AI 记忆" ——
-记忆应该是纯文本、可读、可审计、可改；跨系统传递时只传提炼后的摘要，
-不搬原始行为数据。Stellamem 从第一天就是文本 claim + 审计链 + 人工批准，
-所以这次是**印证 + 补两小件**，不是路线大改。
+personalisation》（EMNLP 2026，Senior Area Chair Highlight Award）提出
+"可读 AI 记忆"——记忆应该是纯文本、可读、可审计、可改；跨系统传递时
+只传提炼后的摘要，不搬原始行为数据。Stellamem 从第一天就是文本 claim +
+审计链 + 人工批准，所以这次是**印证 + 补两小件**，不是路线大改。
 
-## 偷了 1：桥接"只传摘要、不搬原文"明文规则
+## 外部致谢：Ant International 可读记忆研究
+
+- **来源项目**：Ant International 研究《Text as a universal interface for
+  transferable personalisation》（EMNLP 2026，获 Senior Area Chair Highlight Award）
+- **采用的功能**："记忆就该是人话"的设计原则——记忆以纯文本呈现，可读、
+  可审计、可改；跨系统传递时只传提炼后的摘要，不搬运原始行为数据
+- **为什么采用**：该研究以获奖论文的形式印证了 Stellamem 的基础路线
+  （文本 claim + 审计链 + 人工批准）；"只传摘要、不搬原文"恰好是桥接治理
+  一直缺少的那条明文原则；把偏好写成简短纯文本摘要，是常客偏好卡的天然形态
+- **我们的适配与差异**：①桥接规则写成 ADR-0004 明文原则，并配人工批准
+  检查清单；②偏好摘要做成一等记忆类型 `preference_summary`，且每条陈述
+  强制带证据（无证据拒绝写入）——这是原文没有、我们按自身教训加严的；
+  ③未采用其 AlignXplore+ 模型与两阶段训练（不开源、投入产出比不划算），
+  见"未采用部分"一节
+
+## 采用 1：桥接"只传摘要、不搬原文"明文规则
 
 - 位置：`docs/adr/0004-summary-only-bridge.md`。
 - 内容：过桥的永远是提炼后的摘要文本；原始日志、原始行为数据永不过桥；
@@ -16,7 +31,7 @@ personalisation》(EMNLP 2026, SAC Highlight Award) 提出"可读 AI 记忆" —
   只给审批人提示，不自动拒绝（与 BLACKLIST 同级，真正边界永远是人工看全文）。
 - 实践本来已是如此（6 张常客桥接卡都是摘要），这次是把实践写成明文。
 
-## 偷了 2：偏好摘要做成一等记忆类型
+## 采用 2：偏好摘要做成一等记忆类型
 
 - 新 kind：`preference_summary`（`compiler/preference_summary.py`）。
 - 字段：subject、text（短，plain language，上限 500 字）、
@@ -33,13 +48,13 @@ personalisation》(EMNLP 2026, SAC Highlight Award) 提出"可读 AI 记忆" —
   get / list_active；审计 JSONL 只增，拒绝写入同样记审计。
 - 适用：常客偏好卡、用户偏好画像等"短、活、只讲偏好"的记忆。
 
-## 没偷：AlignXplore+ 与两阶段训练
+## 未采用部分：AlignXplore+ 与两阶段训练
 
 论文训练了一个 8B 模型（AlignXplore+），两阶段训练"写出好的偏好摘要"：
 先生成候选摘要、用用户未来真实选择做压力测试、只保留被证实正确的；
-再强化长期更新后依然有用的摘要。不偷的原因：
+再强化长期更新后依然有用的摘要。未采用的原因：
 
-1. 模型不开源，无代码可抄；
+1. 模型不开源，无代码可借鉴；
 2. 训练管线（候选生成 + 未来选择验证 + 强化）是研究级工程，
    当前阶段投入产出比不划算；
 3. 它的"压力测试"思想可用轻量版替代：偏好卡被实际召回/使用的频率
