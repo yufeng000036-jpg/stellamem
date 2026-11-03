@@ -16,8 +16,10 @@ from datetime import datetime, timezone
 
 try:  # 包内导入（compiler.search）与扁平导入（sys.path 加 compiler/）都要能用
     from . import semantic
+    from . import rank as rank_mod
 except ImportError:  # pragma: no cover
     import semantic  # type: ignore
+    import rank as rank_mod  # type: ignore
 
 # 字面/语义权重。语义通道默认开启后字面噪声会压住正确项，故可调。
 W_LEX = float(os.environ.get("STELLAMEM_W_LEX", "0.20"))
@@ -578,9 +580,22 @@ def recall(
     budget_chars: int = 1200,
     max_items: int = 6,
     min_score: float = 0.18,
+    decay: bool = True,
+    explain_decay: bool = False,
 ) -> dict:
+    """严格召回（F3：可选时效衰减）。
+
+    decay=True 时，先按 rank（基础相关度 × 时效保持度）重排命中，
+    再走去重/top-k/budget。衰减只影响排序，不删除任何条目、不改 status；
+    identity/user-core/core 与 pinned 记录不参与衰减。
+    explain_decay=True 时每个 item 附带 decay 诊断信息（调试用）。
+    """
     intent = detect_intent(prompt)
     hits = search(con, prompt, limit=max_items * 3, status=("active",))
+
+    if decay:
+        # [(record, base, adjusted)] 按 adjusted 降序；min_score 仍按 base 过滤
+        hits = [rec for rec, _base, _adj in rank_mod.rank([(r, r["score"]) for r in hits])]
 
     # 去重：同一 claim 只留最高分那条；同值不同 id 也折叠。
     seen_claims, seen_values, picked = set(), set(), []
@@ -593,6 +608,8 @@ def recall(
             continue
         seen_claims.add(key)
         seen_values.add(value_key)
+        if explain_decay:
+            rec["decay"] = rank_mod.explain(rec)
         picked.append(rec)
         if len(picked) >= max_items:
             break
