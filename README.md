@@ -33,6 +33,14 @@ D4/D5 与步骤 2–7 合并后 338 测试 → D1/D3 合并后 347 测试 →
 第二轮可靠性轮次（Windows 中文输出、密钥扫描误报、桥接安全边界测试）后重跑为 **372 / 372 通过**，清单 **206 条**。
 **不是生产部署包**：不含任何真实记忆内容、真实记忆文件、生产索引、生产备份、生产配置。
 
+### 2026-11-03 更新（PR #17 / #18 / #20 已合入 main）
+
+- 4 个治理功能：写前自动快照 + 一键回滚（`compiler/snapshots.py`）、Token 看板（`compiler/token_dashboard.py`，只读）、90 天时效衰减接入 recall（`compiler/rank.py`）、selector-audit（`compiler/selector_audit.py`）；详见 `docs/GOVERNANCE-4-FEATURES.md`。
+- MemSkill 轻量适配：Skill Bank（`compiler/skills.py`，11 个命名/版本化/可审计的 skill）+ 失败案例复盘（`compiler/designer_review.py`，只提议不自动改）；详见 `docs/MEMSKILL-LITE.md`。
+- 可读记忆两小件：桥"只传摘要、不搬原文"明文规则（ADR 0004）+ 一等记忆类型 `preference_summary`（每条陈述强制带证据）；详见 `docs/READABLE-MEMORY.md`。
+- 全量回归 **472 passed + 37 subtests**，基线零下跌；更新总览见 `docs/UPDATE-2026-11-03.md`。
+- 待合入（draft）：PR #21（skill 运行时接线、偏好卡 recall 接线、SenseNova 三件套、睡眠巩固文本版）、PR #22（外部致谢文档）。
+
 ### 现在已有的功能
 
 **记忆治理核心（沿用 v0.1.0-alpha，并经回归验证）：**
@@ -76,6 +84,16 @@ D4/D5 与步骤 2–7 合并后 338 测试 → D1/D3 合并后 347 测试 →
 - OpenClaw Adapter：隔离真实宿主 E2E 通过（首个一等公民宿主）；
 - AI 自举安装：`AI_BOOTSTRAP.md` + `INSTALL.md` + `setup.py`，支持 `--dry-run`、幂等安装，
   不覆盖已有自定义文件；离线演示用虚构数据，无需模型。
+
+**治理增强（2026-11-03，PR #17 / #18 / #20 已合入）：**
+- 写前自动快照 + 一键回滚（`compiler/snapshots.py`）：写操作前自动快照，回滚需确认短语，全程审计；
+- Token 看板（`compiler/token_dashboard.py`，只读）：分组统计、token 估算、三色预算告警，超预算只给人工复核建议（不做自动压实）；
+- 时效衰减（`compiler/rank.py` 接入 recall）：90 天半衰期可配，只降排序不删数据，core/pinned 永不衰减；
+- selector-audit（`compiler/selector_audit.py`，只读）：9 阶段诊断"这条记忆为什么没被召回"；
+- Skill Bank（`compiler/skills.py`）：11 个命名、版本化、可审计的记忆技能，规则选择；
+- 失败案例复盘（`compiler/designer_review.py`）：hard cases 生成 pending 提案，人工批准才生效，永不自动改；
+- 桥摘要规则（ADR 0004）：过桥只传提炼摘要，原始日志永不过桥，人工检查清单；
+- 偏好摘要（`compiler/preference_summary.py`）：一等记忆类型，每条陈述强制带证据，缺证据拒绝写入。
 
 ### 现在没有的功能 / 已知问题（合并前请先读）
 
@@ -249,6 +267,13 @@ Stellamem **不是**：
 | Transaction / Rollback | ✅ |
 | Crash recovery | ✅ |
 | Local models（llama.cpp 等） | ✅ |
+| 写前快照 + 回滚（snapshots） | ✅ |
+| Token 看板（只读） | ✅ |
+| 时效衰减（recall 排序层） | ✅ |
+| selector-audit（只读诊断） | ✅ |
+| Skill Bank（记忆技能注册表） | ✅ |
+| preference_summary（偏好摘要 kind） | ✅ |
+| 桥摘要规则（ADR 0004） | ✅ |
 | Remote cloud models | 🚧 暂不支持（仅环回地址） |
 | Other agent adapters | 🚧 |
 | GUI | 🚧 |
@@ -328,7 +353,7 @@ Run the built-in checks and report whether installation succeeded.
 - **Adapter 召回仍偏关键词** —— 可能漏召回不含同词的自然提问
 - **本地 4B 模型存在分类漂移**（kind 判定不够严谨）
 - **英文临时情绪检测不完整**
-- **蒸馏 / 保留释放流程尚未实现**
+- **蒸馏 / 保留释放流程尚未合入 main**（文本版"睡眠巩固"在 PR #21，draft 未合入；权重版明确不做，原因见 `docs/UPDATE-2026-11-03.md`）
 - **尚无 GUI**
 - **尚未经过大规模外部用户长期验证**
 
