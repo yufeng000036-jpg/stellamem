@@ -4,6 +4,31 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased - review-round2（外部审查第二轮，快照 / 主体隔离 / 看板 / selector-audit）
+
+来源：对 main `803df0d` 的外部审查。四项均先用失败测试复现，再在根上修复，测试保留为回归。
+
+### 修复
+
+- **WAL 快照失败关闭**（`compiler/snapshots.py`）：`Connection.backup()` 失败时不再
+  `shutil.copy2` 活动 WAL 库（那会写出缺表的快照，打开即 `no such table`）。
+  失败则抛错、不留下快照，并写 `snapshot_auto_failed` 审计。
+- **恢复**（同一模块）：先确认 live 库及其 `-wal`/`-shm` 没有活动连接，再用
+  `Connection.backup()` 把快照写回 live 库（不用 `copy2`），然后切到 DELETE
+  日志模式并删除 sidecar，避免旧 WAL 被重放。manifest 记录 `row_count`、
+  `latest_record_timestamp` 和表名；恢复后做 `integrity_check` 并核对这三项，
+  任一失败都把库滚回恢复前。
+- **召回主体隔离**（`compiler/search.py`）：偏好卡和规律项使用同一个可信主体
+  （`request_subject()` 上下文优先于 `pref_subject`）。主体未知时两条通道都
+  返回空，不再混入其他主体。主体不从 prompt 或卡片文本推断。
+- **Token 看板 namespace**（`compiler/token_dashboard.py`）：`records` 表没有
+  `namespace` 列。统计改为 `subjects.subject_of()`：索引 meta 里能找到记忆根时
+  读规范记录上的 `namespace`，否则用行内已有字段。
+- **selector-audit**（`compiler/selector_audit.py`）：`subject_of()` 返回 None
+  时 namespace 阶段失败，`namespace` 为 `unknown`，verdict 为
+  `blocked_by_namespace`。CLI 补上文档里的 `--namespace` / `--subject` 和
+  `--query`（`--prompt` 的别名）。
+
 ## Unreleased - review-fixes（外部代码审查 4 项逻辑修复 + ruff）
 
 来源：第三方代码审查报告（2026-11-03），4 项问题已在 `b0de0c9` 源码中逐条核实属实，
@@ -15,11 +40,12 @@
   `sqlite3.Connection.backup()` 在线备份——生产 `index.db` 是 WAL 模式
  （`indexer.py: PRAGMA journal_mode=WAL`），此前 `shutil.copy2` 只拷主文件会丢
   `-wal` 里最近提交的数据。非 db 文件保持 `copy2`；manifest 新增 `method` 字段
-  注明备份方式；备份失败回退 `copy2`（旧行为）。
+  注明备份方式。备份失败回退 `copy2` 的行为已在 review-round2 去掉：
+  活动 WAL 库备份失败现在失败关闭，不再文件拷贝。
 - **偏好卡跨主体混入**（`compiler/search.py`）：`recall()` 新增可选参数 `pref_subject`，
   `_match_pref_cards()` 在指定时只匹配该 subject 的卡——此前新偏好卡通道纯按文本
-  bigram 匹配、无请求者过滤，老 recall 通道的 namespace 规则在新通道没有等价边界。
-  多主体调用方必须传 `pref_subject`；不传 = 不过滤（保持旧行为）。
+  bigram 匹配、无请求者过滤。review-round2 起，不传主体不再放行：没有可信主体时
+  偏好卡和规律项都不注入。
 - **Skill 选择移到提取之前**（`compiler/pipeline.py`）：`extract_chunks` 每个 chunk
   提取**前**调 `select_skills`，选出的 skill `instructions` 拼入 `_extract_group` 的
   system prompt（含递归重试路径），真正指导本次提取；此前是提取后才选、只做事后
@@ -50,7 +76,8 @@
 - **偏好卡 / 规律项注入 recall**（`compiler/search.py`）：`recall()` 新增可选参数
   `preference_cards`（配额 `pref_quota=2`）、`patterns`（配额 `pattern_quota=1`）、
   `usage_tracker`；注入项走独立匹配通道，只占 `max_items` 剩余额度，
-  明确标注 `[偏好]` / `[规律]` 并展示证据链；398 候选域语义与 namespace 规则不变。
+  明确标注 `[偏好]` / `[规律]` 并展示证据链；398 候选域语义不变。
+  主体边界见 review-round2：没有可信主体时偏好卡和规律项都不注入。
 - **使用频率回流**（`compiler/usage_signals.py`，新增）：`UsageTracker` 记录偏好卡 /
   规律项被 recall 命中的次数与首末时间，只读看板；只增信号，不碰内容，
   无任何删除 / 降权 / 自动清理路径。
