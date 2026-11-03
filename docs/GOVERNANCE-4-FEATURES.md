@@ -37,11 +37,20 @@
   `stellamem-data/index.db` 与 `config.json`。`openclaw.json` 不在这份清单里。
   自动调用点目前在 `compiler/api.py` 的索引重建和 `write_status`，
   不是每一次写路径（标签写入、收件箱 CLI、`store.commit` 不会自动拍这份快照）。
-  `.db` 走 SQLite 在线备份；备份抛错时退回 `shutil.copy2`。这条失败路径仍是开着的缺口。
 - 快照存 `system/snapshots/<ts>-<label>/`，每个文件记 SHA256，
   快照清单本身也记 SHA256；快照/回滚/清理全部写审计日志。
 - `restore_snapshot()` 是显式运维操作：必须传确认短语，否则抛错；
   恢复前先校验 SHA256，不一致拒绝恢复。
+- `.db` 只用 `sqlite3.Connection.backup()`。备份失败则失败关闭：抛错、
+  不留下快照、写 `snapshot_auto_failed` 审计，**不会**回退到 `shutil.copy2`
+  （WAL 下只拷主文件会丢 `-wal` 里的表，打开即 `no such table`）。
+  非 SQLite 的配置文件仍用 `copy2`。
+- manifest 对 SQLite 快照额外记录 `tables`、`row_count`（`records` 行数）
+  和 `latest_record_timestamp`（`observed_at` / `occurred_at` 的较新值）。
+- 恢复 SQLite：先确认 live 库和 `-wal`/`-shm` 没有活动连接，否则拒绝且不改文件；
+  然后用 `backup()` 把快照写回 live 库（不是 `copy2`），切到 DELETE 日志模式并
+  删除 sidecar，使旧 WAL 不会被重放。接着做 `integrity_check`，并核对表、行数、
+  最新记录时间。任一失败都把库滚回恢复前的内容。
 - **不绕过 append-only**：快照恢复针对的是"运维事故"（如索引重建写坏），
   不是常规记忆修改路径；记忆内容的修改仍走事务 + `valid_to` 过期，
   快照恢复的每一次调用都有审计记录、可追溯。
@@ -55,8 +64,12 @@
 超预算自动压实、throttle 一键压预算。
 
 **Stellamem 适配**（只读、不改数据）：
-- `dashboard(root, db)` 返回：总条数、按 namespace / status / kind 分组、
+- `dashboard(db)` 返回：总条数、按 namespace / status / kind 分组、
   token 估算总量与 Top-N 大户。
+- namespace 的来源不是 `records.namespace`（索引表没有这一列，读它会把每条
+  都算成未分类）。看板用 `subjects.subject_of()`：若 `meta.root` 指向可读的
+  记忆根，则读规范记录上的 `namespace` 字段；否则用该行里实际存在的
+  `namespace` / `subject`。对不上已知主体时记为 `(unclassified)`。
 - 计量：优先 `tiktoken`（装了就用）；没有则用 CJK 启发式
   （CJK 字符 ≈ 1.5 token，ASCII 按 4 字符 1 token），**输出必须标注"估算"**。
 - 预算：`token_budget` 可配置（默认 30000 token）；三色告警
@@ -64,7 +77,7 @@
 - **不做"自动压实/throttle"**：Stellamem 的记忆删除/压实必须走人工复核，
   工具只给"如果超预算，建议复核这些大户"的只读建议清单。这是与记忆管家
   刻意不同的地方（治理哲学差异），在文档中明确写出。
-- CLI：`python -m token_dashboard --root … --db … [--json] [--budget N]`。
+- CLI：`python -m token_dashboard --db … [--json] [--budget N] [--top N]`。
 
 ---
 
@@ -94,7 +107,8 @@
 
 **Stellamem 适配**：诊断"这条记忆为什么没被召回"，逐阶段输出：
 1. 索引中存在？（id/claim_id/revision_id 查找）
-2. namespace 隔离是否放行？（主体不匹配 → 拒绝，注明）
+2. namespace 隔离是否放行？（`subject_of()` 为 None → `namespace=unknown` 且
+   `blocked_by_namespace`；传入的请求方主体不匹配 → 同样拒绝）
 3. status 是否为 active？（pending/rejected 被筛掉，注明）
 4. `search()` 是否召回？（score / overlap / semantic 分项）
 5. `min_score` 过滤？
@@ -103,8 +117,9 @@
 8. budget 字符截断？
 9. decay 系数？（retention 值）
 
-只读；CLI：`python -m selector_audit --db … --id … [--prompt …] [--namespace …]`，
-或 `--query …` 按查询串诊断"为什么这条没进 top-k"。
+只读；CLI：`python -m selector_audit --db … --id … --prompt … [--namespace …]`。
+`--query` 是 `--prompt` 的别名，`--subject` 是 `--namespace` 的别名
+（请求方主体，`user` / `persona` / `viewer`）。未分类记录不会被标成通过。
 输出 JSON，便于程序化处理。
 
 ---

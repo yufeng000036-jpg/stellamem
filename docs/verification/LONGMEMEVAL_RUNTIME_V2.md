@@ -1,10 +1,12 @@
 # Local inference failure and v2 freeze
 
-> Status note (2026-11-04): the code later merged to main via PR #15 (`803df0d`).
-> Independent quality acceptance stays unmet and the release gate stays CLOSED.
-> This file's invalid v1 run is still not a quality score. Current main recount
-> is 563 Python tests + 42 subtests and 8 Node tests; the 422 below is this
-> commit's own check.
+> Status note (2026-11-04): the code is on main (`e732da5`, including PR #15,
+> #28, and #29). Independent quality acceptance stays unmet and the release
+> gate stays CLOSED. This file's invalid v1 run is still not a quality score.
+> LongMemEval v2 is still running and this repository has no v2 result, so
+> there is no score. The 422 below is this commit's own check. The later
+> recounts are 563 + 42 on `803df0d` and 577 + 42 after #28 / #29, with 8 Node
+> tests.
 
 
 

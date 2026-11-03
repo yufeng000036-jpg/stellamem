@@ -14,16 +14,20 @@ with SQLite, FTS5, and vectors, and it self-reports LoCoMo 88.83 and
 LongMemEval 89.20. Those figures are theirs. **Stellamem has no public
 benchmark score.** The difference is governance: source hashes, pre-write
 snapshots, a human review inbox, a secret gate, and subject namespaces.
-Chinese status, the 9-point list, and open gaps: [`README.md`](README.md).
+Chinese status and the 9-point list: [`README.md`](README.md).
 
-Code on `main` (`803df0d`, PR #15 and PR #26) is **not** a production
-deployment. Stage E is NOT MET. Stage F is CLOSED. See
+Code on `main` (`e732da5`, including PR #15, #26, #28, and #29) is **not** a
+production deployment. Stage E is NOT MET. Stage F is CLOSED. See
 [`docs/verification/STAGES_E_F_STATUS.md`](docs/verification/STAGES_E_F_STATUS.md).
-An external reviewer's subjective rating of this main is 7.8/10. That is not
-a benchmark and it does not pass Stage E or open Stage F.
+An external reviewer's subjective rating of the earlier main `803df0d` was
+7.8/10. That is not a benchmark, not a new rating of `e732da5`, and it does
+not pass Stage E or open Stage F. The five code gaps from that review are
+fixed in #28 and #29. Real-data verification is still pending and needs the
+owner's approval. LongMemEval v2 is still running and has no result, so there
+is no score.
 
-Current recount on `803df0d`: **563 passed + 42 subtests** (Python 3.12.3),
-**8** Node tests.
+Current recount on this tree: **577 passed + 42 subtests** (Python 3.12.3),
+**8** Node tests. The 563 on `803df0d` is the previous recount.
 
 <p align="center">
   <b>🚧 Alpha (v0.2.0-alpha)</b> ·

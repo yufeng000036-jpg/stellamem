@@ -4,28 +4,57 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
-## 2026-11-04 - 文档：愿景、完成标准与现状（main `803df0d`）
+## 2026-11-04 - 文档对齐 main `e732da5`（PR #28 / #29 已合入）
 
-只改文档，不改代码。
+只改文档，外加 `compiler/preference_summary.py` 模块说明里一句过时的「不接 recall」。不改行为。
 
 ### 合入
 
-- PR #26（`83e4e9a`）已在 main：WAL 在线备份、偏好卡 `pref_subject`、提取前选 skill、使用计数改到 budget 之后，以及 ruff。合入后的 Engineering checks [run 41667719093](https://github.com/yufeng000036-jpg/stellamem/actions/runs/41667719093) 结论是 failure（`tests (macos-latest, 3.10)` cancelled，其余已结束 job 为 success）。不是全绿。
-- PR #15（`803df0d`）已在 main。**合入 main 不是生产部署。** Stage E 仍是 NOT MET，Stage F 仍关闭。写本文时 main 上的 [run 41670486088](https://github.com/yufeng000036-jpg/stellamem/actions/runs/41670486088) 尚未结束。
+- PR #28（`302128e`）与 PR #29（`e732da5`，当前 main）已在 main。合入不是生产部署。Stage E 仍是 NOT MET，Stage F 仍关闭。
+- 此前 #26（`83e4e9a`）与 #15（`803df0d`）也在 main。#26 合入后的 Engineering checks [run 41667719093](https://github.com/yufeng000036-jpg/stellamem/actions/runs/41667719093) 不是全绿（`tests (macos-latest, 3.10)` cancelled）。
 
-### 测试（在 `803df0d` 重跑）
+### 测试（在含 #28 / #29 的合并树上重跑）
 
-- Python 3.12.3：`python -m unittest discover -s tests` → **563 passed + 42 subtests**，0 失败。
+- Python 3.12.3：`python -m unittest discover -s tests` → **577 passed + 42 subtests**，0 失败。
 - Node.js 22.23.4：`node --test tests/hooks.test.mjs` → **8 passed**。
-
-下文各节里的 528、518、472 是那些改动当时写下的次数，保留作历史记录，不再代表当前 main。
+- `803df0d` 上的 563 passed + 42 subtests 是 #28 / #29 之前的测量，不再代表当前 main。
+- 下文更早的 528、518、472 仍是那些改动当时的次数。
 
 ### 状态
 
-- 完成标准、P0–P3、候选 A（计划，未实现）和竞品对照见 `README.md`。
-- 评估计划见 `docs/evaluation-plan.md`（计划 / 未验证，没有公开基准分数）。
-- 外部项目见 `docs/ACKNOWLEDGEMENTS.md`。
-- 外部审阅对 `803df0d` 的主观判断是 7.8/10。这不是基准分数。同一审阅标出的五项代码缺口为未关闭、修复进行中，由单独的代码 PR 处理。
+- 对 `803df0d` 的五项代码缺口已在仓库里修好。回归测试：`tests/test_review_round2_20261104.py`（#28）、`tests/test_pref_card_review_20261104.py`（#29）。真实记忆库上的核验还没有做，需要所有者批准。
+- 外部审阅对 `803df0d` 的主观判断仍是 7.8/10。这不是基准分数，也不是对 `e732da5` 的新评分。Stage E / F 不因此改变。
+- LongMemEval v2 仍在跑，仓库里没有结果，因此没有分数。
+- `compiler/preference_summary.py` 的模块说明原先写「不接 recall」。召回注入在 `compiler/search.py`，说明已改成与代码一致。
+
+## 2026-11-04 - review-round2（PR #28，`302128e`）与 pref-card-review（PR #29，`e732da5`）
+
+## Unreleased - review-round2（外部审查第二轮，快照 / 主体隔离 / 看板 / selector-audit）
+
+来源：对 main `803df0d` 的外部审查。四项均先用失败测试复现，再在根上修复，测试保留为回归。
+
+### 修复
+
+- **WAL 快照失败关闭**（`compiler/snapshots.py`）：`Connection.backup()` 失败时不再
+  `shutil.copy2` 活动 WAL 库（那会写出缺表的快照，打开即 `no such table`）。
+  失败则抛错、不留下快照，并写 `snapshot_auto_failed` 审计。
+- **恢复**（同一模块）：先确认 live 库及其 `-wal`/`-shm` 没有活动连接，再用
+  `Connection.backup()` 把快照写回 live 库（不用 `copy2`），然后切到 DELETE
+  日志模式并删除 sidecar，避免旧 WAL 被重放。manifest 记录 `row_count`、
+  `latest_record_timestamp` 和表名；恢复后做 `integrity_check` 并核对这三项，
+  任一失败都把库滚回恢复前。
+- **召回主体隔离**（`compiler/search.py`）：偏好卡和规律项使用同一个可信主体
+  （`request_subject()` 上下文优先于 `pref_subject`）。主体未知时两条通道都
+  返回空，不再混入其他主体。主体不从 prompt 或卡片文本推断。
+- **Token 看板 namespace**（`compiler/token_dashboard.py`）：`records` 表没有
+  `namespace` 列。统计改为 `subjects.subject_of()`：索引 meta 里能找到记忆根时
+  读规范记录上的 `namespace`，否则用行内已有字段。
+- **selector-audit**（`compiler/selector_audit.py`）：`subject_of()` 返回 None
+  时 namespace 阶段失败，`namespace` 为 `unknown`，verdict 为
+  `blocked_by_namespace`。CLI 补上文档里的 `--namespace` / `--subject` 和
+  `--query`（`--prompt` 的别名）。
+- 回归：`tests/test_review_round2_20261104.py`。偏好卡复核在下一节，回归是
+  `tests/test_pref_card_review_20261104.py`。合成数据。真实记忆库未核验，需要所有者批准。
 
 ## Unreleased - review-fixes（外部代码审查 4 项逻辑修复 + ruff）
 
@@ -38,11 +67,12 @@
   `sqlite3.Connection.backup()` 在线备份——生产 `index.db` 是 WAL 模式
  （`indexer.py: PRAGMA journal_mode=WAL`），此前 `shutil.copy2` 只拷主文件会丢
   `-wal` 里最近提交的数据。非 db 文件保持 `copy2`；manifest 新增 `method` 字段
-  注明备份方式；备份失败回退 `copy2`（旧行为）。
+  注明备份方式。备份失败回退 `copy2` 的行为已在 review-round2 去掉：
+  活动 WAL 库备份失败现在失败关闭，不再文件拷贝。
 - **偏好卡跨主体混入**（`compiler/search.py`）：`recall()` 新增可选参数 `pref_subject`，
   `_match_pref_cards()` 在指定时只匹配该 subject 的卡——此前新偏好卡通道纯按文本
-  bigram 匹配、无请求者过滤，老 recall 通道的 namespace 规则在新通道没有等价边界。
-  多主体调用方必须传 `pref_subject`；不传 = 不过滤（保持旧行为）。
+  bigram 匹配、无请求者过滤。review-round2 起，不传主体不再放行：没有可信主体时
+  偏好卡和规律项都不注入。
 - **Skill 选择移到提取之前**（`compiler/pipeline.py`）：`extract_chunks` 每个 chunk
   提取**前**调 `select_skills`，选出的 skill `instructions` 拼入 `_extract_group` 的
   system prompt（含递归重试路径），真正指导本次提取；此前是提取后才选、只做事后
@@ -73,7 +103,8 @@
 - **偏好卡 / 规律项注入 recall**（`compiler/search.py`）：`recall()` 新增可选参数
   `preference_cards`（配额 `pref_quota=2`）、`patterns`（配额 `pattern_quota=1`）、
   `usage_tracker`；注入项走独立匹配通道，只占 `max_items` 剩余额度，
-  明确标注 `[偏好]` / `[规律]` 并展示证据链；398 候选域语义与 namespace 规则不变。
+  明确标注 `[偏好]` / `[规律]` 并展示证据链；398 候选域语义不变。
+  主体边界见 review-round2：没有可信主体时偏好卡和规律项都不注入。
 - **使用频率回流**（`compiler/usage_signals.py`，新增）：`UsageTracker` 记录偏好卡 /
   规律项被 recall 命中的次数与首末时间，只读看板；只增信号，不碰内容，
   无任何删除 / 降权 / 自动清理路径。
@@ -193,6 +224,17 @@ core 画像与 pinned 记录不参与衰减。
 
 ---
 
+## Unreleased - pref-card-review（偏好卡进入人工复核 + 全量版本历史）
+
+- **偏好卡**（`compiler/preference_summary.py`）：`create` / `update` 不再直接
+  `status=active`。新卡和改写后的卡是 `pending`，`list_active()` 看不到，
+  直到具名人类 `approve(subject, by)`。`withdraw` 仍追加撤回版本。
+- 版本历史按主体只追加：每个版本保留当时的 text、evidence、status。
+  `rollback(subject, version, by)` 再追加一条 pending，正文来自该旧版本，
+  不改已经写下的记录。审计条目带 `content`（正文与证据），不只是操作和版本号。
+- `validate_card` 未写 status 时默认为 `pending`，允许 `pending` / `active` /
+  `withdrawn`。
+
 ## Unreleased - large diary reliability
 
 - 新增 MemSkill 轻量适配（`compiler/skills.py` + `compiler/designer_review.py`，见 `docs/MEMSKILL-LITE.md`）：Skill Bank 把记忆提取/整理/修剪收敛为命名、版本化、可审计的技能（INSERT/UPDATE/DELETE/SKIP 四原语 + 从现有流程提炼的 8 个领域技能）；Designer 只收集 hard cases 并生成 pending 提案，**永不自动生效**——新增/修改/删除 skill 必须具名人类批准。刻意未做 RL 训练闭环（原因见文档）。
@@ -202,6 +244,7 @@ core 画像与 pinned 记录不参与衰减。
   - 新增一等记忆类型 `preference_summary`（compiler/preference_summary.py）：
     subject/text/evidence/updated_at/version/status；每条陈述强制有证据，
     缺证据拒绝写入 + 记审计；支持更新（version+1）与撤回。
+    pref-card-review 起，新建和更新为 pending，批准后才 active，并保留逐版本正文。
   - 未采用 AlignXplore+ 两阶段训练（模型不开源、训练管线太重，文档留了原因）。
 - 默认编译分块调整为 2500 字符，llama.cpp 上下文窗口调整为 16384。
 - 将 `finish_reason=length` 与连接、超时错误分开；输出截断时递归重切。

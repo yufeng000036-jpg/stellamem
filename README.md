@@ -29,7 +29,7 @@ Stellamem 是跑在本机上的 AI 记忆系统：对话收成带证据的 Claim
 
 ## 代码里已经有的设计原则
 
-对照过当前 `main`（`803df0d`）。只写代码里的行为。
+对照过当前 `main`（`e732da5`，含 PR #28 与 #29）。只写代码里的行为。
 
 | 原则 | 代码里实际做什么 |
 |---|---|
@@ -42,7 +42,7 @@ Stellamem 是跑在本机上的 AI 记忆系统：对话收成带证据的 Claim
 
 来源哈希：能对上单条消息时，provenance 带 SHA-256 `content_hash`。对不上的来源指针不会被当成那条消息用。证据不能唯一对上某条消息时，provenance 降为 chunk 级，不编造消息级哈希（`compiler/pipeline.py`）。Claim 另有 `claim_id` / `revision_id`，是槽位和取值的 SHA-256 摘要（`compiler/claim_normalizer.py`）。
 
-写前快照：`compiler/snapshots.py` 覆盖 `stellamem-data/index.db`（SQLite 在线 backup）和 `config.json`。自动调用点在 `compiler/api.py` 的索引重建和 `write_status`，不是每一条写路径。恢复必须 `confirm="RESTORE"`，并先校验 SHA256。备份 API 失败时会退回文件拷贝，这一条仍是开着的缺口，见下文。
+写前快照：`compiler/snapshots.py` 覆盖 `stellamem-data/index.db`（SQLite `backup()`）和 `config.json`。自动调用点在 `compiler/api.py` 的索引重建和 `write_status`，不是每一条写路径。真正的 SQLite / 活动 WAL 库备份失败会抛错，不留快照，也不再 `copy2`。不是 SQLite 的文件仍可以 `copy2`。恢复必须 `confirm="RESTORE"`。SQLite 恢复先确认没有活动连接，再用 `backup()` 写回，并做 `integrity_check`、表名、`row_count`、最新记录时间核对；失败则滚回恢复前。生产环境的端到端回执仍未核验。
 
 `compiler/nightly.py`、`compiler/semantic_health.py`、`compiler/pending_batch.py`、`compiler/persona_sync.py`、`compiler/bridge_gui.py` 在本仓库里只被测试导入，没有接到安装后的生产调用链上。
 
@@ -70,7 +70,7 @@ Stellamem 是跑在本机上的 AI 记忆系统：对话收成带证据的 Claim
 |---|---|---|
 | #26 已合入 main | 已完成 | 合并提交 `83e4e9a` |
 | #26 合入后 CI 全绿 | 未完成 | main 上 Engineering checks [run 41667719093](https://github.com/yufeng000036-jpg/stellamem/actions/runs/41667719093) 结论是 failure：`tests (macos-latest, 3.10)` 为 cancelled，其余已结束的 job 为 success。不能写成全绿 |
-| #15 已合入 main | 已完成 | 当前 main `803df0d` |
+| #15 已合入 main | 已完成 | `803df0d`。当前 main 是 `e732da5`，其上还有 #28 与 #29 |
 | #15 合入后 CI 全绿 | 未完成 | 写本文时 main push [run 41670486088](https://github.com/yufeng000036-jpg/stellamem/actions/runs/41670486088) 仍未结束（总状态 queued）。未全绿 |
 | 4 项修复在真实数据上验证 | 未验证/待生产核验 | 四项修复的代码已在 main（WAL 在线备份、偏好卡 `pref_subject`、提取前选 skill、budget 之后才计使用次数）。仓库里没有真实记忆库上的核验记录 |
 | 快照→回滚端到端跑通 | 未验证/待生产核验 | 单测覆盖 `auto_snapshot` / `restore_snapshot`。仓库里没有生产环境端到端回执 |
@@ -104,23 +104,23 @@ PR #15 已经在 `main` 上。**代码进 main ≠ 部署到生产。** Stage E 
 
 有界测量本身还在：300 条合成投影契约，reader Recall@1 在 80 条正例上是 1.00。那个 1.00 只度量适配器投影契约，不能用来宣称成熟度。
 
-外部审阅者对当前 main（`803df0d`）的主观判断是 **7.8/10**。这不是基准分数，也不表示 Stage E 已通过或 Stage F 已打开。早先 Stage F 文稿里的 6.8/10 是合入前的临时工程量规，同样不是基准，不要把它当成现在的分数。
+外部审阅者对当时的 main（`803df0d`）的主观判断是 **7.8/10**。这不是基准分数，也不是对现在的 `e732da5` 重新打的分，更不表示 Stage E 已通过或 Stage F 已打开。早先 Stage F 文稿里的 6.8/10 是更早的临时工程量规。LongMemEval v2 仍在跑，仓库里没有结果，因此没有分数。
 
-## 外部审阅仍开着的缺口（`803df0d`）
+## 外部审阅的五项（代码已修，真实数据未核验）
 
-下面五项是对 `803df0d` 的外部审阅结论，状态都是 **未关闭，修复进行中**。另有一个改代码的 PR 处理它们。本文件只记录缺口，不改代码。
+这五项是对 `803df0d` 的审阅。PR #28（`302128e`）与 PR #29（`e732da5`）已经把代码修进 main。回归测试用的是合成数据：`tests/test_review_round2_20261104.py`、`tests/test_pref_card_review_20261104.py`。**真实记忆库上还没有核验，需要所有者批准之后才能做。** 未验证/待生产核验。
 
-1. **WAL 快照在备份失败时退回文件拷贝。** `compiler/snapshots.py` 的 `_backup_db()` 在 `sqlite3` 在线备份抛错时执行 `shutil.copy2`，并返回 `copy2-fallback`。WAL 库只拷主文件会丢掉 `-wal` 里尚未检查点的提交。在线备份路径已经有了，失败路径仍然是这个缺口。
-2. **不传 `pref_subject` 时，偏好卡 / 规律通道不做主体隔离。** `compiler/search.py` 的 `recall()` 里 `pref_subject` 默认是 `None`。`_match_pref_cards()` 只在 `subject is not None` 时过滤。`_match_patterns()` 没有主体参数。省略 `pref_subject` 会按文本重叠召回传入列表里的卡，规律项同样不过滤主体。
-3. **Token 看板的 namespace 统计对不上索引列。** `compiler/token_dashboard.py` 按 `rec.get("namespace")` 计数。`compiler/indexer.py` 的 `records` 表有 `subject`，没有 `namespace` 列。从该表读出的行会全部落到 `(none)`。
-4. **selector-audit 在主体为 None 时仍判该阶段通过。** `compiler/selector_audit.py` 调用 `subject_of()`。未分类记录返回 `None` 且不抛 `ValueError`，于是阶段结果是 `pass: True` 且 `namespace` 为 `None`。
-5. **偏好卡创建即为 active，没有复核，也没有版本链。** `compiler/preference_summary.py` 的 `PreferenceCardStore.create()` 直接写 `status=active`、`version=1`，不进收件箱。`update()` 在同一槽位换成 `version+1` 的新字典，旧正文不保留。JSONL 审计只记动作和版本号，不是 Claim 那种 revision 链。
+1. **WAL 快照失败关闭。** 已修（#28）。真正的 SQLite / 活动 WAL 库在 `backup()` 失败时抛 `SnapshotError`，不留下快照，不再 `copy2`。不是 SQLite 的文件仍可以 `copy2`。恢复用 `backup()` 写回，并核对 `integrity_check`、表名、`row_count` 和最新记录时间；失败则滚回恢复前。见 `compiler/snapshots.py` 与 `tests/test_review_round2_20261104.py`。
+2. **偏好卡和规律项共用一个可信主体。** 已修（#28）。`request_subject()` 优先于 `pref_subject`。两者都没有时，两条通道都返回空，不从 prompt 或卡片文本推断主体。见 `compiler/search.py`。
+3. **Token 看板按规范记录取主体。** 已修（#28）。`records` 表没有 `namespace` 列。看板用 `subjects.subject_of()`：能从索引 meta 找到记忆根时读规范记录，否则用该行里已有的字段。对不上则记 `(unclassified)`。见 `compiler/token_dashboard.py`。
+4. **selector-audit 对 None 失败关闭。** 已修（#28）。`subject_of()` 返回 None 时，namespace 阶段 `pass` 为 false，`namespace` 为 `unknown`，verdict 是 `blocked_by_namespace`。见 `compiler/selector_audit.py`。
+5. **偏好卡先 pending，具名批准，历史只追加。** 已修（#29）。`create` / `update` 的 status 是 `pending`。`approve(subject, by)` 要求非空的具名人类。每个版本的正文、证据和状态追加进历史。`rollback(subject, version, by)` 再追加一条 pending，不改旧记录。见 `compiler/preference_summary.py` 与 `tests/test_pref_card_review_20261104.py`。
 
 ## 路线（P0–P3）
 
 近端顺序，不是日期。没写进代码的都标计划。
 
-- **P0** 把 9 分表里的生产核验做完并留下回执：四项修复的真实数据、快照到回滚、运行中宿主上的注入门、pending、sleep_purify 的命名空间问题、生产索引 SHA、restore+rebuild。本仓库现在核验不了。同时收口上面五项「修复进行中」的代码缺口（另一个 PR）。
+- **P0** 把 9 分表里的生产核验做完并留下回执：四项修复的真实数据、快照到回滚、运行中宿主上的注入门、pending、sleep_purify 的命名空间问题、生产索引 SHA、restore+rebuild。上面五项代码缺口已经在仓库里修好，真实数据核验同样还没做，需要所有者批准。本仓库现在核验不了。
 - **P1** 语义检索二选一：恢复可用，或改成显式降级。现在是静默退回，尚未采纳。以及独立评估基线，顺序见评估计划。
 - **P2** 10 分方向，候选 A。计划，未实现。
 - **P3** 不作为当前差异点的备选：进程内向量（fastembed + sqlite-vec）、快照之外的 WAL 持续复制（litestream）。都未实现，也未选定。
@@ -136,17 +136,17 @@ PR #15 已经在 `main` 上。**代码进 main ≠ 部署到生产。** Stage E 
 - 一律进人工复核收件箱；
 - 绝不自动注入。
 
-候选 B（偏好卡的证据链）打算随 A 一起做，同样未实现。现有偏好卡要求 evidence 非空，但创建即为 active，见上面的开着的缺口。
+候选 B（偏好卡的证据链作为 10 分的一部分）仍是计划，未实现。现有偏好卡已经要求 evidence 非空，并且新建为 pending、具名批准后才 active。那是 #29 的复核，不是候选 A 的归纳。
 
 仓库里已有的是另一件事：`compiler/sleep_consolidation.py` 的 `mine_patterns`。默认 `min_episodes=2`，把相同的 subject/predicate/value 收成 `kind=pattern` 的 pending 候选，provenance 是 episode id 列表。它不是 `pattern_claim`，不要求 3 条证据跨 2 个会话，也不保证调用方不会注入。不要把它写成候选 A 已经落地。
 
 可参考、还没接进代码的做法：Generative Agents 的「洞见必须引用记忆编号」，Nemori 的「只蒸馏预测错的部分」。Letta 的 sleep-time compute 只说明「空闲时整理、主路径不堵住」这个方向。`compiler/nightly.py` 不是 Letta。
 
-## 当前测试（在 `803df0d` 重跑）
+## 当前测试（在含 #28 / #29 的树上重跑）
 
-- Python 3.12.3：`python -m unittest discover -s tests` → **563 passed + 42 subtests**，0 失败。
+- Python 3.12.3：`python -m unittest discover -s tests` → **577 passed + 42 subtests**，0 失败。这是含 PR #28 / #29 的当前树。
 - Node.js 22.23.4：`node --test tests/hooks.test.mjs` → **8 passed**。
-- 更早文档里的 357、372、426、472、518、528 是当时那次测量，不是现在的 main。
+- `803df0d` 上的 563 passed + 42 subtests，以及更早的 357、372、426、472、518、528，都是当时那次测量，不是现在的 main。
 
 本仓库不含真实记忆、生产索引、生产备份或生产配置。历史次数见 [`CHANGELOG.md`](CHANGELOG.md)。
 
@@ -198,11 +198,11 @@ PR #15 已经在 `main` 上。**代码进 main ≠ 部署到生产。** Stage E 
 - 写前自动快照 + 一键回滚（`compiler/snapshots.py`）：写操作前自动快照，回滚需确认短语，全程审计；
 - Token 看板（`compiler/token_dashboard.py`，只读）：分组统计、token 估算、三色预算告警，超预算只给人工复核建议（不做自动压实）；
 - 时效衰减（`compiler/rank.py` 接入 recall）：90 天半衰期可配，只降排序不删数据，core/pinned 永不衰减；
-- selector-audit（`compiler/selector_audit.py`，只读）：9 阶段诊断"这条记忆为什么没被召回"。主体为 None 时 namespace 阶段仍会判通过，见上文开着的缺口；
+- selector-audit（`compiler/selector_audit.py`，只读）：9 阶段诊断"这条记忆为什么没被召回"。`subject_of()` 为 None 时 verdict 是 `blocked_by_namespace`（#28）。
 - Skill Bank（`compiler/skills.py`）：11 个命名、版本化、可审计的记忆技能，规则选择；
 - 失败案例复盘（`compiler/designer_review.py`）：hard cases 生成 pending 提案，人工批准才生效，永不自动改；
 - 桥摘要规则（ADR 0004）：过桥只传提炼摘要，原始日志永不过桥，人工检查清单；
-- 偏好摘要（`compiler/preference_summary.py`）：一等记忆类型，每条陈述强制带证据，缺证据拒绝写入。`create()` 直接写成 active，没有收件箱复核，更新不保留旧正文，见上文开着的缺口。
+- 偏好摘要（`compiler/preference_summary.py`）：一等记忆类型，每条陈述强制带证据，缺证据拒绝写入。新建和更新为 pending，具名批准后才 active，版本正文只追加、可回滚（#29）。真实数据未核验。
 
 ### 现在没有的功能 / 已知问题（合并前请先读）
 
@@ -371,12 +371,12 @@ Stellamem **不是**：
 | Transaction / Rollback | ✅ |
 | Crash recovery | ✅ |
 | Local models（llama.cpp 等） | ✅ |
-| 写前快照 + 回滚（snapshots） | 🚧 在线备份与确认短语已有；失败时退回文件拷贝，见开着的缺口 |
-| Token 看板（只读） | 🚧 只读统计已有；`by_namespace` 读不到索引里的 namespace 列 |
+| 写前快照 + 回滚（snapshots） | 代码已修（#28）：SQLite 备份失败关闭，恢复核对行数与完整性。生产端到端未验证 |
+| Token 看板（只读） | 代码已修（#28）：用 `subject_of` 读规范记录。生产未验证 |
 | 时效衰减（recall 排序层） | ✅ |
-| selector-audit（只读诊断） | 🚧 九阶段诊断已有；主体为 None 时该阶段仍 pass |
+| selector-audit（只读诊断） | 代码已修（#28）：主体为 None 时 `blocked_by_namespace`。生产未验证 |
 | Skill Bank（记忆技能注册表） | ✅ |
-| preference_summary（偏好摘要 kind） | 🚧 缺证据会拒绝；创建即为 active，无复核、无版本链 |
+| preference_summary（偏好摘要 kind） | 代码已修（#29）：pending、具名批准、只追加历史、可回滚。生产未验证 |
 | 桥摘要规则（ADR 0004） | ✅ |
 | Remote cloud models | 🚧 暂不支持（仅环回地址） |
 | Other agent adapters | 🚧 |
@@ -487,7 +487,7 @@ Run the built-in checks and report whether installation succeeded.
 
 ### Alpha（当前）
 - 把 Stage E / F 仍缺的证据补上
-- 收口外部审阅标成「修复进行中」的五项
+- 五项代码缺口已在 #28 / #29 修好；真实数据核验仍待所有者批准
 - 独立评估基线（计划，未跑）
 
 ### Beta

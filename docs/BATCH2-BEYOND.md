@@ -57,8 +57,10 @@
   `preference_cards`（配额 `pref_quota=2`）、`patterns`（配额 `pattern_quota=1`）、
   `usage_tracker`。
 - 注入项走**独立匹配通道**（bigram overlap），只占 `max_items` 剩余额度；
-  sqlite 候选域（398）与 namespace 规则原样不动；注入项明确标注
-  `[偏好]` / `[规律]` 并展示证据链（偏好卡证据条数 / 规律项 provenance 期数）。
+  sqlite 候选域（398）不变。偏好卡和规律项共用可信请求主体
+  （`request_subject()` 优先于 `pref_subject`）：主体未知时两条通道都返回空，
+  不混入其他主体。注入项明确标注 `[偏好]` / `[规律]` 并展示证据链
+  （偏好卡证据条数 / 规律项 provenance 期数）。
 
 ### 3. 使用频率回流为质量信号（`compiler/usage_signals.py`，新增）
 - PR #20 当时列为"后续可做"的轻量版压力测试。
@@ -110,7 +112,7 @@
 ## 测试
 
 - 新增 46 项（`tests/test_batch2_*.py` ×5）。当时测量：518 passed + 37 subtests，
-  相对当时基线（472）零下跌。当前 main 重跑是 563 passed + 42 subtests。
+  相对当时基线（472）零下跌。`803df0d` 重跑是 563 passed + 42 subtests。含 #28 / #29 的当前重跑是 577 passed + 42 subtests。
 - `ruff check` / `ruff format` 通过（本分支新增与修改的文件）；
   `tools/secret_scan.py` 干净。
 - 未验证：GitHub Actions CI（合并前看一眼）；运行时真实数据接入（按铁律未碰生产）。

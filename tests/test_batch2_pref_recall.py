@@ -44,7 +44,7 @@ class PrefRecallTests(unittest.TestCase):
     def test_matching_card_injected_with_evidence(self):
         con = _empty_db()
         cards = [_card("钟丽潭", "送小心心是省钱的支持方式，不是喜欢特效")]
-        r = S.recall(con, "钟丽潭送了什么", preference_cards=cards)
+        r = S.recall(con, "钟丽潭送了什么", preference_cards=cards, pref_subject="钟丽潭")
         kinds = [i["kind"] for i in r["items"]]
         self.assertIn("preference_summary", kinds)
         item = [i for i in r["items"] if i["kind"] == "preference_summary"][0]
@@ -55,14 +55,14 @@ class PrefRecallTests(unittest.TestCase):
     def test_non_matching_card_not_injected(self):
         con = _empty_db()
         cards = [_card("张三", "喜欢喝咖啡")]
-        r = S.recall(con, "钟丽潭送了什么", preference_cards=cards)
+        r = S.recall(con, "钟丽潭送了什么", preference_cards=cards, pref_subject="钟丽潭")
         self.assertEqual(r["items"], [])
         con.close()
 
     def test_quota_respected(self):
         con = _empty_db()
-        cards = [_card("钟丽潭%d" % i, "钟丽潭送小心心支持主播") for i in range(5)]
-        r = S.recall(con, "钟丽潭", preference_cards=cards, pref_quota=2)
+        cards = [_card("钟丽潭", "钟丽潭送小心心支持主播%d" % i) for i in range(5)]
+        r = S.recall(con, "钟丽潭", preference_cards=cards, pref_quota=2, pref_subject="钟丽潭")
         n = len([i for i in r["items"] if i["kind"] == "preference_summary"])
         self.assertEqual(n, 2)
         con.close()
@@ -70,7 +70,7 @@ class PrefRecallTests(unittest.TestCase):
     def test_withdrawn_card_never_injected(self):
         con = _empty_db()
         cards = [_card("钟丽潭", "钟丽潭送小心心", status="withdrawn")]
-        r = S.recall(con, "钟丽潭", preference_cards=cards)
+        r = S.recall(con, "钟丽潭", preference_cards=cards, pref_subject="钟丽潭")
         self.assertEqual(r["items"], [])
         con.close()
 
@@ -85,7 +85,13 @@ class PrefRecallTests(unittest.TestCase):
         con = _empty_db()
         tracker = UsageTracker()
         cards = [_card("钟丽潭", "送小心心是省钱的支持方式")]
-        S.recall(con, "钟丽潭送了什么", preference_cards=cards, usage_tracker=tracker)
+        S.recall(
+            con,
+            "钟丽潭送了什么",
+            preference_cards=cards,
+            usage_tracker=tracker,
+            pref_subject="钟丽潭",
+        )
         hit = tracker.get("pref:钟丽潭")
         self.assertIsNotNone(hit)
         self.assertEqual(hit["hits"], 1)
@@ -106,7 +112,7 @@ class PrefRecallTests(unittest.TestCase):
                 "support": 2,
             }
         ]
-        r = S.recall(con, "钟丽潭起哄会送礼吗", patterns=patterns)
+        r = S.recall(con, "钟丽潭起哄会送礼吗", patterns=patterns, pref_subject="钟丽潭")
         kinds = [i["kind"] for i in r["items"]]
         self.assertIn("pattern", kinds)
         item = [i for i in r["items"] if i["kind"] == "pattern"][0]
@@ -129,7 +135,7 @@ class PrefRecallTests(unittest.TestCase):
             }
             for i in range(4)
         ]
-        r = S.recall(con, "钟丽潭送礼", patterns=patterns, pattern_quota=1)
+        r = S.recall(con, "钟丽潭送礼", patterns=patterns, pattern_quota=1, pref_subject="钟丽潭")
         n = len([i for i in r["items"] if i["kind"] == "pattern"])
         self.assertEqual(n, 1)
         con.close()
@@ -148,7 +154,7 @@ class PrefRecallTests(unittest.TestCase):
                 "support": 1,
             }
         ]
-        r = S.recall(con, "钟丽潭送礼", patterns=patterns)
+        r = S.recall(con, "钟丽潭送礼", patterns=patterns, pref_subject="钟丽潭")
         self.assertEqual(r["items"], [])
         con.close()
 

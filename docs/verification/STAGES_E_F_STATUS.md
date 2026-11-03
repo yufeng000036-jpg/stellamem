@@ -1,8 +1,12 @@
-# Stage E / Stage F status after PR #15 merged
+# Stage E / Stage F status after PR #15, #28, and #29
 
-PR #15 is merged to `main` at `803df0d` (2026-11-03). **Code on main is not a production deployment.** No production service, configuration, or data change is evidenced by this repository. Stage E acceptance stays **NOT MET**. The Stage F release gate stays **CLOSED**. This tree is not a release candidate.
+PR #15 is on `main`. PR #28 (`302128e`) and PR #29 (`e732da5`, current `main`) are on `main` as well. **Code on main is not a production deployment.** No production service, configuration, or data change is evidenced by this repository. Stage E acceptance stays **NOT MET**. The Stage F release gate stays **CLOSED**. This tree is not a release candidate. #28 and #29 do not supply the missing evidence below.
 
-An external review of current `main` (`803df0d`) gave a subjective **7.8/10**. That number is one reviewer's judgment, not a benchmark score, and it does not pass Stage E or open Stage F. The 6.8/10 rubric later in this file is the older pre-merge engineering estimate. It is also a judgment, not a measurement, and it is not the current rating.
+An external review of the earlier main `803df0d` gave a subjective **7.8/10**. That number is one reviewer's judgment of that commit, not a benchmark score, and not a new rating of `e732da5`. It does not pass Stage E or open Stage F. The 6.8/10 rubric later in this file is an older pre-merge engineering estimate. It is also a judgment, not a measurement.
+
+LongMemEval v2 is still running. This repository has no v2 result, so there is no score. Do not read a missing result as zero.
+
+The five code gaps found on `803df0d` are fixed in the tree (`tests/test_review_round2_20261104.py`, `tests/test_pref_card_review_20261104.py`). Those tests use synthetic data. Real-data verification is still pending and needs the owner's approval.
 
 ## Evidence still required before a production release
 
@@ -58,8 +62,8 @@ All raw per-case results, expected/actual IDs, split labels and observed latency
 
 # Stage F — release gate remains CLOSED
 
-#15 is on `main`. That is a git merge, not a release and not a production deployment. D7–D13 original audit is still unknown. F cannot pass while E acceptance is unmet. This file contains no evidence that production services, configuration, or data changed.
+#15, #28, and #29 are on `main` (`e732da5`). Those are git merges, not a release and not a production deployment. D7–D13 original audit is still unknown. F cannot pass while E acceptance is unmet. This file contains no evidence that production services, configuration, or data changed.
 
-Provisional engineering estimate recorded before the merge, subject to final same-SHA CI at that time: governance 1.4/2, privacy/security 1.5/2, cross-platform 1.8/2, simulated E2E/recovery 1.1/1.5, memory-quality evidence 0.3/1.5, maintainability/docs 0.7/1 = **6.8/10**. This was a judgment rubric, not a measured benchmark score. It is not the current rating. The current external subjective rating of `803df0d` is **7.8/10**, also not a benchmark, and it does not change the NOT MET / CLOSED conclusions above.
+Provisional engineering estimate recorded before the merge, subject to final same-SHA CI at that time: governance 1.4/2, privacy/security 1.5/2, cross-platform 1.8/2, simulated E2E/recovery 1.1/1.5, memory-quality evidence 0.3/1.5, maintainability/docs 0.7/1 = **6.8/10**. This was a judgment rubric, not a measured benchmark score. It is not the current rating. The later subjective 7.8/10 applied to `803df0d` only. It is also not a benchmark, and it does not change the NOT MET / CLOSED conclusions above.
 
 To proceed past E, the missing quality evidence listed above has to be produced. Extra features are not a substitute. Production access is not a substitute for writing the evidence down.

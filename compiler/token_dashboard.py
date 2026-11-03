@@ -16,6 +16,8 @@ import json
 import sqlite3
 from pathlib import Path
 
+import subjects as SU
+
 DEFAULT_BUDGET_TOKENS = 30000
 
 # 三色告警阈值（占预算比例）
@@ -58,6 +60,56 @@ def _record_text(rec: dict) -> str:
     return "\n".join(p for p in parts if p)
 
 
+def _canonical_by_claim(con: sqlite3.Connection) -> dict[str, dict]:
+    """索引表 records 没有 namespace 列。namespace 在记忆根的规范记录上。"""
+    try:
+        row = con.execute("SELECT value FROM meta WHERE key='root'").fetchone()
+    except sqlite3.Error:
+        return {}
+    if not row or not row[0]:
+        return {}
+    root = Path(str(row[0]))
+    if not root.is_dir():
+        return {}
+    try:
+        import indexer
+        from storage import load_records
+    except ImportError:
+        return {}
+    paths = [root / rel for rel, _layer in indexer.MANAGED]
+    try:
+        extra = [
+            item[0]
+            for item in con.execute("SELECT DISTINCT file FROM records WHERE file IS NOT NULL")
+        ]
+    except sqlite3.Error:
+        extra = []
+    paths.extend(root / rel for rel in extra)
+    found: dict[str, dict] = {}
+    seen = set()
+    for path in paths:
+        if path in seen or not path.is_file():
+            continue
+        seen.add(path)
+        try:
+            _, records = load_records(path)
+        except (OSError, ValueError):
+            continue
+        for rec in records:
+            claim_id = rec.get("claim_id")
+            if claim_id:
+                found[str(claim_id)] = rec
+    return found
+
+
+def _namespace_label(row: dict, canonical: dict[str, dict]) -> str:
+    claim_id = row.get("claim_id")
+    source = canonical.get(str(claim_id)) if claim_id else None
+    if source is None:
+        source = row
+    return SU.subject_of(source) or "(unclassified)"
+
+
 def dashboard(
     db_path: Path | str, budget_tokens: int = DEFAULT_BUDGET_TOKENS, top_n: int = 10
 ) -> dict:
@@ -67,6 +119,7 @@ def dashboard(
     con.row_factory = sqlite3.Row
     try:
         rows = [dict(r) for r in con.execute("SELECT * FROM records")]
+        canonical = _canonical_by_claim(con)
     finally:
         con.close()
 
@@ -77,7 +130,7 @@ def dashboard(
     token_rows = []
     estimated_any = False
     for rec in rows:
-        ns = rec.get("namespace") or "(none)"
+        ns = _namespace_label(rec, canonical)
         by_namespace[ns] = by_namespace.get(ns, 0) + 1
         st = rec.get("status") or "(none)"
         by_status[st] = by_status.get(st, 0) + 1
@@ -89,7 +142,7 @@ def dashboard(
             {
                 "id": rec.get("claim_id") or rec.get("id"),
                 "kind": rec.get("kind"),
-                "namespace": rec.get("namespace"),
+                "namespace": ns,
                 "tokens": toks,
             }
         )

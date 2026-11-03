@@ -1,6 +1,6 @@
 # Stellamem 公开版更新日志（脱敏版）
 
-> 这是 2026-11-02 公开包的历史记录，不是当前 main。当前状态、563 passed + 42 subtests、Node 8，以及「合入 main 不是生产发布」，见 README 与 `docs/verification/STAGES_E_F_STATUS.md`。
+> 这是 2026-11-02 公开包的历史记录，不是当前 main。当前 main 是 `e732da5`（577 passed + 42 subtests、Node 8）。合入 main 不是生产发布。见 README 与 `docs/verification/STAGES_E_F_STATUS.md`。
 
 
 

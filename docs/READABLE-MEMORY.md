@@ -36,7 +36,8 @@ personalisation》（EMNLP 2026，Senior Area Chair Highlight Award）提出
 - 新 kind：`preference_summary`（`compiler/preference_summary.py`）。
 - 字段：subject、text（短，plain language，上限 500 字）、
   evidence（每条陈述的证据引用，`[{statement, evidence}]`）、
-  updated_at、version、status（active/withdrawn）。
+  updated_at、version、status（pending/active/withdrawn）。
+  新建和更新都是 pending，具名人类 `approve` 之后才是 active。
 - 铁律（用户 2026-11-03 亲定，写进校验）：每条陈述必须有证据支撑，
   禁止想当然式推断。证据缺失 = 拒绝写入 + 记审计。
   - 反例 1："送了 235 个小心心" → 不许写成"喜欢小心心特效"。
@@ -44,8 +45,11 @@ personalisation》（EMNLP 2026，Senior Area Chair Highlight Award）提出
   - 证据只能支持证据本身。
 - 模块强制的是结构（evidence 非空）；证据是否真正支撑陈述（忠实度）
   是人工评审的判断 —— 模块管"有没有"，人管"对不对"。
-- 能力：create / update（version+1）/ withdraw（撤回，历史保留）/
-  get / list_active；审计 JSONL 只增，拒绝写入同样记审计。
+- 能力：create / update（version+1，status 回到 pending）/ approve（具名人类，
+  pending → active）/ withdraw（撤回，历史保留）/ rollback（追加一条 pending，
+  正文来自指定旧版本，不改旧记录）/ get / history / list_active。
+  每个版本保存当时的 text、evidence、status，只追加。
+  审计 JSONL 只增，成功写入记下正文，拒绝写入同样记审计。
 - 适用：常客偏好卡、用户偏好画像等"短、活、只讲偏好"的记忆。
 
 ## 未采用部分：AlignXplore+ 与两阶段训练
@@ -62,6 +66,6 @@ personalisation》（EMNLP 2026，Senior Area Chair Highlight Award）提出
 
 ## 后续可做（不阻塞本次）
 
-- `preference_summary` 的 recall 通道已经在 `compiler/search.py` 的 `recall(preference_cards=...)`。不传 `pref_subject` 时不做主体过滤，这是未关闭的缺口。创建即为 active、没有复核和版本链，同样未关闭。见 README 的「外部审阅仍开着的缺口」。
+- `preference_summary` 的 recall 通道在 `compiler/search.py`。#28 起，没有可信主体时偏好卡和规律项都返回空。#29 起，新建和更新是 pending，具名批准后才 active，历史只追加。真实数据核验还没有做，需要所有者批准。
 - 偏好卡的使用频率回流已有 `compiler/usage_signals.py`（只记信号）。把它用作质量判决仍未做。
 - 桥接摘要的忠实度抽查流程（人工抽检比例）。

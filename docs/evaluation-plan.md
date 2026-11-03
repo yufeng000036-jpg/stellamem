@@ -31,7 +31,7 @@
 - 计划：从 `longmemeval_s_cleaned` 按 6 类分层抽 100 题，固定随机种子，把题号清单放进仓库，报告写明这是**自抽子集**。抽取尚未做，种子尚未定。
 - 计划中的流水线：自写适配器，把会话灌入、检索、生成回答，写出 hypothesis 文件，再用官方 `evaluate_qa.py` 打分。judge 需要 OpenAI，会花钱。
 - 数据集是英文。Stellamem 的提取提示要求 value 与证据跟随源文语言。这个分数如果将来产生，只代表英文能力。
-- 仓库里已有另一套东西：`benchmark/longmemeval/` 冻结了 140 道官方题，用本地模型做有界实验，**不用**官方 `evaluate_qa.py`。`docs/verification/AUTOLOG_BOUNDARY.md` 与 `docs/verification/LONGMEMEVAL_RUNTIME_V2.md` 写明没有最终 v2 质量分，中断的那次不是质量通过。不要把这套脚手架写成第二步已经完成，也不要把它没有分数说成 0 分。
+- 仓库里已有另一套东西：`benchmark/longmemeval/` 冻结了 140 道官方题，用本地模型做有界实验，**不用**官方 `evaluate_qa.py`。`docs/verification/AUTOLOG_BOUNDARY.md` 与 `docs/verification/LONGMEMEVAL_RUNTIME_V2.md` 写明没有最终 v2 质量分，中断的那次不是质量通过。文档更新时 LongMemEval v2 仍在跑，仓库里没有结果，因此没有分数。不要把「还在跑」写成 0 分，也不要把这套脚手架写成第二步已经完成。
 
 ## 明确不写成 Stellamem 的成绩
 

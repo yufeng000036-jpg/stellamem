@@ -1,11 +1,11 @@
 # Real isolated OpenClaw hook — 2026-11-02
 
-> Status note (2026-11-04): PR #15 is merged at `803df0d`. The transport
-> evidence below still does not pass Stage E and does not open the Stage F
-> release gate. "Release gate open" later in this file means the gate was not
-> passed, not that a release shipped. Merge is not a production deployment.
-> SQLite session intake remains unadapted. The 421 Python tests below are this
-> note's own run.
+> Status note (2026-11-04): current main is `e732da5` (includes PR #15, #28,
+> and #29). The transport evidence below still does not pass Stage E and does
+> not open the Stage F release gate. "Release gate open" later in this file
+> means the gate was not passed, not that a release shipped. Merge is not a
+> production deployment. SQLite session intake remains unadapted. The 421
+> Python tests below are this note's own run.
 
 
 

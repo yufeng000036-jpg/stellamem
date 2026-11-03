@@ -1,8 +1,9 @@
 # Reclassified pending update regression
 
-> Status note (2026-11-04): this fix is on main via PR #15 (`803df0d`). The
-> 423 Python tests below are this note's own run. Independent acceptance stays
-> unmet and the release gate stays CLOSED. Merge is not production deployment.
+> Status note (2026-11-04): this fix is on main. Current main is `e732da5`.
+> The 423 Python tests below are this note's own run. Independent acceptance
+> stays unmet and the release gate stays CLOSED. Merge is not production
+> deployment.
 
 
 
