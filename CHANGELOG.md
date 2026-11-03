@@ -13,6 +13,50 @@
   `docs/LAUNCH_COPY.md`、`CHANGELOG.md`、`PUBLIC-CHANGELOG.md` 同步改写。
   功能代码零改动。
 
+---
+
+## 2026-11-03 - PR #17 / #18 / #20 合入 main（head `0ad18f58`）
+
+更新总览见 `docs/UPDATE-2026-11-03.md`。三项均为外部借鉴、按 Stellamem 治理哲学重做。
+
+### 新增（已合入）
+
+- **4 个治理功能**（PR #17，`c8d20307`，借鉴记忆管家 V4.0.6；详见 `docs/GOVERNANCE-4-FEATURES.md`）：
+  写前自动快照 + 一键回滚（`compiler/snapshots.py`）、Token 看板只读版（`compiler/token_dashboard.py`，
+  刻意不做自动压实）、90 天时效衰减接入 recall（`compiler/rank.py`，只降排序不删数据）、
+  selector-audit 九阶段召回诊断（`compiler/selector_audit.py`）。
+- **MemSkill 轻量适配**（PR #18，`19e7ec53`；详见 `docs/MEMSKILL-LITE.md`）：
+  Skill Bank（`compiler/skills.py`，11 个命名/版本化/可审计 skill，规则选择）+
+  失败案例复盘（`compiler/designer_review.py`，只提议、人工批准才生效，永不自动改）。
+- **可读记忆两小件**（PR #20，`0ad18f58`，替代 #19；详见 `docs/READABLE-MEMORY.md`）：
+  桥"只传摘要、不搬原文"明文规则（ADR 0004）+ 一等记忆类型 `preference_summary`
+ （`compiler/preference_summary.py`，每条陈述强制带证据）。
+
+### 修复
+
+- `rank._timestamp_ms` 不认索引表实际 `occurred_at`/`observed_at` 字段，
+  导致真实数据上衰减静默失效（PR #17 顺带修复）。
+
+### 测试
+
+- 全量回归 **472 passed + 37 subtests**，基线全程零下跌；`tools/secret_scan.py` 干净。
+
+### 已合入
+
+- PR #22（`feat/attribution-20261103`，`608acd11`）：外部致谢文档（"偷"表述改为正式致谢）。
+
+### 待合入（draft）
+
+- PR #21（`feat/batch2-beyond-20261103`）：skill 运行时接线、偏好卡 recall 接线、
+  使用频率回流、SenseNova 三件套、睡眠巩固文本版。
+
+### 未验证 / 已知
+
+- 三个已合入 PR 的 GitHub Actions CI 均无状态上报（workflow 权限问题）。
+- decay 生产启用、#21 功能的运行时真实数据验证，均需单独确认（未碰生产）。
+
+---
+
 ## Unreleased - governance-4-features（借鉴记忆管家 V4.0.6）
 
 设计文档：`docs/GOVERNANCE-4-FEATURES.md`。4 个功能按 Stellamem 架构独立实现，

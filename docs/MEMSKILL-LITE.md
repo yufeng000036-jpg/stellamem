@@ -41,7 +41,7 @@ skill 注册表。每个 skill 包含：
 | digest | 内容 SHA256（防篡改） |
 
 初始 skill 集 = MemSkill 的 INSERT / UPDATE / DELETE / SKIP 四原语 +
-从现有手写流程提炼的 8 个领域 skills：
+从现有手写流程提炼的 7 个领域 skills（共 11 个）：
 
 - `extract_atomic_claims` ← `pipeline.py` SYSTEM（≤6 条、evidence ≤240 字、质量 bar、语言规则）
 - `evidence_verify` ← `pipeline.py` 证据核实 + 说话人归因
