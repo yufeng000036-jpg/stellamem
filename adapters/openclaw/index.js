@@ -122,8 +122,9 @@ export async function project(root, prompt, config = {}) {
   }
   const beforeGeneration = await generation(root);
   const max = Math.max(0, Math.min(16000, Number.isFinite(config.maxInjectChars) ? config.maxInjectChars : 4000));
-  const requester = Object.hasOwn(config, "requesterSubject") ? config.requesterSubject : "user";
-  if (!["user", "persona", "viewer"].includes(requester)) return "";
+  // Missing, blank, or unknown requester is fail-closed. Do not default to user.
+  const requester = Object.hasOwn(config, "requesterSubject") ? config.requesterSubject : "";
+  if (typeof requester !== "string" || !["user", "persona", "viewer"].includes(requester)) return "";
   if (Object.hasOwn(config, "activeScopes") && (!Array.isArray(config.activeScopes) ||
       config.activeScopes.some(scope => typeof scope !== "string"))) return "";
   const scopes = ["global", ...(config.activeScopes || [])];

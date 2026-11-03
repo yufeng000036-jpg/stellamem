@@ -2,7 +2,7 @@
 
 > **Reliability development branch (not a deployed release):** see [latest automation boundaries](docs/verification/AUTOLOG_BOUNDARY.md), [real host transport evidence](docs/verification/REAL_OPENCLAW.md), and [frozen independent evaluation](benchmark/longmemeval/PROTOCOL.md). Local regression: 426 Python / 8 Node; exact-SHA CI evidence is attached to draft PR #15. Older counts below describe historical milestones. Memory-quality acceptance and full host intake remain incomplete; no 9/10 claim.
 >
-> **Compatibility:** projection defaults to requester `user` and scope `global`; use explicit `requesterSubject` / `activeScopes` for other namespaces/tasks. An explicit invalid namespace fails closed. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
+> **Compatibility:** projection returns nothing unless `requesterSubject` is `user`, `persona`, or `viewer` (a missing requester is not treated as `user`). Scope defaults to `global`; set `activeScopes` explicitly for other tasks. An explicit invalid namespace fails closed. Record search, recall, and the local HTTP API use the same rule. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
 
 > **Give AI memory a Git.** ｜ **给 AI 记忆一个 Git。**
 

@@ -108,53 +108,59 @@ class APITests(unittest.TestCase):
         self.assertFalse(data["model_required"])
 
     def test_search_chinese(self):
-        status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("记忆系统第一阶段"))
+        status, data = self.call(
+            "GET", "/v1/search?q=" + urllib.parse.quote("记忆系统第一阶段") + "&subject=user"
+        )
         self.assertEqual(status, 200)
         self.assertGreaterEqual(data["count"], 1)
         self.assertIn("星忆", data["items"][0]["value"])
 
     def test_search_fragmented_query(self):
-        status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("第一阶段 记忆 系统"))
+        status, data = self.call(
+            "GET", "/v1/search?q=" + urllib.parse.quote("第一阶段 记忆 系统") + "&subject=user"
+        )
         self.assertEqual(status, 200)
         self.assertGreaterEqual(data["count"], 1)
 
     def test_timeline(self):
-        status, data = self.call("GET", "/v1/timeline")
+        status, data = self.call("GET", "/v1/timeline?subject=user")
         self.assertEqual(status, 200)
         self.assertGreaterEqual(data["count"], 5)
 
     def test_memory_lookup_and_404(self):
-        status, data = self.call("GET", "/v1/memory/c-api0")
+        status, data = self.call("GET", "/v1/memory/c-api0?subject=user")
         self.assertEqual(status, 200)
         self.assertEqual(data["claim_id"], "c-api0")
-        status, data = self.call("GET", "/v1/memory/c-missing")
+        status, data = self.call("GET", "/v1/memory/c-missing?subject=user")
         self.assertEqual(status, 404)
 
     def test_history_and_related(self):
-        status, data = self.call("GET", "/v1/history/c-api0")
+        status, data = self.call("GET", "/v1/history/c-api0?subject=user")
         self.assertEqual(status, 200)
         self.assertGreaterEqual(len(data["items"]), 1)
-        status, data = self.call("GET", "/v1/related/c-api0:r-api0")
+        status, data = self.call("GET", "/v1/related/c-api0:r-api0?subject=user")
         self.assertEqual(status, 200)
 
     def test_evidence_missing_raw_returns_404(self):
-        status, data = self.call("GET", "/v1/evidence/rm-0")
+        status, data = self.call("GET", "/v1/evidence/rm-0?subject=user")
         self.assertEqual(status, 404)
 
     def test_recall_budget(self):
         status, data = self.call(
-            "POST", "/v1/recall", {"prompt": "我的记忆系统做到哪了", "budget": 120}
+            "POST",
+            "/v1/recall",
+            {"prompt": "我的记忆系统做到哪了", "budget": 120, "subject": "user"},
         )
         self.assertEqual(status, 200)
         self.assertLessEqual(data["chars"], 120)
         self.assertGreaterEqual(len(data["items"]), 1)
 
     def test_export_ndjson(self):
-        status, body = self.call("GET", "/v1/export?ns=personal")
+        status, body = self.call("GET", "/v1/export?ns=personal&subject=user")
         self.assertEqual(status, 200)
         lines = [line for line in body.strip().split("\n") if line]
         self.assertGreaterEqual(len(lines), 5)
-        self.assertEqual(json.loads(lines[0])["namespace"], "personal")
+        self.assertEqual(json.loads(lines[0])["namespace"], "user")
 
     # ---------------- 安全边界 ----------------
 
@@ -171,7 +177,7 @@ class APITests(unittest.TestCase):
         status, data = self.call(
             "POST",
             "/v1/approve",
-            {"claim_id": "c-api4"},
+            {"claim_id": "c-api4", "subject": "user"},
             headers={"Authorization": f"Bearer {self.token}", "Origin": "http://evil.example.com"},
         )
         self.assertEqual(status, 403)
@@ -193,7 +199,7 @@ class APITests(unittest.TestCase):
         status, data = self.call(
             "POST",
             "/v1/approve",
-            {"claim_id": "c-api4"},
+            {"claim_id": "c-api4", "subject": "user"},
             headers={"Authorization": f"Bearer {self.token}"},
         )
         self.assertEqual(status, 200, data)
@@ -218,7 +224,7 @@ class APITests(unittest.TestCase):
         status, data = self.call(
             "POST",
             "/v1/reject",
-            {"claim_id": "c-api4"},
+            {"claim_id": "c-api4", "subject": "user"},
             headers={"Authorization": f"Bearer {self.token}"},
         )
         self.assertEqual(status, 200, data)

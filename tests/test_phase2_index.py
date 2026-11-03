@@ -72,33 +72,37 @@ class IndexTests(unittest.TestCase):
         self.assertEqual(self.idx.stats()["records"], first)
 
     def test_quarantined_never_returned_by_default(self):
-        hits = S.search(self.idx.con, "敏感内容", limit=10)
+        hits = S.search(self.idx.con, "敏感内容", limit=10, namespace="user")
         self.assertEqual(hits, [])
-        explicit = S.search(self.idx.con, "敏感内容", limit=10, status=("quarantined",))
+        explicit = S.search(
+            self.idx.con, "敏感内容", limit=10, status=("quarantined",), namespace="user"
+        )
         self.assertEqual(len(explicit), 1)
 
     def test_active_and_pending_are_searchable(self):
-        self.assertTrue(S.search(self.idx.con, "第一阶段完成", limit=5))
-        self.assertTrue(S.search(self.idx.con, "大白话", limit=5))
-        self.assertTrue(S.search(self.idx.con, "SQLite 本地索引", limit=5))
+        self.assertTrue(S.search(self.idx.con, "第一阶段完成", limit=5, namespace="user"))
+        self.assertTrue(S.search(self.idx.con, "大白话", limit=5, namespace="user"))
+        self.assertTrue(S.search(self.idx.con, "SQLite 本地索引", limit=5, namespace="user"))
 
     def test_fragmented_chinese_query(self):
-        hits = S.search(self.idx.con, "索引 本地 做", limit=5)
+        hits = S.search(self.idx.con, "索引 本地 做", limit=5, namespace="user")
         self.assertTrue(hits)
 
     def test_kind_filter(self):
-        hits = S.search(self.idx.con, "决定", kinds="decision", limit=5)
+        hits = S.search(self.idx.con, "决定", kinds="decision", limit=5, namespace="user")
         self.assertEqual(len(hits), 1)
         self.assertEqual(hits[0]["kind"], "decision")
 
     def test_recall_respects_budget_and_dedupes(self):
-        out = S.recall(self.idx.con, "我的记忆系统做到哪了", budget_chars=60, max_items=5)
+        out = S.recall(
+            self.idx.con, "我的记忆系统做到哪了", budget_chars=60, max_items=5, namespace="user"
+        )
         self.assertLessEqual(out["chars"], 60)
         self.assertEqual(len({i["claim_id"] for i in out["items"]}), len(out["items"]))
 
     def test_history_and_timeline(self):
-        self.assertEqual(len(S.timeline(self.idx.con)), 4)
-        self.assertGreaterEqual(len(S.history(self.idx.con, "c-1")), 1)
+        self.assertEqual(len(S.timeline(self.idx.con, namespace="user")), 4)
+        self.assertGreaterEqual(len(S.history(self.idx.con, "c-1", namespace="user")), 1)
 
 
 if __name__ == "__main__":

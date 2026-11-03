@@ -61,7 +61,11 @@ def _record_text(rec: dict) -> str:
 
 
 def _canonical_by_claim(con: sqlite3.Connection) -> dict[str, dict]:
-    """索引表 records 没有 namespace 列。namespace 在记忆根的规范记录上。"""
+    """Prefer the memory-root record when meta.root is set.
+
+    The index may also store namespace. Canonical markdown still wins so a
+    hand-built database without that column keeps the same labels.
+    """
     try:
         row = con.execute("SELECT value FROM meta WHERE key='root'").fetchone()
     except sqlite3.Error:

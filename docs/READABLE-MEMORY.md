@@ -49,7 +49,10 @@ personalisation》（EMNLP 2026，Senior Area Chair Highlight Award）提出
   pending → active）/ withdraw（撤回，历史保留）/ rollback（追加一条 pending，
   正文来自指定旧版本，不改旧记录）/ get / history / list_active。
   每个版本保存当时的 text、evidence、status，只追加。
-  审计 JSONL 只增，成功写入记下正文，拒绝写入同样记审计。
+  `audit_path` 上的 JSONL 是这份历史的账本：只追加、写后 fsync、
+  不覆盖已写字节。新的 `PreferenceCardStore` 从同一路径重建全部版本、
+  状态和批准人。最后一行残缺时跳过并记 fail-closed 日志，更早的版本保留。
+  拒绝写入同样记审计。批准仍然要求非空的具名 approver。
 - 适用：常客偏好卡、用户偏好画像等"短、活、只讲偏好"的记忆。
 
 ## 未采用部分：AlignXplore+ 与两阶段训练

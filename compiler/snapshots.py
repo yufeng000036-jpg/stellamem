@@ -11,10 +11,12 @@
 - 恢复前校验 SHA256，不一致拒绝；
 - .db 只用 sqlite3.Connection.backup()。在线备份失败则失败关闭：
   不写快照、不回退到 shutil.copy2（WAL 下 copy2 主文件会丢表）；
-- 恢复前确认没有活动连接，再用 backup() 把快照写回 live db，
-  并清掉 -wal/-shm，避免旧 WAL 被重放；
-- 恢复后做 integrity_check，并核对 manifest 里的表、行数、最新记录时间；
-  任一失败都保留恢复前的库；
+- 快照先写入隐藏的 `.partial-*` 目录，fsync 之后再改名发布；
+  进程在发布前被杀死时，不会留下可被列出的半份快照；
+- 恢复先把完整内容写到旁边的暂存文件并校验，再原子替换 live 库。
+  替换前清掉 -wal/-shm（已 checkpoint 进主文件）。杀死进程后，
+  live 库要么仍是恢复前，要么是完整恢复后，integrity_check 为 ok；
+- 恢复前确认没有活动连接。校验失败不替换 live 库；
 - 快照/回滚/清理/失败全部写审计日志；
 - 不绕过 append-only：记忆内容的常规修改仍走事务 + valid_to，
   快照恢复只用于运维事故，且每次调用可审计、可追溯。
@@ -24,11 +26,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import sqlite3
 import subprocess
 import sys
-import tempfile
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -106,6 +109,78 @@ def _remove_sidecars(path: Path) -> None:
         side = _sidecar(path, suffix)
         if side.exists():
             side.unlink()
+
+
+def _fsync_file(path: Path) -> None:
+    fd = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def _fsync_dir(path: Path) -> None:
+    if os.name == "nt":
+        return
+    try:
+        fd = os.open(path, os.O_RDONLY)
+    except OSError:
+        return
+    try:
+        os.fsync(fd)
+    except OSError:
+        pass
+    finally:
+        os.close(fd)
+
+
+def _fault_point(name: str) -> None:
+    """Test-only pause before a snapshot is published or a restore replaces the live db.
+
+    Both STELLAMEM_SNAPSHOT_FAULT and STELLAMEM_SNAPSHOT_FAULT_READY must be set.
+    The process then waits until SIGKILL / TerminateProcess. It does not publish
+    or replace anything after the pause.
+    """
+    if os.environ.get("STELLAMEM_SNAPSHOT_FAULT") != name:
+        return
+    ready = os.environ.get("STELLAMEM_SNAPSHOT_FAULT_READY")
+    if not ready:
+        return
+    marker = Path(ready)
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    marker.write_text(name, encoding="utf-8")
+    try:
+        _fsync_file(marker)
+    except OSError:
+        pass
+    while True:
+        time.sleep(0.2)
+
+
+def _atomic_write(path: Path, data: bytes) -> None:
+    tmp = path.with_name(path.name + ".tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
+    try:
+        os.write(fd, data)
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    os.replace(tmp, path)
+    _fsync_dir(path.parent)
+
+
+def _checkpoint_live(path: Path) -> None:
+    """Fold a WAL into the main file so sidecars can be removed without losing commits."""
+    if not path.exists() or not _is_sqlite_file(path):
+        return
+    con = sqlite3.connect(path)
+    try:
+        con.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    except sqlite3.Error as exc:
+        raise SnapshotError(f"cannot checkpoint live database before restore: {exc}") from exc
+    finally:
+        con.close()
+    _remove_sidecars(path)
 
 
 def _backup_db(src: Path, target: Path) -> str:
@@ -338,45 +413,56 @@ def _verify_db_against_entry(path: Path, entry: dict) -> None:
 
 
 def _restore_sqlite(src: Path, dst: Path, entry: dict) -> None:
-    """把快照库 backup() 回 live 路径。调用方已确认没有活动连接。"""
+    """Stage a verified copy, then atomically replace the live database.
+
+    The live file is not unlinked first. A kill before os.replace leaves the
+    pre-restore database. A kill during os.replace leaves one of the two
+    complete files. Sidecars are removed only after a checkpoint, and before
+    the replace, so an old WAL cannot replay onto the new image.
+    """
     if dst.exists():
         _assert_no_active_connections(dst)
-    pre_dir = Path(tempfile.mkdtemp(prefix="stellamem-pre-restore-"))
-    pre_db = pre_dir / "pre.db"
-    had_sqlite = dst.exists() and _is_sqlite_file(dst)
-    had_other = dst.exists() and not had_sqlite
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if dst.exists() and _is_sqlite_file(dst):
+        _checkpoint_live(dst)
+    staging = dst.with_name(dst.name + ".restoring")
+    if staging.exists():
+        staging.unlink()
+    _remove_sidecars(staging)
     try:
-        if had_sqlite:
-            _backup_db(dst, pre_db)
-        elif had_other:
-            shutil.copy2(dst, pre_dir / "pre.bin")
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        _remove_sidecars(dst)
-        if dst.exists():
-            dst.unlink()
-        _backup_db(src, dst)
-        con = sqlite3.connect(dst)
+        _backup_db(src, staging)
+        con = sqlite3.connect(staging)
         try:
-            # DELETE 模式让恢复后的库不依赖 -wal/-shm，旧 WAL 无法被重放。
             con.execute("PRAGMA journal_mode=DELETE")
             con.execute("PRAGMA wal_checkpoint(TRUNCATE)")
         finally:
             con.close()
+        _remove_sidecars(staging)
+        _fsync_file(staging)
+        _verify_db_against_entry(staging, entry)
         _remove_sidecars(dst)
-        _verify_db_against_entry(dst, entry)
+        _fault_point("restore-before-replace")
+        os.replace(staging, dst)
+        _fsync_dir(dst.parent)
+        _remove_sidecars(dst)
     except Exception:
-        try:
-            _remove_sidecars(dst)
-            if dst.exists():
-                dst.unlink()
-            if had_sqlite and pre_db.exists():
-                _backup_db(pre_db, dst)
-            elif had_other and (pre_dir / "pre.bin").exists():
-                shutil.copy2(pre_dir / "pre.bin", dst)
-        finally:
-            shutil.rmtree(pre_dir, ignore_errors=True)
+        if staging.exists():
+            try:
+                staging.unlink()
+            except OSError:
+                pass
+        _remove_sidecars(staging)
         raise
-    shutil.rmtree(pre_dir, ignore_errors=True)
+
+
+def _restore_file(src: Path, dst: Path) -> None:
+    """Atomic replace for non-database snapshot files."""
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    staging = dst.with_name(dst.name + ".restoring")
+    shutil.copy2(src, staging)
+    _fsync_file(staging)
+    os.replace(staging, dst)
+    _fsync_dir(dst.parent)
 
 
 def auto_snapshot(root: Path | str, label: str) -> Path:
@@ -384,24 +470,29 @@ def auto_snapshot(root: Path | str, label: str) -> Path:
 
     不存在的文件跳过（不报错），以便在部分初始化的环境里也能用。
     .db 文件走 WAL-safe 的 sqlite3 在线备份，其余文件走 copy2。
-    在线备份失败时删除已写的半份快照并记审计，不回退到文件拷贝。
+    内容先写入 `.partial-*`，fsync 后再改名为可发布目录。在线备份失败
+    或进程在改名前被杀死时，不留下可列出的半份快照，也不回退到文件拷贝。
     """
     root = Path(root)
-    dest = _snap_dir(root) / f"{_now_ts()}-{label}"
-    dest.mkdir(parents=True, exist_ok=False)
+    snap_root = _snap_dir(root)
+    name = f"{_now_ts()}-{label}"
+    partial = snap_root / f".partial-{name}"
+    final = snap_root / name
+    partial.mkdir(parents=True, exist_ok=False)
     try:
         manifest = {"created_at": _now_ts(), "label": label, "files": []}
         for rel in SNAPSHOT_FILES:
             src = root / rel
             if not src.is_file():
                 continue
-            target = dest / rel
+            target = partial / rel
             target.parent.mkdir(parents=True, exist_ok=True)
             if src.suffix.lower() in (".db", ".sqlite", ".sqlite3"):
                 method = _backup_db(src, target)
             else:
                 shutil.copy2(src, target)
                 method = "copy2"
+            _fsync_file(target)
             file_entry = {
                 "path": rel,
                 "bytes": target.stat().st_size,
@@ -414,19 +505,24 @@ def auto_snapshot(root: Path | str, label: str) -> Path:
         manifest["digest"] = hashlib.sha256(
             "".join(e["sha256"] for e in manifest["files"]).encode("utf-8")
         ).hexdigest()
-        (dest / "manifest.json").write_text(
-            json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8"
+        _atomic_write(
+            partial / "manifest.json",
+            json.dumps(manifest, ensure_ascii=False, indent=1).encode("utf-8"),
         )
+        _fsync_dir(partial)
+        _fault_point("backup-before-publish")
+        os.rename(partial, final)
+        _fsync_dir(snap_root)
     except Exception as exc:
-        shutil.rmtree(dest, ignore_errors=True)
+        shutil.rmtree(partial, ignore_errors=True)
         try:
             _audit(root, "snapshot_auto_failed", label=label, error=str(exc))
         except Exception:
             pass
         raise
-    _audit(root, "snapshot_auto", label=label, path=str(dest), files=len(manifest["files"]))
+    _audit(root, "snapshot_auto", label=label, path=str(final), files=len(manifest["files"]))
     prune_snapshots(root)
-    return dest
+    return final
 
 
 def list_snapshots(root: Path | str) -> list[dict]:
@@ -437,6 +533,8 @@ def list_snapshots(root: Path | str) -> list[dict]:
     if not snap_dir.is_dir():
         return out
     for child in sorted(snap_dir.iterdir()):
+        if child.name.startswith("."):
+            continue
         mf = child / "manifest.json"
         if not child.is_dir() or not mf.is_file():
             continue
@@ -498,7 +596,7 @@ def restore_snapshot(
         if _uses_sqlite_restore(src, entry):
             _restore_sqlite(src, dst, entry)
         else:
-            shutil.copy2(src, dst)
+            _restore_file(src, dst)
         restored.append(entry["path"])
     _audit(root, "snapshot_restore", name=name, files=restored)
     if prune_after:

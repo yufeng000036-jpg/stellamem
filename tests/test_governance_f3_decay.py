@@ -111,7 +111,7 @@ class RecallDecayWiringTests(unittest.TestCase):
                 claim_id,
                 "memory",
                 kind,
-                "s",
+                "user",
                 value,
                 "",
                 status,
@@ -125,7 +125,9 @@ class RecallDecayWiringTests(unittest.TestCase):
         # 两条同样关键词：旧的高分 vs 新的低分；衰减后新的应排前
         self._insert("c-old", "测试关键词 alpha", occurred_at=_old_ts(200))
         self._insert("c-new", "测试关键词 beta", occurred_at=_old_ts(0))
-        res = S.recall(self.con, "测试关键词", decay=True, min_score=0.0, max_items=10)
+        res = S.recall(
+            self.con, "测试关键词", decay=True, min_score=0.0, max_items=10, namespace="user"
+        )
         ids = [r["claim_id"] for r in res["items"]]
         self.assertIn("c-old", ids)
         self.assertIn("c-new", ids)
@@ -135,7 +137,9 @@ class RecallDecayWiringTests(unittest.TestCase):
     def test_decay_false_preserves_old_behavior(self):
         self._insert("c-old", "测试关键词 alpha", occurred_at=_old_ts(200))
         self._insert("c-new", "测试关键词 beta", occurred_at=_old_ts(0))
-        res = S.recall(self.con, "测试关键词", decay=False, min_score=0.0, max_items=10)
+        res = S.recall(
+            self.con, "测试关键词", decay=False, min_score=0.0, max_items=10, namespace="user"
+        )
         ids = [r["claim_id"] for r in res["items"]]
         self.assertIn("c-old", ids)
         self.assertIn("c-new", ids)
@@ -143,7 +147,13 @@ class RecallDecayWiringTests(unittest.TestCase):
     def test_explain_decay_attaches_info(self):
         self._insert("c-1", "测试关键词 gamma", occurred_at=_old_ts(10))
         res = S.recall(
-            self.con, "测试关键词", decay=True, explain_decay=True, min_score=0.0, max_items=10
+            self.con,
+            "测试关键词",
+            decay=True,
+            explain_decay=True,
+            min_score=0.0,
+            max_items=10,
+            namespace="user",
         )
         self.assertTrue(res["items"])
         self.assertIn("decay", res["items"][0])
@@ -151,7 +161,7 @@ class RecallDecayWiringTests(unittest.TestCase):
 
     def test_no_explain_by_default(self):
         self._insert("c-1", "测试关键词 delta", occurred_at=_old_ts(10))
-        res = S.recall(self.con, "测试关键词", min_score=0.0, max_items=10)
+        res = S.recall(self.con, "测试关键词", min_score=0.0, max_items=10, namespace="user")
         if res["items"]:
             self.assertNotIn("decay", res["items"][0])
 
