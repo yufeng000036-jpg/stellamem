@@ -4,7 +4,7 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
-## Unreleased - batch2（偷来+超越：Skill 接线 / 偏好卡注入 / 三件套 / 睡眠巩固）
+## Unreleased - batch2（外部借鉴+超越：Skill 接线 / 偏好卡注入 / 三件套 / 睡眠巩固）
 
 设计文档：`docs/BATCH2-BEYOND.md`；ADR：`docs/adr/0005-sleep-consolidation-text.md`。
 把 PR #18/#19/#20 里"刻意没做、列为后续"的项全部实现，外加用户拍板转入
@@ -43,7 +43,7 @@
 ## Unreleased - governance-4-features（借鉴记忆管家 V4.0.6）
 
 设计文档：`docs/GOVERNANCE-4-FEATURES.md`。4 个功能按 Stellamem 架构适配，
-不是照抄；铁律：衰减只降可检索性不删除、快照/回滚为显式运维操作、
+不是简单复制；铁律：衰减只降可检索性不删除、快照/回滚为显式运维操作、
 core 画像与 pinned 记录不参与衰减。
 
 ### 新增

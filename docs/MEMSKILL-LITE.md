@@ -2,9 +2,26 @@
 
 > 来源：MemSkill 论文（arXiv:2602.02474，ICML）——"Learning and Evolving
 > Memory Skills for Self-Evolving Agents"。
-> 适配原则：**偷思想和表示法，不偷训练闭环**。
+> 适配原则：**采用其思想与表示法，未采用其训练闭环**。
+> 外部致谢见 [外部致谢](#外部致谢memskill) 一节。
 
-## 偷了什么
+## 外部致谢：MemSkill
+
+- **来源项目**：MemSkill 论文《Learning and Evolving Memory Skills for
+  Self-Evolving Agents》（arXiv:2602.02474，ICML）；开源代码：
+  https://github.com/ViktorAxelsen/MemSkill
+- **采用的功能**：Skill Bank 表示法（把记忆操作做成命名、版本化、
+  带自然语言描述的技能）与"记法本身可以进化"的思想
+- **为什么采用**：它点出了记忆系统的关键问题——"怎么记"长期是手写的
+  固定流程，僵硬且难维护；把记法做成可描述、可版本化、可复盘的技能，
+  是让记忆系统随经验成长的正确方向；其"从失败案例中进化"的闭环思想非常出色
+- **我们的适配与差异**：①技能选择用规则匹配而非 RL 训练；②Designer
+  只许提议、不许自动改库，生效必须经具名人类批准（与本项目"AI 起草、
+  人拍板"的治理哲学一致，红线写死在代码里）；③初始技能从 Stellamem
+  现有手写流程提炼，而非论文的基准任务。未采用训练闭环的原因见
+  "未采用部分"一节
+
+## 采用内容
 
 ### 1. Skill Bank 表示法（`compiler/skills.py`）
 
@@ -48,7 +65,7 @@ Designer 只做两件事：
 提案生效的唯一路径：具名人类 `approve`（需确认短语 `APPLY`）→
 同一人 `apply`。提案本身版本化、可拒绝、可审计。
 
-## 没偷什么（以及为什么）
+## 未采用部分（以及为什么）
 
 **完整的 RL 训练闭环**（Controller 策略训练、LLM 裁判、下游任务标签、
 自动进化技能库）明确 out of scope：
