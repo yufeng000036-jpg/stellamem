@@ -1,5 +1,12 @@
 # Automatic intake boundary — 2026-11-03
 
+> Status note (2026-11-04): PR #15 is merged at `803df0d`. That merge is not a
+> production deployment. Stage E remains NOT MET and Stage F remains CLOSED.
+> Counts in this file (423 / 426 Python, 8 Node) are this run's evidence, not
+> the current main recount (563 Python tests + 42 subtests, 8 Node). See README.
+
+
+
 Resume baseline: PR #15 head 353e5e0, main 910f27d. All seven baseline jobs in
 run 41405907440 succeeded; all logs checked (423 Python / 8 Node per matrix job).
 The prior temporary environment was unavailable after interruption. Published

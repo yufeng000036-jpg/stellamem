@@ -1,6 +1,8 @@
 # Roadmap（规划）
 
-> 本文件只列**尚未实现**的能力。README 只写已经跑通的能力，这里列规划，避免混淆「已支持」和「计划支持」。
+> 近端落地顺序（P0 生产核验、P1 评估、P2 候选 A、P3 备选）在 README。那张表和本文件的 P1/P2 不是同一套编号。合入 main 不是生产发布。Stage E 未通过，Stage F 关闭。
+>
+> 本文件列尚未完成的产品项，也保留已经落地、容易被误读成「还没做」的条目。
 >
 > 优先级：`P0` 近期核心 · `P1` 重要增强 · `P2` 远期 / 待评估。
 
@@ -33,10 +35,10 @@
 
 | 项 | 优先级 | 说明 |
 |---|---|---|
-| 可复现 Benchmark 发布 | P1 | 公开 samples / golden / 结果与跑分脚本（当前仓内只有存储测量 `benchmark/measure.py`） |
+| 可复现 Benchmark 发布 | P1 | 仓库里已有 `benchmark/` 与 LongMemEval 脚手架，没有公开分数。计划见 `docs/evaluation-plan.md`，状态是未验证 |
 | 保留与释放流程（`distill.py`） | P1 | `schema.md` 描述的归档/蒸馏/准释放尚未实现 |
 | 真实宿主端到端验证 | P1 | 在隔离 OpenClaw 宿主跑通 会话→hook→编译→记忆→adapter→下一轮 |
-| GUI | P2 | 图形界面（查看 / 确认 inbox / 回滚）；当前用 `compiler/inbox.py` CLI |
+| GUI | P2 | 桌面产品 GUI 未做。收件箱是 `compiler/inbox.py` CLI。桥接环回页在 `compiler/bridge_gui.py`，本仓库里只被测试导入 |
 | 多设备同步 | P2 | 待评估（当前本地优先，不强依赖） |
 | 云端加密同步 | P2 | 待评估 |
 | 自动 SBOM / 签名发布 | P2 | 软件物料清单与发布物签名 |

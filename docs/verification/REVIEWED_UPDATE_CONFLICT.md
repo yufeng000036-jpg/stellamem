@@ -1,5 +1,11 @@
 # Reclassified pending update regression
 
+> Status note (2026-11-04): this fix is on main via PR #15 (`803df0d`). The
+> 423 Python tests below are this note's own run. Independent acceptance stays
+> unmet and the release gate stays CLOSED. Merge is not production deployment.
+
+
+
 During the real host/quality work, a second concrete classification edge was
 reproduced: an approved named topic has a namespaced ID; a new unclassified
 pending update initially has another ID. After a human used `inbox edit

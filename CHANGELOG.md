@@ -4,6 +4,29 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## 2026-11-04 - 文档：愿景、完成标准与现状（main `803df0d`）
+
+只改文档，不改代码。
+
+### 合入
+
+- PR #26（`83e4e9a`）已在 main：WAL 在线备份、偏好卡 `pref_subject`、提取前选 skill、使用计数改到 budget 之后，以及 ruff。合入后的 Engineering checks [run 41667719093](https://github.com/yufeng000036-jpg/stellamem/actions/runs/41667719093) 结论是 failure（`tests (macos-latest, 3.10)` cancelled，其余已结束 job 为 success）。不是全绿。
+- PR #15（`803df0d`）已在 main。**合入 main 不是生产部署。** Stage E 仍是 NOT MET，Stage F 仍关闭。写本文时 main 上的 [run 41670486088](https://github.com/yufeng000036-jpg/stellamem/actions/runs/41670486088) 尚未结束。
+
+### 测试（在 `803df0d` 重跑）
+
+- Python 3.12.3：`python -m unittest discover -s tests` → **563 passed + 42 subtests**，0 失败。
+- Node.js 22.23.4：`node --test tests/hooks.test.mjs` → **8 passed**。
+
+下文各节里的 528、518、472 是那些改动当时写下的次数，保留作历史记录，不再代表当前 main。
+
+### 状态
+
+- 完成标准、P0–P3、候选 A（计划，未实现）和竞品对照见 `README.md`。
+- 评估计划见 `docs/evaluation-plan.md`（计划 / 未验证，没有公开基准分数）。
+- 外部项目见 `docs/ACKNOWLEDGEMENTS.md`。
+- 外部审阅对 `803df0d` 的主观判断是 7.8/10。这不是基准分数。同一审阅标出的五项代码缺口为未关闭、修复进行中，由单独的代码 PR 处理。
+
 ## Unreleased - review-fixes（外部代码审查 4 项逻辑修复 + ruff）
 
 来源：第三方代码审查报告（2026-11-03），4 项问题已在 `b0de0c9` 源码中逐条核实属实，
@@ -33,7 +56,7 @@
 - Ruff：`compiler/token_dashboard.py:62` F841（`cols` 未使用，删除）、
   `tests/test_governance_f2_dashboard.py` F401（未用的 `json` import，删除）——
   `ruff check .` 现已全过，CI quality 门恢复绿色。
-- 全量测试：528 passed + 37 subtests（基线 518 零下跌）。
+- 当时测量：528 passed + 37 subtests（相对当时的 518）。这不是当前 main 的次数。
 
 ## Unreleased - batch2（外部借鉴+超越：Skill 接线 / 偏好卡注入 / 三件套 / 睡眠巩固）
 
@@ -68,8 +91,8 @@
 
 ### 测试
 
-- 新增 46 项（`tests/test_batch2_*.py` ×5）；全量 518 passed + 37 subtests，
-  基线零下跌；`ruff` 通过；`tools/secret_scan.py` 干净。
+- 新增 46 项（`tests/test_batch2_*.py` ×5）。当时测量：518 passed + 37 subtests，
+  相对当时基线零下跌。这不是当前 main 的次数。当时 `ruff` 通过，`tools/secret_scan.py` 干净。
 
 ---
 
@@ -108,11 +131,11 @@
 
 ### 测试
 
-- 全量回归 **472 passed + 37 subtests**，基线全程零下跌；`tools/secret_scan.py` 干净。
+- 当时测量：**472 passed + 37 subtests**。这不是当前 main 的次数。当时 `tools/secret_scan.py` 干净。
 
 ### 已合入
 
-- PR #22（`feat/attribution-20261103`，`608acd11`）：外部致谢文档（"偷"表述改为正式致谢）。
+- PR #22（`feat/attribution-20261103`，`608acd11`）：外部致谢文档（口语来源表述改为正式致谢）。
 
 ### 待合入（draft）
 

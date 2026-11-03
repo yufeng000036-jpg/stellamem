@@ -1,5 +1,13 @@
 # Local inference failure and v2 freeze
 
+> Status note (2026-11-04): the code later merged to main via PR #15 (`803df0d`).
+> Independent quality acceptance stays unmet and the release gate stays CLOSED.
+> This file's invalid v1 run is still not a quality score. Current main recount
+> is 563 Python tests + 42 subtests and 8 Node tests; the 422 below is this
+> commit's own check.
+
+
+
 v1 completed 140 case attempts across four arms but generated zero successful
 responses. Every main/candidate arm failed in extraction; direct/no-memory
 failed at the reader. This is INVALID infrastructure evidence, not 0% memory

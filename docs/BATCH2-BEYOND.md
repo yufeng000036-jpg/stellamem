@@ -3,7 +3,7 @@
 第二批外部借鉴的功能：把之前各 PR 里"刻意没做、列为后续"的项全部实现，
 外加用户拍板转入实现队列的 SenseNova 三件套与睡眠巩固（文本版）。
 
-分支：`feat/batch2-beyond-20261103`（基于 main `0ad18f5`，含 PR #17/#18/#20）。
+已随 PR #25 合入 main（`b0de0c9`）。原分支 `feat/batch2-beyond-20261103` 基于当时的 main `0ad18f5`（含 PR #17/#18/#20）。下文的 518 是该批当时的测量，不是当前 main。当前重跑见 README。
 
 ## 外部致谢
 
@@ -109,8 +109,8 @@
 
 ## 测试
 
-- 新增 46 项（`tests/test_batch2_*.py` ×5），全量 518 passed + 37 subtests，
-  基线（472）零下跌。
+- 新增 46 项（`tests/test_batch2_*.py` ×5）。当时测量：518 passed + 37 subtests，
+  相对当时基线（472）零下跌。当前 main 重跑是 563 passed + 42 subtests。
 - `ruff check` / `ruff format` 通过（本分支新增与修改的文件）；
   `tools/secret_scan.py` 干净。
 - 未验证：GitHub Actions CI（合并前看一眼）；运行时真实数据接入（按铁律未碰生产）。

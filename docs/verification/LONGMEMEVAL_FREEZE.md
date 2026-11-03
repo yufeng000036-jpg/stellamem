@@ -1,5 +1,13 @@
 # Independent-data evaluation freeze — 2026-11-02
 
+> Status note (2026-11-04): PR #15, which carried this freeze, is merged at
+> `803df0d`. Merge is not a quality pass and not a production deployment.
+> Stage E remains NOT MET. The Stage F release gate remains CLOSED. The
+> sentence below that says "Keep PR draft" described the freeze commit; it is
+> not the current git state. There is still no public benchmark score.
+
+
+
 140 official LongMemEval cases selected before inference: 20/category across
 seven categories. MIT data revision/hash, model/runtime hashes, exact sampling,
 budgets, script lock and acceptance thresholds are in benchmark/longmemeval/.

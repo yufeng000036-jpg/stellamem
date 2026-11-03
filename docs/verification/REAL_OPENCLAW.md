@@ -1,5 +1,14 @@
 # Real isolated OpenClaw hook — 2026-11-02
 
+> Status note (2026-11-04): PR #15 is merged at `803df0d`. The transport
+> evidence below still does not pass Stage E and does not open the Stage F
+> release gate. "Release gate open" later in this file means the gate was not
+> passed, not that a release shipped. Merge is not a production deployment.
+> SQLite session intake remains unadapted. The 421 Python tests below are this
+> note's own run.
+
+
+
 Official npm OpenClaw 2026.10.9 (8b18b55), Node 24.22.1, Linux x86_64.
 The package installs and starts. An exact npm lock is retained under benchmark/host
 for this opt-in verification only; the product gains no npm dependency.

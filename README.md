@@ -1,19 +1,18 @@
 # Stellamem · 星忆
 
-> **Reliability development branch (not a deployed release):** see [latest automation boundaries](docs/verification/AUTOLOG_BOUNDARY.md), [real host transport evidence](docs/verification/REAL_OPENCLAW.md), and [frozen independent evaluation](benchmark/longmemeval/PROTOCOL.md). Local regression: 426 Python / 8 Node; exact-SHA CI evidence is attached to draft PR #15. Older counts below describe historical milestones. Memory-quality acceptance and full host intake remain incomplete; no 9/10 claim.
->
-> **Compatibility:** projection defaults to requester `user` and scope `global`; use explicit `requesterSubject` / `activeScopes` for other namespaces/tasks. An explicit invalid namespace fails closed. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
+> **给 AI 记忆一个 Git。** 长期记忆要查得到来源、复核得了、撤得回去。
 
-> **Give AI memory a Git.** ｜ **给 AI 记忆一个 Git。**
+Stellamem 是跑在本机上的 AI 记忆系统：对话收成带证据的 Claim，经过关系判断和人工复核，才进入可被召回的记忆。记忆文件在本机；模型客户端只接受环回地址（`compiler/model_client.py`）。
 
-Stellamem 是一个**本地优先、可审计的 AI 长期记忆治理层**。
-它让 AI 的长期记忆可以被**查看、溯源、版本化、复核、回滚** —— 而不是变成一个不可见的黑箱。
+它要做成的四件事是 **记得住、记不错、不记混、不泄露**。这四条是目标。下面「怎样算完整」写哪些已经能在仓库里核对，哪些还不能。
+
+本地运行和检索都不是差异点。MemOS 的 README（2026-11-04 对照笔记）已经描述了面向同一宿主 OpenClaw 的本地插件：SQLite + FTS5 + 向量，并自报 LoCoMo 88.83、LongMemEval 89.20。那些分数是对方自报，本仓库没有复现。**Stellamem 没有公开基准分数。** 差异在治理：Claim 带来源哈希、写前快照可回滚、人工复核收件箱、密钥门禁、主体命名空间隔离。详见下方愿景和 [`docs/ACKNOWLEDGEMENTS.md`](docs/ACKNOWLEDGEMENTS.md)。
 
 <p align="center">
   <b>🚧 Alpha（v0.2.0-alpha）</b> ·
-  🦞 首个一等公民宿主：OpenClaw ·
+  🦞 首个宿主：OpenClaw ·
   🧩 核心与框架无关 ·
-  🔒 本地优先 ·
+  🔒 记忆在本机 ·
   📝 Markdown 优先
 </p>
 
@@ -28,34 +27,139 @@ Stellamem 是一个**本地优先、可审计的 AI 长期记忆治理层**。
 </p>
 ---
 
-## 本版是什么（v0.2.0-alpha，2026-11-02）
+## 代码里已经有的设计原则
 
-本版是公开版，相对旧主分支 v0.1.0-alpha 的变化全部来自 staging 链路与后续合并：
-生产三项版 187 测试 → 改进版 226 测试 → PATCH1 242 测试 → PATCH2 266 测试 →
-D4/D5 与步骤 2–7 合并后 338 测试 → D1/D3 合并后 347 测试 →
-本可靠性轮次（夜间 scope 分组、桥接令牌加固）后重跑为 **357 / 357 通过**，清单 **203 条**。
-第二轮可靠性轮次（Windows 中文输出、密钥扫描误报、桥接安全边界测试）后重跑为 **372 / 372 通过**，清单 **206 条**。
-**不是生产部署包**：不含任何真实记忆内容、真实记忆文件、生产索引、生产备份、生产配置。
+对照过当前 `main`（`803df0d`）。只写代码里的行为。
 
-### 2026-11-03 更新（PR #17 / #18 / #20 已合入 main）
+| 原则 | 代码里实际做什么 |
+|---|---|
+| 一个治理核心，按命名空间隔离 | `compiler/subjects.py` 的权威命名空间是三个：`user`、`persona`、`viewer`。默认同命名空间才能检索。无效或未分类的记录对谁都不可见，不回退成另一个主体。投影默认请求者是 `user`、范围是 `global`；显式的非法命名空间得到空投影（`adapters/openclaw/index.js`）。未打命名空间的旧话题要显式补标，没有自动迁移。 |
+| 桥默认拒绝，全文人工批准 | `compiler/bridge.py`：跨主体默认不通过。只允许 relationship / method / result 三种结构化模板。`approve()` 要求 `confirmed_full_text=True` 和非空审批人。关键词名单只是提示。过期不能批准。72 小时是代码注释里的低置信占位，不是测出来的最优值。 |
+| 只追加 | `compiler/guards.py` 与 `compiler/store.py`：`claim_id`、正文、证据、来源等不能原地改写。要改就新 revision，旧的标 superseded。`commit()` 发现内容被改会抛错。 |
+| 失败即关闭 | 无效命名空间不检索；桥过期不能批准；来源指针的哈希或身份对不上则 `SourceError`，不消费这条来源（`compiler/source_reader.py`）；非环回模型地址直接拒绝；快照恢复短语不对或 SHA256 不符就拒绝。语义检索是例外：服务不可用时 `compiler/search.py` 静默退回字面检索，不打降级标记。 |
+| 密钥门禁 | `compiler/pipeline.py` 在调用模型前丢掉含密钥的消息。`compiler/security.py` 把含密钥的 claim 标成 `write_policy=never`。`compiler/store.py` 入库前再拦一次，不写库。 |
+| 人工复核收件箱 | `compiler/inbox.py`：pending 在 `system/memory-inbox.md`，人工 `approve` / `reject` / `edit`。这是 CLI。敏感和身份类不会在摄入时自动批准。被占住的活动槽位，通用批准会拒绝。 |
 
-- 4 个治理功能：写前自动快照 + 一键回滚（`compiler/snapshots.py`）、Token 看板（`compiler/token_dashboard.py`，只读）、90 天时效衰减接入 recall（`compiler/rank.py`）、selector-audit（`compiler/selector_audit.py`）；详见 `docs/GOVERNANCE-4-FEATURES.md`。
-- MemSkill 轻量适配：Skill Bank（`compiler/skills.py`，11 个命名/版本化/可审计的 skill）+ 失败案例复盘（`compiler/designer_review.py`，只提议不自动改）；详见 `docs/MEMSKILL-LITE.md`。
-- 可读记忆两小件：桥"只传摘要、不搬原文"明文规则（ADR 0004）+ 一等记忆类型 `preference_summary`（每条陈述强制带证据）；详见 `docs/READABLE-MEMORY.md`。
-- 全量回归 **472 passed + 37 subtests**，基线零下跌；更新总览见 `docs/UPDATE-2026-11-03.md`。
-- 已合入：PR #22（外部致谢文档，`608acd11`）。
-- 待合入（draft）：PR #21（skill 运行时接线、偏好卡 recall 接线、SenseNova 三件套、睡眠巩固文本版）。
+来源哈希：能对上单条消息时，provenance 带 SHA-256 `content_hash`。对不上的来源指针不会被当成那条消息用。证据不能唯一对上某条消息时，provenance 降为 chunk 级，不编造消息级哈希（`compiler/pipeline.py`）。Claim 另有 `claim_id` / `revision_id`，是槽位和取值的 SHA-256 摘要（`compiler/claim_normalizer.py`）。
+
+写前快照：`compiler/snapshots.py` 覆盖 `stellamem-data/index.db`（SQLite 在线 backup）和 `config.json`。自动调用点在 `compiler/api.py` 的索引重建和 `write_status`，不是每一条写路径。恢复必须 `confirm="RESTORE"`，并先校验 SHA256。备份 API 失败时会退回文件拷贝，这一条仍是开着的缺口，见下文。
+
+`compiler/nightly.py`、`compiler/semantic_health.py`、`compiler/pending_batch.py`、`compiler/persona_sync.py`、`compiler/bridge_gui.py` 在本仓库里只被测试导入，没有接到安装后的生产调用链上。
+
+## 愿景
+
+给 AI 记忆一份类似 Git 的历史：每一条都能回答从哪来、现在还算不算数、跟别的记忆冲突时留着双方、人能不能撤。比的是治理，不是谁记得多，也不是谁更「本地」或谁的检索更全。MemOS 的 README 已经在讲本地 OpenClaw 插件和混合检索，并且有自报分数。Stellamem 要补上的是可追溯、可复核、可撤回，再用公开评测把「记得对、不记混」量出来。目前没有公开跑分。评估顺序见 [`docs/evaluation-plan.md`](docs/evaluation-plan.md)，全部是计划，未跑。
+
+对照笔记写于 2026-11-04，不是本仓库实测。README 没写的，写「README 未提及」，不等于对方没有。
+
+| | Mem0 | Graphiti | Letta | MemOS | Stellamem（以本仓库代码为准） |
+|---|---|---|---|---|---|
+| 本地运行 | README 描述库、自托管、云三种 | README 描述自托管框架 | README 描述可本地或自托管 App Server | README 描述本地 OpenClaw/Hermes 插件，SQLite+FTS5+向量 | 记忆在本机，模型客户端只允许环回。这不是差异点 |
+| 来源可溯 | README 未提及 | README 写明每条事实回指来源 episode | README 未提及 | README 未提及 | 单条消息对得上时，provenance 带内容哈希 |
+| 时间 / 版本 | 笔记记录 `mem0/memory/main.py` 有 `history(memory_id)` | README 写双时间、保留时间历史 | README 未提及 | README 未提及 | `valid_to` / `expired_at`、`as_of`、`SUPERSEDES` 版本链。这是本仓库自己的代码 |
+| 回滚 | README 未提及 | README 未提及 | README 未提及 | README 未提及 | 写前快照 + 确认短语；另有事务。生产端到端未验证 |
+| 人工复核 | README 未提及 | README 未提及 | README 未提及 | README 未提及 | 收件箱 `approve` / `reject` / `edit` |
+| 密钥 / 隔离 | README 未提及 | README 未提及 | README 未提及 | README 未提及 | 模型调用前的密钥门禁；三个命名空间；桥默认拒绝 |
+| 公开跑分 | 笔记写 memory-benchmarks 覆盖 LongMemEval / LoCoMo / BEAM，且 README 写明只支持 Mem0 后端 | 笔记未记录公开分 | 笔记未记录公开分 | README 自报 LoCoMo 88.83、LongMemEval 89.20 | **没有公开基准分数** |
+
+## 怎样算完整（9 分验收线）
+
+9 分是「完整、可靠、在生产环境经得起查」。10 分是下一节的候选 A，还没做。下表只根据仓库和公开 CI，不把生产环境说成已经验过。
+
+| 条款 | 状态 | 依据 |
+|---|---|---|
+| #26 已合入 main | 已完成 | 合并提交 `83e4e9a` |
+| #26 合入后 CI 全绿 | 未完成 | main 上 Engineering checks [run 41667719093](https://github.com/yufeng000036-jpg/stellamem/actions/runs/41667719093) 结论是 failure：`tests (macos-latest, 3.10)` 为 cancelled，其余已结束的 job 为 success。不能写成全绿 |
+| #15 已合入 main | 已完成 | 当前 main `803df0d` |
+| #15 合入后 CI 全绿 | 未完成 | 写本文时 main push [run 41670486088](https://github.com/yufeng000036-jpg/stellamem/actions/runs/41670486088) 仍未结束（总状态 queued）。未全绿 |
+| 4 项修复在真实数据上验证 | 未验证/待生产核验 | 四项修复的代码已在 main（WAL 在线备份、偏好卡 `pref_subject`、提取前选 skill、budget 之后才计使用次数）。仓库里没有真实记忆库上的核验记录 |
+| 快照→回滚端到端跑通 | 未验证/待生产核验 | 单测覆盖 `auto_snapshot` / `restore_snapshot`。仓库里没有生产环境端到端回执 |
+| gate 在运行中的 ClawX 生效 | 未接线；效果未验证/待生产核验 | `InjectionGate` 只在 `compiler/gate.py` 和测试里出现。`benchmark/live_verify.py` 会查看名为 ClawX 的进程，本仓库没有「门已在该进程生效」的回执 |
+| pending 激活 | 未验证/待生产核验 | 收件箱批准路径在代码里。仓库不含生产库 |
+| sleep_purify 命名空间剥离 bug | 仓库内未见该修复；生产效果未验证/待生产核验 | `compiler/sleep_purify.py` 没有命名空间剥离修复 |
+| 生产索引 SHA 差异查清 | 未验证/待生产核验 | 仓库里没有生产索引的对照记录 |
+| restore + rebuild 回执核验 | 未验证/待生产核验 | 仓库里没有这份生产回执 |
+| 语义检索恢复，或书面定下降级方案 | 未开始 | 服务不可用时静默退回字面检索，没有 `degraded=lexical`，也没有已采纳的书面降级决定。生产端口是否恢复：未验证/待生产核验 |
+| 独立评估基线分 | 未开始 | 没有公开分数。计划见 `docs/evaluation-plan.md` |
+
+9 分在上表离开「未完成 / 未开始 / 未验证」之前不成立。
+
+## 合入 main 不是生产发布
+
+PR #15 已经在 `main` 上。**代码进 main ≠ 部署到生产。** Stage E 验收仍然是 **NOT MET**。Stage F 发布门仍然 **关闭**。本树不是发布候选。完整清单在 [`docs/verification/STAGES_E_F_STATUS.md`](docs/verification/STAGES_E_F_STATUS.md)。
+
+生产发布还缺这些证据，每一项都保持未通过：
+
+1. 独立的人工复核金标。现有有界测量的金标是 AI 写的。
+2. 开发之前就冻结的盲持出集。现有名义持出集是在已知修复之后冻结的，不是独立盲集。
+3. 真正的提取 precision / recall。
+4. 生成答案的证据支持。
+5. 端到端来源完整度指标。
+6. 整条记忆流水线的峰值内存和成本测量。
+7. 相对旧日记基准、能量化的记忆质量比较。现有材料量化不了这个提升。
+8. Stage E 通过。F 在 E 未通过时不能打开。
+9. 生产部署记录：运行中的服务、配置和数据确实改过，并有回滚回执。#15 的合并没有这份记录。
+10. D7–D13 的原始审计文本。仓库里仍然没有，这几项不能签完。`compiler/subjects.py` 里已有的「无效 namespace 不回退」只覆盖 D13 里能对上的那一种表现。
+11. 在以上各项之后做出的发布候选决定。现在没有。
+
+有界测量本身还在：300 条合成投影契约，reader Recall@1 在 80 条正例上是 1.00。那个 1.00 只度量适配器投影契约，不能用来宣称成熟度。
+
+外部审阅者对当前 main（`803df0d`）的主观判断是 **7.8/10**。这不是基准分数，也不表示 Stage E 已通过或 Stage F 已打开。早先 Stage F 文稿里的 6.8/10 是合入前的临时工程量规，同样不是基准，不要把它当成现在的分数。
+
+## 外部审阅仍开着的缺口（`803df0d`）
+
+下面五项是对 `803df0d` 的外部审阅结论，状态都是 **未关闭，修复进行中**。另有一个改代码的 PR 处理它们。本文件只记录缺口，不改代码。
+
+1. **WAL 快照在备份失败时退回文件拷贝。** `compiler/snapshots.py` 的 `_backup_db()` 在 `sqlite3` 在线备份抛错时执行 `shutil.copy2`，并返回 `copy2-fallback`。WAL 库只拷主文件会丢掉 `-wal` 里尚未检查点的提交。在线备份路径已经有了，失败路径仍然是这个缺口。
+2. **不传 `pref_subject` 时，偏好卡 / 规律通道不做主体隔离。** `compiler/search.py` 的 `recall()` 里 `pref_subject` 默认是 `None`。`_match_pref_cards()` 只在 `subject is not None` 时过滤。`_match_patterns()` 没有主体参数。省略 `pref_subject` 会按文本重叠召回传入列表里的卡，规律项同样不过滤主体。
+3. **Token 看板的 namespace 统计对不上索引列。** `compiler/token_dashboard.py` 按 `rec.get("namespace")` 计数。`compiler/indexer.py` 的 `records` 表有 `subject`，没有 `namespace` 列。从该表读出的行会全部落到 `(none)`。
+4. **selector-audit 在主体为 None 时仍判该阶段通过。** `compiler/selector_audit.py` 调用 `subject_of()`。未分类记录返回 `None` 且不抛 `ValueError`，于是阶段结果是 `pass: True` 且 `namespace` 为 `None`。
+5. **偏好卡创建即为 active，没有复核，也没有版本链。** `compiler/preference_summary.py` 的 `PreferenceCardStore.create()` 直接写 `status=active`、`version=1`，不进收件箱。`update()` 在同一槽位换成 `version+1` 的新字典，旧正文不保留。JSONL 审计只记动作和版本号，不是 Claim 那种 revision 链。
+
+## 路线（P0–P3）
+
+近端顺序，不是日期。没写进代码的都标计划。
+
+- **P0** 把 9 分表里的生产核验做完并留下回执：四项修复的真实数据、快照到回滚、运行中宿主上的注入门、pending、sleep_purify 的命名空间问题、生产索引 SHA、restore+rebuild。本仓库现在核验不了。同时收口上面五项「修复进行中」的代码缺口（另一个 PR）。
+- **P1** 语义检索二选一：恢复可用，或改成显式降级。现在是静默退回，尚未采纳。以及独立评估基线，顺序见评估计划。
+- **P2** 10 分方向，候选 A。计划，未实现。
+- **P3** 不作为当前差异点的备选：进程内向量（fastembed + sqlite-vec）、快照之外的 WAL 持续复制（litestream）。都未实现，也未选定。
+
+## 10 分方向（候选 A，计划，未实现）
+
+选定方向是候选 A：把睡眠巩固做成真正的归纳，而不是把同一句话在多期里重复计数。
+
+尚未写进代码的规则：
+
+- 每条归纳结论必须引用支撑它的原始记忆；
+- 至少 3 条证据，并且跨至少 2 个会话；
+- 一律进人工复核收件箱；
+- 绝不自动注入。
+
+候选 B（偏好卡的证据链）打算随 A 一起做，同样未实现。现有偏好卡要求 evidence 非空，但创建即为 active，见上面的开着的缺口。
+
+仓库里已有的是另一件事：`compiler/sleep_consolidation.py` 的 `mine_patterns`。默认 `min_episodes=2`，把相同的 subject/predicate/value 收成 `kind=pattern` 的 pending 候选，provenance 是 episode id 列表。它不是 `pattern_claim`，不要求 3 条证据跨 2 个会话，也不保证调用方不会注入。不要把它写成候选 A 已经落地。
+
+可参考、还没接进代码的做法：Generative Agents 的「洞见必须引用记忆编号」，Nemori 的「只蒸馏预测错的部分」。Letta 的 sleep-time compute 只说明「空闲时整理、主路径不堵住」这个方向。`compiler/nightly.py` 不是 Letta。
+
+## 当前测试（在 `803df0d` 重跑）
+
+- Python 3.12.3：`python -m unittest discover -s tests` → **563 passed + 42 subtests**，0 失败。
+- Node.js 22.23.4：`node --test tests/hooks.test.mjs` → **8 passed**。
+- 更早文档里的 357、372、426、472、518、528 是当时那次测量，不是现在的 main。
+
+本仓库不含真实记忆、生产索引、生产备份或生产配置。历史次数见 [`CHANGELOG.md`](CHANGELOG.md)。
 
 ### 现在已有的功能
 
 **记忆治理核心（沿用 v0.1.0-alpha，并经回归验证）：**
 - Claim 结构化断言：`kind / subject / scope / predicate / value / confidence / evidence / provenance`；
-- 来源可溯：每条 Claim 带来源指针与内容 hash，来源不可验证时抛错、不伪造；
+- 来源可溯：能对上单条消息时，provenance 带内容哈希；指针对不上就报错，不把这条来源当成已核验。不能唯一对上证据时，降为 chunk 级来源，不编造消息级哈希；
 - 作用域 scope：同一话题在不同场景可有不同偏好，不互相污染；
 - 版本演化：`SUPERSEDES` 更新旧值，旧版本保留在版本链里；
 - 关系引擎：`NEW / DUPLICATE / REINFORCES / REFINES / COMPATIBLE / SUPERSEDES / CONTRADICTS / UNCERTAIN` 共 8 种；
 - 人工复核收件箱（CLI）：敏感、身份、低置信度、可疑内容进入收件箱，人工 `approve / reject / edit`；
-- 密钥门禁 Secret Gate：密钥在任何模型调用之前被拦截，不写库、不进日志、不外发；
+- 密钥门禁 Secret Gate：含密钥的消息在模型调用之前被整段排除；命中的 claim 不入库。不把「所有日志文件都已审过、必无密钥」写成额外保证；
 - 冲突治理：冲突写进冲突日志并保留双方证据，不静默覆盖；
 - 事务与回滚：记忆写入是事务，有日志、可恢复、可回滚；
 - 上下文投影：只向 Agent 注入当前任务相关的已批准 Claim，并有全局字符预算；
@@ -94,28 +198,24 @@ D4/D5 与步骤 2–7 合并后 338 测试 → D1/D3 合并后 347 测试 →
 - 写前自动快照 + 一键回滚（`compiler/snapshots.py`）：写操作前自动快照，回滚需确认短语，全程审计；
 - Token 看板（`compiler/token_dashboard.py`，只读）：分组统计、token 估算、三色预算告警，超预算只给人工复核建议（不做自动压实）；
 - 时效衰减（`compiler/rank.py` 接入 recall）：90 天半衰期可配，只降排序不删数据，core/pinned 永不衰减；
-- selector-audit（`compiler/selector_audit.py`，只读）：9 阶段诊断"这条记忆为什么没被召回"；
+- selector-audit（`compiler/selector_audit.py`，只读）：9 阶段诊断"这条记忆为什么没被召回"。主体为 None 时 namespace 阶段仍会判通过，见上文开着的缺口；
 - Skill Bank（`compiler/skills.py`）：11 个命名、版本化、可审计的记忆技能，规则选择；
 - 失败案例复盘（`compiler/designer_review.py`）：hard cases 生成 pending 提案，人工批准才生效，永不自动改；
 - 桥摘要规则（ADR 0004）：过桥只传提炼摘要，原始日志永不过桥，人工检查清单；
-- 偏好摘要（`compiler/preference_summary.py`）：一等记忆类型，每条陈述强制带证据，缺证据拒绝写入。
+- 偏好摘要（`compiler/preference_summary.py`）：一等记忆类型，每条陈述强制带证据，缺证据拒绝写入。`create()` 直接写成 active，没有收件箱复核，更新不保留旧正文，见上文开着的缺口。
 
 ### 现在没有的功能 / 已知问题（合并前请先读）
 
 - **D4、D5 已合并到 main（经 PR #11 累积分支；单列 PR #5 已被其覆盖，不再单独合并）：** `blocked_weak` 现在只计已标记弱信号的被拦项，新增 `blocked_low_signal / blocked_total` 计数，空结果提示按弱标记/低信号分别表述；缺 `text` 的注入项不再抛 KeyError，缺失按空文本处理。
   但 gate 当前仍无生产调用方，接线到任何生产调用方之前，调用方与回滚方式仍需单独说明，本分支不擅自接线。
-- **D1、D3 已合并到 main（PR #12，合并提交 e47b4297…）：** `as_of_paged(limit=None, offset)` 不再丢弃 offset；gate 轮转阈值统一为“达到即轮转”。**D7–D13 仍未修：** 仓库内无其具体审计内容，无法在无细节的情况下修复，见公开日志新节。
-- **主体标签只到干跑：** `namespace` 尚未写入任何真实数据；hold 规则已实现并经干跑验证（角色/系统类与含人格/观众字样记录暂缓自动归类），写入真实数据前仍需要全量备份、干跑清单核对、回滚方案与批准人，缺一不可。
+- **D1、D3 已合并到 main（PR #12，合并提交 e47b4297…）：** `as_of_paged(limit=None, offset)` 不再丢弃 offset；gate 轮转阈值统一为“达到即轮转”。**D7–D12：** 仓库里没有这些编号的原始审计文本，不能宣称已修。**D13：** `compiler/subjects.py` 对无效 `namespace` 不回退到 `subject`；原始审计是否还有别的要求，仓库里对不上，不能签完。
+- **主体标签只到干跑：** `compiler/legacy_tags.py` 只在内存里计划补标，不写盘。生产数据有没有 `namespace`，本仓库无法核验。写入真实数据前仍需要全量备份、干跑清单核对、回滚方案与批准人。
 - **人格事件同步到用户库未实现：** 同步候选包准备已实现（仅 reviewed 事件、批准要求、批量全有或全无），`export_pack()` 只返回 reviewed 数据；实际写库仍未实现，需另行人工批准的任务才能消费。
 - **桥接图形界面已实现并加固：** 环回绑定 + 每服务器随机令牌 + POST 来源校验，终端文本审批仍为兜底；72 小时 TTL 为低置信猜测；关键词黑名单可被改写绕过，真正边界是人工看全文批准。
-- **语义检索生产接线未做：** 健康检查、向量缓存、查询后重排、用自有题集评测已实现；生产语义服务曾因端口占用离线是生产环境配置问题，本包不含生产配置修复，生产接线仍需单独确认。
-- **生产侧 pending 未激活：** 生产库 3969 条 pending 记录在本版不激活，批量 keep / task / drop
-  清理需单独批准，不能顺手激活；5 个核心身份候选未获批准，不得写入。
-- **通用 Alpha 限制（沿用旧版）：** 无 GUI、无同步、远程云模型仅环回地址、其他宿主适配未完成、
-  Adapter 召回仍偏关键词、本地 4B 模型存在分类漂移、英文临时情绪检测不完整、
-  蒸馏 / 保留释放流程尚未实现、尚未经过大规模外部用户长期验证。
-- **量化口径：** benchmark 仅为 30 篇日记、单一用户的内部实验数据（recall ≈ 0.705 / precision ≈ 0.505），
-  不构成准确率承诺；`False Write = 0` 仅表示在已定义的对抗样本中未观察到该类失败。
+- **语义检索：** `compiler/semantic.py` 走 llama.cpp 的 `/v1/embeddings`，默认 `127.0.0.1:8082`。服务不可用时 `compiler/search.py` 静默退回字面检索，不写 `degraded` 标记。健康检查、向量缓存、重排在 `compiler/semantic_health.py`，该模块没有生产调用方。生产端口是否恢复：未验证/待生产核验。
+- **生产侧 pending：** 仓库不含生产库，不能证明 pending 已激活或仍未激活。交接材料里出现过的条数不在这里当作当前已核对的数字。批量 keep / task / drop 仍需单独批准。
+- **通用 Alpha 限制：** 没有桌面产品 GUI（桥接审批有环回页面 `compiler/bridge_gui.py`，未接到生产调用链）；无同步；远程云模型仅环回地址；其他宿主适配未完成；Adapter 召回仍偏关键词；本地 4B 模型存在分类漂移；英文临时情绪检测不完整；`schema.md` 里的 distill 归档流程没有对应的 `distill.py`。文本版 `compiler/sleep_consolidation.py` 已在 main（PR #25），那不是 distill，也不是候选 A。尚未经过大规模外部用户长期验证。
+- **量化口径：** 没有公开基准分数。旧的 30 篇日记 recall ≈ 0.705 / precision ≈ 0.505 已被 `benchmark/README.md` 标明无法用现行匹配器复现，不能当作当前成绩。`False Write = 0` 仅表示在已定义的对抗样本中未观察到该类失败。
 
 
 ## 它解决什么问题
@@ -253,8 +353,7 @@ Stellamem **不是**：
 - ❌ 全量上传用户私人数据的服务
 - ❌ 一个必须依赖 OpenClaw 才存在的项目
 
-**OpenClaw 是「第一个完整验证的宿主」，不是「唯一宿主」。**
-核心编译器是框架无关的。
+**OpenClaw 是第一个接上的宿主，不是唯一宿主。** 隔离宿主上的注入传输有证据（`docs/verification/REAL_OPENCLAW.md`）。SQLite 会话自动采集没有接通，Stage E 没有通过。核心编译器与框架无关。
 
 ---
 
@@ -262,7 +361,7 @@ Stellamem **不是**：
 
 | Capability | Status |
 |---|---|
-| OpenClaw Adapter | ✅ Alpha · 隔离真实宿主 E2E 通过 |
+| OpenClaw Adapter | 🚧 Alpha · 隔离宿主注入传输有证据；SQLite 自动采集未接通；Stage E 未通过 |
 | Claim compiler | ✅ |
 | Relation Engine | ✅ |
 | Source provenance | ✅ |
@@ -272,16 +371,16 @@ Stellamem **不是**：
 | Transaction / Rollback | ✅ |
 | Crash recovery | ✅ |
 | Local models（llama.cpp 等） | ✅ |
-| 写前快照 + 回滚（snapshots） | ✅ |
-| Token 看板（只读） | ✅ |
+| 写前快照 + 回滚（snapshots） | 🚧 在线备份与确认短语已有；失败时退回文件拷贝，见开着的缺口 |
+| Token 看板（只读） | 🚧 只读统计已有；`by_namespace` 读不到索引里的 namespace 列 |
 | 时效衰减（recall 排序层） | ✅ |
-| selector-audit（只读诊断） | ✅ |
+| selector-audit（只读诊断） | 🚧 九阶段诊断已有；主体为 None 时该阶段仍 pass |
 | Skill Bank（记忆技能注册表） | ✅ |
-| preference_summary（偏好摘要 kind） | ✅ |
+| preference_summary（偏好摘要 kind） | 🚧 缺证据会拒绝；创建即为 active，无复核、无版本链 |
 | 桥摘要规则（ADR 0004） | ✅ |
 | Remote cloud models | 🚧 暂不支持（仅环回地址） |
 | Other agent adapters | 🚧 |
-| GUI | 🚧 |
+| GUI | 🚧 无桌面产品 GUI；桥接环回页只在测试里被导入 |
 | Sync | 🚧 |
 
 > 状态**严格来自真实实现**。标 🚧 的尚未实现。
@@ -334,8 +433,8 @@ Run the built-in checks and report whether installation succeeded.
 
 简版如下，完整版见 [`SECURITY.md`](SECURITY.md)。
 
-- **Local-first** —— 记忆默认保存在你自己的机器上。
-- **不复制原始对话** —— Stellamem 不保存第二份完整 raw conversation；只存来源指针与 hash，原文留在宿主。
+- **记忆在本机** —— 默认把记忆写在本机。这是存放方式，不是相对其他本地记忆插件的差异。
+- **原文** —— 编译主路径保存来源指针和内容哈希，宿主里的原文仍是第一份。可选的 `compiler/raw_archive.py` 会把会话压进 `<memories_root>/_raw/`，那是第二份只追加档案。不能说系统从不保存原文副本。
 - **Secret before model** —— 密钥在发给任何模型之前被检测阻断。
 - **Sensitive review** —— 敏感与身份信息需要人工确认，且**永远不自动写**。
 - **Provenance or nothing** —— 来源不可验证时，**不伪造**。
@@ -344,38 +443,39 @@ Run the built-in checks and report whether installation succeeded.
 
 ## 量化效果（Benchmark）
 
-> **Benchmark results are experimental and limited to predefined test sets.**
-> 以下是内部版本比较用的实验数据，**不构成准确率承诺**。
+**没有公开基准分数。** MemOS README 自报的 LongMemEval 89.20 与 LoCoMo 88.83 不是本项目的分数。
 
-- 样本：30 篇日记（单一用户）
-- 指标：recall ≈ 0.705 / precision ≈ 0.505
-- `False Write = 0` **仅**表示在已定义的对抗样本中未观察到该类失败，**不代表真实环境零错误**
+- 旧的 30 篇日记实验曾写出 recall ≈ 0.705 / precision ≈ 0.505。`benchmark/README.md` 写明旧匹配器没有随仓发布，现行匹配器复现不了这两个数。
+- `False Write = 0` 只表示在已定义的对抗样本中未观察到该类失败。
+- Stage E 的 reader Recall@1 = 1.00 只覆盖 80 条合成投影契约，验收仍是 NOT MET。
+- 下一步评测是计划，未跑：[`docs/evaluation-plan.md`](docs/evaluation-plan.md)。
 
-测试条件与局限已完整记录，详见 [`benchmark/README.md`](benchmark/README.md)。
+详见 [`benchmark/README.md`](benchmark/README.md)。
 
 ---
 
 ## 当前限制（Alpha 的诚实边界）
 
-- **OpenClaw 是唯一完整 E2E 验证的宿主**（核心与框架无关，但其它宿主适配尚未完成）
+- **OpenClaw 是唯一接过隔离宿主传输试验的宿主**（核心与框架无关；SQLite 自动采集未接通；其它宿主适配未完成）
 - **远程云模型未正式支持** —— 模型客户端仅允许环回地址
-- **Adapter 召回仍偏关键词** —— 可能漏召回不含同词的自然提问
+- **Adapter 召回仍偏关键词** —— 可能漏召回不含同词的自然提问。语义通道不可用时静默退回字面检索
 - **本地 4B 模型存在分类漂移**（kind 判定不够严谨）
 - **英文临时情绪检测不完整**
-- **蒸馏 / 保留释放流程尚未合入 main**（文本版"睡眠巩固"在 PR #21，draft 未合入；权重版明确不做，原因见 `docs/UPDATE-2026-11-03.md`）
-- **尚无 GUI**
+- **`distill.py` 不在仓库里。** 文本版睡眠巩固已随 PR #25 合入，它不是候选 A，权重版不做
+- **没有桌面产品 GUI**（桥接环回页未接到生产调用链）
 - **尚未经过大规模外部用户长期验证**
+- **代码在 main 上，生产发布没有做。** Stage E 未通过，Stage F 关闭
 
-- 第 2 步 hold 规则已在分支阶段完成（干跑验证通过），标签写入真实数据仍未做。
+- hold 规则的干跑在仓库里。把标签写进真实数据仍未做，生产数据无法从本仓库核验。
 
-### 本版新增的已知问题（2026-11-02，见上文“本版是什么”一节）
+### 仍未关闭的已知问题
 
-- D4、D5 已合并到 main，gate 当前仍无生产调用方，接线前仍需单独确认；
-- D1、D3 已合并到 main；D7–D13 因审计内容缺失仍未修；
-- 主体标签只到干跑，未写入真实数据，hold 规则已实现并经干跑验证；
-- 人格事件同步实际写库未实现，桥接图形界面已加固，72 小时 TTL 为低置信猜测；
-- 语义检索健康检查 / 缓存 / 重排已实现，生产接线未做；
-- 生产侧 3969 条 pending 未激活，核心身份候选未获批准不得写入。
+- D4、D5 已合并到 main，`InjectionGate` 仍无生产调用方；
+- D1、D3 已合并到 main；D7–D12 缺审计原文；D13 的无效 namespace 不回退已在代码里，其余要求对不上原文；
+- 主体补标只到干跑；生产数据是否已写入，未验证/待生产核验；
+- 人格事件同步的实际写库未实现。桥接环回页在仓库里，未接到生产调用链。72 小时 TTL 是低置信占位；
+- 语义健康检查、缓存、重排在 `compiler/semantic_health.py`，没有生产调用方。召回在语义服务不可用时静默退回字面检索；
+- 生产 pending 是否激活、核心身份候选是否写入：未验证/待生产核验。交接材料里的条数不在这里当成当前数字。
 
 这些透明项是设计的一部分，不是缺陷隐瞒。
 
@@ -383,10 +483,12 @@ Run the built-in checks and report whether installation succeeded.
 
 ## Roadmap
 
+近端的 P0–P3 在本文开头。下面是更长期的产品方向，字母优先级和开头的 P0–P3 不是同一张表。详见 [`ROADMAP.md`](ROADMAP.md)。
+
 ### Alpha（当前）
-- 可靠性打磨
-- 召回质量
-- 外部测试
+- 把 Stage E / F 仍缺的证据补上
+- 收口外部审阅标成「修复进行中」的五项
+- 独立评估基线（计划，未跑）
 
 ### Beta
 - 更多宿主 Adapter
@@ -417,19 +519,17 @@ Run the built-in checks and report whether installation succeeded.
 
 ## Vision
 
-未来的 AI 会存在数年甚至更久。如果一个 AI 真正长期陪伴、工作或服务一个人，它就需要回答：
+正文开头已经写了愿景：给 AI 记忆一个 Git，可追溯、可复核、可撤回。治理是差异点。本地运行和检索不是。
 
-- 我为什么知道这件事？
-- 这是用户什么时候说的？
-- 现在还成立吗？
-- 后来有没有改变？
-- 两条记忆冲突怎么办？
-- 用户能不能撤销？
-- 敏感内容是否应该调用？
+长期陪伴仍然要能回答：这件事从哪来、何时说过、现在是否还成立、后来有没有改、冲突怎么留、能不能撤、敏感内容该不该被调用。
 
-Stellamem 希望成为 **AI 长期记忆的治理基础层**。
+**OpenClaw 是第一站，不是终点。** 代码在 main 上，生产发布没有做。
 
-**OpenClaw 是第一站，不是终点。**
+---
+
+## 外部致谢
+
+点到的外部项目、许可和「未接入 / 计划」边界在 [`docs/ACKNOWLEDGEMENTS.md`](docs/ACKNOWLEDGEMENTS.md)。评估计划在 [`docs/evaluation-plan.md`](docs/evaluation-plan.md)。
 
 ---
 
