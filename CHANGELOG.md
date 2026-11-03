@@ -4,10 +4,54 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased - governance-4-features（借鉴记忆管家 V4.0.6）
+
+设计文档：`docs/GOVERNANCE-4-FEATURES.md`。4 个功能按 Stellamem 架构适配，
+不是照抄；铁律：衰减只降可检索性不删除、快照/回滚为显式运维操作、
+core 画像与 pinned 记录不参与衰减。
+
+### 新增
+
+- **F1 写前自动快照 + 显式回滚**（`compiler/snapshots.py`）：索引重建、
+  approve/reject 等写操作前自动对 `index.db` + 关键配置做文件级快照
+  （SHA256 清单）；`restore_snapshot()` 必须传确认短语 `RESTORE` 否则拒绝，
+  恢复前校验 SHA256；快照/回滚/清理全部写审计日志；默认保留最近 10 份。
+  不绕过 append-only：记忆内容修改仍走事务 + `valid_to`，快照恢复只用于
+  运维事故且每次可审计。
+- **F2 Token 看板**（`compiler/token_dashboard.py`，只读）：总条数、
+  按 namespace/status/kind 分组、token 估算（优先 tiktoken，否则 CJK 启发式
+  并标注"估算"）、可配置预算（默认 30000）、三色告警（<70% 绿 / 70–100% 黄 /
+  >100% 红）、超预算时给出"建议人工复核的大户清单"。刻意不做自动压实/
+  throttle：删除与压实必须走人工复核。
+- **F3 90 天时效衰减接入 recall**：`compiler/rank.py` 新增
+  `configure_decay(halflife_days, strength)`（默认沿用按 kind 稳定度，
+  可设全局半衰期如 90 天；identity/user-core/core 与 `pinned` 记录永不衰减）、
+  `search.recall(..., decay=True, explain_decay=False)` 在评分层做
+  base_score × retention 重排（只影响排序，不删除条目、不改 status）、
+  `/v1/recall` 支持 `explain_decay` 透传调试信息。另修复真 bug：
+  `rank._timestamp_ms` 原先不认索引表实际的 `occurred_at`/`observed_at`
+  字段，导致真实数据上衰减静默失效。
+- **F4 selector-audit**（`compiler/selector_audit.py`，只读）：诊断单条记忆
+  在召回链路各阶段的命运——存在性 → namespace 隔离 → status → search 召回
+  （score/overlap/semantic）→ min_score → 去重折叠 → top-k → budget → decay，
+  输出 verdict（injected / not_in_index / blocked_by_namespace / blocked_by_status /
+  not_recalled_by_search / filtered_by_min_score / folded_by_dedup /
+  cut_by_top_k / cut_by_budget）与分阶段 JSON。
+
+### 测试
+
+- 新增 33 项：`test_governance_f1_snapshot.py`（8）、
+  `test_governance_f2_dashboard.py`（6）、`test_governance_f3_decay.py`（11）、
+  `test_governance_f4_audit.py`（8），全合成数据。
+- 全量回归：371 / 371 通过（338 基线零下跌）。
+
+---
+
 ---
 
 ## Unreleased - large diary reliability
 
+- 新增 MemSkill 轻量适配（`compiler/skills.py` + `compiler/designer_review.py`，见 `docs/MEMSKILL-LITE.md`）：Skill Bank 把记忆提取/整理/修剪收敛为命名、版本化、可审计的技能（INSERT/UPDATE/DELETE/SKIP 四原语 + 从现有流程提炼的 8 个领域技能）；Designer 只收集 hard cases 并生成 pending 提案，**永不自动生效**——新增/修改/删除 skill 必须具名人类批准。刻意未做 RL 训练闭环（原因见文档）。
 - 可读记忆（Ant International EMNLP 2026 印证 + 补两小件，见 docs/READABLE-MEMORY.md）：
   - 新增 ADR 0004：桥接只传摘要、不搬原文（明文规则 + 人工批准检查清单）；
     `bridge.raw_source_hits()` 噪音过滤器标记疑似原文混入（只提示，不自动拒绝）。
@@ -15,7 +59,6 @@
     subject/text/evidence/updated_at/version/status；每条陈述强制有证据，
     缺证据拒绝写入 + 记审计；支持更新（version+1）与撤回。
   - 未采用 AlignXplore+ 两阶段训练（模型不开源、训练管线太重，文档留了原因）。
-
 - 默认编译分块调整为 2500 字符，llama.cpp 上下文窗口调整为 16384。
 - 将 `finish_reason=length` 与连接、超时错误分开；输出截断时递归重切。
 - 完整响应若 JSON 无效，原块只重试一次；连续无效再按无损边界重切，到下限仍无效则硬失败，不修补残缺 JSON。
