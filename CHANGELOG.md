@@ -8,6 +8,14 @@
 
 ## Unreleased - large diary reliability
 
+- 可读记忆（Ant International EMNLP 2026 印证 + 补两小件，见 docs/READABLE-MEMORY.md）：
+  - 新增 ADR 0004：桥接只传摘要、不搬原文（明文规则 + 人工批准检查清单）；
+    `bridge.raw_source_hits()` 噪音过滤器标记疑似原文混入（只提示，不自动拒绝）。
+  - 新增一等记忆类型 `preference_summary`（compiler/preference_summary.py）：
+    subject/text/evidence/updated_at/version/status；每条陈述强制有证据，
+    缺证据拒绝写入 + 记审计；支持更新（version+1）与撤回。
+  - 未采用 AlignXplore+ 两阶段训练（模型不开源、训练管线太重，文档留了原因）。
+
 - 默认编译分块调整为 2500 字符，llama.cpp 上下文窗口调整为 16384。
 - 将 `finish_reason=length` 与连接、超时错误分开；输出截断时递归重切。
 - 完整响应若 JSON 无效，原块只重试一次；连续无效再按无损边界重切，到下限仍无效则硬失败，不修补残缺 JSON。
