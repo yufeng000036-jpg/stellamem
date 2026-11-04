@@ -220,7 +220,7 @@ class PreferenceCardStore:
     def _key(self, subject: str, topic: str) -> tuple[str, str]:
         return (str(subject), str(topic or ""))
 
-    def create(self, subject: str, topic: str, text: str, evidence: list[dict]) -> dict:
+    def create(self, subject: str, text: str, evidence: list[dict], *, topic: str = "") -> dict:
         """新建偏好卡（version=1, status=pending）。证据缺失即拒绝 + 记审计。
 
         同一 subject 可有多张不同 topic 的卡；(subject, topic) 已存在则抛 KeyError。
@@ -249,9 +249,10 @@ class PreferenceCardStore:
     def update(
         self,
         subject: str,
-        topic: str,
         text: str | None = None,
         evidence: list[dict] | None = None,
+        *,
+        topic: str = "",
     ) -> dict:
         """更新偏好卡：version+1，status 回到 pending，旧版本保留。"""
         key = self._key(subject, topic)
@@ -284,7 +285,7 @@ class PreferenceCardStore:
             raise
         return self._commit(card, "updated")
 
-    def approve(self, subject: str, topic: str, by: str) -> dict:
+    def approve(self, subject: str, by: str, *, topic: str = "") -> dict:
         """具名人类批准：pending -> active。正文不变，版本 +1，历史只追加。"""
         name = self._named(by, "approve")
         key = self._key(subject, topic)
@@ -297,6 +298,7 @@ class PreferenceCardStore:
             {
                 "kind": PREFERENCE_SUMMARY_KIND,
                 "subject": subject,
+                "topic": old.get("topic", ""),
                 "text": old["text"],
                 "evidence": old["evidence"],
                 "version": old["version"] + 1,
@@ -308,7 +310,7 @@ class PreferenceCardStore:
         card["approved_at"] = self.now_fn()
         return self._commit(card, "approved", note=f"by={name}")
 
-    def withdraw(self, subject: str, topic: str, reason: str = "") -> dict:
+    def withdraw(self, subject: str, reason: str = "", *, topic: str = "") -> dict:
         """撤回偏好卡：追加 status=withdrawn 的新版本，旧版本保留。"""
         key = self._key(subject, topic)
         old = self.cards.get(key)
@@ -318,6 +320,7 @@ class PreferenceCardStore:
             {
                 "kind": PREFERENCE_SUMMARY_KIND,
                 "subject": subject,
+                "topic": old.get("topic", ""),
                 "text": old["text"],
                 "evidence": old["evidence"],
                 "version": old["version"] + 1,
@@ -327,7 +330,7 @@ class PreferenceCardStore:
         )
         return self._commit(card, "withdrawn", note=reason)
 
-    def rollback(self, subject: str, topic: str, version: int, by: str) -> dict:
+    def rollback(self, subject: str, version: int, by: str, *, topic: str = "") -> dict:
         """追加一条 pending 新版本，正文来自指定历史版本。不改旧记录。"""
         name = self._named(by, "rollback")
         key = self._key(subject, topic)
@@ -345,6 +348,7 @@ class PreferenceCardStore:
             {
                 "kind": PREFERENCE_SUMMARY_KIND,
                 "subject": subject,
+                "topic": prior.get("topic", old.get("topic", "")),
                 "text": prior["text"],
                 "evidence": prior["evidence"],
                 "version": old["version"] + 1,

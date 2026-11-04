@@ -191,8 +191,8 @@ class Round4HardeningTest(unittest.TestCase):
 
         store = PreferenceCardStore(audit_path=self.tmp_ws / "pref.jsonl")
         ev = [{"statement": "s", "evidence": "e"}]
-        c1 = store.create("user", "editor", "Uses Vim", ev)
-        c2 = store.create("user", "music", "Likes jazz", ev)
+        c1 = store.create("user", "Uses Vim", ev, topic="editor")
+        c2 = store.create("user", "Likes jazz", ev, topic="music")
         self.assertEqual(c1["version"], 1)
         self.assertEqual(c2["version"], 1)  # not version 2 of the first card
         self.assertEqual(c1["topic"], "editor")
