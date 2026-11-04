@@ -175,6 +175,7 @@ class StellamemMCPServer:
                     from compiler.search import recall as live_recall
 
                     con = sqlite3.connect(str(self.index_db_path))
+                    con.row_factory = sqlite3.Row
                     try:
                         result = live_recall(
                             con,
