@@ -40,3 +40,10 @@ _bak/
 
 # 个人版交付目录含真实记忆字段、隔离清单与隐私清单，禁止进版本库
 docs/personal-edition/
+
+# Stellamem Round 4 lock & derived cache artifacts
+.*.stellamem.lock
+.*.tmp-*
+.derived_index_cache.json
+.partial-*
+*.restoring
