@@ -205,12 +205,23 @@ def check_report(config_path=None, offline=False):
         "system/version-chain.json",
         "system/memory-inbox.md",
     ):
-        add(
-            "File " + rel,
-            "OK" if (root / rel).is_file() else "FAIL",
-            "",
-            "Re-run install; templates never overwrite",
-        )
+        p = root / rel
+        if not p.is_file():
+            add("File " + rel, "FAIL", "", "Re-run install; templates never overwrite")
+        elif rel.endswith(".json"):
+            # JSON files must also parse; existence alone is not enough.
+            try:
+                json.loads(p.read_text(encoding="utf-8-sig"))
+                add("File " + rel, "OK")
+            except (OSError, ValueError, UnicodeDecodeError):
+                add(
+                    "File " + rel,
+                    "FAIL",
+                    "File exists but is not valid JSON",
+                    "Restore from backup; do not delete",
+                )
+        else:
+            add("File " + rel, "OK")
     from storage import load_records
     from security import contains_secret
     from store import FILES
