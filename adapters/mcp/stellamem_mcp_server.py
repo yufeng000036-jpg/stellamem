@@ -183,10 +183,12 @@ class StellamemMCPServer:
                             budget_chars=max_chars,
                             max_items=6,
                             pref_subject=subj,
+                            subject=subj,
                         )
                     finally:
                         con.close()
-                    # Subject isolation: only return items matching the requester.
+                    # Subject isolation: database-level filtering via subject=subj
+                    # above, plus post-query check as defense in depth.
                     items = [
                         {
                             "id": it.get("id"),
@@ -274,7 +276,16 @@ class StellamemMCPServer:
 
 def main() -> None:
     workspace = Path(sys.argv[1]) if len(sys.argv) > 1 else Path.cwd() / ".stellamem"
-    server = StellamemMCPServer(workspace)
+    # Index DB for live recall: 2nd CLI arg, or STELLAMEM_INDEX_DB env var.
+    # If unset or missing, stellamem_recall returns wired:false.
+    import os
+
+    index_db = None
+    if len(sys.argv) > 2:
+        index_db = Path(sys.argv[2])
+    elif os.environ.get("STELLAMEM_INDEX_DB"):
+        index_db = Path(os.environ["STELLAMEM_INDEX_DB"])
+    server = StellamemMCPServer(workspace, index_db_path=index_db)
     for raw_line in sys.stdin:
         line = raw_line.strip()
         if not line:

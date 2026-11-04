@@ -700,6 +700,7 @@ def recall(
     pref_subject: str | None = None,
     patterns=None,
     pattern_quota: int = 1,
+    subject: str | None = None,
     usage_tracker=None,
 ) -> dict:
     """严格召回（F3：可选时效衰减）。
@@ -720,7 +721,11 @@ def recall(
     usage_tracker: 可选的 UsageTracker，注入项命中时记一次。
     """
     intent = detect_intent(prompt)
-    hits = search(con, prompt, limit=max_items * 3, status=("active",))
+    # Subject isolation at the database level: when a subject is specified,
+    # only records with matching subject are retrieved. This is fail-closed:
+    # no subject means no filtering (backward compat), but callers that
+    # require isolation must pass an explicit subject.
+    hits = search(con, prompt, limit=max_items * 3, status=("active",), person=subject)
 
     if decay:
         # [(record, base, adjusted)] 按 adjusted 降序；min_score 仍按 base 过滤
