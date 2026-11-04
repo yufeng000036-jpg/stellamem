@@ -4,6 +4,31 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## 2026-11-04 — v0.3.0 正式落地
+
+**项目正式落地版本。DSH 桌面助手已完成三阶段部署验收并投入日常运行。**
+
+### 新增
+
+- **MCP 真实召回**（PR #36）：`StellamemMCPServer` 新增可选参数 `index_db_path`，传入索引库路径即接通真实检索；不传则保持 `wired:false` 向后兼容；主体隔离，无效主体 fail_closed。
+- **check JSON 校验**（PR #35）：`setup.py check` 对 `.json` 文件额外做 `json.loads` 可解析性校验，损坏文件不再误报 OK。
+- **DSH 正式部署**：隔离安装 → MCP 召回验证 → 真实数据接入 → 日常运行（每日健康检查、每周快照备份）。
+
+### 修复
+
+- **PR #37**：MCP 自建 SQLite 连接缺 `row_factory`，导致 `dict(row)` 报错；由 DSH 实测发现，一行修复（`con.row_factory = sqlite3.Row`）验证通过。
+
+### 部署验证
+
+- 阶段一：21 文件隔离安装、check 全绿、虚构测试卡写读一致
+- 阶段二：3/3 查询 `wired:true / status:ok / 命中1条 / text 逐字一致`
+- 阶段三：备份 1476 文件/768MB（只读）、正式库全新空库、真实偏好写入 3/3 查回一致
+- 日常运行：4 条真实记录入库、召回 5/5 正确、每日 23:30 检查、每周 23:45 快照
+
+### 测试
+
+- 全量 **587 passed**，CI 全绿（Linux/Windows/macOS × Python 3.10/3.12）。
+
 ## 2026-11-04 — Round 4 加固（PR #31 / #32 / #33 已合入 main）
 
 第四轮硬化模块 + 两轮外部审查修复。主分支评分 7.0 → 7.3。
