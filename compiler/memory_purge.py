@@ -22,6 +22,12 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote as _url_quote
 
+
+def _pct(value: str) -> str:
+    """Percent-encode a field so embedded separators can't collide."""
+    return _url_quote(value, safe="")
+
+
 from compiler.file_lock import atomic_write_text
 
 NEGATION_PAIRS: tuple[tuple[str, str], ...] = (
@@ -48,8 +54,16 @@ def normalize_statement(text: str) -> str:
 
 
 def compute_statement_signature(subject: str, topic: str, text: str) -> str:
-    """Generate a deterministic hash signature for deduplication."""
-    norm = f"{subject.strip().lower()}::{topic.strip().lower()}::{normalize_statement(text)}"
+    """Generate a deterministic hash signature for deduplication.
+
+    Each field is percent-encoded before joining so that a "::" inside a
+    field value can never collide with the separator (cf. Mem0 CVE-2026-116575).
+    """
+    norm = "%s::%s::%s" % (
+        _pct(subject.strip().lower()),
+        _pct(topic.strip().lower()),
+        _pct(normalize_statement(text)),
+    )
     return hashlib.sha256(norm.encode("utf-8")).hexdigest()[:16]
 
 
@@ -161,7 +175,11 @@ def run_memory_purge(
         topic_key = (subject, topic)
         prior_list = by_topic.setdefault(topic_key, [])
         for prior in prior_list:
-            prior_stmt = str(prior.get("statement") or prior.get("content") or "")
+            # Same field mapping as the extraction above: core records store
+            # their content in `value`, not `statement`/`content`.
+            prior_stmt = str(
+                prior.get("statement") or prior.get("content") or prior.get("value") or ""
+            )
             is_conflict, reason = detect_semantic_contradiction(prior_stmt, statement)
             if is_conflict:
                 conflict_entry = {
@@ -250,23 +268,40 @@ def _write_version_chain(
     chains: dict[str, list[dict[str, Any]]],
     updated_at_ms: int,
 ) -> bool:
-    """Write version chains fail-closed.
+    """Write version chains fail-closed, merging with existing history.
 
-    Returns True on write, False when refusing to overwrite a non-empty
-    existing chain file with empty chains (e.g. a purge run over zero
-    records must never clobber real history).
+    New entries are merged into (not overwriting) any existing chain file,
+    so a purge run over partial records can never destroy the full history.
+    Returns True on write, False only when refusing to overwrite a non-empty
+    existing chain file with empty chains.
     """
-    if not chains:
+    merged: dict[str, list[dict[str, Any]]] = {}
+    if path.exists():
         try:
             existing = json.loads(path.read_text(encoding="utf-8"))
-            if isinstance(existing, dict) and existing.get("chains"):
-                return False
+            if isinstance(existing, dict) and isinstance(existing.get("chains"), dict):
+                for k, v in existing["chains"].items():
+                    if isinstance(v, list):
+                        merged[str(k)] = list(v)
         except (OSError, json.JSONDecodeError, UnicodeDecodeError):
-            pass
+            # Unparseable existing file: do not silently clobber it.
+            if chains:
+                return False
+    if not chains and merged:
+        return False
+    for key, entries in chains.items():
+        bucket = merged.setdefault(key, [])
+        seen_ids = {e.get("id") for e in bucket if isinstance(e, dict)}
+        for entry in entries:
+            eid = entry.get("id") if isinstance(entry, dict) else None
+            if eid is None or eid not in seen_ids:
+                bucket.append(entry)
+                if eid is not None:
+                    seen_ids.add(eid)
     payload = {
         "schema_version": 1,
         "updated_at_ms": updated_at_ms,
-        "chains": chains,
+        "chains": merged,
     }
     atomic_write_text(
         path,

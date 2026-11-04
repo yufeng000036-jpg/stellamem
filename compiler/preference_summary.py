@@ -123,6 +123,46 @@ class PreferenceCardStore:
         self._history: dict[str, list[dict]] = {}
         if self.audit_path:
             self.audit_path.parent.mkdir(parents=True, exist_ok=True)
+            self._replay_audit()
+
+    def _replay_audit(self) -> None:
+        """Rebuild in-memory cards/history from the append-only audit log.
+
+        Makes pending cards survive process restarts: the JSONL audit file
+        is the durable store, memory is just a cache.
+        """
+        if not self.audit_path or not self.audit_path.exists():
+            return
+        replayable = {"created", "updated", "approved", "withdrawn", "rolled_back"}
+        try:
+            lines = self.audit_path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            return
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if entry.get("action") not in replayable:
+                continue
+            content = entry.get("content")
+            subject = entry.get("subject")
+            if not isinstance(content, dict) or not subject:
+                continue
+            card = {
+                "kind": PREFERENCE_SUMMARY_KIND,
+                "subject": str(subject),
+                "text": content.get("text"),
+                "evidence": content.get("evidence") or [],
+                "version": entry.get("version") or 1,
+                "status": content.get("status") or "pending",
+                "updated_at": entry.get("ts") or self.now_fn(),
+            }
+            self._history.setdefault(card["subject"], []).append(copy.deepcopy(card))
+            self.cards[card["subject"]] = copy.deepcopy(card)
 
     # -- audit ---------------------------------------------------------
     def _audit(self, action: str, subject: str, version=None, note: str = "", content=None) -> None:
