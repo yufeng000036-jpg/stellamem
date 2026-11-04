@@ -46,6 +46,14 @@ D4/D5 与步骤 2–7 合并后 338 测试 → D1/D3 合并后 347 测试 →
 - 已合入：PR #22（外部致谢文档，`608acd11`）。
 - 待合入（draft）：PR #21（skill 运行时接线、偏好卡 recall 接线、SenseNova 三件套、睡眠巩固文本版）。
 
+
+### 2026-11-04 更新（PR #31 / #32 / #33 已合入 main）
+
+- 5 个硬化模块：文件锁与原子写入（`compiler/file_lock.py`）、Markdown 增量缓存（`compiler/derived_cache.py`，SHA256 防旧读）、记忆去重与冲突识别（`compiler/memory_purge.py`，只标记不自动删）、MCP 标准接口（`adapters/mcp/stellamem_mcp_server.py`）、版本链（防覆盖、防损坏、合并写入）。
+- 偏好卡支持多主题：`(subject, topic)` 双键，同一用户可存多张独立偏好；`topic` 参数向后兼容；审批/撤回/回滚不丢主题。
+- 全量回归 **587 passed**，CI 7/7（Linux/Windows/macOS × Python 3.10/3.12）；第三方审查主分支评分 7.0 → 7.3。
+- 详见 `CHANGELOG.md` 的 2026-11-04 节。
+
 ### 现在已有的功能
 
 **记忆治理核心（沿用 v0.1.0-alpha，并经回归验证）：**
