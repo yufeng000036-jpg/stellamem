@@ -23,13 +23,16 @@ MCP_PROTOCOL_VERSION = "2024-11-05"
 class StellamemMCPServer:
     """Lightweight JSON-RPC 2.0 MCP server backed by a Stellamem workspace."""
 
-    def __init__(self, workspace_dir: Path | str) -> None:
+    def __init__(self, workspace_dir: Path | str, index_db_path: Path | str | None = None) -> None:
         self.workspace_dir = Path(workspace_dir).resolve()
         self.workspace_dir.mkdir(parents=True, exist_ok=True)
         self.active_subject: str | None = None
         self._pref_store = PreferenceCardStore(
             audit_path=self.workspace_dir / "preference_history.jsonl"
         )
+        # Optional path to the Stellamem index SQLite DB for live recall.
+        # If unset or missing, stellamem_recall returns wired:false (scaffold).
+        self.index_db_path = Path(index_db_path).resolve() if index_db_path else None
 
     def list_tools(self) -> list[dict[str, Any]]:
         return [
@@ -50,7 +53,7 @@ class StellamemMCPServer:
             },
             {
                 "name": "stellamem_recall",
-                "description": "Recall subject-isolated memories with strict token budget and 90-day decay weighting. SCAFFOLDING: not yet wired to the live recall pipeline; returns no items until wired.",
+                "description": "Recall subject-isolated memories with strict token budget and 90-day decay weighting. Wired to live recall when the server was constructed with index_db_path; otherwise returns wired:false.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -163,6 +166,53 @@ class StellamemMCPServer:
                     "reason": "Missing or invalid subject",
                 }
             query = str(args.get("query", "")).strip()
+            max_chars = int(args.get("max_chars", 2000) or 2000)
+            # Live recall when an index DB is configured; otherwise scaffold.
+            if self.index_db_path and self.index_db_path.is_file():
+                try:
+                    import sqlite3
+
+                    from compiler.search import recall as live_recall
+
+                    con = sqlite3.connect(str(self.index_db_path))
+                    try:
+                        result = live_recall(
+                            con,
+                            query,
+                            budget_chars=max_chars,
+                            max_items=6,
+                            pref_subject=subj,
+                        )
+                    finally:
+                        con.close()
+                    # Subject isolation: only return items matching the requester.
+                    items = [
+                        {
+                            "id": it.get("id"),
+                            "text": it.get("text") or it.get("value") or "",
+                            "score": it.get("score"),
+                            "kind": it.get("kind"),
+                        }
+                        for it in result.get("items", [])
+                        if it.get("subject", subj) == subj
+                    ]
+                    return {
+                        "status": "ok",
+                        "subject": subj,
+                        "query": query,
+                        "items": items,
+                        "wired": True,
+                        "chars": result.get("chars", 0),
+                    }
+                except Exception as exc:  # noqa: BLE001
+                    return {
+                        "status": "error",
+                        "subject": subj,
+                        "query": query,
+                        "items": [],
+                        "wired": True,
+                        "reason": f"recall failed: {exc}",
+                    }
             # Scaffolding only: the live recall pipeline is not wired here yet.
             # `wired: false` lets callers distinguish "no results" from "not connected".
             return {"status": "ok", "subject": subj, "query": query, "items": [], "wired": False}
