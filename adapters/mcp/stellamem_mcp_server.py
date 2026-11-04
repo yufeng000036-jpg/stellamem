@@ -185,13 +185,13 @@ class StellamemMCPServer:
             ]
             try:
                 card = self._pref_store.create(
-                    subject=subj, text=statement, evidence=evidence_items
+                    subject=subj, topic=topic, text=statement, evidence=evidence_items
                 )
             except KeyError:
                 # Card exists: propose as an update (new pending version).
                 try:
                     card = self._pref_store.update(
-                        subject=subj, text=statement, evidence=evidence_items
+                        subject=subj, topic=topic, text=statement, evidence=evidence_items
                     )
                 except (PreferenceEvidenceError, KeyError) as exc:
                     raise ValueError(f"Preference proposal rejected: {exc}") from exc

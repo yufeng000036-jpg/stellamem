@@ -100,6 +100,14 @@ class Round4HardeningTest(unittest.TestCase):
             )
         )
 
+    def test_purge_never_clobbers_unparseable_chain_file(self):
+        """Corrupt chain file + empty input: must not overwrite, bytes preserved."""
+        chain_path = self.tmp_ws / "version-chain.json"
+        raw = b'{"chains": {"a": [{"id": "x"}]'  # truncated, invalid JSON
+        chain_path.write_bytes(raw)
+        _, _ = run_memory_purge([], version_chain_path=chain_path, now_ms=1_760_000_000_000)
+        self.assertEqual(chain_path.read_bytes(), raw)
+
     def test_purge_chain_keys_resist_delimiter_injection(self):
         chain_path = self.tmp_ws / "version-chain.json"
         records = [
@@ -176,6 +184,24 @@ class Round4HardeningTest(unittest.TestCase):
         self.assertTrue(payload["persisted"])
         audit = (self.tmp_ws / "preference_history.jsonl").read_text(encoding="utf-8")
         self.assertIn("Vim keybindings", audit)
+
+    def test_multi_topic_cards_coexist(self):
+        """Same subject, different topics: two independent cards, not an update."""
+        from compiler.preference_summary import PreferenceCardStore
+
+        store = PreferenceCardStore(audit_path=self.tmp_ws / "pref.jsonl")
+        ev = [{"statement": "s", "evidence": "e"}]
+        c1 = store.create("user", "editor", "Uses Vim", ev)
+        c2 = store.create("user", "music", "Likes jazz", ev)
+        self.assertEqual(c1["version"], 1)
+        self.assertEqual(c2["version"], 1)  # not version 2 of the first card
+        self.assertEqual(c1["topic"], "editor")
+        self.assertEqual(c2["topic"], "music")
+        self.assertEqual(len(store.list_active()), 0)  # both pending
+        # Restart recovery keeps both.
+        store2 = PreferenceCardStore(audit_path=self.tmp_ws / "pref.jsonl")
+        self.assertIsNotNone(store2.get("user", "editor"))
+        self.assertIsNotNone(store2.get("user", "music"))
 
 
 if __name__ == "__main__":

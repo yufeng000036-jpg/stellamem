@@ -82,6 +82,7 @@ def validate_card(card: dict) -> dict:
             f"kind 必须是 {PREFERENCE_SUMMARY_KIND!r}，实际 {card.get('kind')!r}"
         )
     subject = _nonempty_str(card.get("subject"), "subject")
+    topic = str(card.get("topic") or "").strip()
     text = _nonempty_str(card.get("text"), "text")
     if len(text) > MAX_TEXT_CHARS:
         raise PreferenceEvidenceError(f"text 超过 {MAX_TEXT_CHARS} 字：偏好摘要要短，不是小作文")
@@ -99,6 +100,7 @@ def validate_card(card: dict) -> dict:
     return {
         "kind": PREFERENCE_SUMMARY_KIND,
         "subject": subject,
+        "topic": topic,
         "text": text,
         "evidence": items,
         "version": version,
@@ -155,22 +157,27 @@ class PreferenceCardStore:
             card = {
                 "kind": PREFERENCE_SUMMARY_KIND,
                 "subject": str(subject),
+                "topic": str(entry.get("topic") or ""),
                 "text": content.get("text"),
                 "evidence": content.get("evidence") or [],
                 "version": entry.get("version") or 1,
                 "status": content.get("status") or "pending",
                 "updated_at": entry.get("ts") or self.now_fn(),
             }
-            self._history.setdefault(card["subject"], []).append(copy.deepcopy(card))
-            self.cards[card["subject"]] = copy.deepcopy(card)
+            key = self._key(card["subject"], card["topic"])
+            self._history.setdefault(key, []).append(copy.deepcopy(card))
+            self.cards[key] = copy.deepcopy(card)
 
     # -- audit ---------------------------------------------------------
-    def _audit(self, action: str, subject: str, version=None, note: str = "", content=None) -> None:
+    def _audit(
+        self, action: str, subject: str, topic: str = "", version=None, note: str = "", content=None
+    ) -> None:
         entry = {
             "ts": self.now_fn(),
             "action": action,
             "kind": PREFERENCE_SUMMARY_KIND,
             "subject": subject,
+            "topic": topic or "",
             "version": version,
             "note": note,
         }
@@ -190,11 +197,13 @@ class PreferenceCardStore:
     def _commit(self, card: dict, action: str, note: str = "") -> dict:
         """追加不可变快照。不修改已有版本。"""
         snap = copy.deepcopy(card)
-        self._history.setdefault(snap["subject"], []).append(snap)
-        self.cards[snap["subject"]] = copy.deepcopy(snap)
+        key = self._key(snap["subject"], snap.get("topic", ""))
+        self._history.setdefault(key, []).append(snap)
+        self.cards[key] = copy.deepcopy(snap)
         self._audit(
             action,
             snap["subject"],
+            snap.get("topic", ""),
             version=snap["version"],
             note=note,
             content=self._content(snap),
@@ -208,15 +217,23 @@ class PreferenceCardStore:
         return name
 
     # -- write ---------------------------------------------------------
-    def create(self, subject: str, text: str, evidence: list[dict]) -> dict:
-        """新建偏好卡（version=1, status=pending）。证据缺失即拒绝 + 记审计。"""
-        if subject in self.cards:
-            raise KeyError(f"card already exists: {subject!r}")
+    def _key(self, subject: str, topic: str) -> tuple[str, str]:
+        return (str(subject), str(topic or ""))
+
+    def create(self, subject: str, topic: str, text: str, evidence: list[dict]) -> dict:
+        """新建偏好卡（version=1, status=pending）。证据缺失即拒绝 + 记审计。
+
+        同一 subject 可有多张不同 topic 的卡；(subject, topic) 已存在则抛 KeyError。
+        """
+        key = self._key(subject, topic)
+        if key in self.cards:
+            raise KeyError(f"card already exists: {key!r}")
         try:
             card = validate_card(
                 {
                     "kind": PREFERENCE_SUMMARY_KIND,
                     "subject": subject,
+                    "topic": topic or "",
                     "text": text,
                     "evidence": evidence,
                     "version": 1,
@@ -225,22 +242,28 @@ class PreferenceCardStore:
                 }
             )
         except PreferenceEvidenceError as e:
-            self._audit("rejected", str(subject), version=1, note=f"create: {e}")
+            self._audit("rejected", str(subject), str(topic or ""), version=1, note=f"create: {e}")
             raise
         return self._commit(card, "created")
 
     def update(
-        self, subject: str, text: str | None = None, evidence: list[dict] | None = None
+        self,
+        subject: str,
+        topic: str,
+        text: str | None = None,
+        evidence: list[dict] | None = None,
     ) -> dict:
         """更新偏好卡：version+1，status 回到 pending，旧版本保留。"""
-        old = self.cards.get(subject)
+        key = self._key(subject, topic)
+        old = self.cards.get(key)
         if old is None:
-            raise KeyError(f"no such card: {subject!r}")
+            raise KeyError(f"no such card: {key!r}")
         if old["status"] == "withdrawn":
             raise PreferenceEvidenceError("已撤回的卡不能更新，先恢复再改")
         merged = {
             "kind": PREFERENCE_SUMMARY_KIND,
             "subject": subject,
+            "topic": topic or "",
             "text": text if text is not None else old["text"],
             "evidence": evidence if evidence is not None else old["evidence"],
             "version": old["version"] + 1,
@@ -253,6 +276,7 @@ class PreferenceCardStore:
             self._audit(
                 "rejected",
                 subject,
+                topic or "",
                 version=merged["version"],
                 note=f"update: {e}",
                 content=self._content(old),
@@ -260,12 +284,13 @@ class PreferenceCardStore:
             raise
         return self._commit(card, "updated")
 
-    def approve(self, subject: str, by: str) -> dict:
+    def approve(self, subject: str, topic: str, by: str) -> dict:
         """具名人类批准：pending -> active。正文不变，版本 +1，历史只追加。"""
         name = self._named(by, "approve")
-        old = self.cards.get(subject)
+        key = self._key(subject, topic)
+        old = self.cards.get(key)
         if old is None:
-            raise KeyError(f"no such card: {subject!r}")
+            raise KeyError(f"no such card: {key!r}")
         if old["status"] != "pending":
             raise PreferenceEvidenceError(f"status {old['status']!r} 不能批准，只有 pending 可以")
         card = validate_card(
@@ -283,11 +308,12 @@ class PreferenceCardStore:
         card["approved_at"] = self.now_fn()
         return self._commit(card, "approved", note=f"by={name}")
 
-    def withdraw(self, subject: str, reason: str = "") -> dict:
+    def withdraw(self, subject: str, topic: str, reason: str = "") -> dict:
         """撤回偏好卡：追加 status=withdrawn 的新版本，旧版本保留。"""
-        old = self.cards.get(subject)
+        key = self._key(subject, topic)
+        old = self.cards.get(key)
         if old is None:
-            raise KeyError(f"no such card: {subject!r}")
+            raise KeyError(f"no such card: {key!r}")
         card = validate_card(
             {
                 "kind": PREFERENCE_SUMMARY_KIND,
@@ -301,14 +327,15 @@ class PreferenceCardStore:
         )
         return self._commit(card, "withdrawn", note=reason)
 
-    def rollback(self, subject: str, version: int, by: str) -> dict:
+    def rollback(self, subject: str, topic: str, version: int, by: str) -> dict:
         """追加一条 pending 新版本，正文来自指定历史版本。不改旧记录。"""
         name = self._named(by, "rollback")
-        old = self.cards.get(subject)
+        key = self._key(subject, topic)
+        old = self.cards.get(key)
         if old is None:
-            raise KeyError(f"no such card: {subject!r}")
+            raise KeyError(f"no such card: {key!r}")
         prior = None
-        for snap in self._history.get(subject, []):
+        for snap in self._history.get(key, []):
             if snap.get("version") == version:
                 prior = snap
                 break
@@ -328,13 +355,15 @@ class PreferenceCardStore:
         return self._commit(card, "rolled_back", note=f"by={name} to_version={version}")
 
     # -- read ----------------------------------------------------------
-    def get(self, subject: str) -> dict | None:
-        card = self.cards.get(subject)
+    def get(self, subject: str, topic: str = "") -> dict | None:
+        key = self._key(subject, topic)
+        card = self.cards.get(key)
         return copy.deepcopy(card) if card else None
 
-    def history(self, subject: str) -> list[dict]:
-        """按时间顺序返回该主体的全部版本（深拷贝）。"""
-        return [copy.deepcopy(snap) for snap in self._history.get(subject, [])]
+    def history(self, subject: str, topic: str = "") -> list[dict]:
+        """按时间顺序返回该 (subject, topic) 的全部版本（深拷贝）。"""
+        key = self._key(subject, topic)
+        return [copy.deepcopy(snap) for snap in self._history.get(key, [])]
 
     def list_active(self) -> list[dict]:
         return [copy.deepcopy(c) for c in self.cards.values() if c["status"] == "active"]
