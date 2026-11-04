@@ -1,5 +1,9 @@
 # Stage E — bounded measurement; acceptance NOT passed
 
+> **Note (2026-11-04, v0.3.0):** This document records the historical Stage E evaluation status as of 2026-11-02. It does NOT reflect the v0.3.0 formal deployment (DSH three-stage acceptance, 2026-11-04). The "NOT passed" refers specifically to the Stage E synthetic benchmark criteria listed below, not to the project's overall deployment readiness. See README.md "2026-11-04 正式部署" for current deployment status.
+>
+> **注意（2026-11-04，v0.3.0）：** 本文档记录的是 2026-11-02 时的 Stage E 历史评估状态，不反映 v0.3.0 正式部署情况（DSH 三阶段验收，2026-11-04）。"未通过"特指下方列出的 Stage E 合成基准标准，不代表项目整体部署状态。当前部署状态见 README.md "2026-11-04 正式部署"章节。
+
 300 frozen synthetic projection-contract cases were actually executed against baseline `8430657` and the updated adapter, using identical corpus/environment. 200 functional cases (10 families x20 variants), 100 adversarial cases (10 families x10); train/dev/holdout partition, 90/300 holdout cases. Corpus SHA-256: `d20453b038a4cbd86e4a39aa652337c323838287f0d99b9b122e3e7b3d3555ac`.
 
 **Validity limits:** explicit gold labels are AI-authored, not independently human-reviewed. Cases were frozen after known fixes, not before development; the nominal holdout is NOT an independent blind set. Templates repeat. Runtime values are generated synthetic fixtures, not real diary/chat material. This measures the actual adapter's projection contract, not language understanding, extraction or generated answers. No tuning after viewing holdout results was performed.
