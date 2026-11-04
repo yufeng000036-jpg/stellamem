@@ -1,6 +1,6 @@
 # Stellamem · 星忆
 
-> **Reliability development branch (not a deployed release):** see [latest automation boundaries](docs/verification/AUTOLOG_BOUNDARY.md), [real host transport evidence](docs/verification/REAL_OPENCLAW.md), and [frozen independent evaluation](benchmark/longmemeval/PROTOCOL.md). Local regression: 426 Python / 8 Node; exact-SHA CI evidence is attached to draft PR #15. Older counts below describe historical milestones. Memory-quality acceptance and full host intake remain incomplete; no 9/10 claim.
+> **v0.3.0（2026-11-04）：正式落地版本。** 已在真实环境部署并通过完整验收：DSH 桌面助手已正式启用 Stellamem 作为长期记忆（隔离安装 → 真实数据 → 日常运行）。详见下方"正式部署"章节。
 >
 > **Compatibility:** projection defaults to requester `user` and scope `global`; use explicit `requesterSubject` / `activeScopes` for other namespaces/tasks. An explicit invalid namespace fails closed. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
 
@@ -10,8 +10,9 @@ Stellamem 是一个**本地优先、可审计的 AI 长期记忆治理层**。
 它让 AI 的长期记忆可以被**查看、溯源、版本化、复核、回滚** —— 而不是变成一个不可见的黑箱。
 
 <p align="center">
-  <b>🚧 Alpha（v0.2.0-alpha）</b> ·
+  <b>✅ v0.3.0 正式版</b> ·
   🦞 首个一等公民宿主：OpenClaw ·
+  🖥️ 首个正式部署：DSH 桌面助手 ·
   🧩 核心与框架无关 ·
   🔒 本地优先 ·
   📝 Markdown 优先
@@ -28,14 +29,25 @@ Stellamem 是一个**本地优先、可审计的 AI 长期记忆治理层**。
 </p>
 ---
 
-## 本版是什么（v0.2.0-alpha，2026-11-02）
+## 本版是什么（v0.3.0，2026-11-04）
 
-本版是公开版，相对旧主分支 v0.1.0-alpha 的变化全部来自 staging 链路与后续合并：
-生产三项版 187 测试 → 改进版 226 测试 → PATCH1 242 测试 → PATCH2 266 测试 →
-D4/D5 与步骤 2–7 合并后 338 测试 → D1/D3 合并后 347 测试 →
-本可靠性轮次（夜间 scope 分组、桥接令牌加固）后重跑为 **357 / 357 通过**，清单 **203 条**。
-第二轮可靠性轮次（Windows 中文输出、密钥扫描误报、桥接安全边界测试）后重跑为 **372 / 372 通过**，清单 **206 条**。
-**不是生产部署包**：不含任何真实记忆内容、真实记忆文件、生产索引、生产备份、生产配置。
+**正式落地版本。** 从 v0.2.0-alpha 到 v0.3.0 的核心变化：项目已在真实环境完成部署验收，不再是"开发分支"。
+
+### 2026-11-04 正式部署（DSH 生产验收）
+
+DSH 桌面助手按"隔离测试 → 真实数据 → 日常运行"三阶段完成部署：
+
+- **阶段一（隔离安装）**：`C:\Users\hd\Stellamem-DSH` 隔离目录，21 个文件全在目录内，`check --offline` 全绿，demo 跑通，虚构测试卡写入/新进程读回逐字一致
+- **阶段二（MCP 召回）**：发现并修复 PR #36 的真实 bug（见下文），3/3 查询 `wired:true / status:ok / 命中1条 / text 逐字一致`
+- **阶段三（正式接入）**：备份 1476 文件/768MB（只读复制、源文件未动）；正式库 `Stellamem-DSH-Prod` 全新空库、check 全绿；写入真实偏好 3/3 查回一致
+- **日常运行**：已启用。重要对话结束时判断写入、每日 23:30 健康检查、每周 23:45 快照备份
+
+### 2026-11-04 更新（PR #35 / #36 / #37 已合入 main）
+
+- **PR #35**：`check` 校验 JSON 可解析性——此前只检查文件存在，损坏的 JSON 会误报 OK；现在 `.json` 文件额外做 `json.loads` 校验
+- **PR #36**：MCP `stellamem_recall` 接入真实检索——新增可选参数 `index_db_path`，传入索引库路径即接通真实召回；不传则保持 `wired:false` 向后兼容；主体隔离，无效主体 fail_closed
+- **PR #37**：修复 PR #36 的 `row_factory` 缺失——MCP 自建 SQLite 连接时未设 `con.row_factory = sqlite3.Row`，导致 `dict(row)` 报错；由 DSH 实测发现并验证修复
+- 全量回归 **587 passed**，CI 全绿
 
 ### 2026-11-03 更新（PR #17 / #18 / #20 已合入 main）
 
@@ -287,6 +299,9 @@ Stellamem **不是**：
 | Skill Bank（记忆技能注册表） | ✅ |
 | preference_summary（偏好摘要 kind） | ✅ |
 | 桥摘要规则（ADR 0004） | ✅ |
+| MCP 真实召回（index_db_path） | ✅ v0.3.0 · DSH 生产验证 |
+| DSH 桌面助手正式部署 | ✅ v0.3.0 · 日常运行中 |
+| check JSON 可解析性校验 | ✅ v0.3.0 |
 | Remote cloud models | 🚧 暂不支持（仅环回地址） |
 | Other agent adapters | 🚧 |
 | GUI | 🚧 |
@@ -363,18 +378,16 @@ Run the built-in checks and report whether installation succeeded.
 
 ---
 
-## 当前限制（Alpha 的诚实边界）
+## 当前限制（v0.3.0 的诚实边界）
 
-- **OpenClaw 是唯一完整 E2E 验证的宿主**（核心与框架无关，但其它宿主适配尚未完成）
+- **DSH 是第二个正式部署的宿主**（OpenClaw 之后）；核心与框架无关，但其它宿主适配尚未完成
 - **远程云模型未正式支持** —— 模型客户端仅允许环回地址
 - **Adapter 召回仍偏关键词** —— 可能漏召回不含同词的自然提问
 - **本地 4B 模型存在分类漂移**（kind 判定不够严谨）
 - **英文临时情绪检测不完整**
 - **蒸馏 / 保留释放流程尚未合入 main**（文本版"睡眠巩固"在 PR #21，draft 未合入；权重版明确不做，原因见 `docs/UPDATE-2026-11-03.md`）
 - **尚无 GUI**
-- **尚未经过大规模外部用户长期验证**
-
-- 第 2 步 hold 规则已在分支阶段完成（干跑验证通过），标签写入真实数据仍未做。
+- **语义检索在生产环境降级为字面匹配**（8082 端口被占用，语义服务离线）
 
 ### 本版新增的已知问题（2026-11-02，见上文“本版是什么”一节）
 
