@@ -284,9 +284,10 @@ def _write_version_chain(
                     if isinstance(v, list):
                         merged[str(k)] = list(v)
         except (OSError, json.JSONDecodeError, UnicodeDecodeError):
-            # Unparseable existing file: do not silently clobber it.
-            if chains:
-                return False
+            # Unparseable existing file: never overwrite it, period.
+            # The original bytes may be recoverable; an empty write would
+            # destroy that chance.
+            return False
     if not chains and merged:
         return False
     for key, entries in chains.items():
