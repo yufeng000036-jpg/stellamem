@@ -100,6 +100,14 @@ class Round4HardeningTest(unittest.TestCase):
             )
         )
 
+    def test_purge_never_clobbers_unparseable_chain_file(self):
+        """Corrupt chain file + empty input: must not overwrite, bytes preserved."""
+        chain_path = self.tmp_ws / "version-chain.json"
+        raw = b'{"chains": {"a": [{"id": "x"}]'  # truncated, invalid JSON
+        chain_path.write_bytes(raw)
+        _, _ = run_memory_purge([], version_chain_path=chain_path, now_ms=1_760_000_000_000)
+        self.assertEqual(chain_path.read_bytes(), raw)
+
     def test_purge_chain_keys_resist_delimiter_injection(self):
         chain_path = self.tmp_ws / "version-chain.json"
         records = [
