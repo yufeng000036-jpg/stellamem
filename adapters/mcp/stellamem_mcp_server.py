@@ -14,7 +14,8 @@ from pathlib import Path
 from typing import Any
 
 from compiler.memory_purge import run_memory_purge
-from compiler.subjects import VALID_SUBJECTS
+from compiler.preference_summary import PreferenceCardStore, PreferenceEvidenceError
+from compiler.subjects import SUBJECTS as VALID_SUBJECTS
 
 MCP_PROTOCOL_VERSION = "2024-11-05"
 
@@ -26,6 +27,9 @@ class StellamemMCPServer:
         self.workspace_dir = Path(workspace_dir).resolve()
         self.workspace_dir.mkdir(parents=True, exist_ok=True)
         self.active_subject: str | None = None
+        self._pref_store = PreferenceCardStore(
+            audit_path=self.workspace_dir / "preference_history.jsonl"
+        )
 
     def list_tools(self) -> list[dict[str, Any]]:
         return [
@@ -170,12 +174,29 @@ class StellamemMCPServer:
             evidence = args.get("evidence") or []
             if not evidence or not any(str(e).strip() for e in evidence):
                 raise ValueError("Preference proposal rejected: non-empty evidence is required")
+            topic = str(args.get("topic") or "").strip()
+            statement = str(args.get("statement") or "").strip()
+            # Persist to the real pending store (status=pending, needs named
+            # human approval to activate). No more false "pending" without storage.
+            evidence_items = [
+                {"statement": topic or statement, "evidence": str(e).strip()}
+                for e in evidence
+                if str(e).strip()
+            ]
+            try:
+                card = self._pref_store.create(
+                    subject=subj, text=statement, evidence=evidence_items
+                )
+            except (PreferenceEvidenceError, KeyError) as exc:
+                raise ValueError(f"Preference proposal rejected: {exc}") from exc
             return {
-                "status": "pending",
+                "status": card.get("status", "pending"),
                 "subject": subj,
-                "topic": args.get("topic"),
-                "statement": args.get("statement"),
-                "evidence_count": len(evidence),
+                "topic": topic,
+                "statement": statement,
+                "evidence_count": len(evidence_items),
+                "version": card.get("version", 1),
+                "persisted": True,
             }
 
         if name == "stellamem_purge_and_audit":

@@ -134,8 +134,16 @@ def run_memory_purge(
     for rec in sorted_records:
         item = dict(rec)
         subject = str(item.get("subject") or item.get("namespace") or "unknown").strip()
-        topic = str(item.get("topic") or item.get("category") or "general").strip()
-        statement = str(item.get("statement") or item.get("content") or "").strip()
+        # Core Stellamem semantic records use (subject, predicate, value);
+        # preference cards and ledger entries use (subject, topic, statement/content).
+        # Map both so core records are never read as empty statements
+        # (which would make distinct memories hash-identical and get folded).
+        topic = str(
+            item.get("topic") or item.get("category") or item.get("predicate") or "general"
+        ).strip()
+        statement = str(
+            item.get("statement") or item.get("content") or item.get("value") or ""
+        ).strip()
         rec_id = str(item.get("id") or compute_statement_signature(subject, topic, statement))
         ts_ms = int(item.get("updated_at_ms") or item.get("occurred_at_ms") or current_ms)
 
@@ -202,7 +210,17 @@ def run_memory_purge(
         _write_conflict_log(Path(conflict_log_path), report.conflicts_logged)
 
     if version_chain_path is not None:
-        _write_version_chain(Path(version_chain_path), version_chains, current_ms)
+        wrote = _write_version_chain(Path(version_chain_path), version_chains, current_ms)
+        if not wrote:
+            report.conflicts_logged.append(
+                {
+                    "subject": "-",
+                    "topic": "-",
+                    "reason": "version_chain_write_refused_empty_over_nonempty",
+                    "detected_at_ms": current_ms,
+                    "resolution_mode": "fail_closed_no_overwrite",
+                }
+            )
 
     return retained, report
 
@@ -231,7 +249,20 @@ def _write_version_chain(
     path: Path,
     chains: dict[str, list[dict[str, Any]]],
     updated_at_ms: int,
-) -> None:
+) -> bool:
+    """Write version chains fail-closed.
+
+    Returns True on write, False when refusing to overwrite a non-empty
+    existing chain file with empty chains (e.g. a purge run over zero
+    records must never clobber real history).
+    """
+    if not chains:
+        try:
+            existing = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(existing, dict) and existing.get("chains"):
+                return False
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+            pass
     payload = {
         "schema_version": 1,
         "updated_at_ms": updated_at_ms,
@@ -241,3 +272,4 @@ def _write_version_chain(
         path,
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
     )
+    return True

@@ -86,17 +86,26 @@ class DerivedMarkdownCache:
         size = st.st_size
 
         cached = self._entries.get(rel_key)
+        text: str | None = None
         if (
             cached is not None
             and cached.get("mtime_ns") == mtime_ns
             and cached.get("size") == size
             and isinstance(cached.get("parsed"), dict)
         ):
-            self._stats["hits"] += 1
-            return cached["parsed"]
+            # Fast-path hit, but verify the content hash before trusting it.
+            # mtime_ns + size alone can lie on coarse-resolution filesystems
+            # or when timestamps are cloned; a sha256 read is cheap compared
+            # to re-parsing (which may cost LLM tokens).
+            text = path.read_text(encoding="utf-8")
+            if hashlib.sha256(text.encode("utf-8")).hexdigest() == cached.get("sha256"):
+                self._stats["hits"] += 1
+                return cached["parsed"]
+            # Hash mismatch: fall through to re-parse below (text already read).
 
         self._stats["misses"] += 1
-        text = path.read_text(encoding="utf-8")
+        if text is None:
+            text = path.read_text(encoding="utf-8")
         digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
 
         if (
