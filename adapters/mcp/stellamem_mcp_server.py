@@ -183,10 +183,12 @@ class StellamemMCPServer:
                             budget_chars=max_chars,
                             max_items=6,
                             pref_subject=subj,
+                            subject=subj,
                         )
                     finally:
                         con.close()
-                    # Subject isolation: only return items matching the requester.
+                    # Subject isolation: database-level filtering via subject=subj
+                    # above, plus post-query check as defense in depth.
                     items = [
                         {
                             "id": it.get("id"),
