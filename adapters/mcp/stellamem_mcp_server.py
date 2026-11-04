@@ -274,7 +274,16 @@ class StellamemMCPServer:
 
 def main() -> None:
     workspace = Path(sys.argv[1]) if len(sys.argv) > 1 else Path.cwd() / ".stellamem"
-    server = StellamemMCPServer(workspace)
+    # Index DB for live recall: 2nd CLI arg, or STELLAMEM_INDEX_DB env var.
+    # If unset or missing, stellamem_recall returns wired:false.
+    import os
+
+    index_db = None
+    if len(sys.argv) > 2:
+        index_db = Path(sys.argv[2])
+    elif os.environ.get("STELLAMEM_INDEX_DB"):
+        index_db = Path(os.environ["STELLAMEM_INDEX_DB"])
+    server = StellamemMCPServer(workspace, index_db_path=index_db)
     for raw_line in sys.stdin:
         line = raw_line.strip()
         if not line:
