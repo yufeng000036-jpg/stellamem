@@ -4,6 +4,29 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## 2026-11-04 — Round 4 加固（PR #31 / #32 / #33 已合入 main）
+
+第四轮硬化模块 + 两轮外部审查修复。主分支评分 7.0 → 7.3。
+
+### 新增
+
+- **文件锁与原子写入**（`compiler/file_lock.py`）：跨进程并发写保护，`atomic_append_jsonl` 修复 torn tail，`atomic_write_text` 保证写入原子性。
+- **Markdown 增量缓存**（`compiler/derived_cache.py`）：解析结果缓存，命中时 SHA256 校验防止旧读，mtime/size 不变但内容变化时能正确重解析。
+- **记忆去重与冲突识别**（`compiler/memory_purge.py`）：扫描重复记忆、检测语义矛盾（"喜欢→讨厌"），只标记不自动删除。签名用 percent-encode 防分隔符碰撞（cf. Mem0 CVE-2026-116575）；兼容核心 `(subject, predicate, value)` 字段。
+- **MCP 接口**（`adapters/mcp/stellamem_mcp_server.py`）：标准 JSON-RPC 2.0 接口，偏好提案真实写入 `PreferenceCardStore` pending（需具名审批激活），支持多主题。
+- **版本链**（`compiler/memory_purge.py`）：变更历史追踪，空数据不覆盖非空历史，损坏文件永不覆盖，合并写入不丢历史。
+
+### 修复
+
+- **PR #32**：版本链损坏文件保护——无法解析的 JSON 文件永不覆盖，保留原始字节供恢复。
+- **PR #33**：偏好卡多主题——`(subject, topic)` 双键，同一用户可存多张独立偏好卡；`topic` 为 keyword-only 参数向后兼容；`approve`/`withdraw`/`rollback` 保留主题不丢失。
+
+### 测试
+
+- 新增 `tests/test_round4_hardening.py`（10 项）：并发写入、缓存校验、分隔符注入、版本链保护、多主题、MCP 持久化、重启恢复。
+- 全量 **587 passed**，CI 7/7（Linux/Windows/macOS × Python 3.10/3.12 + 代码质量）。
+
+
 ## Unreleased - review-round2（外部审查第二轮，快照 / 主体隔离 / 看板 / selector-audit）
 
 来源：对 main `803df0d` 的外部审查。四项均先用失败测试复现，再在根上修复，测试保留为回归。
