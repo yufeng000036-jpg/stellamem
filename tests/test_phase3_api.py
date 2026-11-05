@@ -61,6 +61,61 @@ def seed(root: Path):
     target.write_text(render_records("# 项目\n", records), encoding="utf-8")
 
 
+def append_to_projects(root: Path, svc, records):
+    """把记录追加到 long-term/projects.md（MANAGED 文件，索引会读），返回原内容以便恢复。
+
+    注意：索引只读 MANAGED 清单里的 8 个文件，写 persona.md 这类新文件不会被索引，
+    测试会空跑通过（假阳性）。必须追加到已有 MANAGED 文件。
+    """
+    target = root / "long-term" / "projects.md"
+    original = target.read_text(encoding="utf-8")
+    blocks = []
+    for rec in records:
+        blocks.extend(
+            ["```stellamem", json.dumps(rec, ensure_ascii=False, sort_keys=True), "```", ""]
+        )
+    target.write_text(original.rstrip() + "\n\n" + "\n".join(blocks), encoding="utf-8")
+    svc.ensure_index(force=True)
+    return original
+
+
+def restore_projects(root: Path, svc, original):
+    target = root / "long-term" / "projects.md"
+    target.write_text(original, encoding="utf-8")
+    svc.ensure_index(force=True)
+
+
+def make_record(claim_id, subject, value):
+    """合成一条标准测试记录。"""
+    return {
+        "schema_version": 2,
+        "claim_id": claim_id,
+        "revision_id": f"r-{claim_id}",
+        "event_id": f"e-{claim_id}",
+        "kind": "preference",
+        "scope": "global",
+        "subject": subject,
+        "predicate": f"p-{claim_id}",
+        "value": value,
+        "evidence": value,
+        "source": "user",
+        "confidence": 0.9,
+        "importance": 0.5,
+        "sensitivity": "PRIVATE",
+        "write_policy": "allow",
+        "injection_policy": "recall",
+        "evidence_verified": True,
+        "status": "active",
+        "relation": "NEW",
+        "auto_write": True,
+        "observed_at": "2026-11-04T00:00:00+00:00",
+        "provenance": {
+            "timestamp": "2026-11-04T09:00:00",
+            "record_id": f"rm-{claim_id}",
+        },
+    }
+
+
 class APITests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -225,9 +280,10 @@ class APITests(unittest.TestCase):
                 "record_id": "rm-persona",
             },
         }
-        target = self.root / "long-term" / "persona.md"
-        target.write_text(render_records("# 鲸鱼娘\n", [persona_rec]), encoding="utf-8")
-        self.svc.ensure_index(force=True)
+        # 必须追加到 MANAGED 文件 projects.md，写新文件不会被索引（假阳性）
+        # 同时加一条 用户 记录含"喜欢"，否则 search 空跑通过（seed 里没有"喜欢"的用户记录）
+        user_rec = make_record("c-user-like", "用户", "用户喜欢喝茶看书")
+        original = append_to_projects(self.root, self.svc, [persona_rec, user_rec])
 
         scoped_token = "scoped-dual-test"
         scoped_hash = hashlib.sha256(scoped_token.encode()).hexdigest()
@@ -235,18 +291,19 @@ class APITests(unittest.TestCase):
         scopes_file.write_text(json.dumps({scoped_hash: ["用户"]}), encoding="utf-8")
         headers = {"Authorization": f"Bearer {scoped_token}"}
 
-        # 1. search：结果里绝不能有 persona
+        # 1. search：结果里绝不能有 persona，且必须非空（否则是空跑通过）
         status, data = self.call(
             "GET",
             "/v1/search?q=" + urllib.parse.quote("喜欢"),
             headers=headers,
         )
         self.assertEqual(status, 200)
+        self.assertGreater(len(data.get("items", [])), 0)
         for item in data.get("items", []):
             self.assertEqual(item.get("subject"), "用户")
             self.assertNotIn("鲸鱼娘", item.get("value", ""))
 
-        # 2. recall：items 和 text 里绝不能有 persona
+        # 2. recall：items 和 text 里绝不能有 persona，且必须非空
         status, data = self.call(
             "POST",
             "/v1/recall",
@@ -254,14 +311,14 @@ class APITests(unittest.TestCase):
             headers=headers,
         )
         self.assertEqual(status, 200)
+        self.assertGreater(len(data.get("items", [])), 0)
         for item in data.get("items", []):
             self.assertEqual(item.get("subject"), "用户")
         self.assertNotIn("鲸鱼娘", data.get("text", ""))
         self.assertNotIn("persona", data.get("text", ""))
 
-        # 清理：删掉 persona 文件并重建索引，避免影响其他测试
-        target.unlink()
-        self.svc.ensure_index(force=True)
+        # 清理：恢复 projects.md 并重建索引，避免影响其他测试
+        restore_projects(self.root, self.svc, original)
         scopes_file.unlink()
 
     def test_empty_scope_returns_nothing(self):
@@ -354,9 +411,10 @@ class APITests(unittest.TestCase):
                 "record_id": "rm-persona-2",
             },
         }
-        target = self.root / "long-term" / "persona2.md"
-        target.write_text(render_records("# 鲸鱼娘\n", [persona_rec]), encoding="utf-8")
-        self.svc.ensure_index(force=True)
+        # 必须追加到 MANAGED 文件 projects.md，写新文件不会被索引（假阳性）
+        # 两边各加一条含"喜欢"的记录，否则一侧空跑通过
+        user_rec = make_record("c-both-user", "用户", "用户喜欢喝茶")
+        original = append_to_projects(self.root, self.svc, [persona_rec, user_rec])
 
         scoped_token = "scoped-both-test"
         scoped_hash = hashlib.sha256(scoped_token.encode()).hexdigest()
@@ -364,16 +422,17 @@ class APITests(unittest.TestCase):
         scopes_file.write_text(json.dumps({scoped_hash: ["用户", "persona"]}), encoding="utf-8")
         headers = {"Authorization": f"Bearer {scoped_token}"}
 
-        # 明确只查 user：结果只能有 用户
+        # 明确只查 user：结果只能有 用户，且不能为空（否则是空跑通过）
         status, data = self.call(
             "GET",
             "/v1/search?q=" + urllib.parse.quote("喜欢") + "&person=" + urllib.parse.quote("用户"),
             headers=headers,
         )
         self.assertEqual(status, 200)
+        self.assertGreater(len(data.get("items", [])), 0)
         for item in data.get("items", []):
             self.assertEqual(item.get("subject"), "用户")
-        # 明确只查 persona：结果只能有 persona
+        # 明确只查 persona：结果只能有 persona，且不能为空（否则是空跑通过）
         status, data = self.call(
             "GET",
             "/v1/search?q="
@@ -383,9 +442,10 @@ class APITests(unittest.TestCase):
             headers=headers,
         )
         self.assertEqual(status, 200)
+        self.assertGreater(len(data.get("items", [])), 0)
         for item in data.get("items", []):
             self.assertEqual(item.get("subject"), "persona")
-        # 不指定：两个主体都可出现
+        # 不指定：两个主体都出现
         status, data = self.call(
             "GET",
             "/v1/search?q=" + urllib.parse.quote("喜欢"),
@@ -393,11 +453,114 @@ class APITests(unittest.TestCase):
         )
         self.assertEqual(status, 200)
         subjects = {item.get("subject") for item in data.get("items", [])}
-        self.assertTrue(subjects <= {"用户", "persona"})
+        self.assertEqual(subjects, {"用户", "persona"})
 
-        target.unlink()
-        self.svc.ensure_index(force=True)
+        restore_projects(self.root, self.svc, original)
         scopes_file.unlink()
+
+    def test_subject_alias_recall(self):
+        """评审最终验收 P1：旧版 subject="用户" 与标准 "user" 是同一命名空间。
+        查 "user" 必须命中 "用户" 记录；查 persona/viewer 绝不能串话。
+        索引里保留原始拼写，不批量改写生产记忆。"""
+        import hashlib
+
+        recs = [
+            make_record("c-alias-user-cn", "用户", "别名测试用户旧拼写喜欢喝茶"),
+            make_record("c-alias-user-en", "user", "别名测试用户标准拼写喜欢喝茶"),
+            make_record("c-alias-persona", "persona", "别名测试鲸鱼娘喜欢唱歌"),
+            make_record("c-alias-viewer", "viewer", "别名测试观众喜欢看直播"),
+        ]
+        # 必须追加到 MANAGED 文件 projects.md，写新文件不会被索引（假阳性）
+        original = append_to_projects(self.root, self.svc, recs)
+
+        # 1. master 查 user：必须命中 用户 + user 两条，绝不能有 persona/viewer
+        status, data = self.call(
+            "GET",
+            "/v1/search?q=" + urllib.parse.quote("别名测试") + "&person=user",
+        )
+        self.assertEqual(status, 200)
+        found = {item.get("claim_id") for item in data.get("items", [])}
+        self.assertIn("c-alias-user-cn", found)
+        self.assertIn("c-alias-user-en", found)
+        self.assertNotIn("c-alias-persona", found)
+        self.assertNotIn("c-alias-viewer", found)
+        # 2. master 用旧拼写查 用户：同样命中两条
+        status, data = self.call(
+            "GET",
+            "/v1/search?q="
+            + urllib.parse.quote("别名测试")
+            + "&person="
+            + urllib.parse.quote("用户"),
+        )
+        self.assertEqual(status, 200)
+        found = {item.get("claim_id") for item in data.get("items", [])}
+        self.assertIn("c-alias-user-cn", found)
+        self.assertIn("c-alias-user-en", found)
+        # 3. master 查 persona：只命中 persona
+        status, data = self.call(
+            "GET",
+            "/v1/search?q=" + urllib.parse.quote("别名测试") + "&person=persona",
+        )
+        self.assertEqual(status, 200)
+        found = {item.get("claim_id") for item in data.get("items", [])}
+        self.assertEqual(found, {"c-alias-persona"})
+        # 4. scoped token 只允许 user：recall 必须命中 用户 记录（不漏），且不泄露 persona
+        scoped_token = "scoped-alias-test"
+        scoped_hash = hashlib.sha256(scoped_token.encode()).hexdigest()
+        scopes_file = self.root / "system" / "api-token-scopes.json"
+        scopes_file.write_text(json.dumps({scoped_hash: ["user"]}), encoding="utf-8")
+        headers = {"Authorization": f"Bearer {scoped_token}"}
+        status, data = self.call(
+            "POST",
+            "/v1/recall",
+            {"prompt": "别名测试喜欢喝茶", "budget": 1200},
+            headers=headers,
+        )
+        self.assertEqual(status, 200)
+        found = {item.get("claim_id") for item in data.get("items", [])}
+        self.assertIn("c-alias-user-cn", found)
+        self.assertNotIn("c-alias-persona", found)
+        self.assertNotIn("别名测试鲸鱼娘", data.get("text", ""))
+
+        restore_projects(self.root, self.svc, original)
+        scopes_file.unlink()
+
+    def test_backup_restore_roundtrip(self):
+        """评审最终验收第二阶段：隔离副本备份 → 删除 → 恢复 → 记录一致；
+        服务重启后记忆恢复。"""
+        import shutil
+        import sqlite3
+
+        # 用独立临时目录建索引，不碰共享测试服务
+        tmp2 = tempfile.TemporaryDirectory()
+        base2 = Path(tmp2.name)
+        root2 = base2 / "memories"
+        seed(root2)
+        db2 = base2 / "index.db"
+        svc2 = api.MemoryService(root2, db2)
+        meta = svc2.ensure_index()
+        self.assertGreater(meta.get("records", 0), 0)
+        n_before = meta["records"]
+        # 备份
+        backup = base2 / "index.db.bak"
+        svc2.index.close()
+        shutil.copyfile(db2, backup)
+        # 模拟损坏：删掉原库
+        db2.unlink()
+        self.assertFalse(db2.exists())
+        # 恢复
+        shutil.copyfile(backup, db2)
+        # 重启：重新打开服务，记录必须一致
+        svc3 = api.MemoryService(root2, db2)
+        meta3 = svc3.ensure_index()
+        self.assertEqual(meta3.get("records"), n_before)
+        # 直接查库验证内容
+        con = sqlite3.connect(str(db2))
+        row = con.execute("SELECT COUNT(*) FROM records WHERE claim_id = 'c-api0'").fetchone()
+        self.assertEqual(row[0], 1)
+        con.close()
+        svc3.index.close()
+        tmp2.cleanup()
 
     def test_recall_budget_boundaries(self):
         """评审 P1：budget 边界——0 真正关闭召回，负数钳到 0，极大值不崩。"""
