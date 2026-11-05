@@ -117,6 +117,30 @@ def source_fingerprint(root, include_daily=True) -> str:
     return _sha("\n".join(parts))
 
 
+def source_content_hash(root, include_daily=True) -> str:
+    """源文件内容 hash：只在 mtime/size 指纹变了时才算。
+    只 touch、不改内容时不重建（验收第三轮建议：touch 一下就全量重建 3s）。
+    读全部文件，比 stat 贵，只走变化分支。"""
+    root = Path(root)
+    h = hashlib.sha256()
+    for rel_path, _ in MANAGED:
+        p = root / rel_path
+        if p.exists():
+            h.update(rel_path.encode("utf-8"))
+            h.update(b"\0")
+            h.update(p.read_bytes())
+            h.update(b"\0")
+    if include_daily:
+        daily = root / "daily"
+        if daily.is_dir():
+            for p in sorted(daily.glob("*.md")):
+                h.update(f"daily/{p.name}".encode("utf-8"))
+                h.update(b"\0")
+                h.update(p.read_bytes())
+                h.update(b"\0")
+    return h.hexdigest()
+
+
 def _split_daily(path: Path) -> list[dict]:
     """把 daily 长文按二级标题切块，作为可检索的原文段落。"""
     try:
@@ -180,7 +204,10 @@ class Index:
     # ---------------- 构建 ----------------
 
     def build(self, root, include_daily=True, include_pending=True) -> dict:
-        from storage import load_records
+        try:  # 包内与扁平导入都要能用（MCP stdio 只加了仓库根，compiler/ 不在 sys.path）
+            from .storage import load_records
+        except ImportError:  # pragma: no cover - flat layout
+            from storage import load_records
 
         root = Path(root)
         self.con.execute("DELETE FROM records")
@@ -274,6 +301,7 @@ class Index:
             "root": str(root),
             "schema": "3",
             "source_fingerprint": source_fingerprint(root, include_daily),
+            "source_content_hash": source_content_hash(root, include_daily),
         }
         for key, value in meta.items():
             self.con.execute("INSERT OR REPLACE INTO meta VALUES (?,?)", (key, str(value)))
@@ -303,11 +331,26 @@ class Index:
         """索引是否过期：无指纹（旧版建的库）或指纹不一致都算过期。
 
         旧库第一次调用会重建一次，之后指纹正常，不会反复重建。
+        mtime/size 指纹变了时再算内容 hash：只 touch、不改内容时
+        只更新指纹，不重建（验收第三轮建议：touch 一下就全量重建 3s）。
         """
+        current_fp = source_fingerprint(root, include_daily)
         row = self.con.execute("SELECT value FROM meta WHERE key='source_fingerprint'").fetchone()
         if row is None:
             return True
-        return row[0] != source_fingerprint(root, include_daily)
+        if row[0] == current_fp:
+            return False
+        hash_row = self.con.execute(
+            "SELECT value FROM meta WHERE key='source_content_hash'"
+        ).fetchone()
+        if hash_row is not None and hash_row[0] == source_content_hash(root, include_daily):
+            self.con.execute(
+                "INSERT OR REPLACE INTO meta VALUES ('source_fingerprint', ?)",
+                (current_fp,),
+            )
+            self.con.commit()
+            return False
+        return True
 
     def stats(self) -> dict:
         def get(key):
