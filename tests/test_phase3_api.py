@@ -757,6 +757,12 @@ class APITests(unittest.TestCase):
         if thread is not None:
             thread.join(timeout=30)
             self.assertFalse(thread.is_alive())
+        # 后台重建若抛异常，测试直接报出真正原因，而不是只看到
+        # “查不到新记录”这种间接失败（CI Ubuntu 3.12 曾因此难定位）。
+        self.assertIsNone(
+            self.svc._rebuild_error,
+            f"后台重建线程抛异常：{self.svc._rebuild_error!r}",
+        )
 
     def _append_raw_record(self, record):
         """只写 markdown，不调 ensure_index——模拟本地 agent 直接写文件。"""
@@ -779,6 +785,8 @@ class APITests(unittest.TestCase):
             ).fetchone()
             self.assertEqual(row[0], 0)
             # 普通 ensure_index 必须靠指纹发现变化并重建（后台跑，等它跑完）
+            # 清掉前面测试万一留下的失败冷却，避免本次不启动后台线程
+            self.svc._last_rebuild_failed_at = 0.0
             self.svc.ensure_index()
             self._wait_for_rebuild()
             row = self.svc.index.con.execute(
@@ -813,6 +821,8 @@ class APITests(unittest.TestCase):
         self.svc.index.con.execute("DELETE FROM meta WHERE key='source_fingerprint'")
         self.svc.index.con.commit()
         self.assertTrue(self.svc.index.is_stale(self.root))
+        # 清掉前面测试万一留下的失败冷却，避免本次不启动后台线程
+        self.svc._last_rebuild_failed_at = 0.0
         self.svc.ensure_index()
         self._wait_for_rebuild()
         self.assertFalse(self.svc.index.is_stale(self.root))
@@ -841,6 +851,8 @@ class APITests(unittest.TestCase):
         original = self._append_raw_record(old)
         try:
             self._append_raw_record(new)
+            # 清掉前面测试万一留下的失败冷却，避免本次不启动后台线程
+            self.svc._last_rebuild_failed_at = 0.0
             self.svc.ensure_index()
             self._wait_for_rebuild()
             import search as S
@@ -1019,6 +1031,8 @@ class APITests(unittest.TestCase):
                 + "\n```\n",
                 encoding="utf-8",
             )
+            # 清掉前面测试万一留下的失败冷却，避免本次不启动后台线程
+            self.svc._last_rebuild_failed_at = 0.0
             self.svc.ensure_index()  # 起后台重建
             results = []
 

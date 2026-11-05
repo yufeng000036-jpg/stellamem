@@ -206,7 +206,7 @@ class Index:
         # 一把 RLock 护住整个连接：HTTP 线程池共用它，读和读之间也会互相干扰，
         # 不能只锁写。后台重建线程用自己的 Index/连接，不抢这把锁。
         self._lock = threading.RLock()
-        self.con = sqlite3.connect(self.path, check_same_thread=False)
+        self.con = sqlite3.connect(self.path, check_same_thread=False, timeout=30.0)
         self.con.row_factory = sqlite3.Row
         self._migrate()
         self.con.executescript(SCHEMA)
