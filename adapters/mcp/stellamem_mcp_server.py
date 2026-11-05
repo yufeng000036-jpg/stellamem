@@ -166,7 +166,10 @@ class StellamemMCPServer:
                     "reason": "Missing or invalid subject",
                 }
             query = str(args.get("query", "")).strip()
-            max_chars = int(args.get("max_chars", 2000) or 2000)
+            # 评审 P1：区分"没传 max_chars"和"明确传 0"。
+            # `or 2000` 会把 0 变成 2000，零预算关不掉召回；负数钳到 0。
+            raw_max = args.get("max_chars")
+            max_chars = 2000 if raw_max is None else max(0, int(raw_max))
             # Live recall when an index DB is configured; otherwise scaffold.
             if self.index_db_path and self.index_db_path.is_file():
                 try:

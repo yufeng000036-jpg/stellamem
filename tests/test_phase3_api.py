@@ -73,6 +73,9 @@ class APITests(unittest.TestCase):
         cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
         cls.thread.start()
         cls.token = cls.svc.ensure_token()
+        # 评审 P2：setUpClass 必须建好索引，否则每个测试依赖前面测试
+        # 偶然触发的重建才能读到数据，单独跑就全空（test_health / history）。
+        cls.svc.ensure_index()
 
     @classmethod
     def tearDownClass(cls):
@@ -293,6 +296,129 @@ class APITests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(data.get("items"), [])
         scopes_file.unlink()
+
+    def test_malformed_scope_config_rejected(self):
+        """评审 P0：Scoped Token 配置值是 null / 字符串 / 数字时，必须拒绝认证（401），
+        绝不能拿到 Master 权限（之前 get_token_subjects 返回 None = 不受限）。"""
+        import hashlib
+
+        scopes_file = self.root / "system" / "api-token-scopes.json"
+        for idx, bad_value in enumerate((None, "用户", 123, {"x": 1})):
+            # Token 名只用 ASCII（Authorization 头是 latin-1，中文会编码失败）
+            token = f"scoped-bad-{idx}"
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+            scopes_file.write_text(json.dumps({token_hash: bad_value}), encoding="utf-8")
+            headers = {"Authorization": f"Bearer {token}"}
+            # 读接口必须 401（认证失败），不是 200 更不是 Master 权限
+            status, _ = self.call(
+                "GET",
+                "/v1/search?q=" + urllib.parse.quote("记忆系统"),
+                headers=headers,
+            )
+            self.assertEqual(status, 401, f"bad config {bad_value!r} should be 401")
+            # 写接口也必须 401，不能审批
+            status, _ = self.call("POST", "/v1/approve", {"claim_id": "c-api0"}, headers=headers)
+            self.assertEqual(status, 401, f"bad config {bad_value!r} write should be 401")
+        scopes_file.unlink()
+
+    def test_explicit_subject_intersects_scope(self):
+        """评审 P1：Scoped Token 允许 user+persona，客户端明确只查 user 时，
+        SQL 必须只返回 user，不能让授权范围覆盖显式指定。"""
+        import hashlib
+
+        # 加一条 persona 记录（与 seed 的 用户 并存）
+        persona_rec = {
+            "schema_version": 2,
+            "claim_id": "c-persona-2",
+            "revision_id": "r-persona-2",
+            "event_id": "e-persona-2",
+            "kind": "preference",
+            "scope": "global",
+            "subject": "persona",
+            "predicate": "p-persona-2",
+            "value": "鲸鱼娘喜欢唱歌跳舞",
+            "evidence": "鲸鱼娘喜欢唱歌跳舞",
+            "source": "persona",
+            "confidence": 0.9,
+            "importance": 0.5,
+            "sensitivity": "PRIVATE",
+            "write_policy": "allow",
+            "injection_policy": "recall",
+            "evidence_verified": True,
+            "status": "active",
+            "relation": "NEW",
+            "auto_write": True,
+            "observed_at": "2026-11-04T00:00:00+00:00",
+            "provenance": {
+                "timestamp": "2026-11-04T09:00:00",
+                "record_id": "rm-persona-2",
+            },
+        }
+        target = self.root / "long-term" / "persona2.md"
+        target.write_text(render_records("# 鲸鱼娘\n", [persona_rec]), encoding="utf-8")
+        self.svc.ensure_index(force=True)
+
+        scoped_token = "scoped-both-test"
+        scoped_hash = hashlib.sha256(scoped_token.encode()).hexdigest()
+        scopes_file = self.root / "system" / "api-token-scopes.json"
+        scopes_file.write_text(json.dumps({scoped_hash: ["用户", "persona"]}), encoding="utf-8")
+        headers = {"Authorization": f"Bearer {scoped_token}"}
+
+        # 明确只查 user：结果只能有 用户
+        status, data = self.call(
+            "GET",
+            "/v1/search?q=" + urllib.parse.quote("喜欢") + "&person=" + urllib.parse.quote("用户"),
+            headers=headers,
+        )
+        self.assertEqual(status, 200)
+        for item in data.get("items", []):
+            self.assertEqual(item.get("subject"), "用户")
+        # 明确只查 persona：结果只能有 persona
+        status, data = self.call(
+            "GET",
+            "/v1/search?q="
+            + urllib.parse.quote("喜欢")
+            + "&person="
+            + urllib.parse.quote("persona"),
+            headers=headers,
+        )
+        self.assertEqual(status, 200)
+        for item in data.get("items", []):
+            self.assertEqual(item.get("subject"), "persona")
+        # 不指定：两个主体都可出现
+        status, data = self.call(
+            "GET",
+            "/v1/search?q=" + urllib.parse.quote("喜欢"),
+            headers=headers,
+        )
+        self.assertEqual(status, 200)
+        subjects = {item.get("subject") for item in data.get("items", [])}
+        self.assertTrue(subjects <= {"用户", "persona"})
+
+        target.unlink()
+        self.svc.ensure_index(force=True)
+        scopes_file.unlink()
+
+    def test_recall_budget_boundaries(self):
+        """评审 P1：budget 边界——0 真正关闭召回，负数钳到 0，极大值不崩。"""
+        # budget=0：items 和 text 都为空
+        status, data = self.call("POST", "/v1/recall", {"prompt": "记忆系统", "budget": 0})
+        self.assertEqual(status, 200)
+        self.assertEqual(data.get("items"), [])
+        self.assertEqual(data.get("text"), "")
+        # budget=-5：同样为空（不崩、不注入）
+        status, data = self.call("POST", "/v1/recall", {"prompt": "记忆系统", "budget": -5})
+        self.assertEqual(status, 200)
+        self.assertEqual(data.get("items"), [])
+        self.assertEqual(data.get("text"), "")
+        # budget=10**9：正常返回，不崩
+        status, data = self.call("POST", "/v1/recall", {"prompt": "记忆系统", "budget": 10**9})
+        self.assertEqual(status, 200)
+        self.assertGreater(len(data.get("items", [])), 0)
+        # 不传 budget：默认 1200，正常返回
+        status, data = self.call("POST", "/v1/recall", {"prompt": "记忆系统"})
+        self.assertEqual(status, 200)
+        self.assertGreater(len(data.get("items", [])), 0)
 
     def test_history_returns_subject(self):
         """评审 P1：history 必须返回 subject 字段，受限 Token 才能看到授权主体的历史。"""

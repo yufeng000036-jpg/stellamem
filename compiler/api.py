@@ -92,7 +92,10 @@ class MemoryService:
             except (ValueError, OSError):
                 return False
             token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
-            return token_hash in data
+            # 评审 P0：配置值必须是合法列表，否则直接拒绝认证。
+            # null / 字符串 / 数字等非法配置若被当成有效 Token，
+            # get_token_subjects 会返回 None（不受限），等于拿到 Master 权限。
+            return isinstance(data.get(token_hash), list)
         return False
 
     def get_token_subjects(self, header: str | None) -> set[str] | None:
@@ -123,7 +126,10 @@ class MemoryService:
         if subjects is None:
             return None
         if not isinstance(subjects, list):
-            return None
+            # 评审 P0：非法配置值（null / 字符串 / 数字）→ 零权限，
+            # 绝不能返回 None（不受限）。check_token 已拒绝这类 Token，
+            # 这里是防御性 fail-closed。
+            return set()
         return set(str(s) for s in subjects)
 
     def find_record(self, ident: str) -> dict | None:
@@ -417,7 +423,10 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/v1/recall":
             payload = self._read_json()
-            budget = int(payload.get("budget") or 1200)
+            # 评审 P1：区分"没传 budget"和"明确传 0"。
+            # `or 1200` 会把 0 变成 1200，零预算关不掉召回；负数钳到 0。
+            raw_budget = payload.get("budget")
+            budget = 1200 if raw_budget is None else max(0, int(raw_budget))
             # 主体权限：recall 的 subject 参数若越权 → 403
             req_subject = payload.get("subject")
             if req_subject and allowed is not None and req_subject not in allowed:
