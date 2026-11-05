@@ -94,7 +94,13 @@ def detect_broad(prompt: str) -> str | None:
     return None
 
 
-def broad_recall(con, kind: str, limit: int = 8, status=("active", "pending"), subject: str | None = None) -> list[dict]:
+def broad_recall(
+    con,
+    kind: str,
+    limit: int = 8,
+    status=("active", "pending"),
+    subject: str | None = None,
+) -> list[dict]:
     """按类型取记忆，按可信度 + 时间排序。
 
     subject: 可信主体过滤。传入时只返回该主体的记录（精确匹配），
@@ -228,7 +234,13 @@ def search(
     # 泛问走类型召回：问「我有哪些偏好」不该靠文本匹配
     broad = detect_broad(query)
     if broad and not kinds:
-        picked = broad_recall(con, broad, limit=limit, status=status or ("active", "pending"), subject=person)
+        picked = broad_recall(
+            con,
+            broad,
+            limit=limit,
+            status=status or ("active", "pending"),
+            subject=person,
+        )
         if picked:
             return picked
     # 默认只检索可注入状态：quarantined 记录不得被任何读路径搜出。
@@ -513,7 +525,10 @@ def as_of_paged(
 
 
 def timeline(
-    con: sqlite3.Connection, since: str | None = None, until: str | None = None, limit: int = 200
+    con: sqlite3.Connection,
+    since: str | None = None,
+    until: str | None = None,
+    limit: int = 200,
 ) -> list[dict]:
     sql = (
         "SELECT id, claim_id, kind, subject, value, occurred_at, observed_at, layer, status "
