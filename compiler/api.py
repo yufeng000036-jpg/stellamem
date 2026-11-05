@@ -63,7 +63,9 @@ class MemoryService:
     def ensure_index(self, force=False) -> dict:
         with self.lock:
             stats = self.index.stats()
-            if force or not stats["records"]:
+            # 验收 P1：只看记录数不够——写记忆不经过 API（如直接写 markdown
+            # 或写完后重启），库里有记录但内容已旧。指纹变了就重建。
+            if force or not stats["records"] or self.index.is_stale(self.root):
                 # F1：索引重建是写操作，先做轻量快照
                 snapshots.auto_snapshot(self.root, "index-rebuild")
                 meta = self.index.build(self.root)
@@ -294,6 +296,8 @@ class Handler(BaseHTTPRequestHandler):
 
         try:
             if path in {"/v1/health", "/health"}:
+                # health 也要先保鲜：否则重启后 health 报的还是旧记录数。
+                svc.ensure_index()
                 stats = svc.index.stats()
                 return self._send(
                     *_json(
@@ -316,6 +320,10 @@ class Handler(BaseHTTPRequestHandler):
             if not self._require_token():
                 return
             allowed = self._allowed_subjects()
+            # 读接口每次先保鲜索引：文件在服务运行时被改写（如本地 agent
+            # 直接写 markdown）时，不靠重启也能读到新记忆。指纹没变时
+            # 只是 stat 几个文件，不重建。
+            svc.ensure_index()
 
             if path == "/v1/search":
                 q = (query.get("q") or [""])[0]
@@ -435,6 +443,8 @@ class Handler(BaseHTTPRequestHandler):
         if not self._require_token():
             return
         allowed = self._allowed_subjects()
+        # recall 读索引，先保鲜（同 do_GET 的读接口）。
+        svc.ensure_index()
 
         if path == "/v1/recall":
             payload = self._read_json()
