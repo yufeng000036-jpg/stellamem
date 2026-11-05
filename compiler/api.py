@@ -170,9 +170,9 @@ class MemoryService:
                 continue
             hit = False
             for rec in records:
-                if (
-                    rec.get("claim_id") == ident or rec.get("revision_id") == ident
-                ) and rec.get("status") == "pending":
+                if (rec.get("claim_id") == ident or rec.get("revision_id") == ident) and rec.get(
+                    "status"
+                ) == "pending":
                     rec["status"] = status
                     rec["reviewed_at"] = rel.now_iso()
                     hit = True
@@ -252,17 +252,13 @@ class Handler(BaseHTTPRequestHandler):
         """当前请求 Token 允许访问的主体；None 表示不受限。"""
         return self.service.get_token_subjects(self.headers.get("Authorization"))
 
-    def _filter_subjects(
-        self, items: list[dict], allowed: set[str] | None
-    ) -> list[dict]:
+    def _filter_subjects(self, items: list[dict], allowed: set[str] | None) -> list[dict]:
         """按主体权限过滤记录列表；allowed=None 时不过滤。"""
         if allowed is None:
             return items
         return [it for it in items if str(it.get("subject", "")) in allowed]
 
-    def _check_subject_allowed(
-        self, subject: str | None, allowed: set[str] | None
-    ) -> bool:
+    def _check_subject_allowed(self, subject: str | None, allowed: set[str] | None) -> bool:
         """单条记录的主体是否在允许范围内；allowed=None 时总允许。"""
         if allowed is None:
             return True
@@ -272,9 +268,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if not self._host_ok():
-            return self._send(
-                *_json(HTTPStatus.MISDIRECTED_REQUEST, {"error": "bad host"})
-            )
+            return self._send(*_json(HTTPStatus.MISDIRECTED_REQUEST, {"error": "bad host"}))
         parsed = urlparse(self.path)
         path = parsed.path.rstrip("/") or "/"
         query = parse_qs(parsed.query)
@@ -334,9 +328,7 @@ class Handler(BaseHTTPRequestHandler):
                 )
                 hits = self._filter_subjects(hits, allowed)[:limit]
                 return self._send(
-                    *_json(
-                        HTTPStatus.OK, {"query": q, "count": len(hits), "items": hits}
-                    )
+                    *_json(HTTPStatus.OK, {"query": q, "count": len(hits), "items": hits})
                 )
 
             if path == "/v1/timeline":
@@ -357,22 +349,16 @@ class Handler(BaseHTTPRequestHandler):
                     subject=db_subject,
                 )
                 rows = self._filter_subjects(rows, allowed)[:req_limit]
-                return self._send(
-                    *_json(HTTPStatus.OK, {"count": len(rows), "items": rows})
-                )
+                return self._send(*_json(HTTPStatus.OK, {"count": len(rows), "items": rows}))
 
             if path == "/v1/namespaces":
-                return self._send(
-                    *_json(HTTPStatus.OK, {"items": sorted(svc.namespaces)})
-                )
+                return self._send(*_json(HTTPStatus.OK, {"items": sorted(svc.namespaces)}))
 
             if path == "/v1/export":
                 ns = (query.get("ns") or ["personal"])[0]
                 rows = svc.export(ns)
                 rows = self._filter_subjects(rows, allowed)
-                body = (
-                    "\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n"
-                ).encode()
+                body = ("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n").encode()
                 return self._send(
                     *(
                         HTTPStatus.OK,
@@ -398,9 +384,7 @@ class Handler(BaseHTTPRequestHandler):
                     data = svc.find_record(ident)
                 if not data:
                     return self._send(
-                        *_json(
-                            HTTPStatus.NOT_FOUND, {"error": "not found", "id": ident}
-                        )
+                        *_json(HTTPStatus.NOT_FOUND, {"error": "not found", "id": ident})
                     )
                 # 主体权限：单条记录的主体不在允许范围内 → 403（不透露是否存在）
                 rec_subject = None
@@ -426,22 +410,16 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(*_json(HTTPStatus.OK, data))
 
             return self._send(
-                *_json(
-                    HTTPStatus.NOT_FOUND, {"error": "unknown endpoint", "path": path}
-                )
+                *_json(HTTPStatus.NOT_FOUND, {"error": "unknown endpoint", "path": path})
             )
         except ValueError as exc:
             return self._send(*_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)}))
 
     def do_POST(self):
         if not self._host_ok():
-            return self._send(
-                *_json(HTTPStatus.MISDIRECTED_REQUEST, {"error": "bad host"})
-            )
+            return self._send(*_json(HTTPStatus.MISDIRECTED_REQUEST, {"error": "bad host"}))
         if not self._origin_ok():
-            return self._send(
-                *_json(HTTPStatus.FORBIDDEN, {"error": "cross-origin blocked"})
-            )
+            return self._send(*_json(HTTPStatus.FORBIDDEN, {"error": "cross-origin blocked"}))
         parsed = urlparse(self.path)
         path = parsed.path.rstrip("/")
         svc = self.service
@@ -457,9 +435,7 @@ class Handler(BaseHTTPRequestHandler):
             # 主体权限：recall 的 subject 参数若越权 → 403
             req_subject = payload.get("subject")
             if req_subject and allowed is not None and req_subject not in allowed:
-                return self._send(
-                    *_json(HTTPStatus.FORBIDDEN, {"error": "subject not allowed"})
-                )
+                return self._send(*_json(HTTPStatus.FORBIDDEN, {"error": "subject not allowed"}))
             result = S.recall(
                 svc.index.con,
                 payload.get("prompt") or "",
@@ -486,9 +462,7 @@ class Handler(BaseHTTPRequestHandler):
         # 以下为写操作：Scoped Token（受限 Token）禁止写操作，只读
         # P0 修复：没有写权限的客户端不能审批、回滚或备份
         if allowed is not None:
-            return self._send(
-                *_json(HTTPStatus.FORBIDDEN, {"error": "scoped token is read-only"})
-            )
+            return self._send(*_json(HTTPStatus.FORBIDDEN, {"error": "scoped token is read-only"}))
         try:
             payload = self._read_json()
             if path in {"/v1/approve", "/v1/reject"}:
@@ -498,9 +472,7 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(
                         *_json(HTTPStatus.BAD_REQUEST, {"error": "claim_id required"})
                     )
-                return self._send(
-                    *_json(HTTPStatus.OK, svc.write_status(ident, status))
-                )
+                return self._send(*_json(HTTPStatus.OK, svc.write_status(ident, status)))
 
             if path == "/v1/rebuild":
                 meta = svc.ensure_index(force=True)
@@ -519,9 +491,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(*_json(HTTPStatus.OK, {"ok": True, "undone": txid}))
 
             return self._send(
-                *_json(
-                    HTTPStatus.NOT_FOUND, {"error": "unknown endpoint", "path": path}
-                )
+                *_json(HTTPStatus.NOT_FOUND, {"error": "unknown endpoint", "path": path})
             )
         except LookupError as exc:
             return self._send(*_json(HTTPStatus.NOT_FOUND, {"error": str(exc)}))
@@ -529,9 +499,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(*_json(HTTPStatus.CONFLICT, {"error": str(exc)}))
 
     def do_PUT(self):
-        return self._send(
-            *_json(HTTPStatus.METHOD_NOT_ALLOWED, {"error": "read-only surface"})
-        )
+        return self._send(*_json(HTTPStatus.METHOD_NOT_ALLOWED, {"error": "read-only surface"}))
 
     do_DELETE = do_PUT
     do_PATCH = do_PUT
