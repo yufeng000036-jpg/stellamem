@@ -750,6 +750,13 @@ class APITests(unittest.TestCase):
 
     # ---------------- 验收 P1：重启不重建索引 ----------------
 
+    def _wait_for_rebuild(self):
+        """后台重建是异步的：测试里要断言重建结果时，先等后台线程跑完。"""
+        thread = self.svc._rebuild_thread
+        if thread is not None:
+            thread.join(timeout=30)
+            self.assertFalse(thread.is_alive())
+
     def _append_raw_record(self, record):
         """只写 markdown，不调 ensure_index——模拟本地 agent 直接写文件。"""
         target = self.root / "long-term" / "projects.md"
@@ -770,8 +777,9 @@ class APITests(unittest.TestCase):
                 "SELECT COUNT(*) FROM records WHERE claim_id='c-stale1'"
             ).fetchone()
             self.assertEqual(row[0], 0)
-            # 普通 ensure_index 必须靠指纹发现变化并重建
+            # 普通 ensure_index 必须靠指纹发现变化并重建（后台跑，等它跑完）
             self.svc.ensure_index()
+            self._wait_for_rebuild()
             row = self.svc.index.con.execute(
                 "SELECT COUNT(*) FROM records WHERE claim_id='c-stale1'"
             ).fetchone()
@@ -805,6 +813,7 @@ class APITests(unittest.TestCase):
         self.svc.index.con.commit()
         self.assertTrue(self.svc.index.is_stale(self.root))
         self.svc.ensure_index()
+        self._wait_for_rebuild()
         self.assertFalse(self.svc.index.is_stale(self.root))
         # 第二次调用不再重建：built_at 不变
         built_before = self.svc.index.stats()["built_at"]
@@ -832,6 +841,7 @@ class APITests(unittest.TestCase):
         try:
             self._append_raw_record(new)
             self.svc.ensure_index()
+            self._wait_for_rebuild()
             import search as S
 
             items = S.history(self.svc.index.con, "c-hist1")
@@ -912,6 +922,127 @@ class APITests(unittest.TestCase):
         self.assertEqual(before, after)
         # 指纹已更新进库：再次检查不再算内容 hash 也不重建
         self.assertFalse(self.svc.index.is_stale(self.root))
+
+    def test_cold_start_rebuilds_synchronously(self):
+        """冷启动：本进程第一次检查，ensure_index() 同步重建，返回时新记录已可查。"""
+        rec = make_record("c-bg-cold", "user", "冷启动测试新记忆冰滴咖啡")
+        target = self.root / "long-term" / "projects.md"
+        original = target.read_text(encoding="utf-8")
+        try:
+            target.write_text(
+                original.rstrip()
+                + "\n\n```stellamem\n"
+                + json.dumps(rec, ensure_ascii=False, sort_keys=True)
+                + "\n```\n",
+                encoding="utf-8",
+            )
+            self.svc._warmed_up = False  # 模拟冷启动：本进程第一次检查
+            self.svc.ensure_index()
+            self.assertIsNone(self.svc._rebuild_thread)
+            status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("冰滴咖啡"))
+            self.assertEqual(status, 200)
+            self.assertTrue(
+                any("冰滴咖啡" in (it.get("value") or "") for it in data["items"]),
+                f"冷启动同步重建后仍查不到新记录：{data}",
+            )
+        finally:
+            restore_projects(self.root, self.svc, original)
+
+    def test_warm_staleness_rebuilds_in_background(self):
+        """运行中变旧：ensure_index() 不卡请求、返回旧数据，后台重建完才查到新记录。"""
+        rec = make_record("c-bg-warm", "user", "后台重建测试新记忆冰滴咖啡")
+        target = self.root / "long-term" / "projects.md"
+        original = target.read_text(encoding="utf-8")
+        try:
+            target.write_text(
+                original.rstrip()
+                + "\n\n```stellamem\n"
+                + json.dumps(rec, ensure_ascii=False, sort_keys=True)
+                + "\n```\n",
+                encoding="utf-8",
+            )
+            before = self.svc.index.stats()["records"]
+            meta = self.svc.ensure_index()
+            # 本次返回旧数据（还没重建完），且确实起了后台线程
+            self.assertEqual(meta["records"], before)
+            thread = self.svc._rebuild_thread
+            self.assertIsNotNone(thread, "运行中变旧应起后台重建线程")
+            thread.join(timeout=30)
+            self.assertFalse(thread.is_alive())
+            status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("冰滴咖啡"))
+            self.assertEqual(status, 200)
+            self.assertTrue(
+                any("冰滴咖啡" in (it.get("value") or "") for it in data["items"]),
+                f"后台重建后仍查不到新记录：{data}",
+            )
+        finally:
+            restore_projects(self.root, self.svc, original)
+
+    def test_force_rebuild_waits_for_background(self):
+        """force=True 时若后台重建在跑，先等它跑完，不会两个写者同时重建。"""
+        rec = make_record("c-bg-force", "user", "强制重建测试新记忆冰滴咖啡")
+        target = self.root / "long-term" / "projects.md"
+        original = target.read_text(encoding="utf-8")
+        try:
+            target.write_text(
+                original.rstrip()
+                + "\n\n```stellamem\n"
+                + json.dumps(rec, ensure_ascii=False, sort_keys=True)
+                + "\n```\n",
+                encoding="utf-8",
+            )
+            self.svc.ensure_index()  # 起后台重建
+            thread = self.svc._rebuild_thread
+            self.assertIsNotNone(thread, "运行中变旧应起后台重建线程")
+            self.svc.ensure_index(force=True)
+            self.assertFalse(thread.is_alive())
+            status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("冰滴咖啡"))
+            self.assertEqual(status, 200)
+            self.assertTrue(
+                any("冰滴咖啡" in (it.get("value") or "") for it in data["items"]),
+                f"force 重建后仍查不到新记录：{data}",
+            )
+        finally:
+            restore_projects(self.root, self.svc, original)
+
+    def test_concurrent_reads_during_background_rebuild(self):
+        """后台重建进行中，读请求不被卡、不报错，返回旧数据。"""
+        rec = make_record("c-bg-conc", "user", "并发读测试新记忆冰滴咖啡")
+        target = self.root / "long-term" / "projects.md"
+        original = target.read_text(encoding="utf-8")
+        try:
+            target.write_text(
+                original.rstrip()
+                + "\n\n```stellamem\n"
+                + json.dumps(rec, ensure_ascii=False, sort_keys=True)
+                + "\n```\n",
+                encoding="utf-8",
+            )
+            self.svc.ensure_index()  # 起后台重建
+            results = []
+
+            def do_search():
+                status, _ = self.call("GET", "/v1/search?q=" + urllib.parse.quote("星忆"))
+                results.append(status)
+
+            threads = [threading.Thread(target=do_search) for _ in range(5)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join(timeout=10)
+            self.assertEqual(len(results), 5)
+            self.assertTrue(all(s == 200 for s in results), results)
+            thread = self.svc._rebuild_thread
+            if thread is not None:
+                thread.join(timeout=30)
+            status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("冰滴咖啡"))
+            self.assertEqual(status, 200)
+            self.assertTrue(
+                any("冰滴咖啡" in (it.get("value") or "") for it in data["items"]),
+                f"后台重建后仍查不到新记录：{data}",
+            )
+        finally:
+            restore_projects(self.root, self.svc, original)
 
     def test_mcp_stdio_recall_picks_up_new_records(self):
         """验收第三轮第 5 步原样复现：标准 stdio 启动（PYTHONPATH 只有仓库根，
