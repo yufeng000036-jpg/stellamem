@@ -151,7 +151,8 @@ def _like_where(query: str):
     if not terms:
         return None, []
     clause = " AND ".join(
-        "(subject LIKE ? OR predicate LIKE ? OR value LIKE ? OR evidence LIKE ?)" for _ in terms
+        "(subject LIKE ? OR predicate LIKE ? OR value LIKE ? OR evidence LIKE ?)"
+        for _ in terms
     )
     params = []
     for term in terms:
@@ -341,7 +342,9 @@ def search(
             continue
         rec_grams = set((rec.get("grams") or "").split())
         overlap = (
-            len(query_grams & rec_grams) / len(query_grams) if query_grams and rec_grams else 0.0
+            len(query_grams & rec_grams) / len(query_grams)
+            if query_grams and rec_grams
+            else 0.0
         )
         if rec["id"] in exact_ids:
             # 精确命中是最强信号：不受分词差异影响（拉丁片段、专有名词）
@@ -358,16 +361,23 @@ def search(
                 not occurred
                 or occurred[:10]
                 < (
-                    __import__("datetime").date.today() - __import__("datetime").timedelta(days=30)
+                    __import__("datetime").date.today()
+                    - __import__("datetime").timedelta(days=30)
                 ).isoformat()
             ):
                 continue
         lexical = overlap
         if rec["id"] in fts_ids:
             lexical = min(1.0, lexical + 0.15)
-        boost = 0.25 if rec.get("kind") in intent_kinds else (-0.08 if intent_kinds else 0.0)
+        boost = (
+            0.25
+            if rec.get("kind") in intent_kinds
+            else (-0.08 if intent_kinds else 0.0)
+        )
         needle = query.strip()
-        if needle and (needle in (rec.get("value") or "") or needle in (rec.get("evidence") or "")):
+        if needle and (
+            needle in (rec.get("value") or "") or needle in (rec.get("evidence") or "")
+        ):
             boost += 0.35
         score = (
             w_lex * lexical
@@ -529,12 +539,16 @@ def timeline(
     since: str | None = None,
     until: str | None = None,
     limit: int = 200,
+    subject: str | None = None,
 ) -> list[dict]:
     sql = (
         "SELECT id, claim_id, kind, subject, value, occurred_at, observed_at, layer, status "
         "FROM records WHERE occurred_at <> ''"
     )
     params = []
+    if subject:
+        sql += " AND subject = ?"
+        params.append(subject)
     if since:
         sql += " AND occurred_at >= ?"
         params.append(since)
@@ -750,7 +764,9 @@ def recall(
 
     if decay:
         # [(record, base, adjusted)] 按 adjusted 降序；min_score 仍按 base 过滤
-        hits = [rec for rec, _base, _adj in rank_mod.rank([(r, r["score"]) for r in hits])]
+        hits = [
+            rec for rec, _base, _adj in rank_mod.rank([(r, r["score"]) for r in hits])
+        ]
 
     # 去重：同一 claim 只留最高分那条；同值不同 id 也折叠。
     seen_claims, seen_values, picked = set(), set(), []
@@ -817,9 +833,7 @@ def recall(
             rec.get("overlap", 0) <= 0
             and rec.get("semantic", 0) < getattr(semantic, "MIN_SIM", 0.45)
         )
-        line = (
-            f"- [{KIND_LABEL.get(rec.get('kind'), rec.get('kind'))}] {_trim(rec.get('value'), 90)}"
-        )
+        line = f"- [{KIND_LABEL.get(rec.get('kind'), rec.get('kind'))}] {_trim(rec.get('value'), 90)}"
         if rec.get("occurred_at"):
             line += f"（{rec['occurred_at'][:10]}）"
         if len(line) + used + 1 > budget_chars:
