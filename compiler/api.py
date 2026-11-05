@@ -413,9 +413,7 @@ class Handler(BaseHTTPRequestHandler):
             # 主体权限：recall 的 subject 参数若越权 → 403
             req_subject = payload.get("subject")
             if req_subject and allowed is not None and req_subject not in allowed:
-                return self._send(
-                    *_json(HTTPStatus.FORBIDDEN, {"error": "subject not allowed"})
-                )
+                return self._send(*_json(HTTPStatus.FORBIDDEN, {"error": "subject not allowed"}))
             result = S.recall(
                 svc.index.con,
                 payload.get("prompt") or "",
