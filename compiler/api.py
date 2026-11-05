@@ -27,6 +27,7 @@ import indexer
 import reliability as rel
 import search as S
 import snapshots
+import subjects
 from storage import Transaction, load_records
 
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
@@ -259,16 +260,27 @@ class Handler(BaseHTTPRequestHandler):
         return self.service.get_token_subjects(self.headers.get("Authorization"))
 
     def _filter_subjects(self, items: list[dict], allowed: set[str] | None) -> list[dict]:
-        """按主体权限过滤记录列表；allowed=None 时不过滤。"""
+        """按主体权限过滤记录列表；allowed=None 时不过滤。
+
+        评审最终验收 P1：比较时用标准命名空间——旧拼写 "用户" 与 "user"
+        是同一命名空间，绝不能因为拼写不同就把授权记录过滤掉。
+        """
         if allowed is None:
             return items
-        return [it for it in items if str(it.get("subject", "")) in allowed]
+        allowed_canon = {subjects.canonical_subject(s) for s in allowed}
+        return [
+            it for it in items if subjects.canonical_subject(it.get("subject", "")) in allowed_canon
+        ]
 
     def _check_subject_allowed(self, subject: str | None, allowed: set[str] | None) -> bool:
-        """单条记录的主体是否在允许范围内；allowed=None 时总允许。"""
+        """单条记录的主体是否在允许范围内；allowed=None 时总允许。
+
+        评审最终验收 P1：比较时用标准命名空间，"用户" 与 "user" 是同一命名空间。
+        """
         if allowed is None:
             return True
-        return str(subject or "") in allowed
+        allowed_canon = {subjects.canonical_subject(s) for s in allowed}
+        return subjects.canonical_subject(subject or "") in allowed_canon
 
     # ---------------- 路由 ----------------
 
@@ -309,11 +321,14 @@ class Handler(BaseHTTPRequestHandler):
                 q = (query.get("q") or [""])[0]
                 limit = min(50, int((query.get("limit") or ["10"])[0]))
                 # 主体权限：越权请求直接 403（person 参数指定的主体不在允许范围内）
+                # 评审最终验收 P1：比较时用标准命名空间，"用户" 与 "user" 是同一命名空间。
                 req_person = (query.get("person") or [None])[0]
-                if req_person and allowed is not None and req_person not in allowed:
-                    return self._send(
-                        *_json(HTTPStatus.FORBIDDEN, {"error": "subject not allowed"})
-                    )
+                if req_person and allowed is not None:
+                    allowed_canon = {subjects.canonical_subject(s) for s in allowed}
+                    if subjects.canonical_subject(req_person) not in allowed_canon:
+                        return self._send(
+                            *_json(HTTPStatus.FORBIDDEN, {"error": "subject not allowed"})
+                        )
                 # 多主体 SQL IN 过滤：直接把 allowed 集合传给 DB，不过滤后漏召回
                 # （评审反例：31 条未授权 + 1 条授权，3 倍策略会返回空）
                 hits = S.search(
@@ -428,9 +443,14 @@ class Handler(BaseHTTPRequestHandler):
             raw_budget = payload.get("budget")
             budget = 1200 if raw_budget is None else max(0, int(raw_budget))
             # 主体权限：recall 的 subject 参数若越权 → 403
+            # 评审最终验收 P1：比较时用标准命名空间，"用户" 与 "user" 是同一命名空间。
             req_subject = payload.get("subject")
-            if req_subject and allowed is not None and req_subject not in allowed:
-                return self._send(*_json(HTTPStatus.FORBIDDEN, {"error": "subject not allowed"}))
+            if req_subject and allowed is not None:
+                allowed_canon = {subjects.canonical_subject(s) for s in allowed}
+                if subjects.canonical_subject(req_subject) not in allowed_canon:
+                    return self._send(
+                        *_json(HTTPStatus.FORBIDDEN, {"error": "subject not allowed"})
+                    )
             result = S.recall(
                 svc.index.con,
                 payload.get("prompt") or "",

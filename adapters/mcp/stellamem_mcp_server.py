@@ -149,6 +149,10 @@ class StellamemMCPServer:
 
     def _call_tool(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         if name == "stellamem_switch_subject":
+            # 评审最终验收 P1：主体切换只验证名称合法，不验证调用方有没有权利切到该主体。
+            # 本接口只适用于单人可信部署（自己的 DSH / OpenClaw），调用方被假定为可信宿主。
+            # 未来多客户端版本必须把主体身份绑定到宿主授权，绝不能让模型自行扩大访问范围。
+            # 在那之前，不得把本接口宣称为不可信多客户端的安全边界。
             subj = str(args.get("subject", "")).strip()
             if subj not in VALID_SUBJECTS:
                 raise ValueError(
@@ -192,6 +196,10 @@ class StellamemMCPServer:
                         con.close()
                     # Subject isolation: database-level filtering via subject=subj
                     # above, plus post-query check as defense in depth.
+                    # 评审最终验收 P1：比较时用标准命名空间——旧拼写 "用户" 与 "user"
+                    # 是同一命名空间，不能因为拼写不同就丢掉授权记录。
+                    from compiler.subjects import canonical_subject
+
                     items = [
                         {
                             "id": it.get("id"),
@@ -200,7 +208,7 @@ class StellamemMCPServer:
                             "kind": it.get("kind"),
                         }
                         for it in result.get("items", [])
-                        if it.get("subject", subj) == subj
+                        if canonical_subject(it.get("subject", subj)) == subj
                     ]
                     return {
                         "status": "ok",
