@@ -3,12 +3,16 @@
 约束
 - 只绑定 127.0.0.1；Host 必须是本机名，否则 421。
 - 读写接口均要求 Bearer token（存在 `system/api-token`）；仅 /v1/health 例外（只返回统计数）。
+- Token 主体权限（可选）：`system/api-token-scopes.json` 可将 Token 绑定到允许访问的主体；
+  未绑定或文件不存在时，Token 允许所有主体（向后兼容，现有 DSH 调用不受影响）。
+  越权访问返回 403。
 - 写接口校验 Origin：带跨站 Origin 一律拒绝，防 CSRF。
 - 索引只读：所有写操作走 Transaction / ExternalTransaction。
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import secrets
@@ -48,6 +52,7 @@ class MemoryService:
         self.rebuilt_at = None
         self.lock = threading.Lock()
         self.token_path = self.root / "system" / "api-token"
+        self.token_scopes_path = self.root / "system" / "api-token-scopes.json"
 
     # ---------------- 内部 ----------------
 
@@ -71,10 +76,52 @@ class MemoryService:
         return token
 
     def check_token(self, header: str | None) -> bool:
-        expected = self.ensure_token()
         if not header or not header.startswith("Bearer "):
             return False
-        return secrets.compare_digest(header[7:].strip(), expected)
+        token = header[7:].strip()
+        # Master token 总是有效
+        if secrets.compare_digest(token, self.ensure_token()):
+            return True
+        # Scoped token：查 scopes 文件（按 SHA256）
+        if self.token_scopes_path.exists():
+            try:
+                data = json.loads(self.token_scopes_path.read_text(encoding="utf-8"))
+            except (ValueError, OSError):
+                return False
+            token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+            return token_hash in data
+        return False
+
+    def get_token_subjects(self, header: str | None) -> set[str] | None:
+        """返回 Token 允许访问的主体集合；None 表示不受限（向后兼容）。
+
+        规则：
+        - Header 无效 → None（调用方应先 check_token，返回 401）
+        - Token 是 master token（api-token 文件里的）→ None（不受限）
+        - scopes 文件不存在 → None（不受限，现有调用不受影响）
+        - Token 在 scopes 文件里 → 返回绑定的主体集合
+        - 其他情况 → None（防御性，check_token 已保证 Token 有效）
+        """
+        if not header or not header.startswith("Bearer "):
+            return None
+        token = header[7:].strip()
+        # Master token 不受限
+        if secrets.compare_digest(token, self.ensure_token()):
+            return None
+        # 查 scopes 文件（按 SHA256 存，不存明文 Token）
+        if not self.token_scopes_path.exists():
+            return None
+        try:
+            data = json.loads(self.token_scopes_path.read_text(encoding="utf-8"))
+        except (ValueError, OSError):
+            return None
+        token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+        subjects = data.get(token_hash)
+        if subjects is None:
+            return None
+        if not isinstance(subjects, list):
+            return None
+        return set(str(s) for s in subjects)
 
     def find_record(self, ident: str) -> dict | None:
         row = self.index.con.execute(
@@ -198,6 +245,22 @@ class Handler(BaseHTTPRequestHandler):
             return False
         return True
 
+    def _allowed_subjects(self) -> set[str] | None:
+        """当前请求 Token 允许访问的主体；None 表示不受限。"""
+        return self.service.get_token_subjects(self.headers.get("Authorization"))
+
+    def _filter_subjects(self, items: list[dict], allowed: set[str] | None) -> list[dict]:
+        """按主体权限过滤记录列表；allowed=None 时不过滤。"""
+        if allowed is None:
+            return items
+        return [it for it in items if str(it.get("subject", "")) in allowed]
+
+    def _check_subject_allowed(self, subject: str | None, allowed: set[str] | None) -> bool:
+        """单条记录的主体是否在允许范围内；allowed=None 时总允许。"""
+        if allowed is None:
+            return True
+        return str(subject or "") in allowed
+
     # ---------------- 路由 ----------------
 
     def do_GET(self):
@@ -231,6 +294,7 @@ class Handler(BaseHTTPRequestHandler):
             # 只靠本机 Host 限制不够（同机其他程序可调）。health 例外：只返回统计数。
             if not self._require_token():
                 return
+            allowed = self._allowed_subjects()
 
             if path == "/v1/search":
                 q = (query.get("q") or [""])[0]
@@ -244,6 +308,13 @@ class Handler(BaseHTTPRequestHandler):
                     person=(query.get("person") or [None])[0],
                     limit=limit,
                 )
+                # 主体权限：越权请求直接 403（person 参数指定的主体不在允许范围内）
+                req_person = (query.get("person") or [None])[0]
+                if req_person and allowed is not None and req_person not in allowed:
+                    return self._send(
+                        *_json(HTTPStatus.FORBIDDEN, {"error": "subject not allowed"})
+                    )
+                hits = self._filter_subjects(hits, allowed)
                 return self._send(
                     *_json(HTTPStatus.OK, {"query": q, "count": len(hits), "items": hits})
                 )
@@ -255,6 +326,7 @@ class Handler(BaseHTTPRequestHandler):
                     until=(query.get("until") or [None])[0],
                     limit=min(500, int((query.get("limit") or ["200"])[0])),
                 )
+                rows = self._filter_subjects(rows, allowed)
                 return self._send(*_json(HTTPStatus.OK, {"count": len(rows), "items": rows}))
 
             if path == "/v1/namespaces":
@@ -263,6 +335,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/v1/export":
                 ns = (query.get("ns") or ["personal"])[0]
                 rows = svc.export(ns)
+                rows = self._filter_subjects(rows, allowed)
                 body = ("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n").encode()
                 return self._send(
                     *(
@@ -291,6 +364,27 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(
                         *_json(HTTPStatus.NOT_FOUND, {"error": "not found", "id": ident})
                     )
+                # 主体权限：单条记录的主体不在允许范围内 → 403（不透露是否存在）
+                rec_subject = None
+                if kind == "evidence":
+                    # evidence 不含 subject 字段，查原记录
+                    rec = svc.find_record(ident)
+                    rec_subject = rec.get("subject") if rec else None
+                elif kind == "history":
+                    # history 返回多条，过滤掉越权的
+                    if allowed is not None:
+                        data["items"] = self._filter_subjects(data["items"], allowed)
+                    return self._send(*_json(HTTPStatus.OK, data))
+                elif kind == "related":
+                    if allowed is not None:
+                        data["items"] = self._filter_subjects(data["items"], allowed)
+                    return self._send(*_json(HTTPStatus.OK, data))
+                else:
+                    rec_subject = data.get("subject")
+                if not self._check_subject_allowed(rec_subject, allowed):
+                    return self._send(
+                        *_json(HTTPStatus.FORBIDDEN, {"error": "subject not allowed"})
+                    )
                 return self._send(*_json(HTTPStatus.OK, data))
 
             return self._send(
@@ -311,17 +405,28 @@ class Handler(BaseHTTPRequestHandler):
         # recall 也是读接口，同样要 Token（之前在 Token 检查之前，无鉴权）。
         if not self._require_token():
             return
+        allowed = self._allowed_subjects()
 
         if path == "/v1/recall":
             payload = self._read_json()
             budget = int(payload.get("budget") or 1200)
+            # 主体权限：recall 的 subject 参数若越权 → 403
+            req_subject = payload.get("subject")
+            if req_subject and allowed is not None and req_subject not in allowed:
+                return self._send(
+                    *_json(HTTPStatus.FORBIDDEN, {"error": "subject not allowed"})
+                )
             result = S.recall(
                 svc.index.con,
                 payload.get("prompt") or "",
                 budget_chars=budget,
                 decay=bool(payload.get("decay", True)),
                 explain_decay=bool(payload.get("explain_decay", False)),
+                subject=req_subject,
             )
+            # 过滤召回结果中的越权项（多主体 Token 时，DB 层只按单个 subject 过滤，需二次过滤）
+            if allowed is not None and result.get("items"):
+                result["items"] = self._filter_subjects(result["items"], allowed)
             return self._send(*_json(HTTPStatus.OK, result))
 
         # 以下为写操作

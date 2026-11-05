@@ -108,6 +108,39 @@ class APITests(unittest.TestCase):
         self.assertEqual(status, 401)
         self.assertEqual(data["error"], "unauthorized")
 
+    def test_token_subject_scope(self):
+        """Token 主体权限：scoped token 只能读绑定的主体，越权 403；master 不受限。"""
+        import hashlib
+
+        # 建 scoped token：只允许 subject="用户"（seed 数据的主体）
+        scoped_token = "scoped-test-token-xyz"
+        scoped_hash = hashlib.sha256(scoped_token.encode()).hexdigest()
+        scopes_file = self.root / "system" / "api-token-scopes.json"
+        scopes_file.write_text(
+            json.dumps({scoped_hash: ["用户"]}), encoding="utf-8"
+        )
+        # master token 读 search：应返回（不受限）
+        status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("记忆系统"))
+        self.assertEqual(status, 200)
+        # scoped token 读 search：应返回（只含 用户 主体）
+        status, data = self.call(
+            "GET",
+            "/v1/search?q=" + urllib.parse.quote("记忆系统"),
+            headers={"Authorization": f"Bearer {scoped_token}"},
+        )
+        self.assertEqual(status, 200)
+        for item in data.get("items", []):
+            self.assertEqual(item.get("subject"), "用户")
+        # scoped token 越权查 person=persona：应 403
+        status, data = self.call(
+            "GET",
+            "/v1/search?q=" + urllib.parse.quote("记忆系统") + "&person=persona",
+            headers={"Authorization": f"Bearer {scoped_token}"},
+        )
+        self.assertEqual(status, 403)
+        # 清理 scopes 文件，避免影响其他测试
+        scopes_file.unlink()
+
     def test_health(self):
         status, data = self.call("GET", "/v1/health")
         self.assertEqual(status, 200)
