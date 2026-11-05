@@ -1108,6 +1108,12 @@ class APITests(unittest.TestCase):
         rec = make_record("c-mcp-stdio", "user", "MCP stdio 测试新记忆冰滴咖啡")
         original = self._append_raw_record(rec)
         try:
+            # 先在主进程同步重建、确认索引已新鲜且无后台线程在跑：
+            # 子进程冷启动也要重建，Windows 上两个写者同时碰同一个
+            # index.db 文件锁会撞；索引已新鲜时子进程 is_stale() 为假、
+            # 直接读新鲜索引，不再重建。
+            self.svc._last_rebuild_failed_at = 0.0
+            self.svc.ensure_index(force=True)
             ws = self.root.parent / "ws-stdio"
             ws.mkdir(exist_ok=True)
             req = {
