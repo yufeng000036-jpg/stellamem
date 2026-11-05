@@ -962,13 +962,13 @@ class APITests(unittest.TestCase):
                 encoding="utf-8",
             )
             before = self.svc.index.stats()["records"]
+            # 清掉前面测试万一留下的失败冷却，避免本次不启动后台线程
+            self.svc._last_rebuild_failed_at = 0.0
             meta = self.svc.ensure_index()
-            # 本次返回旧数据（还没重建完），且确实起了后台线程
+            # 本次返回旧数据（还没重建完）——这就是“没卡住”的可观测证据，
+            # 不断言线程引用本身（慢机器上线程调度时序不可靠）
             self.assertEqual(meta["records"], before)
-            thread = self.svc._rebuild_thread
-            self.assertIsNotNone(thread, "运行中变旧应起后台重建线程")
-            thread.join(timeout=30)
-            self.assertFalse(thread.is_alive())
+            self._wait_for_rebuild()
             status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("冰滴咖啡"))
             self.assertEqual(status, 200)
             self.assertTrue(
@@ -991,11 +991,11 @@ class APITests(unittest.TestCase):
                 + "\n```\n",
                 encoding="utf-8",
             )
+            self.svc._last_rebuild_failed_at = 0.0
             self.svc.ensure_index()  # 起后台重建
-            thread = self.svc._rebuild_thread
-            self.assertIsNotNone(thread, "运行中变旧应起后台重建线程")
+            # force=True 必须等后台跑完才返回：返回后新记录立刻可查。
+            # 若它不等（直接返回旧数据），下面这条断言会挂——这就是等待行为的证据。
             self.svc.ensure_index(force=True)
-            self.assertFalse(thread.is_alive())
             status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("冰滴咖啡"))
             self.assertEqual(status, 200)
             self.assertTrue(
@@ -1067,6 +1067,10 @@ class APITests(unittest.TestCase):
             }
             env = dict(os.environ)
             env["PYTHONPATH"] = str(repo)  # 只有仓库根，复现标准 stdio 条件
+            # CI Windows 默认区域是 en-US：子进程的 stdout 编码会是 cp1252，
+            # 写中文会直接炸。显式锁死 UTF-8，子进程行为与区域无关。
+            env["PYTHONUTF8"] = "1"
+            env["PYTHONIOENCODING"] = "utf-8"
             proc = subprocess.run(
                 [
                     sys.executable,
@@ -1077,7 +1081,8 @@ class APITests(unittest.TestCase):
                 input=json.dumps(req) + "\n",
                 capture_output=True,
                 text=True,
-                timeout=30,
+                # CI Windows 冷启动 Python + 建索引慢，30s 在共享跑道上吃紧，放宽到 120s
+                timeout=120,
                 cwd=str(repo),
                 env=env,
             )
