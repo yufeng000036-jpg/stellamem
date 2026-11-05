@@ -186,10 +186,13 @@ class MemoryService:
         return set(str(s) for s in subjects)
 
     def find_record(self, ident: str) -> dict | None:
-        row = self.index.con.execute(
-            "SELECT * FROM records WHERE id = ? OR claim_id = ? OR revision_id = ? LIMIT 1",
-            (ident, ident, ident),
-        ).fetchone()
+        # 直接用 index 连接：必须持 Index 的锁（同 build/stats 的那把），
+        # 否则和别的 HTTP 线程同时开 cursor 会互相顶掉。
+        with self.index._lock:
+            row = self.index.con.execute(
+                "SELECT * FROM records WHERE id = ? OR claim_id = ? OR revision_id = ? LIMIT 1",
+                (ident, ident, ident),
+            ).fetchone()
         return dict(row) if row else None
 
     def evidence(self, record_id: str) -> dict | None:
@@ -257,11 +260,13 @@ class MemoryService:
 
     def export(self, ns: str = "personal") -> list[dict]:
         rows = []
-        for row in self.index.con.execute("SELECT * FROM records ORDER BY occurred_at"):
-            rec = dict(row)
-            rec.pop("grams", None)
-            rec["namespace"] = ns
-            rows.append(rec)
+        # 整趟遍历持 Index 的锁：中途被别的线程插一脚会把 cursor 顶掉。
+        with self.index._lock:
+            for row in self.index.con.execute("SELECT * FROM records ORDER BY occurred_at"):
+                rec = dict(row)
+                rec.pop("grams", None)
+                rec["namespace"] = ns
+                rows.append(rec)
         return rows
 
 
@@ -389,30 +394,34 @@ class Handler(BaseHTTPRequestHandler):
                         )
                 # 多主体 SQL IN 过滤：直接把 allowed 集合传给 DB，不过滤后漏召回
                 # （评审反例：31 条未授权 + 1 条授权，3 倍策略会返回空）
-                hits = S.search(
-                    svc.index.con,
-                    q,
-                    kinds=(query.get("kind") or [None])[0],
-                    since=(query.get("since") or [None])[0],
-                    until=(query.get("until") or [None])[0],
-                    person=req_person,
-                    limit=limit,
-                    persons=allowed,
-                )
+                # 整趟 search 持 Index 的锁：search.py 直接用这个连接做多次查询，
+                # 别的线程同时进来会把 cursor 顶掉（health 并发断连就是这么来的）。
+                with svc.index._lock:
+                    hits = S.search(
+                        svc.index.con,
+                        q,
+                        kinds=(query.get("kind") or [None])[0],
+                        since=(query.get("since") or [None])[0],
+                        until=(query.get("until") or [None])[0],
+                        person=req_person,
+                        limit=limit,
+                        persons=allowed,
+                    )
                 return self._send(
                     *_json(HTTPStatus.OK, {"query": q, "count": len(hits), "items": hits})
                 )
 
             if path == "/v1/timeline":
                 req_limit = min(500, int((query.get("limit") or ["200"])[0]))
-                # 多主体 SQL IN 过滤
-                rows = S.timeline(
-                    svc.index.con,
-                    since=(query.get("since") or [None])[0],
-                    until=(query.get("until") or [None])[0],
-                    limit=req_limit,
-                    subjects=allowed,
-                )
+                # 多主体 SQL IN 过滤（同 search：整趟查询持 Index 的锁）
+                with svc.index._lock:
+                    rows = S.timeline(
+                        svc.index.con,
+                        since=(query.get("since") or [None])[0],
+                        until=(query.get("until") or [None])[0],
+                        limit=req_limit,
+                        subjects=allowed,
+                    )
                 rows = self._filter_subjects(rows, allowed)[:req_limit]
                 return self._send(*_json(HTTPStatus.OK, {"count": len(rows), "items": rows}))
 
@@ -442,9 +451,12 @@ class Handler(BaseHTTPRequestHandler):
                 if kind == "evidence":
                     data = svc.evidence(ident)
                 elif kind == "history":
-                    data = {"claim_id": ident, "items": S.history(svc.index.con, ident)}
+                    # history/related 直接用 index 连接做多次查询，整趟持 Index 的锁
+                    with svc.index._lock:
+                        data = {"claim_id": ident, "items": S.history(svc.index.con, ident)}
                 elif kind == "related":
-                    data = {"id": ident, "items": S.related(svc.index.con, ident)}
+                    with svc.index._lock:
+                        data = {"id": ident, "items": S.related(svc.index.con, ident)}
                 else:
                     data = svc.find_record(ident)
                 if not data:
@@ -511,15 +523,18 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(
                         *_json(HTTPStatus.FORBIDDEN, {"error": "subject not allowed"})
                     )
-            result = S.recall(
-                svc.index.con,
-                payload.get("prompt") or "",
-                budget_chars=budget,
-                decay=bool(payload.get("decay", True)),
-                explain_decay=bool(payload.get("explain_decay", False)),
-                subject=req_subject,
-                subjects=allowed,
-            )
+            # recall 直接用 index 连接做多次查询，整趟持 Index 的锁
+            # （同 search：别的线程同时进来会把 cursor 顶掉）。
+            with svc.index._lock:
+                result = S.recall(
+                    svc.index.con,
+                    payload.get("prompt") or "",
+                    budget_chars=budget,
+                    decay=bool(payload.get("decay", True)),
+                    explain_decay=bool(payload.get("explain_decay", False)),
+                    subject=req_subject,
+                    subjects=allowed,
+                )
             # P0 修复：过滤 items 后必须同步重建 text/chars，否则 text 泄露越权主体的正文
             # （DB 层已按 subjects 过滤，这里是防御性二次过滤）
             if allowed is not None and result.get("items"):
