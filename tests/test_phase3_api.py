@@ -80,13 +80,16 @@ class APITests(unittest.TestCase):
 
     # ---------------- helpers ----------------
 
-    def call(self, method, path, body=None, headers=None, host="127.0.0.1"):
+    def call(self, method, path, body=None, headers=None, host="127.0.0.1", auth=True):
         url = f"http://127.0.0.1:{self.port}{path}"
         data = json.dumps(body).encode() if body is not None else None
         req = urllib.request.Request(url, data=data, method=method)
         req.add_header("Host", f"{host}:{self.port}")
         if data:
             req.add_header("Content-Type", "application/json")
+        # 默认带 Token（读接口现在也要 Token）；测 401 的用例传 auth=False
+        if auth and "Authorization" not in (headers or {}):
+            req.add_header("Authorization", f"Bearer {self.token}")
         for key, value in (headers or {}).items():
             req.add_header(key, value)
         try:
@@ -99,6 +102,11 @@ class APITests(unittest.TestCase):
             return exc.code, json.loads(exc.read() or b"{}")
 
     # ---------------- 读接口 ----------------
+
+    def test_read_requires_token(self):
+        status, data = self.call("GET", "/v1/search?q=test", auth=False)
+        self.assertEqual(status, 401)
+        self.assertEqual(data["error"], "unauthorized")
 
     def test_health(self):
         status, data = self.call("GET", "/v1/health")
@@ -163,7 +171,7 @@ class APITests(unittest.TestCase):
         self.assertEqual(status, 421)
 
     def test_write_requires_token(self):
-        status, data = self.call("POST", "/v1/approve", {"claim_id": "c-api4"})
+        status, data = self.call("POST", "/v1/approve", {"claim_id": "c-api4"}, auth=False)
         self.assertEqual(status, 401)
         self.assertEqual(data["error"], "unauthorized")
 
