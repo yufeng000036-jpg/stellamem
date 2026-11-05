@@ -16,6 +16,7 @@ import hashlib
 import json
 import re
 import secrets
+import sys
 import threading
 import time
 from http import HTTPStatus
@@ -55,23 +56,72 @@ class MemoryService:
         self.index = indexer.Index(self.db)
         self.rebuilt_at = None
         self.lock = threading.Lock()
+        # 后台重建状态：同一时间只跑一个后台重建线程。
+        self._rebuild_thread = None
+        # 本进程第一次检查是否已过：冷启动（刚重启、库还是旧的）必须同步重建，
+        # 保证重启后第一次召回就是新鲜的（验收第三轮的要求）；运行中变旧才走后台。
+        self._warmed_up = False
+        # 后台重建最近一次失败的时间（monotonic 秒），60 秒内不再重试，
+        # 避免重建一直失败时每个读请求都起一个线程刷日志。
+        self._last_rebuild_failed_at = 0.0
         self.token_path = self.root / "system" / "api-token"
         self.token_scopes_path = self.root / "system" / "api-token-scopes.json"
 
     # ---------------- 内部 ----------------
 
     def ensure_index(self, force=False) -> dict:
-        with self.lock:
-            stats = self.index.stats()
-            # 验收 P1：只看记录数不够——写记忆不经过 API（如直接写 markdown
-            # 或写完后重启），库里有记录但内容已旧。指纹变了就重建。
-            if force or not stats["records"] or self.index.is_stale(self.root):
-                # F1：索引重建是写操作，先做轻量快照
+        # 索引过期时：冷启动或显式要求 → 同步重建（卡住本次请求，但保证新鲜）；
+        # 运行中变旧 → 后台线程重建，本次先返回旧数据，不卡请求。
+        # 后台重建用独立的 Index 连接（不和服务共用一个 sqlite3 连接），
+        # WAL 模式下读请求继续读旧快照，提交后才看到新数据。
+        while True:
+            with self.lock:
+                thread = self._rebuild_thread
+                if thread is not None and thread.is_alive():
+                    if not force:
+                        stats = self.index.stats()
+                        return {"built_at": stats["built_at"], "records": stats["records"]}
+                    # force：不能持锁 join（后台线程结束时要拿锁清标志），
+                    # 放锁去等，循环回来重新检查。
+                else:
+                    stats = self.index.stats()
+                    # 验收 P1：只看记录数不够——写记忆不经过 API（如直接写 markdown
+                    # 或写完后重启），库里有记录但内容已旧。指纹变了就重建。
+                    if force or not stats["records"] or self.index.is_stale(self.root):
+                        if force or not self._warmed_up:
+                            # F1：索引重建是写操作，先做轻量快照
+                            snapshots.auto_snapshot(self.root, "index-rebuild")
+                            meta = self.index.build(self.root)
+                            self.rebuilt_at = meta["built_at"]
+                            self._warmed_up = True
+                            return meta
+                        if time.monotonic() - self._last_rebuild_failed_at < 60:
+                            return {"built_at": stats["built_at"], "records": stats["records"]}
+                        t = threading.Thread(target=self._rebuild_in_background, daemon=True)
+                        self._rebuild_thread = t
+                        t.start()
+                        return {"built_at": stats["built_at"], "records": stats["records"]}
+                    self._warmed_up = True
+                    return {"built_at": stats["built_at"], "records": stats["records"]}
+            thread.join()
+
+    def _rebuild_in_background(self):
+        """后台重建：独立连接，快照 + 重建，失败打 stderr 日志，不静默。"""
+        try:
+            idx = indexer.Index(self.db)
+            try:
                 snapshots.auto_snapshot(self.root, "index-rebuild")
-                meta = self.index.build(self.root)
+                meta = idx.build(self.root)
                 self.rebuilt_at = meta["built_at"]
-                return meta
-            return {"built_at": stats["built_at"], "records": stats["records"]}
+            finally:
+                idx.close()
+        except Exception as exc:  # noqa: BLE001
+            self._last_rebuild_failed_at = time.monotonic()
+            print(f"stellamem: background index rebuild failed: {exc}", file=sys.stderr)
+        finally:
+            with self.lock:
+                if self._rebuild_thread is threading.current_thread():
+                    self._rebuild_thread = None
 
     def ensure_token(self) -> str:
         if self.token_path.exists():
