@@ -895,6 +895,71 @@ class APITests(unittest.TestCase):
         store.ingest(claim, mode="review")
         self.assertEqual(store.counts["pending"] + store.counts["active"], 1)
 
+    # ---------------- 验收第三轮：MCP stdio 静默不重建 + touch 重建 ----------------
+
+    def test_touch_without_content_change_does_not_rebuild(self):
+        """只 touch、不改内容：mtime 指纹变了但内容 hash 没变，不重建。
+        built_at 只有秒精度、不可靠，用快照数判断（每次重建前都会自动快照）。"""
+        import os
+
+        snap_dir = self.root / "system" / "snapshots"
+        before = len(list(snap_dir.glob("*-index-rebuild"))) if snap_dir.is_dir() else 0
+        target = self.root / "long-term" / "projects.md"
+        st = target.stat()
+        os.utime(target, ns=(st.st_atime_ns, st.st_mtime_ns + 10**9))
+        self.svc.ensure_index()
+        after = len(list(snap_dir.glob("*-index-rebuild"))) if snap_dir.is_dir() else 0
+        self.assertEqual(before, after)
+        # 指纹已更新进库：再次检查不再算内容 hash 也不重建
+        self.assertFalse(self.svc.index.is_stale(self.root))
+
+    def test_mcp_stdio_recall_picks_up_new_records(self):
+        """验收第三轮第 5 步原样复现：标准 stdio 启动（PYTHONPATH 只有仓库根，
+        compiler/ 不在 sys.path），MCP 召回前必须重建过期索引，不能静默读旧库。"""
+        import os
+        import subprocess
+
+        repo = Path(__file__).resolve().parents[1]
+        rec = make_record("c-mcp-stdio", "user", "MCP stdio 测试新记忆冰滴咖啡")
+        original = self._append_raw_record(rec)
+        try:
+            ws = self.root.parent / "ws-stdio"
+            ws.mkdir(exist_ok=True)
+            req = {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "tools/call",
+                "params": {
+                    "name": "stellamem_recall",
+                    "arguments": {"subject": "user", "query": "冰滴咖啡"},
+                },
+            }
+            env = dict(os.environ)
+            env["PYTHONPATH"] = str(repo)  # 只有仓库根，复现标准 stdio 条件
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    str(repo / "adapters" / "mcp" / "stellamem_mcp_server.py"),
+                    str(ws),
+                    str(self.root.parent / "index.db"),
+                ],
+                input=json.dumps(req) + "\n",
+                capture_output=True,
+                text=True,
+                timeout=30,
+                cwd=str(repo),
+                env=env,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            resp = json.loads(proc.stdout.strip().splitlines()[-1])
+            content = json.loads(resp["result"]["content"][0]["text"])
+            self.assertTrue(
+                any("冰滴咖啡" in (it.get("text") or "") for it in content.get("items", [])),
+                f"stdio MCP 召回没找到新记忆：{content}",
+            )
+        finally:
+            restore_projects(self.root, self.svc, original)
+
 
 if __name__ == "__main__":
     unittest.main()
