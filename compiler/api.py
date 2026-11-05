@@ -64,6 +64,9 @@ class MemoryService:
         # 后台重建最近一次失败的时间（monotonic 秒），60 秒内不再重试，
         # 避免重建一直失败时每个读请求都起一个线程刷日志。
         self._last_rebuild_failed_at = 0.0
+        # 后台重建最近一次失败的异常（供测试断言时直接看到原因，
+        # 而不是只看到“查不到新记录”这种间接失败）。
+        self._rebuild_error = None
         self.token_path = self.root / "system" / "api-token"
         self.token_scopes_path = self.root / "system" / "api-token-scopes.json"
 
@@ -113,10 +116,12 @@ class MemoryService:
                 snapshots.auto_snapshot(self.root, "index-rebuild")
                 meta = idx.build(self.root)
                 self.rebuilt_at = meta["built_at"]
+                self._rebuild_error = None
             finally:
                 idx.close()
         except Exception as exc:  # noqa: BLE001
             self._last_rebuild_failed_at = time.monotonic()
+            self._rebuild_error = exc
             print(f"stellamem: background index rebuild failed: {exc}", file=sys.stderr)
         finally:
             with self.lock:
