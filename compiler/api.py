@@ -2,7 +2,7 @@
 
 约束
 - 只绑定 127.0.0.1；Host 必须是本机名，否则 421。
-- 读接口开放给本机；写接口要求 Bearer token（存在 `system/api-token`）。
+- 读写接口均要求 Bearer token（存在 `system/api-token`）；仅 /v1/health 例外（只返回统计数）。
 - 写接口校验 Origin：带跨站 Origin 一律拒绝，防 CSRF。
 - 索引只读：所有写操作走 Transaction / ExternalTransaction。
 """
@@ -227,6 +227,11 @@ class Handler(BaseHTTPRequestHandler):
                     )
                 )
 
+            # 读接口也要 Token：search/timeline/export/memory/history 等都返回记忆内容，
+            # 只靠本机 Host 限制不够（同机其他程序可调）。health 例外：只返回统计数。
+            if not self._require_token():
+                return
+
             if path == "/v1/search":
                 q = (query.get("q") or [""])[0]
                 limit = min(50, int((query.get("limit") or ["10"])[0]))
@@ -303,6 +308,10 @@ class Handler(BaseHTTPRequestHandler):
         path = parsed.path.rstrip("/")
         svc = self.service
 
+        # recall 也是读接口，同样要 Token（之前在 Token 检查之前，无鉴权）。
+        if not self._require_token():
+            return
+
         if path == "/v1/recall":
             payload = self._read_json()
             budget = int(payload.get("budget") or 1200)
@@ -316,8 +325,6 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(*_json(HTTPStatus.OK, result))
 
         # 以下为写操作
-        if not self._require_token():
-            return
         try:
             payload = self._read_json()
             if path in {"/v1/approve", "/v1/reject"}:
