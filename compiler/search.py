@@ -203,11 +203,16 @@ def _filter_sql(kinds, layers, status, person, persons=None):
     if status:
         clause.append(f"status IN ({','.join('?' * len(status))})")
         params += list(status)
-    if persons:
+    if persons is not None:
         # 多主体：SQL IN 过滤，避免先取 N 倍再过滤导致的漏召回
+        # fail-closed：persons 为空集合时返回零结果，绝不能跳过过滤
+        # （评审 P0：空权限列表 [] 若被当成 falsy 跳过，会泄露全部主体）
         persons = sorted(set(str(p) for p in persons))
-        clause.append(f"subject IN ({','.join('?' * len(persons))})")
-        params += persons
+        if not persons:
+            clause.append("1=0")
+        else:
+            clause.append(f"subject IN ({','.join('?' * len(persons))})")
+            params += persons
     elif person:
         # 主体隔离必须精确匹配：LIKE '%user%' 会误匹配 'superuser'。
         # 主体值来自固定枚举（user/persona/viewer），精确匹配是安全的。
@@ -547,10 +552,14 @@ def timeline(
         "FROM records WHERE occurred_at <> ''"
     )
     params = []
-    if subjects:
+    if subjects is not None:
+        # fail-closed：空集合返回零结果，绝不能跳过过滤（评审 P0）
         subjects = sorted(set(str(s) for s in subjects))
-        sql += f" AND subject IN ({','.join('?' * len(subjects))})"
-        params += subjects
+        if not subjects:
+            sql += " AND 1=0"
+        else:
+            sql += f" AND subject IN ({','.join('?' * len(subjects))})"
+            params += subjects
     elif subject:
         sql += " AND subject = ?"
         params.append(subject)
@@ -566,9 +575,13 @@ def timeline(
 
 
 def history(con: sqlite3.Connection, claim_id: str) -> list[dict]:
-    """同一条记忆的所有修订，按时间排列 → 思想演变。"""
+    """同一条记忆的所有修订，按时间排列 → 思想演变。
+
+    必须返回 subject 字段，否则 API 层的 _filter_subjects 会把全部
+    历史记录过滤掉（评审 P1：受限 Token 的历史记录始终为空）。
+    """
     rows = con.execute(
-        "SELECT id, claim_id, value, status, occurred_at, observed_at, file FROM records "
+        "SELECT id, claim_id, subject, value, status, occurred_at, observed_at, file FROM records "
         "WHERE claim_id = ? ORDER BY COALESCE(NULLIF(occurred_at,''), observed_at) ASC",
         (claim_id,),
     ).fetchall()

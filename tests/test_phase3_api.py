@@ -261,6 +261,65 @@ class APITests(unittest.TestCase):
         self.svc.ensure_index(force=True)
         scopes_file.unlink()
 
+    def test_empty_scope_returns_nothing(self):
+        """评审 P0：空权限列表 [] 的 Token 必须返回零结果，绝不能查到全部主体。"""
+        import hashlib
+
+        scoped_token = "scoped-empty-test"
+        scoped_hash = hashlib.sha256(scoped_token.encode()).hexdigest()
+        scopes_file = self.root / "system" / "api-token-scopes.json"
+        scopes_file.write_text(json.dumps({scoped_hash: []}), encoding="utf-8")
+        headers = {"Authorization": f"Bearer {scoped_token}"}
+        # search：必须返回 0 条（fail-closed），不是全部记录
+        status, data = self.call(
+            "GET",
+            "/v1/search?q=" + urllib.parse.quote("记忆系统"),
+            headers=headers,
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(data.get("count"), 0)
+        self.assertEqual(data.get("items"), [])
+        # recall：必须返回 0 条
+        status, data = self.call(
+            "POST",
+            "/v1/recall",
+            {"prompt": "记忆系统", "budget": 1200},
+            headers=headers,
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(data.get("items"), [])
+        # timeline：必须返回 0 条
+        status, data = self.call("GET", "/v1/timeline", headers=headers)
+        self.assertEqual(status, 200)
+        self.assertEqual(data.get("items"), [])
+        scopes_file.unlink()
+
+    def test_history_returns_subject(self):
+        """评审 P1：history 必须返回 subject 字段，受限 Token 才能看到授权主体的历史。"""
+        import hashlib
+
+        # history 不带 Token（master）：应含 subject 字段
+        status, data = self.call("GET", "/v1/history/c-api0")
+        self.assertEqual(status, 200)
+        items = data.get("items", [])
+        self.assertGreater(len(items), 0)
+        for item in items:
+            self.assertIn("subject", item)
+            self.assertEqual(item.get("subject"), "用户")
+        # scoped token（只允许 用户）：应能看到 用户 的历史
+        scoped_token = "scoped-history-test"
+        scoped_hash = hashlib.sha256(scoped_token.encode()).hexdigest()
+        scopes_file = self.root / "system" / "api-token-scopes.json"
+        scopes_file.write_text(json.dumps({scoped_hash: ["用户"]}), encoding="utf-8")
+        headers = {"Authorization": f"Bearer {scoped_token}"}
+        status, data = self.call("GET", "/v1/history/c-api0", headers=headers)
+        self.assertEqual(status, 200)
+        items = data.get("items", [])
+        self.assertGreater(len(items), 0)
+        for item in items:
+            self.assertEqual(item.get("subject"), "用户")
+        scopes_file.unlink()
+
     def test_health(self):
         status, data = self.call("GET", "/v1/health")
         self.assertEqual(status, 200)
