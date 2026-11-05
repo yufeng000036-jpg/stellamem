@@ -94,9 +94,13 @@ def detect_broad(prompt: str) -> str | None:
     return None
 
 
-def broad_recall(con, kind: str, limit: int = 8, status=("active", "pending")) -> list[dict]:
-    """按类型取记忆，按可信度 + 时间排序。"""
-    where, params = _filter_sql((kind,), None, status, None)
+def broad_recall(con, kind: str, limit: int = 8, status=("active", "pending"), subject: str | None = None) -> list[dict]:
+    """按类型取记忆，按可信度 + 时间排序。
+
+    subject: 可信主体过滤。传入时只返回该主体的记录（精确匹配），
+    不传则不过滤（向后兼容）。泛问路径也必须接主体，否则隔离旁路。
+    """
+    where, params = _filter_sql((kind,), None, status, subject)
     rows = con.execute(
         f"SELECT * FROM records WHERE {where} ORDER BY redacted ASC, "
         "CASE status WHEN 'active' THEN 0 ELSE 1 END, occurred_at DESC LIMIT 200",
@@ -192,8 +196,10 @@ def _filter_sql(kinds, layers, status, person):
         clause.append(f"status IN ({','.join('?' * len(status))})")
         params += list(status)
     if person:
-        clause.append("subject LIKE ?")
-        params.append(f"%{person}%")
+        # 主体隔离必须精确匹配：LIKE '%user%' 会误匹配 'superuser'。
+        # 主体值来自固定枚举（user/persona/viewer），精确匹配是安全的。
+        clause.append("subject = ?")
+        params.append(person)
     return (" AND ".join(clause) if clause else "1=1"), params
 
 
@@ -222,7 +228,7 @@ def search(
     # 泛问走类型召回：问「我有哪些偏好」不该靠文本匹配
     broad = detect_broad(query)
     if broad and not kinds:
-        picked = broad_recall(con, broad, limit=limit, status=status or ("active", "pending"))
+        picked = broad_recall(con, broad, limit=limit, status=status or ("active", "pending"), subject=person)
         if picked:
             return picked
     # 默认只检索可注入状态：quarantined 记录不得被任何读路径搜出。
