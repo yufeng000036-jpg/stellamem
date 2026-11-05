@@ -94,6 +94,29 @@ def _grams_str(text: str) -> str:
     return " ".join(out)
 
 
+def source_fingerprint(root, include_daily=True) -> str:
+    """源文件指纹：MANAGED 文件 + daily/*.md 的 (相对路径, 大小, mtime_ns)。
+
+    索引是否过期只看它，不看记录数——写记忆不经过 API 时（如本地 agent
+    直接写 markdown、或写完后重启服务），记录数不变但内容变了，
+    旧的 `records == 0` 判断永远发现不了（验收 P1：重启后新记忆召回不到）。
+    """
+    root = Path(root)
+    parts = []
+    for rel_path, _ in MANAGED:
+        p = root / rel_path
+        if p.exists():
+            st = p.stat()
+            parts.append(f"{rel_path}:{st.st_size}:{st.st_mtime_ns}")
+    if include_daily:
+        daily = root / "daily"
+        if daily.is_dir():
+            for p in sorted(daily.glob("*.md")):
+                st = p.stat()
+                parts.append(f"daily/{p.name}:{st.st_size}:{st.st_mtime_ns}")
+    return _sha("\n".join(parts))
+
+
 def _split_daily(path: Path) -> list[dict]:
     """把 daily 长文按二级标题切块，作为可检索的原文段落。"""
     try:
@@ -250,6 +273,7 @@ class Index:
             "redacted": redacted,
             "root": str(root),
             "schema": "3",
+            "source_fingerprint": source_fingerprint(root, include_daily),
         }
         for key, value in meta.items():
             self.con.execute("INSERT OR REPLACE INTO meta VALUES (?,?)", (key, str(value)))
@@ -274,6 +298,16 @@ class Index:
         result = semantic.build_vectors(self.con, force=force)
         result["removed"] = removed
         return result
+
+    def is_stale(self, root, include_daily=True) -> bool:
+        """索引是否过期：无指纹（旧版建的库）或指纹不一致都算过期。
+
+        旧库第一次调用会重建一次，之后指纹正常，不会反复重建。
+        """
+        row = self.con.execute("SELECT value FROM meta WHERE key='source_fingerprint'").fetchone()
+        if row is None:
+            return True
+        return row[0] != source_fingerprint(root, include_daily)
 
     def stats(self) -> dict:
         def get(key):
