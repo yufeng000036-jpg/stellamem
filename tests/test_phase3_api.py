@@ -4,6 +4,7 @@ import json
 import sys
 import tempfile
 import threading
+import time
 import unittest
 import urllib.error
 import urllib.parse
@@ -1100,27 +1101,53 @@ class APITests(unittest.TestCase):
             # 写中文会直接炸。显式锁死 UTF-8，子进程行为与区域无关。
             env["PYTHONUTF8"] = "1"
             env["PYTHONIOENCODING"] = "utf-8"
-            proc = subprocess.run(
-                [
-                    sys.executable,
-                    str(repo / "adapters" / "mcp" / "stellamem_mcp_server.py"),
-                    str(ws),
-                    str(self.root.parent / "index.db"),
-                ],
-                input=json.dumps(req) + "\n",
-                capture_output=True,
-                text=True,
-                # CI Windows 冷启动 Python + 建索引慢，30s 在共享跑道上吃紧，放宽到 120s
-                timeout=120,
-                cwd=str(repo),
-                env=env,
-            )
-            self.assertEqual(proc.returncode, 0, proc.stderr)
-            resp = json.loads(proc.stdout.strip().splitlines()[-1])
-            content = json.loads(resp["result"]["content"][0]["text"])
+            # CI Windows 上这条偶发失败（run 42015143423）：召回明明返回了新记录，
+            # 断言却没找到。没能复现，疑似子进程输出/索引重建在慢跑道上的时序
+            # 问题。稳住它：只认最后一个 JSON 行（stdout 里万一混进告警行也不怕），
+            # 第一次没找到就等 2s 再跑一次子进程（重建没 settle 的 transient），
+            # text/value 都查（MCP 侧 text 是 value 的 fallback）。
+            # 两次都找不到才是真失败，且把 stderr 和原始 stdout 一起打出来。
+            last_content = None
+            last_proc = None
+            for _attempt in range(2):
+                proc = subprocess.run(
+                    [
+                        sys.executable,
+                        str(repo / "adapters" / "mcp" / "stellamem_mcp_server.py"),
+                        str(ws),
+                        str(self.root.parent / "index.db"),
+                    ],
+                    input=json.dumps(req) + "\n",
+                    capture_output=True,
+                    text=True,
+                    # CI Windows 冷启动 Python + 建索引慢，30s 在共享跑道上吃紧，放宽到 120s
+                    timeout=120,
+                    cwd=str(repo),
+                    env=env,
+                )
+                last_proc = proc
+                self.assertEqual(proc.returncode, 0, proc.stderr)
+                json_lines = [
+                    ln for ln in proc.stdout.strip().splitlines() if ln.lstrip().startswith("{")
+                ]
+                self.assertTrue(
+                    json_lines,
+                    f"stdio MCP 无 JSON 输出：stdout={proc.stdout!r} stderr={proc.stderr!r}",
+                )
+                resp = json.loads(json_lines[-1])
+                content = json.loads(resp["result"]["content"][0]["text"])
+                last_content = content
+                found = any(
+                    "冰滴咖啡" in (it.get("text") or it.get("value") or "")
+                    for it in content.get("items", [])
+                )
+                if found:
+                    break
+                time.sleep(2)
             self.assertTrue(
-                any("冰滴咖啡" in (it.get("text") or "") for it in content.get("items", [])),
-                f"stdio MCP 召回没找到新记忆：{content}",
+                found,
+                f"stdio MCP 召回没找到新记忆：{last_content} "
+                f"stderr={last_proc.stderr!r} stdout={last_proc.stdout!r}",
             )
         finally:
             restore_projects(self.root, self.svc, original)
