@@ -19,9 +19,11 @@ from datetime import datetime, timezone
 try:  # 包内导入（compiler.search）与扁平导入（sys.path 加 compiler/）都要能用
     from . import semantic
     from . import rank as rank_mod
+    from . import subjects as subjects_mod
 except ImportError:  # pragma: no cover
     import semantic  # type: ignore
     import rank as rank_mod  # type: ignore
+    import subjects as subjects_mod  # type: ignore
 
 # 字面/语义权重。语义通道默认开启后字面噪声会压住正确项，故可调。
 W_LEX = float(os.environ.get("STELLAMEM_W_LEX", "0.20"))
@@ -207,25 +209,34 @@ def _filter_sql(kinds, layers, status, person, persons=None):
         # 多主体：SQL IN 过滤，避免先取 N 倍再过滤导致的漏召回
         # fail-closed：persons 为空集合时返回零结果，绝不能跳过过滤
         # （评审 P0：空权限列表 [] 若被当成 falsy 跳过，会泄露全部主体）
-        persons = sorted(set(str(p) for p in persons))
+        # 评审最终验收 P1：展开旧版别名——查 "user" 时也要命中 "用户" 记录，
+        # 索引里仍保留原始拼写，不批量改写生产记忆。
+        persons = subjects_mod.expand_subjects(persons)
         if person:
             # 评审 P1：显式指定主体 + Token 授权范围必须同时满足（取交集），
             # 不能让授权范围覆盖显式指定。person 不在授权内 → 零结果。
-            if person in persons:
-                clause.append("subject = ?")
-                params.append(person)
+            # 比较时用标准命名空间，旧拼写 "用户" 与 "user" 是同一命名空间。
+            person_canon = subjects_mod.canonical_subject(person)
+            persons_canon = {subjects_mod.canonical_subject(p) for p in persons}
+            if person_canon in persons_canon:
+                # 交集 = person 的别名组（只保留该命名空间的拼写）
+                group = subjects_mod.expand_subjects({person})
+                clause.append(f"subject IN ({','.join('?' * len(group))})")
+                params += sorted(group)
             else:
                 clause.append("1=0")
         elif not persons:
             clause.append("1=0")
         else:
             clause.append(f"subject IN ({','.join('?' * len(persons))})")
-            params += persons
+            params += sorted(persons)
     elif person:
         # 主体隔离必须精确匹配：LIKE '%user%' 会误匹配 'superuser'。
         # 主体值来自固定枚举（user/persona/viewer），精确匹配是安全的。
-        clause.append("subject = ?")
-        params.append(person)
+        # 评审最终验收 P1：单主体也要展开旧版别名（查 "user" 命中 "用户" 记录）。
+        group = subjects_mod.expand_subjects({person})
+        clause.append(f"subject IN ({','.join('?' * len(group))})")
+        params += sorted(group)
     return (" AND ".join(clause) if clause else "1=1"), params
 
 
@@ -562,15 +573,17 @@ def timeline(
     params = []
     if subjects is not None:
         # fail-closed：空集合返回零结果，绝不能跳过过滤（评审 P0）
-        subjects = sorted(set(str(s) for s in subjects))
+        # 评审最终验收 P1：展开旧版别名（查 "user" 命中 "用户" 记录）。
+        subjects = subjects_mod.expand_subjects(subjects)
         if not subjects:
             sql += " AND 1=0"
         else:
             sql += f" AND subject IN ({','.join('?' * len(subjects))})"
-            params += subjects
+            params += sorted(subjects)
     elif subject:
-        sql += " AND subject = ?"
-        params.append(subject)
+        group = subjects_mod.expand_subjects({subject})
+        sql += f" AND subject IN ({','.join('?' * len(group))})"
+        params += sorted(group)
     if since:
         sql += " AND occurred_at >= ?"
         params.append(since)
