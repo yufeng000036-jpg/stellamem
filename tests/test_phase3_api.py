@@ -98,9 +98,7 @@ class APITests(unittest.TestCase):
         try:
             with urllib.request.urlopen(req, timeout=10) as resp:
                 raw = resp.read()
-                if resp.headers.get("Content-Type", "").startswith(
-                    "application/x-ndjson"
-                ):
+                if resp.headers.get("Content-Type", "").startswith("application/x-ndjson"):
                     return resp.status, raw.decode("utf-8")
                 return resp.status, json.loads(raw or b"{}")
         except urllib.error.HTTPError as exc:
@@ -123,9 +121,7 @@ class APITests(unittest.TestCase):
         scopes_file = self.root / "system" / "api-token-scopes.json"
         scopes_file.write_text(json.dumps({scoped_hash: ["用户"]}), encoding="utf-8")
         # master token 读 search：应返回（不受限）
-        status, data = self.call(
-            "GET", "/v1/search?q=" + urllib.parse.quote("记忆系统")
-        )
+        status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("记忆系统"))
         self.assertEqual(status, 200)
         # scoped token 读 search：应返回（只含 用户 主体）
         status, data = self.call(
@@ -181,14 +177,10 @@ class APITests(unittest.TestCase):
         scopes_file.write_text(json.dumps({scoped_hash: ["用户"]}), encoding="utf-8")
         headers = {"Authorization": f"Bearer {scoped_token}"}
         # approve 应 403
-        status, _ = self.call(
-            "POST", "/v1/approve", {"claim_id": "c-api0"}, headers=headers
-        )
+        status, _ = self.call("POST", "/v1/approve", {"claim_id": "c-api0"}, headers=headers)
         self.assertEqual(status, 403)
         # reject 应 403
-        status, _ = self.call(
-            "POST", "/v1/reject", {"claim_id": "c-api0"}, headers=headers
-        )
+        status, _ = self.call("POST", "/v1/reject", {"claim_id": "c-api0"}, headers=headers)
         self.assertEqual(status, 403)
         # backup 应 403
         status, _ = self.call("POST", "/v1/backup", {}, headers=headers)
@@ -206,17 +198,13 @@ class APITests(unittest.TestCase):
         self.assertFalse(data["model_required"])
 
     def test_search_chinese(self):
-        status, data = self.call(
-            "GET", "/v1/search?q=" + urllib.parse.quote("记忆系统第一阶段")
-        )
+        status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("记忆系统第一阶段"))
         self.assertEqual(status, 200)
         self.assertGreaterEqual(data["count"], 1)
         self.assertIn("星忆", data["items"][0]["value"])
 
     def test_search_fragmented_query(self):
-        status, data = self.call(
-            "GET", "/v1/search?q=" + urllib.parse.quote("第一阶段 记忆 系统")
-        )
+        status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("第一阶段 记忆 系统"))
         self.assertEqual(status, 200)
         self.assertGreaterEqual(data["count"], 1)
 
@@ -265,9 +253,7 @@ class APITests(unittest.TestCase):
         self.assertEqual(status, 421)
 
     def test_write_requires_token(self):
-        status, data = self.call(
-            "POST", "/v1/approve", {"claim_id": "c-api4"}, auth=False
-        )
+        status, data = self.call("POST", "/v1/approve", {"claim_id": "c-api4"}, auth=False)
         self.assertEqual(status, 401)
         self.assertEqual(data["error"], "unauthorized")
 
@@ -289,9 +275,7 @@ class APITests(unittest.TestCase):
 
     def test_binds_loopback_only(self):
         try:
-            api.make_server(
-                self.root, Path(self.tmp.name) / "x.db", host="0.0.0.0", port=0
-            )
+            api.make_server(self.root, Path(self.tmp.name) / "x.db", host="0.0.0.0", port=0)
             self.fail("binding 0.0.0.0 must be refused")
         except ValueError:
             pass
