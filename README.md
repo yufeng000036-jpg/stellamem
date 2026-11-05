@@ -2,6 +2,8 @@
 
 > **v0.3.0（2026-11-04）：正式落地版本。** 已在真实环境部署并通过完整验收：DSH 桌面助手已正式启用 Stellamem 作为长期记忆（隔离安装 → 真实数据 → 日常运行）。详见下方"正式部署"章节。
 >
+> **2026-11-05 安全加固（PR #42–#51 已合入 main，提交 `29f97ce`）：** 六轮外部审查 + 修复，主体隔离与 Token 权限边界全部收紧；全量回归 **599 Python + 8 Node** 通过，CI 7/7 全绿，第三方审查评分 8.8/10。Release 仍为 v0.3.0（标签在 `e925378`），补丁版本待发布。详见下方"2026-11-05 安全加固"章节。
+>
 > **Compatibility:** projection defaults to requester `user` and scope `global`; use explicit `requesterSubject` / `activeScopes` for other namespaces/tasks. An explicit invalid namespace fails closed. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
 
 > **Give AI memory a Git.** ｜ **给 AI 记忆一个 Git。**
@@ -65,6 +67,32 @@ DSH 桌面助手按"隔离测试 → 真实数据 → 日常运行"三阶段完�
 - 偏好卡支持多主题：`(subject, topic)` 双键，同一用户可存多张独立偏好；`topic` 参数向后兼容；审批/撤回/回滚不丢主题。
 - 全量回归 **587 passed**，CI 7/7（Linux/Windows/macOS × Python 3.10/3.12）；第三方审查主分支评分 7.0 → 7.3。
 - 详见 `CHANGELOG.md` 的 2026-11-04 节。
+
+### 2026-11-05 安全加固（PR #42–#51 已合入 main，提交 `29f97ce`）
+
+六轮外部审查 + 修复，全部先经 trial-merge 与全量测试零下跌验证才合入。只修安全边界与兼容性，不加新功能。
+
+**主体隔离（PR #42 / #47 / #48 / #49 / #51）：**
+- **PR #42**：主体过滤从 `LIKE '%user%'` 改为精确匹配 `subject = ?`——此前会误匹配 `superuser` 这类主体。
+- **PR #47**：修复 Scoped Token 三处漏洞——`/v1/recall` 过滤 `items` 后未同步重建 `text`（越权主体正文泄露）；`approve / reject / undo / backup` 等写接口只验 Token 不验权限（受限 Token 也能写）；`search / timeline` 先取候选再过滤会漏召回（改走 DB 层过滤）。
+- **PR #48**：多主体 Token 改用 SQL `IN (授权主体集合)` 过滤，不再"取 3 倍再过滤"（31 条未授权 + 1 条授权时旧策略返回空）；补双主体反例测试。
+- **PR #49**：空权限列表 `[]` fail-closed（`persons is None` 才是不限制，空集合返回零结果）；`history()` 补 `subject` 字段，否则受限 Token 的历史记录始终为空。
+- **PR #51**：旧版中文主体别名兼容——查询 `user` 时展开别名命中 `subject="用户"` 的旧记录（`subjects.py` 的 `expand_subjects` / `canonical_subject`），索引里保留原始拼写，不批量改写生产记忆；补 `用户/user/persona/viewer` 四类合成数据测试，召回正确、绝不串话。
+
+**Token 权限（PR #43 / #45 / #50）：**
+- **PR #43**：全部读接口（除 `/v1/health`）要求 Bearer Token 鉴权。
+- **PR #45**：Token 与主体权限绑定——Master Token 不受限（DSH 零改动）；Scoped Token 按 SHA256 存于 `system/api-token-scopes.json`，只读绑定主体，越权请求直接 403。
+- **PR #50**：非法 Scoped Token 配置（null / 字符串 / 数字）直接拒绝认证（401），不再返回"不受限"（此前等于拿到 Master 权限）；显式指定主体与授权范围取交集；`budget=0` / `max_chars=0` 真正关闭召回（此前 `or 1200` / `or 2000` 会把 0 恢复成默认）；测试隔离——`setUpClass` 建好索引，`test_history_and_related` 等单独跑不再全空。
+
+**MCP 边界（PR #51）：**
+- `stellamem_switch_subject` 明确标注只适用于单人可信部署，不得宣称为不可信多客户端的安全边界；未来多客户端版本须将主体身份绑定到宿主授权。
+- MCP 召回后置过滤用标准命名空间比较，旧拼写记录不再被误丢。
+
+**测试与质量：**
+- 全量回归 **599 Python + 8 Node 通过**（v0.3.0 时 587 → 本轮 +12），零下跌；`ruff format --check` 全过；CI 7/7 全绿（Linux/Windows/macOS × Python 3.10/3.12 + 代码质量）。
+- 第三方审查评分 **8.8/10**（早期 7.2 → 8.3 → 8.4 → 8.6 → 8.7 → 8.8）；评审结论：适合单人可信 DSH 环境正式使用，暂不建议开放给互不信任的多客户端，也不建议作为唯一记忆备份。
+- 另：修掉两个假阳性测试——`test_dual_subject_no_leak` 与 `test_explicit_subject_intersects_scope` 之前写的新文件不在索引的 MANAGED 清单里，记录根本没进库，测试空跑通过；已改为追加到 `long-term/projects.md` 并加非空断言。
+- 详见 `CHANGELOG.md` 的 2026-11-05 节。
 
 ### 现在已有的功能
 

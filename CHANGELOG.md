@@ -4,6 +4,38 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## 2026-11-05 — 安全加固（PR #42–#51 已合入 main，提交 `29f97ce`）
+
+六轮外部审查 + 修复，只修安全边界与兼容性，不加新功能。每个 PR 先经 trial-merge 与全量测试零下跌验证才合入。第三方审查评分 8.8/10（早期 7.2 → 8.3 → 8.4 → 8.6 → 8.7 → 8.8）。Release 仍为 v0.3.0（标签在 `e925378`），补丁版本待发布。
+
+### 新增
+
+- **Scoped Token 权限绑定**（PR #45）：Master Token 不受限（DSH 零改动）；Scoped Token 按 SHA256 存于 `system/api-token-scopes.json`，只读绑定主体，越权请求直接 403。
+- **主体别名兼容**（PR #51）：`subjects.py` 新增 `expand_subjects` / `canonical_subject`；查询 `user` 时展开别名命中 `subject="用户"` 的旧记录，索引里保留原始拼写，不批量改写生产记忆。
+- **备份恢复回归测试**（PR #51）：`test_backup_restore_roundtrip`——隔离副本备份 → 删除 → 恢复 → 记录一致，服务重启后记忆恢复。
+
+### 修复
+
+- **PR #42**：主体过滤从 `LIKE '%user%'` 改为精确匹配 `subject = ?`，不再误匹配 `superuser`。
+- **PR #43**：全部读接口（除 `/v1/health`）要求 Bearer Token 鉴权。
+- **PR #44 / #46**：Ruff 格式修复（`compiler/search.py` / `compiler/api.py`）。
+- **PR #47**：Scoped Token 三漏洞——`/v1/recall` 过滤 `items` 后未同步重建 `text`（越权主体正文泄露）；写接口只验 Token 不验权限（受限 Token 也能审批、备份、回滚）；`search / timeline` 先取候选再过滤会漏召回（改走 DB 层过滤）。
+- **PR #48**：多主体 Token 改用 SQL `IN (授权主体集合)` 过滤，不再"取 3 倍再过滤"（31 条未授权 + 1 条授权时旧策略返回空）。
+- **PR #49**：空权限列表 `[]` fail-closed（`persons is None` 才是不限制，空集合返回零结果）；`history()` 补 `subject` 字段，否则受限 Token 的历史记录始终为空。
+- **PR #50**：非法 Scoped Token 配置（null / 字符串 / 数字）直接拒绝认证（401），不再返回"不受限"（此前等于拿到 Master 权限）；显式指定主体与授权范围取交集；`budget=0` / `max_chars=0` 真正关闭召回（此前 `or 1200` / `or 2000` 会把 0 恢复成默认）；测试隔离——`setUpClass` 建好索引，`test_history_and_related` 等单独跑不再全空。
+- **PR #51**：`stellamem_switch_subject` 明确标注只适用于单人可信部署，不得宣称为不可信多客户端的安全边界；MCP 召回后置过滤用标准命名空间比较。
+- **测试假阳性**：`test_dual_subject_no_leak` 与 `test_explicit_subject_intersects_scope` 之前写的新文件不在索引的 MANAGED 清单里，记录根本没进库，测试空跑通过；已改为追加到 `long-term/projects.md` 并加非空断言。
+
+### 测试
+
+- 全量 **599 Python + 8 Node 通过**（v0.3.0 时 587 → 本轮 +12），零下跌；`ruff format --check` 全过；CI 7/7 全绿（Linux/Windows/macOS × Python 3.10/3.12 + 代码质量）。
+- 新增测试：`test_token_subject_scope`、`test_recall_text_filtered`、`test_scoped_token_readonly`、`test_dual_subject_no_leak`、`test_empty_scope_returns_nothing`、`test_history_returns_subject`、`test_malformed_scope_config_rejected`、`test_explicit_subject_intersects_scope`、`test_recall_budget_boundaries`、`test_subject_alias_recall`、`test_backup_restore_roundtrip`。
+
+### 已知限制
+
+- 适合单人可信 DSH 环境正式使用；暂不建议开放给互不信任的多客户端，也不建议作为唯一记忆备份。
+- OpenClaw SQLite 会话自动采集尚未接通；LongMemEval 尚未跑出结果；Token 成本对照尚未拿到完整账单数据。
+
 ## 2026-11-04 — v0.3.0 正式落地
 
 **项目正式落地版本。DSH 桌面助手已完成三阶段部署验收并投入日常运行。**

@@ -194,12 +194,17 @@ The core compiler is framework-agnostic.
 | Transaction / Rollback | ✅ |
 | Crash recovery | ✅ |
 | Local models (llama.cpp etc.) | ✅ |
+| Subject isolation | ✅ exact-match + SQL-level multi-subject filtering |
+| Scoped Tokens (per-subject read-only) | ✅ since 2026-11-05 · malformed configs rejected (401), empty scope returns nothing |
+| Legacy subject aliases (`用户` → `user`) | ✅ recall-compatible since 2026-11-05 |
 | Remote cloud models | 🚧 not supported (loopback only) |
 | Other agent adapters | 🚧 |
 | GUI | 🚧 |
 | Sync | 🚧 |
 
 > Status reflects the **real implementation** only. 🚧 means not yet built.
+>
+> **2026-11-05 hardening (PRs #42–#51, main `29f97ce`):** six rounds of external review and fixes, all trial-merged with zero test regressions. 599 Python + 8 Node tests pass, CI 7/7 green, third-party review score 8.8/10. Suitable for single-user trusted local use; not yet recommended for mutually untrusted multi-client sharing or as the sole backup of memory data. Release is still v0.3.0 (tag `e925378`); a patch release is pending.
 
 ---
 
