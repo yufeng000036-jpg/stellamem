@@ -61,8 +61,10 @@ class MemoryService:
         # 本进程第一次检查是否已过：冷启动（刚重启、库还是旧的）必须同步重建，
         # 保证重启后第一次召回就是新鲜的（验收第三轮的要求）；运行中变旧才走后台。
         self._warmed_up = False
-        # 后台重建最近一次失败的时间（monotonic 秒），60 秒内不再重试，
+        # 后台重建最近一次失败的时间（monotonic 秒），5 秒内不再重试，
         # 避免重建一直失败时每个读请求都起一个线程刷日志。
+        # 60s 太长：一次瞬时失败（慢跑道上的锁冲突）会让索引旧一整分钟，
+        # 期间的测试/读请求都拿不到新记录；5s 足够防刷日志，又能快速恢复。
         self._last_rebuild_failed_at = 0.0
         # 后台重建最近一次失败的异常（供测试断言时直接看到原因，
         # 而不是只看到“查不到新记录”这种间接失败）。
@@ -98,7 +100,7 @@ class MemoryService:
                             self.rebuilt_at = meta["built_at"]
                             self._warmed_up = True
                             return meta
-                        if time.monotonic() - self._last_rebuild_failed_at < 60:
+                        if time.monotonic() - self._last_rebuild_failed_at < 5:
                             return {"built_at": stats["built_at"], "records": stats["records"]}
                         t = threading.Thread(target=self._rebuild_in_background, daemon=True)
                         self._rebuild_thread = t
