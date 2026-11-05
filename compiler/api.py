@@ -36,7 +36,10 @@ MAX_BODY = 64 * 1024
 
 def _json(status, payload, extra_headers=None):
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    headers = {"Content-Type": "application/json; charset=utf-8", "Content-Length": str(len(body))}
+    headers = {
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Length": str(len(body)),
+    }
     headers.update(extra_headers or {})
     return status, headers, body
 
@@ -299,34 +302,53 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/v1/search":
                 q = (query.get("q") or [""])[0]
                 limit = min(50, int((query.get("limit") or ["10"])[0]))
-                hits = S.search(
-                    svc.index.con,
-                    q,
-                    kinds=(query.get("kind") or [None])[0],
-                    since=(query.get("since") or [None])[0],
-                    until=(query.get("until") or [None])[0],
-                    person=(query.get("person") or [None])[0],
-                    limit=limit,
-                )
                 # 主体权限：越权请求直接 403（person 参数指定的主体不在允许范围内）
                 req_person = (query.get("person") or [None])[0]
                 if req_person and allowed is not None and req_person not in allowed:
                     return self._send(
                         *_json(HTTPStatus.FORBIDDEN, {"error": "subject not allowed"})
                     )
-                hits = self._filter_subjects(hits, allowed)
+                # P1 修复：DB 层过滤，避免先取 10 条全是越权主体导致漏召回
+                # 单主体 Token：直接传 person 给 DB；多主体：取 3 倍再过滤
+                db_person = req_person
+                fetch_limit = limit
+                if allowed is not None and not req_person:
+                    if len(allowed) == 1:
+                        db_person = next(iter(allowed))
+                    else:
+                        fetch_limit = limit * 3
+                hits = S.search(
+                    svc.index.con,
+                    q,
+                    kinds=(query.get("kind") or [None])[0],
+                    since=(query.get("since") or [None])[0],
+                    until=(query.get("until") or [None])[0],
+                    person=db_person,
+                    limit=fetch_limit,
+                )
+                hits = self._filter_subjects(hits, allowed)[:limit]
                 return self._send(
                     *_json(HTTPStatus.OK, {"query": q, "count": len(hits), "items": hits})
                 )
 
             if path == "/v1/timeline":
+                req_limit = min(500, int((query.get("limit") or ["200"])[0]))
+                # P1 修复：DB 层过滤，单主体直接传 subject，多主体取 3 倍再过滤
+                db_subject = None
+                fetch_limit = req_limit
+                if allowed is not None:
+                    if len(allowed) == 1:
+                        db_subject = next(iter(allowed))
+                    else:
+                        fetch_limit = req_limit * 3
                 rows = S.timeline(
                     svc.index.con,
                     since=(query.get("since") or [None])[0],
                     until=(query.get("until") or [None])[0],
-                    limit=min(500, int((query.get("limit") or ["200"])[0])),
+                    limit=fetch_limit,
+                    subject=db_subject,
                 )
-                rows = self._filter_subjects(rows, allowed)
+                rows = self._filter_subjects(rows, allowed)[:req_limit]
                 return self._send(*_json(HTTPStatus.OK, {"count": len(rows), "items": rows}))
 
             if path == "/v1/namespaces":
@@ -422,12 +444,25 @@ class Handler(BaseHTTPRequestHandler):
                 explain_decay=bool(payload.get("explain_decay", False)),
                 subject=req_subject,
             )
-            # 过滤召回结果中的越权项（多主体 Token 时，DB 层只按单个 subject 过滤，需二次过滤）
+            # P0 修复：过滤 items 后必须同步重建 text/chars，否则 text 泄露越权主体的正文
             if allowed is not None and result.get("items"):
                 result["items"] = self._filter_subjects(result["items"], allowed)
+                # 按 search.recall 同样的行格式重建 text
+                lines = []
+                for rec in result["items"]:
+                    line = f"- [{S.KIND_LABEL.get(rec.get('kind'), rec.get('kind'))}] {S._trim(rec.get('value'), 90)}"
+                    if rec.get("occurred_at"):
+                        line += f"（{rec['occurred_at'][:10]}）"
+                    lines.append(line)
+                result["text"] = "\n".join(lines)
+                result["chars"] = sum(len(line) + 1 for line in lines)
+                result["dropped"] = max(0, result.get("dropped", 0))
             return self._send(*_json(HTTPStatus.OK, result))
 
-        # 以下为写操作
+        # 以下为写操作：Scoped Token（受限 Token）禁止写操作，只读
+        # P0 修复：没有写权限的客户端不能审批、回滚或备份
+        if allowed is not None:
+            return self._send(*_json(HTTPStatus.FORBIDDEN, {"error": "scoped token is read-only"}))
         try:
             payload = self._read_json()
             if path in {"/v1/approve", "/v1/reject"}:

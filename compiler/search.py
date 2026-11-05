@@ -529,12 +529,16 @@ def timeline(
     since: str | None = None,
     until: str | None = None,
     limit: int = 200,
+    subject: str | None = None,
 ) -> list[dict]:
     sql = (
         "SELECT id, claim_id, kind, subject, value, occurred_at, observed_at, layer, status "
         "FROM records WHERE occurred_at <> ''"
     )
     params = []
+    if subject:
+        sql += " AND subject = ?"
+        params.append(subject)
     if since:
         sql += " AND occurred_at >= ?"
         params.append(since)

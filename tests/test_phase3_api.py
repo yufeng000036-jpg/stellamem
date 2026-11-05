@@ -50,7 +50,10 @@ def seed(root: Path):
                 "relation": "NEW",
                 "auto_write": True,
                 "observed_at": "2026-11-01T00:00:00+00:00",
-                "provenance": {"timestamp": "2026-11-01T09:00:00", "record_id": f"rm-{idx}"},
+                "provenance": {
+                    "timestamp": "2026-11-01T09:00:00",
+                    "record_id": f"rm-{idx}",
+                },
             }
         )
     target = root / "long-term" / "projects.md"
@@ -116,9 +119,7 @@ class APITests(unittest.TestCase):
         scoped_token = "scoped-test-token-xyz"
         scoped_hash = hashlib.sha256(scoped_token.encode()).hexdigest()
         scopes_file = self.root / "system" / "api-token-scopes.json"
-        scopes_file.write_text(
-            json.dumps({scoped_hash: ["用户"]}), encoding="utf-8"
-        )
+        scopes_file.write_text(json.dumps({scoped_hash: ["用户"]}), encoding="utf-8")
         # master token 读 search：应返回（不受限）
         status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("记忆系统"))
         self.assertEqual(status, 200)
@@ -139,6 +140,54 @@ class APITests(unittest.TestCase):
         )
         self.assertEqual(status, 403)
         # 清理 scopes 文件，避免影响其他测试
+        scopes_file.unlink()
+
+    def test_recall_text_filtered(self):
+        """P0：recall 的 text 必须与过滤后的 items 一致，不泄露越权主体正文。"""
+        import hashlib
+
+        scoped_token = "scoped-recall-test"
+        scoped_hash = hashlib.sha256(scoped_token.encode()).hexdigest()
+        scopes_file = self.root / "system" / "api-token-scopes.json"
+        scopes_file.write_text(json.dumps({scoped_hash: ["用户"]}), encoding="utf-8")
+        # recall 不指定 subject，应只返回 用户 主体的 items 和 text
+        status, data = self.call(
+            "POST",
+            "/v1/recall",
+            {"prompt": "记忆系统", "budget": 1200},
+            headers={"Authorization": f"Bearer {scoped_token}"},
+        )
+        self.assertEqual(status, 200)
+        for item in data.get("items", []):
+            self.assertEqual(item.get("subject"), "用户")
+        # text 里不应出现其他主体的内容（seed 数据只有 用户 主体，此处验证 text 与 items 一致）
+        self.assertEqual(
+            data.get("text", "").count("\n") + 1 if data.get("text") else 0,
+            len(data.get("items", [])),
+        )
+        scopes_file.unlink()
+
+    def test_scoped_token_readonly(self):
+        """P0：Scoped Token 禁止写操作（approve/reject/undo/backup/rebuild）。"""
+        import hashlib
+
+        scoped_token = "scoped-write-test"
+        scoped_hash = hashlib.sha256(scoped_token.encode()).hexdigest()
+        scopes_file = self.root / "system" / "api-token-scopes.json"
+        scopes_file.write_text(json.dumps({scoped_hash: ["用户"]}), encoding="utf-8")
+        headers = {"Authorization": f"Bearer {scoped_token}"}
+        # approve 应 403
+        status, _ = self.call("POST", "/v1/approve", {"claim_id": "c-api0"}, headers=headers)
+        self.assertEqual(status, 403)
+        # reject 应 403
+        status, _ = self.call("POST", "/v1/reject", {"claim_id": "c-api0"}, headers=headers)
+        self.assertEqual(status, 403)
+        # backup 应 403
+        status, _ = self.call("POST", "/v1/backup", {}, headers=headers)
+        self.assertEqual(status, 403)
+        # rebuild 应 403
+        status, _ = self.call("POST", "/v1/rebuild", {}, headers=headers)
+        self.assertEqual(status, 403)
         scopes_file.unlink()
 
     def test_health(self):
@@ -213,7 +262,10 @@ class APITests(unittest.TestCase):
             "POST",
             "/v1/approve",
             {"claim_id": "c-api4"},
-            headers={"Authorization": f"Bearer {self.token}", "Origin": "http://evil.example.com"},
+            headers={
+                "Authorization": f"Bearer {self.token}",
+                "Origin": "http://evil.example.com",
+            },
         )
         self.assertEqual(status, 403)
 
