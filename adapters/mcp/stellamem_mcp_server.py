@@ -34,6 +34,41 @@ class StellamemMCPServer:
         # If unset or missing, stellamem_recall returns wired:false (scaffold).
         self.index_db_path = Path(index_db_path).resolve() if index_db_path else None
 
+    def _ensure_index_fresh(self) -> None:
+        """MCP 直接读 index.db：召回前先比对源文件指纹，过期就重建。
+
+        记忆根从库里 meta 的 `root` 读（build 时写进），不依赖
+        workspace_dir（它不一定是记忆根）。失败时不抛错——读旧索引
+        比不读好，下次调用再试。
+        """
+        if not self.index_db_path or not self.index_db_path.is_file():
+            return
+        try:
+            import sqlite3
+
+            from compiler.indexer import Index, source_fingerprint
+
+            con = sqlite3.connect(str(self.index_db_path))
+            try:
+                root_row = con.execute("SELECT value FROM meta WHERE key='root'").fetchone()
+                fp_row = con.execute(
+                    "SELECT value FROM meta WHERE key='source_fingerprint'"
+                ).fetchone()
+            finally:
+                con.close()
+            if not root_row:
+                return
+            root = Path(root_row[0])
+            if fp_row is not None and fp_row[0] == source_fingerprint(root):
+                return
+            idx = Index(self.index_db_path)
+            try:
+                idx.build(root)
+            finally:
+                idx.close()
+        except Exception:  # noqa: BLE001
+            pass
+
     def list_tools(self) -> list[dict[str, Any]]:
         return [
             {
@@ -175,6 +210,9 @@ class StellamemMCPServer:
             raw_max = args.get("max_chars")
             max_chars = 2000 if raw_max is None else max(0, int(raw_max))
             # Live recall when an index DB is configured; otherwise scaffold.
+            # 验收 P1：MCP 直接读 index.db，同样会被旧索引坑——召回前先
+            # 比对源文件指纹，过期就重建。
+            self._ensure_index_fresh()
             if self.index_db_path and self.index_db_path.is_file():
                 try:
                     import sqlite3
