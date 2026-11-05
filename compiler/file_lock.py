@@ -64,8 +64,18 @@ def cross_platform_lock(
     lock_path = target.with_name(f".{target.name}.stellamem.lock")
 
     flags = os.O_CREAT | os.O_RDWR | getattr(os, "O_BINARY", 0)
-    fd = os.open(str(lock_path), flags, 0o600)
     deadline = time.monotonic() + timeout
+    # Windows：多线程同时首次创建 .lock 边车文件时会 EACCES（PermissionError），
+    # 不是锁冲突，是创建竞态——和 msvcrt.locking 用同一个 deadline 重试。
+    # POSIX 上同时 O_CREAT 不会失败，重试分支走不到，不影响行为。
+    while True:
+        try:
+            fd = os.open(str(lock_path), flags, 0o600)
+            break
+        except PermissionError:
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(poll_interval)
     locked = False
 
     try:
