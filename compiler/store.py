@@ -43,6 +43,15 @@ class MemoryStore:
         self.counts = dict(active=0, pending=0, blocked=0, duplicate=0)
 
     def ingest(self, claim, mode="review", llm=None, config=None):
+        # 验收 P3：未 normalize 的 dict（缺 schema_version）写进去后，
+        # load_records 读不了整份文件，索引还静默跳过。入口直接拒绝，
+        # 不写坏块。官方链路（pipeline / migrate / sleep_purify）都走
+        # normalize_claim，不受影响。
+        if not isinstance(claim, dict) or claim.get("schema_version") != 2:
+            raise ValueError(
+                "ingest requires a normalized claim (schema_version == 2); "
+                "run claim_normalizer.normalize_claim first"
+            )
         if contains_secret(claim):
             self.counts["blocked"] += 1
             return
