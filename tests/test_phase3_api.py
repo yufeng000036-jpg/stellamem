@@ -748,6 +748,153 @@ class APITests(unittest.TestCase):
         self.assertTrue(Path(data["archive"]).exists())
         self.assertGreater(data["files"], 0)
 
+    # ---------------- 验收 P1：重启不重建索引 ----------------
+
+    def _append_raw_record(self, record):
+        """只写 markdown，不调 ensure_index——模拟本地 agent 直接写文件。"""
+        target = self.root / "long-term" / "projects.md"
+        original = target.read_text(encoding="utf-8")
+        block = "\n".join(
+            ["```stellamem", json.dumps(record, ensure_ascii=False, sort_keys=True), "```", ""]
+        )
+        target.write_text(original.rstrip() + "\n\n" + block, encoding="utf-8")
+        return original
+
+    def test_ensure_index_rebuilds_when_source_changes(self):
+        """写记忆不经过 API 时，普通 ensure_index()（不 force）也要发现新记录。"""
+        rec = make_record("c-stale1", "user", "验收：重启后仍能召回的新记忆")
+        original = self._append_raw_record(rec)
+        try:
+            # 此时索引还是旧的：直接查库找不到新记录
+            row = self.svc.index.con.execute(
+                "SELECT COUNT(*) FROM records WHERE claim_id='c-stale1'"
+            ).fetchone()
+            self.assertEqual(row[0], 0)
+            # 普通 ensure_index 必须靠指纹发现变化并重建
+            self.svc.ensure_index()
+            row = self.svc.index.con.execute(
+                "SELECT COUNT(*) FROM records WHERE claim_id='c-stale1'"
+            ).fetchone()
+            self.assertEqual(row[0], 1)
+        finally:
+            restore_projects(self.root, self.svc, original)
+
+    def test_restart_picks_up_new_records(self):
+        """验收原样复现：写完记忆 → 服务重启（新实例）→ 不手动 /v1/rebuild 也能召回。"""
+        rec = make_record("c-stale2", "user", "验收：重启后召回的茶饮记忆")
+        original = self._append_raw_record(rec)
+        try:
+            # 新进程：全新 MemoryService 实例，同一 root / 同一 index.db
+            db_path = self.root.parent / "index.db"
+            svc2 = api.MemoryService(self.root, db_path)
+            try:
+                # main() 启动时只调一次 ensure_index()（不 force）
+                svc2.ensure_index()
+                row = svc2.index.con.execute(
+                    "SELECT COUNT(*) FROM records WHERE claim_id='c-stale2'"
+                ).fetchone()
+                self.assertEqual(row[0], 1)
+            finally:
+                svc2.index.close()
+        finally:
+            restore_projects(self.root, self.svc, original)
+
+    def test_old_index_without_fingerprint_rebuilds_once(self):
+        """旧版建的库没有 source_fingerprint：第一次 ensure_index 重建，之后不再反复重建。"""
+        self.svc.index.con.execute("DELETE FROM meta WHERE key='source_fingerprint'")
+        self.svc.index.con.commit()
+        self.assertTrue(self.svc.index.is_stale(self.root))
+        self.svc.ensure_index()
+        self.assertFalse(self.svc.index.is_stale(self.root))
+        # 第二次调用不再重建：built_at 不变
+        built_before = self.svc.index.stats()["built_at"]
+        self.svc.ensure_index()
+        self.assertEqual(built_before, self.svc.index.stats()["built_at"])
+
+    # ---------------- 验收 P3：history 展示不全 ----------------
+
+    def test_history_returns_revision_fields(self):
+        """history 返回 revision_id / valid_to / expired_at / superseded_by。"""
+        old = make_record("c-hist1", "user", "旧说法：喜欢喝红茶")
+        old["revision_id"] = "r-hist1-old"
+        old["status"] = "superseded"
+        old["valid_to"] = "2026-11-04T09:00:00"
+        old["expired_at"] = "2026-11-04T10:00:00"
+        old["superseded_by"] = "r-hist1-new"
+        old["observed_at"] = "2026-11-04T08:00:00+00:00"
+        old["provenance"] = dict(old["provenance"], timestamp="2026-11-04T08:00:00")
+        new = make_record("c-hist1", "user", "新说法：改喝绿茶了")
+        new["revision_id"] = "r-hist1-new"
+        new["status"] = "active"
+        new["observed_at"] = "2026-11-04T09:00:00+00:00"
+        new["provenance"] = dict(new["provenance"], timestamp="2026-11-04T09:00:00")
+        original = self._append_raw_record(old)
+        try:
+            self._append_raw_record(new)
+            self.svc.ensure_index()
+            import search as S
+
+            items = S.history(self.svc.index.con, "c-hist1")
+            self.assertEqual(len(items), 2)
+            self.assertEqual(items[0]["revision_id"], "r-hist1-old")
+            self.assertEqual(items[0]["valid_to"], "2026-11-04T09:00:00")
+            self.assertEqual(items[0]["expired_at"], "2026-11-04T10:00:00")
+            # superseded_by 从下一条修订推导，与写入时存的值一致
+            self.assertEqual(items[0]["superseded_by"], "r-hist1-new")
+            self.assertEqual(items[1]["revision_id"], "r-hist1-new")
+            self.assertIsNone(items[1]["superseded_by"])
+        finally:
+            restore_projects(self.root, self.svc, original)
+
+    # ---------------- 验收 P3：ingest 写坏块 ----------------
+
+    def test_ingest_rejects_unnormalized_claim(self):
+        """未 normalize 的 dict（缺 schema_version）直接拒绝，不写坏块。"""
+        from storage import load_records
+        from store import MemoryStore
+
+        store = MemoryStore(self.root)
+        bad = {
+            "kind": "preference",
+            "subject": "user",
+            "predicate": "p-bad",
+            "value": "没过 normalize 的坏块",
+            "evidence": "没过 normalize 的坏块",
+        }
+        with self.assertRaises(ValueError):
+            store.ingest(bad)
+        # 文件仍可读：什么都没写进去
+        for rel in ("long-term/projects.md", "system/memory-inbox.md"):
+            _, records = load_records(self.root / rel)
+            self.assertFalse(any(r.get("value") == "没过 normalize 的坏块" for r in records))
+
+    def test_ingest_accepts_normalized_claim(self):
+        """对照：走 normalize_claim 的仍可正常写入（官方链路不受影响）。"""
+        from claim_normalizer import normalize_claim
+        from store import MemoryStore
+
+        store = MemoryStore(self.root)
+        claim = normalize_claim(
+            {
+                "kind": "preference",
+                "subject": "user",
+                "predicate": "p-good",
+                "value": "走 normalize 的正常记忆",
+                "evidence": "走 normalize 的正常记忆",
+                "source": "user",
+                "confidence": 0.9,
+            }
+        )
+        claim["provenance"] = {
+            "provider": "test",
+            "precision": "message",
+            "speaker": "user",
+            "timestamp": "2026-11-05T00:00:00+00:00",
+            "message_id": "t1",
+        }
+        store.ingest(claim, mode="review")
+        self.assertEqual(store.counts["pending"] + store.counts["active"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()
