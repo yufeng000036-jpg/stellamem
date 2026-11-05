@@ -100,13 +100,15 @@ def broad_recall(
     limit: int = 8,
     status=("active", "pending"),
     subject: str | None = None,
+    subjects: set[str] | None = None,
 ) -> list[dict]:
     """按类型取记忆，按可信度 + 时间排序。
 
     subject: 可信主体过滤。传入时只返回该主体的记录（精确匹配），
     不传则不过滤（向后兼容）。泛问路径也必须接主体，否则隔离旁路。
+    subjects: 多主体集合过滤（SQL IN），优先于 subject。
     """
-    where, params = _filter_sql((kind,), None, status, subject)
+    where, params = _filter_sql((kind,), None, status, subject, subjects)
     rows = con.execute(
         f"SELECT * FROM records WHERE {where} ORDER BY redacted ASC, "
         "CASE status WHEN 'active' THEN 0 ELSE 1 END, occurred_at DESC LIMIT 200",
@@ -189,7 +191,7 @@ def _as_tuple(value):
     return tuple(value)
 
 
-def _filter_sql(kinds, layers, status, person):
+def _filter_sql(kinds, layers, status, person, persons=None):
     kinds, layers, status = _as_tuple(kinds), _as_tuple(layers), _as_tuple(status)
     clause, params = [], []
     if kinds:
@@ -201,7 +203,12 @@ def _filter_sql(kinds, layers, status, person):
     if status:
         clause.append(f"status IN ({','.join('?' * len(status))})")
         params += list(status)
-    if person:
+    if persons:
+        # 多主体：SQL IN 过滤，避免先取 N 倍再过滤导致的漏召回
+        persons = sorted(set(str(p) for p in persons))
+        clause.append(f"subject IN ({','.join('?' * len(persons))})")
+        params += persons
+    elif person:
         # 主体隔离必须精确匹配：LIKE '%user%' 会误匹配 'superuser'。
         # 主体值来自固定枚举（user/persona/viewer），精确匹配是安全的。
         clause.append("subject = ?")
@@ -220,11 +227,13 @@ def search(
     status=("active", "pending"),
     limit: int = 10,
     min_overlap: float = 0.5,
+    persons: set[str] | None = None,
 ) -> list[dict]:
     """混合检索：FTS5 候选 + 字符二元组重叠打分。
 
     纯 FTS 对中文长句无效（trigram 需要 ≥3 字连续命中），
     纯 LIKE 又无法排序；所以用重叠度做排序信号，FTS 只负责召回候选。
+    persons: 多主体集合过滤（SQL IN），优先于 person。
     """
     started = time.perf_counter()
     # 权重随语义通道是否真的可用而切换：降级时必须回到纯字面时代的配比，
@@ -240,13 +249,14 @@ def search(
             limit=limit,
             status=status or ("active", "pending"),
             subject=person,
+            subjects=persons,
         )
         if picked:
             return picked
     # 默认只检索可注入状态：quarantined 记录不得被任何读路径搜出。
     if status is None:
         status = ("active", "pending")
-    where, params = _filter_sql(kinds, layers, status, person)
+    where, params = _filter_sql(kinds, layers, status, person, persons)
     query_grams = bigrams(query)
     if not query_grams:
         return []
@@ -530,13 +540,18 @@ def timeline(
     until: str | None = None,
     limit: int = 200,
     subject: str | None = None,
+    subjects: set[str] | None = None,
 ) -> list[dict]:
     sql = (
         "SELECT id, claim_id, kind, subject, value, occurred_at, observed_at, layer, status "
         "FROM records WHERE occurred_at <> ''"
     )
     params = []
-    if subject:
+    if subjects:
+        subjects = sorted(set(str(s) for s in subjects))
+        sql += f" AND subject IN ({','.join('?' * len(subjects))})"
+        params += subjects
+    elif subject:
         sql += " AND subject = ?"
         params.append(subject)
     if since:
@@ -727,6 +742,7 @@ def recall(
     pattern_quota: int = 1,
     subject: str | None = None,
     usage_tracker=None,
+    subjects: set[str] | None = None,
 ) -> dict:
     """严格召回（F3：可选时效衰减）。
 
@@ -750,7 +766,10 @@ def recall(
     # only records with matching subject are retrieved. This is fail-closed:
     # no subject means no filtering (backward compat), but callers that
     # require isolation must pass an explicit subject.
-    hits = search(con, prompt, limit=max_items * 3, status=("active",), person=subject)
+    # subjects (plural) takes precedence over subject (singular) for multi-subject tokens.
+    hits = search(
+        con, prompt, limit=max_items * 3, status=("active",), person=subject, persons=subjects
+    )
 
     if decay:
         # [(record, base, adjusted)] 按 adjusted 降序；min_score 仍按 base 过滤

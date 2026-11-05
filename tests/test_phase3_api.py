@@ -190,6 +190,77 @@ class APITests(unittest.TestCase):
         self.assertEqual(status, 403)
         scopes_file.unlink()
 
+    def test_dual_subject_no_leak(self):
+        """评审反例：双主体数据下，scoped token 绝不泄露越权主体（items + text + search）。"""
+        import hashlib
+
+        # 往记忆文件里加一条 persona 主体的记录，再重建索引（FTS 也会同步）
+        persona_rec = {
+            "schema_version": 2,
+            "claim_id": "c-persona-1",
+            "revision_id": "r-persona-1",
+            "event_id": "e-persona-1",
+            "kind": "preference",
+            "scope": "global",
+            "subject": "persona",
+            "predicate": "p-persona",
+            "value": "鲸鱼娘喜欢唱歌跳舞",
+            "evidence": "鲸鱼娘喜欢唱歌跳舞",
+            "source": "persona",
+            "confidence": 0.9,
+            "importance": 0.5,
+            "sensitivity": "PRIVATE",
+            "write_policy": "allow",
+            "injection_policy": "recall",
+            "evidence_verified": True,
+            "status": "active",
+            "relation": "NEW",
+            "auto_write": True,
+            "observed_at": "2026-11-04T00:00:00+00:00",
+            "provenance": {
+                "timestamp": "2026-11-04T09:00:00",
+                "record_id": "rm-persona",
+            },
+        }
+        target = self.root / "long-term" / "persona.md"
+        target.write_text(render_records("# 鲸鱼娘\n", [persona_rec]), encoding="utf-8")
+        self.svc.ensure_index(force=True)
+
+        scoped_token = "scoped-dual-test"
+        scoped_hash = hashlib.sha256(scoped_token.encode()).hexdigest()
+        scopes_file = self.root / "system" / "api-token-scopes.json"
+        scopes_file.write_text(json.dumps({scoped_hash: ["用户"]}), encoding="utf-8")
+        headers = {"Authorization": f"Bearer {scoped_token}"}
+
+        # 1. search：结果里绝不能有 persona
+        status, data = self.call(
+            "GET",
+            "/v1/search?q=" + urllib.parse.quote("喜欢"),
+            headers=headers,
+        )
+        self.assertEqual(status, 200)
+        for item in data.get("items", []):
+            self.assertEqual(item.get("subject"), "用户")
+            self.assertNotIn("鲸鱼娘", item.get("value", ""))
+
+        # 2. recall：items 和 text 里绝不能有 persona
+        status, data = self.call(
+            "POST",
+            "/v1/recall",
+            {"prompt": "喜欢", "budget": 1200},
+            headers=headers,
+        )
+        self.assertEqual(status, 200)
+        for item in data.get("items", []):
+            self.assertEqual(item.get("subject"), "用户")
+        self.assertNotIn("鲸鱼娘", data.get("text", ""))
+        self.assertNotIn("persona", data.get("text", ""))
+
+        # 清理：删掉 persona 文件并重建索引，避免影响其他测试
+        target.unlink()
+        self.svc.ensure_index(force=True)
+        scopes_file.unlink()
+
     def test_health(self):
         status, data = self.call("GET", "/v1/health")
         self.assertEqual(status, 200)
