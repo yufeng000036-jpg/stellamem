@@ -50,7 +50,10 @@ def seed(root: Path):
                 "relation": "NEW",
                 "auto_write": True,
                 "observed_at": "2026-11-01T00:00:00+00:00",
-                "provenance": {"timestamp": "2026-11-01T09:00:00", "record_id": f"rm-{idx}"},
+                "provenance": {
+                    "timestamp": "2026-11-01T09:00:00",
+                    "record_id": f"rm-{idx}",
+                },
             }
         )
     target = root / "long-term" / "projects.md"
@@ -95,7 +98,9 @@ class APITests(unittest.TestCase):
         try:
             with urllib.request.urlopen(req, timeout=10) as resp:
                 raw = resp.read()
-                if resp.headers.get("Content-Type", "").startswith("application/x-ndjson"):
+                if resp.headers.get("Content-Type", "").startswith(
+                    "application/x-ndjson"
+                ):
                     return resp.status, raw.decode("utf-8")
                 return resp.status, json.loads(raw or b"{}")
         except urllib.error.HTTPError as exc:
@@ -116,11 +121,11 @@ class APITests(unittest.TestCase):
         scoped_token = "scoped-test-token-xyz"
         scoped_hash = hashlib.sha256(scoped_token.encode()).hexdigest()
         scopes_file = self.root / "system" / "api-token-scopes.json"
-        scopes_file.write_text(
-            json.dumps({scoped_hash: ["用户"]}), encoding="utf-8"
-        )
+        scopes_file.write_text(json.dumps({scoped_hash: ["用户"]}), encoding="utf-8")
         # master token 读 search：应返回（不受限）
-        status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("记忆系统"))
+        status, data = self.call(
+            "GET", "/v1/search?q=" + urllib.parse.quote("记忆系统")
+        )
         self.assertEqual(status, 200)
         # scoped token 读 search：应返回（只含 用户 主体）
         status, data = self.call(
@@ -141,6 +146,58 @@ class APITests(unittest.TestCase):
         # 清理 scopes 文件，避免影响其他测试
         scopes_file.unlink()
 
+    def test_recall_text_filtered(self):
+        """P0：recall 的 text 必须与过滤后的 items 一致，不泄露越权主体正文。"""
+        import hashlib
+
+        scoped_token = "scoped-recall-test"
+        scoped_hash = hashlib.sha256(scoped_token.encode()).hexdigest()
+        scopes_file = self.root / "system" / "api-token-scopes.json"
+        scopes_file.write_text(json.dumps({scoped_hash: ["用户"]}), encoding="utf-8")
+        # recall 不指定 subject，应只返回 用户 主体的 items 和 text
+        status, data = self.call(
+            "POST",
+            "/v1/recall",
+            {"prompt": "记忆系统", "budget": 1200},
+            headers={"Authorization": f"Bearer {scoped_token}"},
+        )
+        self.assertEqual(status, 200)
+        for item in data.get("items", []):
+            self.assertEqual(item.get("subject"), "用户")
+        # text 里不应出现其他主体的内容（seed 数据只有 用户 主体，此处验证 text 与 items 一致）
+        self.assertEqual(
+            data.get("text", "").count("\n") + 1 if data.get("text") else 0,
+            len(data.get("items", [])),
+        )
+        scopes_file.unlink()
+
+    def test_scoped_token_readonly(self):
+        """P0：Scoped Token 禁止写操作（approve/reject/undo/backup/rebuild）。"""
+        import hashlib
+
+        scoped_token = "scoped-write-test"
+        scoped_hash = hashlib.sha256(scoped_token.encode()).hexdigest()
+        scopes_file = self.root / "system" / "api-token-scopes.json"
+        scopes_file.write_text(json.dumps({scoped_hash: ["用户"]}), encoding="utf-8")
+        headers = {"Authorization": f"Bearer {scoped_token}"}
+        # approve 应 403
+        status, _ = self.call(
+            "POST", "/v1/approve", {"claim_id": "c-api0"}, headers=headers
+        )
+        self.assertEqual(status, 403)
+        # reject 应 403
+        status, _ = self.call(
+            "POST", "/v1/reject", {"claim_id": "c-api0"}, headers=headers
+        )
+        self.assertEqual(status, 403)
+        # backup 应 403
+        status, _ = self.call("POST", "/v1/backup", {}, headers=headers)
+        self.assertEqual(status, 403)
+        # rebuild 应 403
+        status, _ = self.call("POST", "/v1/rebuild", {}, headers=headers)
+        self.assertEqual(status, 403)
+        scopes_file.unlink()
+
     def test_health(self):
         status, data = self.call("GET", "/v1/health")
         self.assertEqual(status, 200)
@@ -149,13 +206,17 @@ class APITests(unittest.TestCase):
         self.assertFalse(data["model_required"])
 
     def test_search_chinese(self):
-        status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("记忆系统第一阶段"))
+        status, data = self.call(
+            "GET", "/v1/search?q=" + urllib.parse.quote("记忆系统第一阶段")
+        )
         self.assertEqual(status, 200)
         self.assertGreaterEqual(data["count"], 1)
         self.assertIn("星忆", data["items"][0]["value"])
 
     def test_search_fragmented_query(self):
-        status, data = self.call("GET", "/v1/search?q=" + urllib.parse.quote("第一阶段 记忆 系统"))
+        status, data = self.call(
+            "GET", "/v1/search?q=" + urllib.parse.quote("第一阶段 记忆 系统")
+        )
         self.assertEqual(status, 200)
         self.assertGreaterEqual(data["count"], 1)
 
@@ -204,7 +265,9 @@ class APITests(unittest.TestCase):
         self.assertEqual(status, 421)
 
     def test_write_requires_token(self):
-        status, data = self.call("POST", "/v1/approve", {"claim_id": "c-api4"}, auth=False)
+        status, data = self.call(
+            "POST", "/v1/approve", {"claim_id": "c-api4"}, auth=False
+        )
         self.assertEqual(status, 401)
         self.assertEqual(data["error"], "unauthorized")
 
@@ -213,7 +276,10 @@ class APITests(unittest.TestCase):
             "POST",
             "/v1/approve",
             {"claim_id": "c-api4"},
-            headers={"Authorization": f"Bearer {self.token}", "Origin": "http://evil.example.com"},
+            headers={
+                "Authorization": f"Bearer {self.token}",
+                "Origin": "http://evil.example.com",
+            },
         )
         self.assertEqual(status, 403)
 
@@ -223,7 +289,9 @@ class APITests(unittest.TestCase):
 
     def test_binds_loopback_only(self):
         try:
-            api.make_server(self.root, Path(self.tmp.name) / "x.db", host="0.0.0.0", port=0)
+            api.make_server(
+                self.root, Path(self.tmp.name) / "x.db", host="0.0.0.0", port=0
+            )
             self.fail("binding 0.0.0.0 must be refused")
         except ValueError:
             pass
