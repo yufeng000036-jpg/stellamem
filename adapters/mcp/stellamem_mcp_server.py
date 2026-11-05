@@ -38,36 +38,32 @@ class StellamemMCPServer:
         """MCP 直接读 index.db：召回前先比对源文件指纹，过期就重建。
 
         记忆根从库里 meta 的 `root` 读（build 时写进），不依赖
-        workspace_dir（它不一定是记忆根）。失败时不抛错——读旧索引
-        比不读好，下次调用再试。
+        workspace_dir（它不一定是记忆根）。失败时打 stderr 日志，
+        读旧索引比不读好，下次调用再试（验收第三轮：原来这里静默吞错，
+        stdio 模式下重建失败也看不出来）。
         """
         if not self.index_db_path or not self.index_db_path.is_file():
             return
         try:
             import sqlite3
 
-            from compiler.indexer import Index, source_fingerprint
+            from compiler.indexer import Index
 
             con = sqlite3.connect(str(self.index_db_path))
             try:
                 root_row = con.execute("SELECT value FROM meta WHERE key='root'").fetchone()
-                fp_row = con.execute(
-                    "SELECT value FROM meta WHERE key='source_fingerprint'"
-                ).fetchone()
             finally:
                 con.close()
             if not root_row:
                 return
-            root = Path(root_row[0])
-            if fp_row is not None and fp_row[0] == source_fingerprint(root):
-                return
             idx = Index(self.index_db_path)
             try:
-                idx.build(root)
+                if idx.is_stale(Path(root_row[0])):
+                    idx.build(Path(root_row[0]))
             finally:
                 idx.close()
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as exc:  # noqa: BLE001
+            print(f"stellamem: index refresh failed: {exc}", file=sys.stderr)
 
     def list_tools(self) -> list[dict[str, Any]]:
         return [
