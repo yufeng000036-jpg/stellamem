@@ -208,7 +208,15 @@ def _filter_sql(kinds, layers, status, person, persons=None):
         # fail-closed：persons 为空集合时返回零结果，绝不能跳过过滤
         # （评审 P0：空权限列表 [] 若被当成 falsy 跳过，会泄露全部主体）
         persons = sorted(set(str(p) for p in persons))
-        if not persons:
+        if person:
+            # 评审 P1：显式指定主体 + Token 授权范围必须同时满足（取交集），
+            # 不能让授权范围覆盖显式指定。person 不在授权内 → 零结果。
+            if person in persons:
+                clause.append("subject = ?")
+                params.append(person)
+            else:
+                clause.append("1=0")
+        elif not persons:
             clause.append("1=0")
         else:
             clause.append(f"subject IN ({','.join('?' * len(persons))})")
