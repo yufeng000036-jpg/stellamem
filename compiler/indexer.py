@@ -11,9 +11,11 @@
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import json
 import sqlite3
+import threading
 from pathlib import Path
 
 try:  # 包内与扁平导入都要能用
@@ -178,11 +180,32 @@ def _split_daily(path: Path) -> list[dict]:
     return out
 
 
+def _locked(method):
+    """把 Index 的连接访问串行化：同一连接绝不能被两个线程同时用。
+
+    背景：sqlite3 连接（check_same_thread=False）允许多线程“轮流”用，
+    但两个线程同时在上面开 cursor 会互相顶掉，一个拿到 0 列的行
+    （IndexError）或 InterfaceError。HTTP 线程池里 health/search/recall
+    都会走到这个连接，#55 之前 ensure_index() 卡 3 秒把并发堵住了，
+    现在它 3ms 就返回，并发读直接撞上这个既有缺陷。
+    用 RLock：build() 内部会调 sync_vectors()，同线程重入必须放行。
+    """
+
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        with self._lock:
+            return method(self, *args, **kwargs)
+
+    return wrapper
+
+
 class Index:
     def __init__(self, db_path):
         self.path = Path(db_path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        # HTTP 服务在线程池里用同一连接：只读为主，写走 MemoryService 的锁。
+        # 一把 RLock 护住整个连接：HTTP 线程池共用它，读和读之间也会互相干扰，
+        # 不能只锁写。后台重建线程用自己的 Index/连接，不抢这把锁。
+        self._lock = threading.RLock()
         self.con = sqlite3.connect(self.path, check_same_thread=False)
         self.con.row_factory = sqlite3.Row
         self._migrate()
@@ -203,6 +226,7 @@ class Index:
 
     # ---------------- 构建 ----------------
 
+    @_locked
     def build(self, root, include_daily=True, include_pending=True) -> dict:
         try:  # 包内与扁平导入都要能用（MCP stdio 只加了仓库根，compiler/ 不在 sys.path）
             from .storage import load_records
@@ -315,6 +339,7 @@ class Index:
             meta["vectors"] = {"error": type(exc).__name__}
         return meta
 
+    @_locked
     def sync_vectors(self, force: bool = False) -> dict:
         """清孤儿向量 + 补缺失向量。嵌入服务不可用时返回 skipped。"""
         removed = self.con.execute(
@@ -327,6 +352,7 @@ class Index:
         result["removed"] = removed
         return result
 
+    @_locked
     def is_stale(self, root, include_daily=True) -> bool:
         """索引是否过期：无指纹（旧版建的库）或指纹不一致都算过期。
 
@@ -352,6 +378,7 @@ class Index:
             return False
         return True
 
+    @_locked
     def stats(self) -> dict:
         def get(key):
             return (
@@ -381,5 +408,6 @@ class Index:
             "db_bytes": self.path.stat().st_size if self.path.exists() else 0,
         }
 
+    @_locked
     def close(self):
         self.con.close()

@@ -1044,6 +1044,35 @@ class APITests(unittest.TestCase):
         finally:
             restore_projects(self.root, self.svc, original)
 
+    def test_concurrent_health_requests_do_not_disconnect(self):
+        """并发读 health 不能断连：既有缺陷回归测试。
+
+        根因：Index 用一个 sqlite3 连接给所有 HTTP 线程共用，stats() 里
+        连做 7 次查询，两个线程同时开 cursor 会互相顶掉，一个拿到 0 列
+        的行（IndexError）或 InterfaceError，服务端直接关连接，客户端
+        看到 RemoteDisconnected。#55 之前 ensure_index() 卡 3 秒把并发
+        堵住了，现在 3ms 就返回，并发读直接撞上。本地真机 5 轮 × 5 并发
+        测出 4/25（#55 后）与 5/25（#55 前）失败。
+        修复：Index 全连接访问套 RLock（见 indexer._locked）。
+        """
+        errors = []
+
+        def do_health():
+            try:
+                status, _ = self.call("GET", "/v1/health")
+                if status != 200:
+                    errors.append(f"status={status}")
+            except Exception as exc:  # noqa: BLE001 - 断连本身就是要抓的失败
+                errors.append(f"{type(exc).__name__}: {exc}")
+
+        for _round in range(5):
+            threads = [threading.Thread(target=do_health) for _ in range(10)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join(timeout=10)
+        self.assertEqual(errors, [], f"并发 health 有 {len(errors)} 次失败：{errors[:5]}")
+
     def test_mcp_stdio_recall_picks_up_new_records(self):
         """验收第三轮第 5 步原样复现：标准 stdio 启动（PYTHONPATH 只有仓库根，
         compiler/ 不在 sys.path），MCP 召回前必须重建过期索引，不能静默读旧库。"""
