@@ -53,6 +53,37 @@ def validate_subject(subject) -> str:
     raise ValueError(f"unknown subject namespace: {subject!r} (expected one of {SUBJECTS})")
 
 
+# 别名组：同一命名空间的不同拼写（旧版中文 / 标准英文）。
+# 查询时展开用——索引里仍保留原始拼写，不批量改写生产记忆。
+# （评审最终验收 P1：旧记忆 subject="用户" 用标准 "user" 查询时漏召回。）
+_ALIAS_GROUPS: dict[str, set[str]] = {}
+for _alias, _canon in ALIASES.items():
+    _group = _ALIAS_GROUPS.setdefault(_canon, {_canon})
+    _group.add(_alias)
+    _ALIAS_GROUPS[_alias] = _group
+
+
+def expand_subjects(subjects) -> set[str] | None:
+    """把主体集合展开为包含旧版别名的集合；None → None（不受限）。
+
+    例：{"user"} → {"user", "用户"}；{"用户"} → {"user", "用户"}。
+    未知主体原样保留，不静默丢弃。
+    """
+    if subjects is None:
+        return None
+    out: set[str] = set()
+    for s in subjects:
+        out |= _ALIAS_GROUPS.get(str(s), {str(s)})
+    return out
+
+
+def canonical_subject(value):
+    """原始 subject 值 → 标准命名空间；未知值原样返回。"""
+    if not isinstance(value, str):
+        return value
+    return ALIASES.get(value, value)
+
+
 def subject_of(record: dict) -> str | None:
     """Canonical namespace of a record, or None if unclassified.
 
