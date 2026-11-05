@@ -600,13 +600,21 @@ def history(con: sqlite3.Connection, claim_id: str) -> list[dict]:
 
     必须返回 subject 字段，否则 API 层的 _filter_subjects 会把全部
     历史记录过滤掉（评审 P1：受限 Token 的历史记录始终为空）。
+    另返回 revision_id / valid_to / expired_at / superseded_by：
+    superseded_by 是下一条修订的 revision_id——写入时旧记录的
+    superseded_by 即新记录的 revision_id（见 store.ingest），
+    索引里不另存一列，从时间顺序直接推导；最新一条为 None。
     """
     rows = con.execute(
-        "SELECT id, claim_id, subject, value, status, occurred_at, observed_at, file FROM records "
+        "SELECT id, claim_id, revision_id, subject, value, status, "
+        "occurred_at, observed_at, valid_to, expired_at, file FROM records "
         "WHERE claim_id = ? ORDER BY COALESCE(NULLIF(occurred_at,''), observed_at) ASC",
         (claim_id,),
     ).fetchall()
-    return [dict(row) for row in rows]
+    items = [dict(row) for row in rows]
+    for i, item in enumerate(items):
+        item["superseded_by"] = items[i + 1]["revision_id"] if i + 1 < len(items) else None
+    return items
 
 
 def related(con: sqlite3.Connection, record_id: str, limit: int = 8) -> list[dict]:

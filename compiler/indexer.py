@@ -94,6 +94,53 @@ def _grams_str(text: str) -> str:
     return " ".join(out)
 
 
+def source_fingerprint(root, include_daily=True) -> str:
+    """源文件指纹：MANAGED 文件 + daily/*.md 的 (相对路径, 大小, mtime_ns)。
+
+    索引是否过期只看它，不看记录数——写记忆不经过 API 时（如本地 agent
+    直接写 markdown、或写完后重启服务），记录数不变但内容变了，
+    旧的 `records == 0` 判断永远发现不了（验收 P1：重启后新记忆召回不到）。
+    """
+    root = Path(root)
+    parts = []
+    for rel_path, _ in MANAGED:
+        p = root / rel_path
+        if p.exists():
+            st = p.stat()
+            parts.append(f"{rel_path}:{st.st_size}:{st.st_mtime_ns}")
+    if include_daily:
+        daily = root / "daily"
+        if daily.is_dir():
+            for p in sorted(daily.glob("*.md")):
+                st = p.stat()
+                parts.append(f"daily/{p.name}:{st.st_size}:{st.st_mtime_ns}")
+    return _sha("\n".join(parts))
+
+
+def source_content_hash(root, include_daily=True) -> str:
+    """源文件内容 hash：只在 mtime/size 指纹变了时才算。
+    只 touch、不改内容时不重建（验收第三轮建议：touch 一下就全量重建 3s）。
+    读全部文件，比 stat 贵，只走变化分支。"""
+    root = Path(root)
+    h = hashlib.sha256()
+    for rel_path, _ in MANAGED:
+        p = root / rel_path
+        if p.exists():
+            h.update(rel_path.encode("utf-8"))
+            h.update(b"\0")
+            h.update(p.read_bytes())
+            h.update(b"\0")
+    if include_daily:
+        daily = root / "daily"
+        if daily.is_dir():
+            for p in sorted(daily.glob("*.md")):
+                h.update(f"daily/{p.name}".encode("utf-8"))
+                h.update(b"\0")
+                h.update(p.read_bytes())
+                h.update(b"\0")
+    return h.hexdigest()
+
+
 def _split_daily(path: Path) -> list[dict]:
     """把 daily 长文按二级标题切块，作为可检索的原文段落。"""
     try:
@@ -157,7 +204,10 @@ class Index:
     # ---------------- 构建 ----------------
 
     def build(self, root, include_daily=True, include_pending=True) -> dict:
-        from storage import load_records
+        try:  # 包内与扁平导入都要能用（MCP stdio 只加了仓库根，compiler/ 不在 sys.path）
+            from .storage import load_records
+        except ImportError:  # pragma: no cover - flat layout
+            from storage import load_records
 
         root = Path(root)
         self.con.execute("DELETE FROM records")
@@ -250,6 +300,8 @@ class Index:
             "redacted": redacted,
             "root": str(root),
             "schema": "3",
+            "source_fingerprint": source_fingerprint(root, include_daily),
+            "source_content_hash": source_content_hash(root, include_daily),
         }
         for key, value in meta.items():
             self.con.execute("INSERT OR REPLACE INTO meta VALUES (?,?)", (key, str(value)))
@@ -274,6 +326,31 @@ class Index:
         result = semantic.build_vectors(self.con, force=force)
         result["removed"] = removed
         return result
+
+    def is_stale(self, root, include_daily=True) -> bool:
+        """索引是否过期：无指纹（旧版建的库）或指纹不一致都算过期。
+
+        旧库第一次调用会重建一次，之后指纹正常，不会反复重建。
+        mtime/size 指纹变了时再算内容 hash：只 touch、不改内容时
+        只更新指纹，不重建（验收第三轮建议：touch 一下就全量重建 3s）。
+        """
+        current_fp = source_fingerprint(root, include_daily)
+        row = self.con.execute("SELECT value FROM meta WHERE key='source_fingerprint'").fetchone()
+        if row is None:
+            return True
+        if row[0] == current_fp:
+            return False
+        hash_row = self.con.execute(
+            "SELECT value FROM meta WHERE key='source_content_hash'"
+        ).fetchone()
+        if hash_row is not None and hash_row[0] == source_content_hash(root, include_daily):
+            self.con.execute(
+                "INSERT OR REPLACE INTO meta VALUES ('source_fingerprint', ?)",
+                (current_fp,),
+            )
+            self.con.commit()
+            return False
+        return True
 
     def stats(self) -> dict:
         def get(key):
