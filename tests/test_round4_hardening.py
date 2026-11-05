@@ -55,6 +55,31 @@ class Round4HardeningTest(unittest.TestCase):
         for line in lines:
             self.assertIsInstance(json.loads(line), dict)
 
+    def test_concurrent_lock_creation_race(self):
+        """Windows：多线程同时首次创建 .lock 边车文件时 os.open 会 EACCES，
+        cross_platform_lock 必须在 deadline 内重试，不能直接抛错。
+        （Linux 上同时 O_CREAT 不失败，本测试只在 Windows 上能复现原问题；
+        但它直接覆盖修改的这段重试逻辑，Windows CI 能守住它。）"""
+        from compiler.file_lock import cross_platform_lock
+
+        target = self.tmp_ws / "race-target.jsonl"
+        errors: list = []
+
+        def worker() -> None:
+            try:
+                for _ in range(20):
+                    with cross_platform_lock(target, timeout=10.0):
+                        pass
+            except Exception as exc:  # noqa: BLE001
+                errors.append(exc)
+
+        threads = [threading.Thread(target=worker) for _ in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        self.assertEqual(errors, [])
+
     def test_derived_cache_verifies_hash_on_hit(self):
         md = self.tmp_ws / "m.md"
         md.write_text("# T\nhello", encoding="utf-8")

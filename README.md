@@ -360,6 +360,20 @@ python compiler/memory.py doctor
 
 要求：**Python 3.10+**（核心只用标准库）。Node 仅在启用 OpenClaw 集成时可选。
 
+### MCP 服务器启动（可直接复制）
+
+`compiler` 必须可导入，否则连启动都失败。两种写法都能用，任选其一：
+
+```bash
+# 写法一：设 PYTHONPATH 为仓库根目录
+PYTHONPATH=/path/to/stellamem python adapters/mcp/stellamem_mcp_server.py <工作区> <索引库.db>
+
+# 写法二：用 -m 启动，不用设 PYTHONPATH
+python -m adapters.mcp.stellamem_mcp_server <工作区> <索引库.db>
+```
+
+`<工作区>` 是 MCP 的工作目录，`<索引库.db>` 是 `index.db` 的路径（不传则召回返回 `wired:false`）。直接 spawn 脚本又不设 `PYTHONPATH` 会启动失败。
+
 **自动采集边界：** 安装片段默认关闭旧版 `daily-autolog`，不改变已有宿主配置。
 它仅支持经过验证的 JSONL 会话来源；OpenClaw 2026.10.9 的 SQLite 会话采集尚未适配。
 `setup.py check` 会明确报告这一阻碍。已批准记忆的真实宿主注入已验证，但不能据此声称新对话会自动记住。
