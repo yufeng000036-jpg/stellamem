@@ -134,7 +134,7 @@ test("projected lines carry the claim date when provenance has a timestamp", asy
       predicate: "bought", value: "Walmart gift card", evidence: "Walmart gift card" }),
   ]);
   const out = await project(root, "What coupon did I use at Walmart?");
-  const lines = out.split("\n").slice(1).filter(Boolean).map((l) => JSON.parse(l));
+  const lines = out.split("\n").filter((l) => l.startsWith("{")).map((l) => JSON.parse(l));
   assert.equal(lines.length, 2, "both matching claims must project: " + out);
   const dated = lines.find((l) => l.id === "c-dated");
   const undated = lines.find((l) => l.id === "c-undated");
@@ -150,4 +150,44 @@ test("irrelevant prompts still inject nothing", async () => {
   ]);
   assert.equal(await project(root, "今天天气怎么样"), "");
   assert.equal(await project(root, "法国的首都是哪里"), "");
+});
+
+test("projection header carries the entity-match guard, and empty projection stays empty", async () => {
+  // LongMemEval verification run (main c46a6fa): correct abstention fell to
+  // 0.800 because the reader answered near-miss questions with cousin facts
+  // (Harajuku for Shinjuku, tennis for table tennis). The guard tells the
+  // reader a line only supports an answer when it is about the same place,
+  // person, role, activity, or item the question asks about. It is header
+  // text only: when nothing projects, project() still returns "" and the
+  // guard never leaks out on its own.
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [
+    record({ claim_id: "c-coupon", revision_id: "r-coupon", kind: "fact",
+      predicate: "used coupon", value: "Walmart coupon",
+      evidence: "I used a coupon at Walmart" }),
+  ]);
+  const out = await project(root, "What coupon did I use at Walmart?");
+  assert.ok(out.includes("about the same place, person, role, activity, or item"),
+    "guard must be in the header: " + out);
+  assert.ok(out.includes("does not support an answer: abstain instead"),
+    "guard must name the abstain behaviour: " + out);
+  assert.equal(await project(root, "今天天气怎么样"), "");
+});
+
+test("guard does not change which claims are projected", async () => {
+  // The guard is header text: selection is decided before the prefix is
+  // assembled, so the projected claim set must be exactly the matching one.
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [
+    record({ claim_id: "c-match", revision_id: "r-match", kind: "fact",
+      predicate: "used coupon", value: "Walmart coupon",
+      evidence: "I used a coupon at Walmart" }),
+    record({ claim_id: "c-other", revision_id: "r-other", kind: "fact",
+      predicate: "bought", value: "Target gift card",
+      evidence: "I bought a gift card at Target" }),
+  ]);
+  const out = await project(root, "What coupon did I use at Walmart?");
+  const lines = out.split("\n").filter((l) => l.startsWith("{")).map((l) => JSON.parse(l));
+  assert.deepEqual(lines.map((l) => l.id), ["c-match"],
+    "only the matching claim must project: " + out);
 });
