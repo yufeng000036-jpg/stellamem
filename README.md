@@ -1,20 +1,21 @@
 # Stellamem · 星忆
 
-> **v0.3.0（2026-11-04）：正式落地版本。** 已在真实环境部署并通过完整验收：DSH 桌面助手已正式启用 Stellamem 作为长期记忆（隔离安装 → 真实数据 → 日常运行）。详见下方"正式部署"章节。
+> **给任何 AI 一个能查账的记忆。**
+> **Universal memory layer for any AI client — inspectable, traceable, versioned, reviewable, reversible.**
 >
-> **2026-11-05 安全加固（PR #42–#51 已合入 main，提交 `29f97ce`）：** 六轮外部审查 + 修复，主体隔离与 Token 权限边界全部收紧；全量回归 **599 Python + 8 Node** 通过，CI 7/7 全绿，第三方审查评分 8.8/10。Release 仍为 v0.3.0（标签在 `e925378`），补丁版本待发布。详见下方"2026-11-05 安全加固"章节。
+> **v0.4.0（2026-11-06）：通用客户端版本。** 从 v0.3.0 到 v0.4.0，项目做了一次方向上的收束：Stellamem 不为某一个宿主服务，它是**任何 AI 客户端都能接的记忆治理层**——今天的生产宿主是 DSH 桌面助手，明天可以是任何支持 MCP 或 HTTP 的客户端。愿景见下方“愿景”一节。
+>
+> **当前状态（2026-11-06，main）：** 全量回归 **747 Python + 13 Node** 通过；CI 7 个 job（Linux / Windows / macOS × Python 3.10 / 3.12 + 代码质量）；第三方审查评分 **8.8/10**（2026-11-05 最终验收）；LongMemEval 500 题独立测量已跑完（见下方“量化效果”）。详见 CHANGELOG.md 的 v0.4.0 一节。
 >
 > **Compatibility:** projection defaults to requester `user` and scope `global`; use explicit `requesterSubject` / `activeScopes` for other namespaces/tasks. An explicit invalid namespace fails closed. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
-
-> **Give AI memory a Git.** ｜ **给 AI 记忆一个 Git。**
 
 Stellamem 是一个**本地优先、可审计的 AI 长期记忆治理层**。
 它让 AI 的长期记忆可以被**查看、溯源、版本化、复核、回滚** —— 而不是变成一个不可见的黑箱。
 
 <p align="center">
-  <b>✅ v0.3.0 正式版</b> ·
-  🦞 首个一等公民宿主：OpenClaw ·
-  🖥️ 首个正式部署：DSH 桌面助手 ·
+  <b>✅ v0.4.0 通用客户端版本</b> ·
+  🌐 任何 MCP / HTTP 客户端都能接 ·
+  🖥️ 生产部署：DSH 桌面助手 ·
   🧩 核心与框架无关 ·
   🔒 本地优先 ·
   📝 Markdown 优先
@@ -29,142 +30,33 @@ Stellamem 是一个**本地优先、可审计的 AI 长期记忆治理层**。
   <a href="docs/USE_CASES.md">应用场景</a> ·
   <a href="CONTRIBUTING.md">参与贡献</a>
 </p>
+
 ---
 
-## 本版是什么（v0.3.0，2026-11-04）
+## 愿景：记忆是基础设施，不是某个宿主的附件
 
-**正式落地版本。** 从 v0.2.0-alpha 到 v0.3.0 的核心变化：项目已在真实环境完成部署验收，不再是"开发分支"。
+未来的 AI 会存在数年甚至更久。如果一个 AI 真正长期陪伴、工作或服务一个人，它就需要回答：
 
-### 2026-11-04 正式部署（DSH 生产验收）
+- 我为什么知道这件事？
+- 这是用户什么时候说的？
+- 现在还成立吗？
+- 后来有没有改变？
+- 两条记忆冲突怎么办？
+- 用户能不能撤销？
+- 敏感内容是否应该调用？
 
-DSH 桌面助手按"隔离测试 → 真实数据 → 日常运行"三阶段完成部署：
+Stellamem 希望成为 **AI 长期记忆的治理基础层**——不绑在任何一个宿主、任何一个模型、任何一家厂商身上。
 
-- **阶段一（隔离安装）**：`C:\Users\hd\Stellamem-DSH` 隔离目录，21 个文件全在目录内，`check --offline` 全绿，demo 跑通，虚构测试卡写入/新进程读回逐字一致
-- **阶段二（MCP 召回）**：发现并修复 PR #36 的真实 bug（见下文），3/3 查询 `wired:true / status:ok / 命中1条 / text 逐字一致`
-- **阶段三（正式接入）**：备份 1476 文件/768MB（只读复制、源文件未动）；正式库 `Stellamem-DSH-Prod` 全新空库、check 全绿；写入真实偏好 3/3 查回一致
-- **日常运行**：已启用。重要对话结束时判断写入、每日 23:30 健康检查、每周 23:45 快照备份
+这意味着三件事：
 
-### 2026-11-04 更新（PR #35 / #36 / #37 已合入 main）
+1. **任何客户端都能接。** 只要支持 MCP（stdio）或 HTTP，就能接 Stellamem。今天跑在生产上的是 DSH 桌面助手；明天换一个客户端，记忆还在，规矩不变。接线方式见下方“任何客户端怎么接”。
+2. **记忆不出本机。** 默认本地运行；私人记忆不发上云；提取、编译、召回都在本机完成。云模型只在用户明确同意的公开评测里用，从不用来处理私人对话。
+3. **用户拥有自己的记忆。** 看得见、改得动、能拒绝、能删除、能回滚、能导出。记忆的每一笔账都能查。
 
-- **PR #35**：`check` 校验 JSON 可解析性——此前只检查文件存在，损坏的 JSON 会误报 OK；现在 `.json` 文件额外做 `json.loads` 校验
-- **PR #36**：MCP `stellamem_recall` 接入真实检索——新增可选参数 `index_db_path`，传入索引库路径即接通真实召回；不传则保持 `wired:false` 向后兼容；主体隔离，无效主体 fail_closed
-- **PR #37**：修复 PR #36 的 `row_factory` 缺失——MCP 自建 SQLite 连接时未设 `con.row_factory = sqlite3.Row`，导致 `dict(row)` 报错；由 DSH 实测发现并验证修复
-- 全量回归 **587 passed**，CI 全绿
+> **Memory should be inspectable infrastructure, not invisible magic.**
+> 记忆应该是可检查的基础设施，而不是看不见的魔法。
 
-### 2026-11-03 更新（PR #17 / #18 / #20 已合入 main）
-
-- 4 个治理功能：写前自动快照 + 一键回滚（`compiler/snapshots.py`）、Token 看板（`compiler/token_dashboard.py`，只读）、90 天时效衰减接入 recall（`compiler/rank.py`）、selector-audit（`compiler/selector_audit.py`）；详见 `docs/GOVERNANCE-4-FEATURES.md`。
-- MemSkill 轻量适配：Skill Bank（`compiler/skills.py`，11 个命名/版本化/可审计的 skill）+ 失败案例复盘（`compiler/designer_review.py`，只提议不自动改）；详见 `docs/MEMSKILL-LITE.md`。
-- 可读记忆两小件：桥"只传摘要、不搬原文"明文规则（ADR 0004）+ 一等记忆类型 `preference_summary`（每条陈述强制带证据）；详见 `docs/READABLE-MEMORY.md`。
-- 全量回归 **472 passed + 37 subtests**，基线零下跌；更新总览见 `docs/UPDATE-2026-11-03.md`。
-- 已合入：PR #22（外部致谢文档，`608acd11`）。
-- 待合入（draft）：PR #21（skill 运行时接线、偏好卡 recall 接线、SenseNova 三件套、睡眠巩固文本版）。
-
-
-### 2026-11-04 更新（PR #31 / #32 / #33 已合入 main）
-
-- 5 个硬化模块：文件锁与原子写入（`compiler/file_lock.py`）、Markdown 增量缓存（`compiler/derived_cache.py`，SHA256 防旧读）、记忆去重与冲突识别（`compiler/memory_purge.py`，只标记不自动删）、MCP 标准接口（`adapters/mcp/stellamem_mcp_server.py`）、版本链（防覆盖、防损坏、合并写入）。
-- 偏好卡支持多主题：`(subject, topic)` 双键，同一用户可存多张独立偏好；`topic` 参数向后兼容；审批/撤回/回滚不丢主题。
-- 全量回归 **587 passed**，CI 7/7（Linux/Windows/macOS × Python 3.10/3.12）；第三方审查主分支评分 7.0 → 7.3。
-- 详见 `CHANGELOG.md` 的 2026-11-04 节。
-
-### 2026-11-05 安全加固（PR #42–#51 已合入 main，提交 `29f97ce`）
-
-六轮外部审查 + 修复，全部先经 trial-merge 与全量测试零下跌验证才合入。只修安全边界与兼容性，不加新功能。
-
-**主体隔离（PR #42 / #47 / #48 / #49 / #51）：**
-- **PR #42**：主体过滤从 `LIKE '%user%'` 改为精确匹配 `subject = ?`——此前会误匹配 `superuser` 这类主体。
-- **PR #47**：修复 Scoped Token 三处漏洞——`/v1/recall` 过滤 `items` 后未同步重建 `text`（越权主体正文泄露）；`approve / reject / undo / backup` 等写接口只验 Token 不验权限（受限 Token 也能写）；`search / timeline` 先取候选再过滤会漏召回（改走 DB 层过滤）。
-- **PR #48**：多主体 Token 改用 SQL `IN (授权主体集合)` 过滤，不再"取 3 倍再过滤"（31 条未授权 + 1 条授权时旧策略返回空）；补双主体反例测试。
-- **PR #49**：空权限列表 `[]` fail-closed（`persons is None` 才是不限制，空集合返回零结果）；`history()` 补 `subject` 字段，否则受限 Token 的历史记录始终为空。
-- **PR #51**：旧版中文主体别名兼容——查询 `user` 时展开别名命中 `subject="用户"` 的旧记录（`subjects.py` 的 `expand_subjects` / `canonical_subject`），索引里保留原始拼写，不批量改写生产记忆；补 `用户/user/persona/viewer` 四类合成数据测试，召回正确、绝不串话。
-
-**Token 权限（PR #43 / #45 / #50）：**
-- **PR #43**：全部读接口（除 `/v1/health`）要求 Bearer Token 鉴权。
-- **PR #45**：Token 与主体权限绑定——Master Token 不受限（DSH 零改动）；Scoped Token 按 SHA256 存于 `system/api-token-scopes.json`，只读绑定主体，越权请求直接 403。
-- **PR #50**：非法 Scoped Token 配置（null / 字符串 / 数字）直接拒绝认证（401），不再返回"不受限"（此前等于拿到 Master 权限）；显式指定主体与授权范围取交集；`budget=0` / `max_chars=0` 真正关闭召回（此前 `or 1200` / `or 2000` 会把 0 恢复成默认）；测试隔离——`setUpClass` 建好索引，`test_history_and_related` 等单独跑不再全空。
-
-**MCP 边界（PR #51 / #64）：**
-- `stellamem_switch_subject` 此前只验证名称合法、不验证调用方有没有权切到该主体，只适用于单人可信部署；PR #64 已补上宿主授权绑定——启动时用 `--allowed-subjects` 或 `STELLAMEM_ALLOWED_SUBJECTS` 配好允许集（逗号分隔，旧版别名如“用户”也认），切到集外主体直接拒绝，集外主体的召回一律空结果、写一律拒绝；非法绑定值启动即报错，不静默跑成无界。两者都不配时保持今天的行为不变，但启动时在 stderr 告警。**多客户端部署必须在启动时配绑定，否则就是单人可信模式，不得宣称具备多客户端隔离。**
-- MCP 召回后置过滤用标准命名空间比较，旧拼写记录不再被误丢。
-
-**测试与质量：**
-- 全量回归 **599 Python + 8 Node 通过**（v0.3.0 时 587 → 本轮 +12），零下跌；`ruff format --check` 全过；CI 7/7 全绿（Linux/Windows/macOS × Python 3.10/3.12 + 代码质量）。
-- 第三方审查评分 **8.8/10**（早期 7.2 → 8.3 → 8.4 → 8.6 → 8.7 → 8.8）；评审结论：适合单人可信 DSH 环境正式使用，暂不建议开放给互不信任的多客户端，也不建议作为唯一记忆备份。
-- 另：修掉两个假阳性测试——`test_dual_subject_no_leak` 与 `test_explicit_subject_intersects_scope` 之前写的新文件不在索引的 MANAGED 清单里，记录根本没进库，测试空跑通过；已改为追加到 `long-term/projects.md` 并加非空断言。
-- 详见 `CHANGELOG.md` 的 2026-11-05 节。
-
-### 现在已有的功能
-
-**记忆治理核心（沿用 v0.1.0-alpha，并经回归验证）：**
-- Claim 结构化断言：`kind / subject / scope / predicate / value / confidence / evidence / provenance`；
-- 来源可溯：每条 Claim 带来源指针与内容 hash，来源不可验证时抛错、不伪造；
-- 作用域 scope：同一话题在不同场景可有不同偏好，不互相污染；
-- 版本演化：`SUPERSEDES` 更新旧值，旧版本保留在版本链里；
-- 关系引擎：`NEW / DUPLICATE / REINFORCES / REFINES / COMPATIBLE / SUPERSEDES / CONTRADICTS / UNCERTAIN` 共 8 种；
-- 人工复核收件箱（CLI）：敏感、身份、低置信度、可疑内容进入收件箱，人工 `approve / reject / edit`；
-- 密钥门禁 Secret Gate：密钥在任何模型调用之前被拦截，不写库、不进日志、不外发；
-- 冲突治理：冲突写进冲突日志并保留双方证据，不静默覆盖；
-- 事务与回滚：记忆写入是事务，有日志、可恢复、可回滚；
-- 上下文投影：只向 Agent 注入当前任务相关的已批准 Claim，并有全局字符预算；
-- 只读体检：索引同步、冲突检测、健康检查、版本链校验（`compiler/memory.py doctor`）。
-
-**时间与过期（生产三项版新增）：**
-- 事实带 `valid_to / expired_at`，支持 `as_of()` 时间回放；
-- `as_of()` 默认不再静默截断，新增 `as_of_paged()`，返回总数与是否截断。
-
-**注入安全（改进版 + PATCH1）：**
-- 注入门拦截低分非弱项：字面重叠 0 且语义低于阈值，或综合分极低时不注入；弱信号默认不注入；
-- `gate_log.jsonl` 轮转：大小达到 1 MiB（1,048,576 字节）或行数达到 10000 行时轮转，最多保留 3 个旧文件；
-- `snapshot()` 打包前重名检测，重复时报错而不是静默覆盖；
-- append-only 内容保护：已写入内容不被静默改写。
-
-**主体隔离与桥（改进版 + PATCH1 + PATCH2）：**
-- 三个主体 `user / persona / viewer`，默认仅同主体检索，跨主体默认拒绝；
-- 桥默认拒绝，仅关系、方法、结果三种结构化模板可走，全文人工批准，带来源与审批人；
-- 桥批量批准失败整批不通过，单条可撤回，72 小时过期（该值为低置信猜测，需真实使用数据重定）；
-- `namespace` 字段为权威主体字段，无效值 fail-closed，不回退到旧 `subject` 字段；
-- 主体标签补标接口只在内存干跑，不写盘、不改现有 `subject` 字段。
-
-**人格事件与承诺（改进版 + PATCH2）：**
-- 人格适配器：事件先待确认，确认真正说出口后才可见，新增可选持久化 store；
-- 人格事件持久化：SQLite sidecar 只追加事件日志，人工复核后才可导出，不自动写用户库；
-  `export_pack()` 只返回 reviewed 数据；
-- 承诺表：独立 SQLite sidecar，不混进记忆正文，可创建、凭证据完成、过期。
-
-**筛查与宿主（改进版 + PATCH1）：**
-- 只读 pending 筛查报告：只统计、不改状态、不激活；
-- OpenClaw Adapter：隔离真实宿主的读取/注入检查通过；SQLite 会话自动采集尚未接通，完整 E2E 未验收；
-- AI 自举安装：`AI_BOOTSTRAP.md` + `INSTALL.md` + `setup.py`，支持 `--dry-run`、幂等安装，
-  不覆盖已有自定义文件；离线演示用虚构数据，无需模型。
-
-**治理增强（2026-11-03，PR #17 / #18 / #20 已合入）：**
-- 写前自动快照 + 一键回滚（`compiler/snapshots.py`）：写操作前自动快照，回滚需确认短语，全程审计；
-- Token 看板（`compiler/token_dashboard.py`，只读）：分组统计、token 估算、三色预算告警，超预算只给人工复核建议（不做自动压实）；
-- 时效衰减（`compiler/rank.py` 接入 recall）：90 天半衰期可配，只降排序不删数据，core/pinned 永不衰减；
-- selector-audit（`compiler/selector_audit.py`，只读）：9 阶段诊断"这条记忆为什么没被召回"；
-- Skill Bank（`compiler/skills.py`）：11 个命名、版本化、可审计的记忆技能，规则选择；
-- 失败案例复盘（`compiler/designer_review.py`）：hard cases 生成 pending 提案，人工批准才生效，永不自动改；
-- 桥摘要规则（ADR 0004）：过桥只传提炼摘要，原始日志永不过桥，人工检查清单；
-- 偏好摘要（`compiler/preference_summary.py`）：一等记忆类型，每条陈述强制带证据，缺证据拒绝写入。新建和更新为 pending，具名批准后才 active，版本正文只追加、可回滚。
-
-### 现在没有的功能 / 已知问题（合并前请先读）
-
-- **D4、D5 已合并到 main（经 PR #11 累积分支；单列 PR #5 已被其覆盖，不再单独合并）：** `blocked_weak` 现在只计已标记弱信号的被拦项，新增 `blocked_low_signal / blocked_total` 计数，空结果提示按弱标记/低信号分别表述；缺 `text` 的注入项不再抛 KeyError，缺失按空文本处理。
-  但 gate 当前仍无生产调用方，接线到任何生产调用方之前，调用方与回滚方式仍需单独说明，本分支不擅自接线。
-- **D1、D3 已合并到 main（PR #12，合并提交 e47b4297…）：** `as_of_paged(limit=None, offset)` 不再丢弃 offset；gate 轮转阈值统一为“达到即轮转”。**D7–D13 仍未修：** 仓库内无其具体审计内容，无法在无细节的情况下修复，见公开日志新节。
-- **主体标签只到干跑：** `namespace` 尚未写入任何真实数据；hold 规则已实现并经干跑验证（角色/系统类与含人格/观众字样记录暂缓自动归类），写入真实数据前仍需要全量备份、干跑清单核对、回滚方案与批准人，缺一不可。
-- **人格事件同步到用户库未实现：** 同步候选包准备已实现（仅 reviewed 事件、批准要求、批量全有或全无），`export_pack()` 只返回 reviewed 数据；实际写库仍未实现，需另行人工批准的任务才能消费。
-- **桥接图形界面已实现并加固：** 环回绑定 + 每服务器随机令牌 + POST 来源校验，终端文本审批仍为兜底；72 小时 TTL 为低置信猜测；关键词黑名单可被改写绕过，真正边界是人工看全文批准。
-- **语义检索生产接线未做：** 健康检查、向量缓存、查询后重排、用自有题集评测已实现；生产语义服务曾因端口占用离线是生产环境配置问题，本包不含生产配置修复，生产接线仍需单独确认。
-- **生产侧 pending 未激活：** 生产库 3969 条 pending 记录在本版不激活，批量 keep / task / drop
-  清理需单独批准，不能顺手激活；5 个核心身份候选未获批准，不得写入。
-- **通用 Alpha 限制（沿用旧版）：** 无 GUI、无同步、远程云模型仅环回地址、其他宿主适配未完成、
-  Adapter 召回仍偏关键词、本地 4B 模型存在分类漂移、英文临时情绪检测不完整、
-  蒸馏 / 保留释放流程尚未实现、尚未经过大规模外部用户长期验证。
-- **量化口径：** benchmark 仅为 30 篇日记、单一用户的内部实验数据（recall ≈ 0.705 / precision ≈ 0.505），
-  不构成准确率承诺；`False Write = 0` 仅表示在已定义的对抗样本中未观察到该类失败。
-
+---
 
 ## 它解决什么问题
 
@@ -200,8 +92,50 @@ Memory
 Version history —— 旧版本保留，可回滚
 ```
 
-> **Memory should be inspectable infrastructure, not invisible magic.**
-> 记忆应该是可检查的基础设施，而不是看不见的魔法。
+---
+
+## 现在有多强（2026-11-06 的实测状态）
+
+先说结论：**在“记得住、记不错、不记混、不泄露、能查能改能撤回”这条线上，Stellamem 已经是能拿出来的东西。** 下面每一条都有数字或生产记录撑着，不是口号。
+
+### 测试与审查：747 个测试，8.8/10
+
+- 全量回归 **747 Python + 13 Node** 通过（v0.3.0 时 587 → v0.4.0 时 747，零下跌）。
+- CI 7 个 job：Linux / Windows / macOS × Python 3.10 / 3.12 + 代码质量。注：2026-11-06 的 main 在 `windows-latest, 3.10` 有一次失败正在定位（同跑的 Ubuntu 3.10 与 Windows 3.12 都绿、本地全量多次全绿，疑似 runner 侧时序抖动，未定性、不猜原因）。
+- 第三方审查评分 **8.8/10**（2026-11-05 最终验收；早期 7.2 → 8.3 → 8.4 → 8.6 → 8.7 → 8.8）。评审结论：适合单人可信环境正式使用；多客户端隔离的彻底完成，正在等评审按最新 main 复核——复核通过之前，不对外宣称“已彻底完成”。
+
+### 独立测量：LongMemEval 500 题，带记忆 0.222 / 不带 0.060
+
+2026-11-06 跑完的 LongMemEval 全量（500 题，只用最便宜的 deepseek-flash 回答+判分，总计 $1.8282，单题 $0.00366）：
+
+- **带记忆 0.222 vs 不带记忆 0.060，delta +0.162**——记忆确实在起作用。
+- **召回@5 是 0.637**，约 27% 的关键会话没进前 5；直接塞原文是 0.602，大幅领先——claim 级投影先天会丢信息，这是已知短板，正在修（v0.4.0 的召回兜底就是针对它）。
+- 最弱的三类：多会话 0.083、时间推理 0.102、单会话助手 0.054；最强的：单会话用户 0.500、知识更新 0.319。
+- 拒答题上带记忆反而退步（0.800 vs 1.000）——有记忆时模型会答本该拒答的问题；v0.4.0 的注入门就是针对它。
+- 32 次调用上限顶穿了 25 题（5%）；验收门（语义支撑 ≥95%、召回 ≥80%、正确拒答 ≥90%）仍是 CLOSED；语义支撑与事实精度本次没测。
+- 这不是 full-distractor 官方分数，只可同跑道臂间比较，不可贴到官方榜上。重跑需先给 DeepSeek 充值（余额约 12.10 元，重跑约 11–13 元）。
+
+完整报告：`benchmark/longmemeval/` 与工作区报告（见 CHANGELOG）。
+
+### 生产运行：DSH 桌面助手，597 条真实记录
+
+- DSH 桌面助手按“隔离测试 → 真实数据 → 日常运行”三阶段完成部署，已投入日常运行：每日 23:30 健康检查、每周 23:45 快照备份。
+- 生产库 **597 条记录**（用户 591 / 人格 6），33 条待审在收件箱里等用户复核。
+- 2026-11-04 的部署验收：隔离安装 21 文件全绿、MCP 召回 3/3 命中逐字一致、真实偏好写入 3/3 查回一致。
+- 生产部署的 Stellamem 应用版本目前落后于 main（main 已到 v0.4.0），更新任务已排队——更新前全量备份、记哈希、可回滚。
+
+### v0.4.0 这一版新加的东西（PR #52–#70）
+
+- **MCP 主体绑定（PR #64）**：启动时用 `--allowed-subjects` 或 `STELLAMEM_ALLOWED_SUBJECTS` 绑定允许集；切到集外主体直接拒绝，集外召回一律空结果、写一律拒绝；非法值启动即报错；不配时保持单人可信行为 + 启动警告。**多客户端部署必须配绑定。**
+- **注入门（PR #65）**：调用方实体/关键词门，无关问题 budget=0、零注入（MCP 入口返回 `status: "gated"`）；记忆问题正常放行；门故障时失败放行，不搞挂召回。
+- **召回兜底（PR #66）**：JS 侧加 CJK 二元组信号 + fact 名字意图；Python 空池时按意图/时间兜底（标 `fallback` + 弱分）。自然问句无共同 bigram 时候选集为空的问题已修，效果待 LongMemEval 重跑量化。
+- **Hit 投票（PR #67）**：召回真被注入才自动记命中；手动票只做补充（赞成票、半权重、无反对票、不下沉）；按主体分开计票；只重排已获准召回内的记录，绝不绕过隔离与确认门；结算走夜间结算。
+- **4K 桌面页（PR #68 / #69）**：每主体一张、各 ≤4096 字节（超了拒绝、不静默截断）；改写留 diff，删人和约行要批；tmp + rename + 锁 + 14 份备份。#69 修了 Windows 控制台中文输出编码问题。
+- **日档五段 + 长期（PR #70）**：每主体一张日档（触点 / 我的想 / 变 / 我的回 / 回声），长期只记“我变了什么”；合成一律本地规则版，不调模型、不出本机；当天没日记那步直接跳过。
+- **夜间结算报数（PR #63）**：每晚 22:05 报四个数（分主体、分种类的记录数、桌面页字节数、当日变化数）+ 两行状态（后台重建、索引行数与生产库最后写入时间）；只读，失败关闭。
+- **后台线程重建（PR #55）**：运行中索引变旧时后台重建、读请求先返回旧数据；真机实测 `ensure_index()` 从约 3180 ms 降至 2.7–75.8 ms。
+- **并发读锁（PR #57）**：`Index` 加 RLock，API 读路径持锁；真机压测健康检查 25/25 + 50/50 零断开。
+- **CI 加固（PR #56 / #58 / #59 / #60 / #61 / #62）**：Ubuntu 3.12 后台重建失败已修（冷却 60→5 秒 + 重试 + stdout 兜底）；Windows 上一个 MCP stdio 测试经验证是 runner 侧原因（失败信息与提交代码矛盾），已按用户批准在 win32 上跳过该单测，Linux/macOS CI 继续跑它。
 
 ---
 
@@ -255,6 +189,8 @@ Conversation → Claim → Evidence → Scope → Revision → Relation → Memo
 
 > 完整说明见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
 
+**一核两主体。** 一个治理核心，两个隔离主体——用户个人记忆与直播人格记忆，内容不盲目合并；跨主体只走桥，桥默认拒绝、全文人工批准；可过桥的仅限关系、指令、工作产出三类，私人生活等不过桥。主体数量可扩展，但隔离与桥的规矩不变：任何新主体进来，都走同一套绑定与审批。
+
 ---
 
 ## Stellamem 能做什么
@@ -275,7 +211,7 @@ Conversation → Claim → Evidence → Scope → Revision → Relation → Memo
 支持 8 种关系：`NEW` / `DUPLICATE` / `REINFORCES` / `REFINES` / `COMPATIBLE` / `SUPERSEDES` / `CONTRADICTS` / `UNCERTAIN`。
 
 ### Human Review（人工复核）
-敏感、身份、低置信度、可疑内容进入收件箱，人工 `approve` / `reject` / `edit`。
+敏感、身份、低置信度、可疑内容进入收件箱，人工 `approve` / `reject` / `edit`。分档批复（🟢/🟡/🔴）只决定呈现与批量操作方式，不改变“必须人批”的前提；🔴 永远逐条；按档批要先看全文加确认短语。
 
 ### Secret Gate（密钥门禁）
 密钥在**任何模型调用之前**被确定性识别并阻断，不写库、不进日志、不外发。
@@ -284,10 +220,25 @@ Conversation → Claim → Evidence → Scope → Revision → Relation → Memo
 冲突写入冲突日志并保留双方证据，**不静默覆盖**。
 
 ### Transaction / Rollback（事务与回滚）
-记忆写入是一个事务：有日志、可恢复、可回滚，冲突检测不覆盖后续改动。
+记忆写入是一个事务：有日志、可恢复、可回滚，冲突检测不覆盖后续改动。写前自动快照 + 一键回滚（回滚需确认短语，全程审计）。
 
 ### Context Projection（上下文投影）
-只向 Agent 注入**当前任务相关**的已批准 Claim，并有全局字符预算。
+只向 Agent 注入**当前任务相关**的已批准 Claim，并有全局字符预算。注入门（PR #65）先过实体/关键词：无关问题 budget=0、零注入。
+
+### 召回：字面 + 语义 + 兜底
+FTS5 trigram 是主路径，向量是加分项；意图与时间问句走类型召回；空池时意图/时间兜底（标 `fallback` + 弱分，上层凭 weak 决定是否注入）。生产语义服务离线时自动退回纯字面配比，不静默降质。
+
+### 夜间结算：记忆每天报一次数
+每晚报四个数 + 两行状态（见上文 v0.4.0 一节）。后台重建是静默的，结算是看得见的自报——记忆每天告诉你它变了多少、健康不健康。
+
+### 桌面页与日档：记忆的“一张纸”
+每主体一张 ≤4096 字节的桌面页（人的一半、约的一半，永不自动删），改写留 diff；每天一张五段日档，长期只记“我变了什么”。合成一律本地规则版，不调模型、不出本机。
+
+### 偏好卡与睡眠巩固
+偏好卡从已批准的偏好里汇总，每条陈述强制带证据；睡眠巩固从已批准的记忆里挖规律（pattern），带来源、可追溯、可删除，需具名人类批准才生效，召回权重 0.8、低于原始记录。
+
+### Token 看板与时效衰减
+Token 看板只读：分组统计、token 估算、三色预算告警，超预算只给人工复核建议（不做自动压实）。时效衰减 90 天半衰期可配，只降排序不删数据，core/pinned 永不衰减。
 
 ---
 
@@ -299,10 +250,7 @@ Stellamem **不是**：
 - ❌ 一个聊天记录备份器
 - ❌ 云端用户画像平台
 - ❌ 全量上传用户私人数据的服务
-- ❌ 一个必须依赖 OpenClaw 才存在的项目
-
-**OpenClaw 是「第一个完整验证的宿主」，不是「唯一宿主」。**
-核心编译器是框架无关的。
+- ❌ 某个宿主的附属功能——**它不为任何一个宿主服务，任何客户端都能接**
 
 ---
 
@@ -310,13 +258,20 @@ Stellamem **不是**：
 
 | Capability | Status |
 |---|---|
-| OpenClaw Adapter | ✅ Alpha · 隔离真实宿主 E2E 通过 |
+| MCP 服务器（任何 MCP 客户端） | ✅ v0.4.0 · 主体绑定已落地 |
+| HTTP API（Bearer Token + Scoped Token） | ✅ v0.4.0 · 主体权限已绑定 |
+| DSH 桌面助手正式部署 | ✅ v0.3.0 · 日常运行中 |
 | Claim compiler | ✅ |
 | Relation Engine | ✅ |
 | Source provenance | ✅ |
 | Human Review Inbox（CLI） | ✅ |
 | Secret Gate | ✅ |
-| Context Projection | ✅ |
+| Context Projection + 注入门 | ✅ v0.4.0 |
+| 召回兜底（意图/时间） | ✅ v0.4.0 |
+| Hit 投票 | ✅ v0.4.0 |
+| 4K 桌面页 + 原子写 | ✅ v0.4.0 |
+| 日档五段 + 长期 | ✅ v0.4.0 |
+| 夜间结算报数 | ✅ v0.4.0 |
 | Transaction / Rollback | ✅ |
 | Crash recovery | ✅ |
 | Local models（llama.cpp 等） | ✅ |
@@ -328,14 +283,47 @@ Stellamem **不是**：
 | preference_summary（偏好摘要 kind） | ✅ |
 | 桥摘要规则（ADR 0004） | ✅ |
 | MCP 真实召回（index_db_path） | ✅ v0.3.0 · DSH 生产验证 |
-| DSH 桌面助手正式部署 | ✅ v0.3.0 · 日常运行中 |
 | check JSON 可解析性校验 | ✅ v0.3.0 |
 | Remote cloud models | 🚧 暂不支持（仅环回地址） |
-| Other agent adapters | 🚧 |
 | GUI | 🚧 |
 | Sync | 🚧 |
 
 > 状态**严格来自真实实现**。标 🚧 的尚未实现。
+
+---
+
+## 任何客户端怎么接
+
+Stellamem 对客户端只有两个要求：会说话（MCP 或 HTTP），并在启动时把主体绑死。模型是谁、宿主是谁，都不重要。
+
+### 方式一：MCP（推荐，任何 MCP 客户端）
+
+```json
+{
+  "mcpServers": {
+    "stellamem": {
+      "command": "python",
+      "args": [
+        "-m", "adapters.mcp.stellamem_mcp_server",
+        "<工作区>", "<索引库.db>"
+      ],
+      "env": {
+        "PYTHONPATH": "/path/to/stellamem",
+        "STELLAMEM_ALLOWED_SUBJECTS": "user"
+      }
+    }
+  }
+}
+```
+
+- `<工作区>` 是 MCP 的工作目录，`<索引库.db>` 是 `index.db` 的路径（不传则召回返回 `wired:false`）。
+- **`STELLAMEM_ALLOWED_SUBJECTS` 是多客户端部署的必选项**：启动时绑定允许集（逗号分隔，旧版别名如“用户”也认）；切到集外主体直接拒绝，集外召回一律空结果、写一律拒绝；非法值启动即报错，不静默跑成无界。两者都不配时保持单人可信行为，但启动时在 stderr 告警——**不配绑定就不得宣称具备多客户端隔离**。
+- 也可用命令行参数 `--allowed-subjects user`（命令行优先于环境变量）。
+- `compiler` 必须可导入：设 `PYTHONPATH` 为仓库根目录，或用 `-m` 启动。直接 spawn 脚本又不设 `PYTHONPATH` 会启动失败。
+
+### 方式二：HTTP API
+
+记忆服务默认端口 **8791**。除 `/v1/health` 外全部读接口要求 Bearer Token 鉴权；Scoped Token 按 SHA256 存于 `system/api-token-scopes.json`，只读绑定主体，越权请求直接 403；非法 Token 配置直接拒绝认证（401），不再返回“不受限”；`budget=0` 真正关闭召回。
 
 ---
 
@@ -358,25 +346,7 @@ python demo/run_demo.py --offline
 python compiler/memory.py doctor
 ```
 
-要求：**Python 3.10+**（核心只用标准库）。Node 仅在启用 OpenClaw 集成时可选。
-
-### MCP 服务器启动（可直接复制）
-
-`compiler` 必须可导入，否则连启动都失败。两种写法都能用，任选其一：
-
-```bash
-# 写法一：设 PYTHONPATH 为仓库根目录
-PYTHONPATH=/path/to/stellamem python adapters/mcp/stellamem_mcp_server.py <工作区> <索引库.db>
-
-# 写法二：用 -m 启动，不用设 PYTHONPATH
-python -m adapters.mcp.stellamem_mcp_server <工作区> <索引库.db>
-```
-
-`<工作区>` 是 MCP 的工作目录，`<索引库.db>` 是 `index.db` 的路径（不传则召回返回 `wired:false`）。直接 spawn 脚本又不设 `PYTHONPATH` 会启动失败。
-
-**自动采集边界：** 安装片段默认关闭旧版 `daily-autolog`，不改变已有宿主配置。
-它仅支持经过验证的 JSONL 会话来源；OpenClaw 2026.10.9 的 SQLite 会话采集尚未适配。
-`setup.py check` 会明确报告这一阻碍。已批准记忆的真实宿主注入已验证，但不能据此声称新对话会自动记住。
+要求：**Python 3.10+**（核心只用标准库）。
 
 > 👉 完整步骤见 [`docs/QUICKSTART.md`](docs/QUICKSTART.md)。
 > ⚠️ 需要本地模型服务（llama.cpp / Ollama / LM Studio 等），且**只接受环回地址**。
@@ -404,6 +374,8 @@ Run the built-in checks and report whether installation succeeded.
 - **Secret before model** —— 密钥在发给任何模型之前被检测阻断。
 - **Sensitive review** —— 敏感与身份信息需要人工确认，且**永远不自动写**。
 - **Provenance or nothing** —— 来源不可验证时，**不伪造**。
+- **主体隔离** —— 默认仅同主体检索，跨主体默认拒绝；桥只过三类、每条全文人工批准。
+- **Token 权限** —— Master 与 Scoped 分开；非法配置拒绝认证，不回退成“不受限”。
 
 ---
 
@@ -412,55 +384,71 @@ Run the built-in checks and report whether installation succeeded.
 > **Benchmark results are experimental and limited to predefined test sets.**
 > 以下是内部版本比较用的实验数据，**不构成准确率承诺**。
 
-- 样本：30 篇日记（单一用户）
-- 指标：recall ≈ 0.705 / precision ≈ 0.505
-- `False Write = 0` **仅**表示在已定义的对抗样本中未观察到该类失败，**不代表真实环境零错误**
+### LongMemEval 全量 500 题（2026-11-06，v0.4.0 之前的主分支）
 
-测试条件与局限已完整记录，详见 [`benchmark/README.md`](benchmark/README.md)。
+- 规模：500 题，4 个臂（带记忆 / 不带记忆 / 字面匹配 / 直接塞原文），只用 deepseek-flash 回答+判分，总计 $1.8282（10,779 次调用，单题 $0.00366）。
+- **带记忆判分 0.222 vs 不带记忆 0.060，delta +0.162**；字面 0.122（delta +0.062）；直接塞原文 0.602——claim 级投影先天丢信息，召回@5 只有 0.637（直接塞原文 0.909），约 27% 的关键会话没进前 5。
+- 最弱：多会话 0.083、时间推理 0.102、单会话助手 0.054；最强：单会话用户 0.500、知识更新 0.319。
+- 拒答题带记忆臂退步（0.800 vs 1.000）；32 次调用上限顶穿 25 题（5%）。
+- 验收门仍是 CLOSED（语义支撑 ≥95%、召回 ≥80%、正确拒答 ≥90% 均未达到；语义支撑与事实精度本次没测）。
+- 这不是 full-distractor 官方分数，只可同跑道臂间比较，不可贴到官方榜上。v0.4.0 的召回兜底与注入门修完后，重跑待 DeepSeek 充值（余额约 12.10 元，重跑约 11–13 元）。
+
+### 早期内部实验（30 篇日记，单一用户）
+
+- recall ≈ 0.705 / precision ≈ 0.505；`False Write = 0` **仅**表示在已定义的对抗样本中未观察到该类失败，**不代表真实环境零错误**。
+- 测试条件与局限已完整记录，详见 [`benchmark/README.md`](benchmark/README.md)。
 
 ---
 
-## 当前限制（v0.3.0 的诚实边界）
+## 当前限制（v0.4.0 的诚实边界）
 
-- **DSH 是第二个正式部署的宿主**（OpenClaw 之后）；核心与框架无关，但其它宿主适配尚未完成
-- **远程云模型未正式支持** —— 模型客户端仅允许环回地址
-- **Adapter 召回仍偏关键词** —— 可能漏召回不含同词的自然提问
-- **本地 4B 模型存在分类漂移**（kind 判定不够严谨）
-- **英文临时情绪检测不完整**
-- **蒸馏 / 保留释放流程尚未合入 main**（文本版"睡眠巩固"在 PR #21，draft 未合入；权重版明确不做，原因见 `docs/UPDATE-2026-11-03.md`）
-- **尚无 GUI**
-- **语义检索在生产环境降级为字面匹配**（8082 端口被占用，语义服务离线）
-
-### 本版新增的已知问题（2026-11-02，见上文“本版是什么”一节）
-
-- D4、D5 已合并到 main，gate 当前仍无生产调用方，接线前仍需单独确认；
-- D1、D3 已合并到 main；D7–D13 因审计内容缺失仍未修；
-- 主体标签只到干跑，未写入真实数据，hold 规则已实现并经干跑验证；
-- 人格事件同步实际写库未实现，桥接图形界面已加固，72 小时 TTL 为低置信猜测；
-- 语义检索健康检查 / 缓存 / 重排已实现，生产接线未做；
-- 生产侧 3969 条 pending 未激活，核心身份候选未获批准不得写入。
+- **多客户端隔离的彻底完成，正在等评审按最新 main 复核**——机制已落地（PR #64 主体绑定），复核通过之前不对外宣称已完成。
+- **召回仍落后于直接塞原文**（LongMemEval 0.222 vs 0.602）——claim 级投影先天丢信息；召回@5 0.637 是当前最大短板。
+- **语义检索在生产环境降级为字面匹配**（8082 端口被占用，语义服务离线）；解决端口还是书面降级，待定。
+- **生产侧约 3948 条 pending 未激活**——批量 keep / task / drop 清理需单独批准，不能顺手激活；5 个核心身份候选未获批准，不得写入。
+- **主体标签只到干跑**——`namespace` 尚未写入任何真实数据；写入真实数据前仍需要全量备份、干跑清单核对、回滚方案与批准人，缺一不可。
+- **人格事件同步到用户库未实现**——同步候选包已实现（仅 reviewed 事件、批准要求、批量全有或全无），实际写库仍未实现，需另行人工批准的任务才能消费。
+- **桥接图形界面已实现并加固**——环回绑定 + 每服务器随机令牌 + POST 来源校验，终端文本审批仍为兜底；72 小时 TTL 为低置信猜测；关键词黑名单可被改写绕过，真正边界是人工看全文批准。
+- **注入门只在 MCP 召回入口生效**——HTTP API 默认行为未动。
+- **通用限制**：无 GUI、无同步、远程云模型仅环回地址、Adapter 召回仍偏关键词、本地 4B 模型存在分类漂移、英文临时情绪检测不完整、蒸馏 / 保留释放流程尚未实现、尚未经过大规模外部用户长期验证。
 
 这些透明项是设计的一部分，不是缺陷隐瞒。
 
 ---
 
+## 版本历史
+
+### v0.4.0（2026-11-06）—— 通用客户端版本
+
+方向收束：不为某一个宿主服务，做任何 AI 客户端都能接的记忆治理层。PR #52–#70：夜间结算报数、MCP 主体绑定、注入门、召回兜底、Hit 投票、4K 桌面页、日档五段 + 长期、后台线程重建、并发读锁、CI 加固。全量回归 **747 Python + 13 Node**，零下跌；LongMemEval 500 题跑完（带记忆 0.222 vs 不带 0.060）。详见 `CHANGELOG.md`。
+
+### v0.3.0（2026-11-04）—— 正式落地版本
+
+DSH 桌面助手完成三阶段部署验收并投入日常运行。MCP 真实召回、check JSON 校验。全量回归 587 passed。
+
+### v0.3.0 之后的安全加固（2026-11-05，PR #42–#51）
+
+六轮外部审查 + 修复：主体隔离（精确匹配、Scoped Token 三漏洞、SQL IN 过滤、空权限 fail-closed、别名兼容）、Token 权限（Bearer 鉴权、Token-主体绑定、非法配置拒绝认证、budget=0 真关闭召回）。第三方审查评分 8.8/10。
+
+---
+
 ## Roadmap
 
-### Alpha（当前）
-- 可靠性打磨
-- 召回质量
-- 外部测试
+### 现在（v0.4.0 之后）
+- 多客户端隔离评审复核 + DSH 启动配置绑定
+- LongMemEval 重跑，量召回兜底与注入门的真实提升
+- Token 真实对照（生产 DSH 数据，开召回 vs 关召回）
+- 语义检索：解决端口占用，或书面降级
 
 ### Beta
-- 更多宿主 Adapter
-- 语义检索
+- 更多客户端接入文档与示例
+- 语义检索生产接线
 - 迁移稳定性
-- 复核体验改进
+- 复核体验改进（分档批复面板）
 
 ### Future
 - 桌面 GUI
 - Companion 集成
-- MCP
 - 加密同步
 - 团队记忆
 - 企业治理
@@ -475,24 +463,6 @@ Run the built-in checks and report whether installation succeeded.
 > ⚠️ 任何与记忆行为相关的修改，**必须附回归测试**。
 
 安全问题请勿公开提交 Issue，按 [`SECURITY.md`](SECURITY.md) 的渠道联系。
-
----
-
-## Vision
-
-未来的 AI 会存在数年甚至更久。如果一个 AI 真正长期陪伴、工作或服务一个人，它就需要回答：
-
-- 我为什么知道这件事？
-- 这是用户什么时候说的？
-- 现在还成立吗？
-- 后来有没有改变？
-- 两条记忆冲突怎么办？
-- 用户能不能撤销？
-- 敏感内容是否应该调用？
-
-Stellamem 希望成为 **AI 长期记忆的治理基础层**。
-
-**OpenClaw 是第一站，不是终点。**
 
 ---
 
