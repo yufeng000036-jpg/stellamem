@@ -31,11 +31,11 @@ from pathlib import Path
 try:  # 包内与扁平导入都要能用（测试只把 compiler/ 加进 sys.path）
     from . import subjects as subjects_mod
     from .cli_output import ensure_utf8_stdout
-    from .file_lock import atomic_write_text
+    from .file_lock import atomic_write_text_locked, cross_platform_lock
 except ImportError:  # pragma: no cover - flat layout
     import subjects as subjects_mod  # type: ignore
     from cli_output import ensure_utf8_stdout  # type: ignore
-    from file_lock import atomic_write_text  # type: ignore
+    from file_lock import atomic_write_text_locked, cross_platform_lock  # type: ignore
 
 MAX_BYTES = 4096
 DESKTOP_DIRNAME = "system/desktop"
@@ -157,6 +157,12 @@ def rewrite_desktop(
     拒绝条件（都不写文件）：主体非法；缺标记/缺节；超 4096 字节；
     reason 为空；人和约一节被删行且未显式 allow_deletions。
     回执含统一 diff、字节数、备份路径，供调用方检查与审计。
+
+    读旧版 → 备份 → 替换整个周期都握着同一把 ``cross_platform_lock``：
+    Windows 上 ``os.replace`` 会因为目标文件正被另一线程打开读而报
+    PermissionError(13)，POSIX 上替换打开的文件能成功——只锁替换那
+    一步不够，读也必须在锁里。锁内不再二次加锁，写用
+    ``atomic_write_text_locked``。
     """
     canon = subjects_mod.validate_subject(subject)
     if not isinstance(reason, str) or not reason.strip():
@@ -164,33 +170,34 @@ def rewrite_desktop(
     _check_markers(new_text)
     size = _check_bytes(new_text)
     path = desktop_path(root, canon)
-    old_text = path.read_text(encoding="utf-8") if path.exists() else ""
-    previous_bytes = len(old_text.encode("utf-8")) if old_text else 0
-    if old_text:
-        old_covenant = set(parse_sections(old_text)["covenant"])
-        new_covenant = set(parse_sections(new_text)["covenant"])
-        deleted = sorted(old_covenant - new_covenant)
-        if deleted and not allow_deletions:
-            preview = "；".join(deleted[:3])
-            raise ValueError(
-                f"人和约一节被删 {len(deleted)} 行，须显式 allow_deletions=True 才改：{preview}"
+    with cross_platform_lock(path):
+        old_text = path.read_text(encoding="utf-8") if path.exists() else ""
+        previous_bytes = len(old_text.encode("utf-8")) if old_text else 0
+        if old_text:
+            old_covenant = set(parse_sections(old_text)["covenant"])
+            new_covenant = set(parse_sections(new_text)["covenant"])
+            deleted = sorted(old_covenant - new_covenant)
+            if deleted and not allow_deletions:
+                preview = "；".join(deleted[:3])
+                raise ValueError(
+                    f"人和约一节被删 {len(deleted)} 行，须显式 allow_deletions=True 才改：{preview}"
+                )
+        diff = "".join(
+            difflib.unified_diff(
+                old_text.splitlines(keepends=True),
+                new_text.splitlines(keepends=True),
+                fromfile="old",
+                tofile="new",
             )
-    diff = "".join(
-        difflib.unified_diff(
-            old_text.splitlines(keepends=True),
-            new_text.splitlines(keepends=True),
-            fromfile="old",
-            tofile="new",
         )
-    )
-    backed_up = None
-    if old_text:
-        backup = _backup_path(root, canon)
-        backup.parent.mkdir(parents=True, exist_ok=True)
-        backup.write_text(old_text, encoding="utf-8")
-        backed_up = str(backup)
-        _prune_backups(root, canon)
-    atomic_write_text(path, new_text)
+        backed_up = None
+        if old_text:
+            backup = _backup_path(root, canon)
+            backup.parent.mkdir(parents=True, exist_ok=True)
+            backup.write_text(old_text, encoding="utf-8")
+            backed_up = str(backup)
+            _prune_backups(root, canon)
+        atomic_write_text_locked(path, new_text)
     return {
         "subject": canon,
         "path": str(path),

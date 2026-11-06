@@ -140,23 +140,35 @@ def atomic_append_jsonl(path: Path | str, payload: dict[str, Any]) -> None:
         fsync_dir_safe(target.parent)
 
 
-def atomic_write_text(path: Path | str, content: str) -> None:
-    """Crash-safe atomic UTF-8 file write with guaranteed staging cleanup on error."""
+def atomic_write_text_locked(path: Path | str, content: str) -> None:
+    """Atomic UTF-8 write for callers that already hold ``cross_platform_lock``.
+
+    Same staging tmp + ``os.replace`` + fsync as :func:`atomic_write_text`,
+    but does NOT acquire the lock itself: acquiring it a second time from the
+    same process conflicts (``msvcrt.locking`` / ``fcntl.flock``) and would
+    deadlock or time out. Only call this while holding ``cross_platform_lock``
+    for the same target.
+    """
     target = Path(path).resolve()
     target.parent.mkdir(parents=True, exist_ok=True)
     staging = target.with_name(f".{target.name}.tmp-{os.getpid()}-{time.time_ns()}")
+    try:
+        with open(staging, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(content)
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(str(staging), str(target))
+        fsync_dir_safe(target.parent)
+    finally:
+        if staging.exists():
+            try:
+                staging.unlink()
+            except OSError:
+                pass
 
+
+def atomic_write_text(path: Path | str, content: str) -> None:
+    """Crash-safe atomic UTF-8 file write with guaranteed staging cleanup on error."""
+    target = Path(path).resolve()
     with cross_platform_lock(target):
-        try:
-            with open(staging, "w", encoding="utf-8", newline="\n") as fh:
-                fh.write(content)
-                fh.flush()
-                os.fsync(fh.fileno())
-            os.replace(str(staging), str(target))
-            fsync_dir_safe(target.parent)
-        finally:
-            if staging.exists():
-                try:
-                    staging.unlink()
-                except OSError:
-                    pass
+        atomic_write_text_locked(target, content)
