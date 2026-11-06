@@ -12,6 +12,8 @@
 
 **只装 adapter（注入）不装 hook（写入），你的 AI 能"读到"记忆，但它的对话永远不会自动写进来。** 你需要手动写日记，否则整条流水线是断的。
 
+> ⚠️ **更正（2026-11-06）：daily-autolog 默认是关的。** 上表“自动落盘”和下面第一节第 3 步的 `"daily-autolog": { "enabled": true }` 是**手动 opt-in**，不是默认行为：`setup.py` 生成的配置片段里这一项默认就是 `false`。只在**已验证的旧版 JSONL 会话目录**上才手动打开；当前 OpenClaw 会话存在 SQLite 里（`agents/main/agent/openclaw-agent.sqlite`），这个 hook 只读 JSONL、读不到 SQLite，打开了也不会自动落盘。旧行为（只读 JSONL）与新行为（SQLite 会话）之别、以及为什么默认关闭，见 `docs/verification/AUTOLOG_BOUNDARY.md`。
+
 完整流水线（⚠️ 中间「编译」一步目前需人工 / 定时触发，**不是全自动**）：
 
 ```
@@ -30,6 +32,8 @@ AI 对话 ──(daily-autolog hook)──▶ daily/*.md 日记        [自动]
 ---
 
 ## 一、写入侧：装 daily-autolog hook
+
+> 默认关闭（见顶部更正）：下面第 3 步是手动 opt-in，只在已验证的旧版 JSONL 环境开；SQLite 会话环境下保持关闭。
 
 让 AI 每天聊完自动写日记，不用你手动记。
 
