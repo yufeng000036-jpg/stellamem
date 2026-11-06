@@ -152,9 +152,23 @@ write policy, verification, flags) were untouched. Commit: see Git section.
 
 ## Remaining risks (honest)
 
-- **P1 — narrow recall.** The adapter's keyword relevance gate misses natural
-  questions that do not share a token with the stored claim. Memory is never
-  wrongly injected; it is under-recalled. Needs a better relevance signal later.
+- **P1 — narrow recall. FIXED 2026-11-06 (branch `feature/recall-fallback`).**
+  The adapter's keyword relevance gate missed natural questions that do not
+  share a token with the stored claim. Two fixes in `adapters/openclaw/index.js`:
+  (1) CJK bigram overlap in `relevance()` — >= 2 shared two-character chunks
+  count as a topical signal (bigram-only score 0.15–0.25, below lexical);
+  (2) a name/title intent for `fact` claims, because kind drift labels title
+  facts as `fact`, not `project`, so "我的绘本项目叫什么名字？" matched
+  neither lexical nor intent. The E2E case now injects 《星球邮差》; see
+  `tests/adapter-recall.test.mjs` (E2E case, bigram-only case, multi-session
+  cap case, irrelevant-still-empty). Known trade-off: a name question with no
+  memory answer can now surface unrelated fact claims at the 0.05 intent-only
+  score (same trade-off type-only recall already made for other kinds); the
+  effect on abstention is measurable only on a LongMemEval rerun, which needs
+  a DeepSeek recharge first. Python `search()` got the same class of fix in
+  the same PR: an empty-pool fallback (intent-kind backfill, recent-30-day
+  backfill, marked `fallback` + weak, `recall()` exempts it from min_score);
+  see `tests/test_recall_fallback.py`.
 - **MODEL QUALITY — kind drift.** The 4B model labels kinds loosely
   (identity stated as `fact`, "learned that" as `fact`). Invalid kinds still route
   to the inbox, so nothing is lost, but routing is imperfect.
