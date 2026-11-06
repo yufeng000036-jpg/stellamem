@@ -474,7 +474,9 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(
                         *_json(HTTPStatus.NOT_FOUND, {"error": "not found", "id": ident})
                     )
-                # 主体权限：单条记录的主体不在允许范围内 → 403（不透露是否存在）
+                # 主体权限：单条记录的主体不在允许范围内 → 404（不透露是否存在）。
+                # 越权记录与不存在的记录必须回同一个状态码，否则 403/404 的区分
+                # 就能被拿来逐个探测别的主体有没有某条记录。
                 rec_subject = None
                 if kind == "evidence":
                     # evidence 不含 subject 字段，查原记录
@@ -492,9 +494,8 @@ class Handler(BaseHTTPRequestHandler):
                 else:
                     rec_subject = data.get("subject")
                 if not self._check_subject_allowed(rec_subject, allowed):
-                    return self._send(
-                        *_json(HTTPStatus.FORBIDDEN, {"error": "subject not allowed"})
-                    )
+                    # 存在性不泄露：越权记录与不存在的记录一律 404。
+                    return self._send(*_json(HTTPStatus.NOT_FOUND, {"error": "not found"}))
                 return self._send(*_json(HTTPStatus.OK, data))
 
             return self._send(

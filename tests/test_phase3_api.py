@@ -322,6 +322,40 @@ class APITests(unittest.TestCase):
         restore_projects(self.root, self.svc, original)
         scopes_file.unlink()
 
+    def test_scoped_single_record_hides_existence(self):
+        """存在性不泄露：scoped token 查越权主体的单条记录，与不存在的记录一律 404。
+
+        之前是 403（越权）vs 404（不存在），能被拿来逐个探测别的主体有没有某条记录；
+        代码注释写的就是“不透露是否存在”，但实现没做到（audit 修复）。
+        /v1/evidence 与 /v1/memory 共用同一分支，同样改成 404。
+        """
+        import hashlib
+
+        persona_rec = make_record("c-persona-1", "persona", "鲸鱼娘喜欢唱歌跳舞")
+        original = append_to_projects(self.root, self.svc, [persona_rec])
+
+        scoped_token = "scoped-single-record-test"
+        scoped_hash = hashlib.sha256(scoped_token.encode()).hexdigest()
+        scopes_file = self.root / "system" / "api-token-scopes.json"
+        scopes_file.write_text(json.dumps({scoped_hash: ["用户"]}), encoding="utf-8")
+        headers = {"Authorization": f"Bearer {scoped_token}"}
+
+        try:
+            # 越权主体的单条记录 → 404，与不存在的记录完全相同
+            status, data = self.call("GET", "/v1/memory/c-persona-1", headers=headers)
+            self.assertEqual(status, 404)
+            self.assertEqual(data.get("error"), "not found")
+            status, data = self.call("GET", "/v1/memory/c-no-such", headers=headers)
+            self.assertEqual(status, 404)
+            self.assertEqual(data.get("error"), "not found")
+            # 本主体的单条记录 → 200（对照组：不是全 404）
+            status, data = self.call("GET", "/v1/memory/c-api0", headers=headers)
+            self.assertEqual(status, 200)
+            self.assertEqual(data.get("claim_id"), "c-api0")
+        finally:
+            restore_projects(self.root, self.svc, original)
+            scopes_file.unlink()
+
     def test_empty_scope_returns_nothing(self):
         """评审 P0：空权限列表 [] 的 Token 必须返回零结果，绝不能查到全部主体。"""
         import hashlib
