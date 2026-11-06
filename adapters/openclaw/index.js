@@ -90,22 +90,45 @@ function sharedBigrams(claimText, query) {
   return shared;
 }
 
-function relevance(claim, prompt) {
-  const query = prompt.toLowerCase();
-  const text = [claim.subject, claim.predicate, claim.value].join(" ");
+// Overlap of one text against the query: shared content words and CJK bigrams.
+function overlap(text, query) {
   const words = contentWords(text);
   let hit = 0;
   for (const word of words) if (query.includes(word)) hit += 1;
-  const lexical = hit > 0;
-  const base = words.length ? hit / words.length : 0;
+  const shared = sharedBigrams(text, query);
+  return {
+    lexical: hit > 0,
+    base: words.length ? hit / words.length : 0,
+    bigram: shared >= 2,
+    sharedBigrams: shared,
+  };
+}
+
+function relevance(claim, prompt) {
+  const query = prompt.toLowerCase();
   const intent = (KIND_INTENT[claim.kind] || NEVER).test(query);
+  // The value is a model paraphrase and may be translated into another
+  // language than the question (extraction does not reliably keep the source
+  // language); the evidence is a verbatim quote from the source message, so
+  // it carries the question's own words. Score the value alone and the
+  // value-plus-evidence together, and take the better base: a value match
+  // keeps its exact old score, an evidence-only match scores on its own
+  // words instead of being diluted by the value's words, and a claim with
+  // no evidence behaves exactly as before. The bigram floor is kept, so a
+  // claim that used to score through bigrams never drops below that score
+  // just because its evidence also matched lexically with a tiny base.
+  const valueText = [claim.subject, claim.predicate, claim.value].join(" ");
+  const value = overlap(valueText, query);
+  const full = overlap(valueText + " " + (claim.evidence || ""), query);
+  const lexical = value.lexical || full.lexical;
+  const bigram = value.bigram || full.bigram;
+  const shared = Math.max(value.sharedBigrams, full.sharedBigrams);
   // Bigram-only matches score below lexical: 0.05 base + 0.05 per shared
   // bigram, capped at 0.25 total. At least 2 shared bigrams are required,
   // so a single stray character pair cannot drag a claim in.
-  const shared = sharedBigrams(text, query);
-  const bigram = shared >= 2;
   const bigramScore = bigram ? 0.05 + Math.min(0.20, 0.05 * shared) : 0;
-  const score = (lexical ? base : bigramScore) + (intent ? 0.35 : 0);
+  const base = Math.max(value.base, full.base);
+  const score = (lexical ? Math.max(base, bigramScore) : bigramScore) + (intent ? 0.35 : 0);
   return { score, lexical, bigram, intent, sharedBigrams: shared };
 }
 
@@ -227,7 +250,13 @@ export async function project(root, prompt, config = {}) {
     if (!c.claim_id || !c.revision_id || revisions.get(c.claim_id).size !== 1) continue;
     if (count >= maxClaims) break;
     if (perKind[c.kind] >= maxPerKind) continue;
-    const line = JSON.stringify({ id: c.claim_id, scope: c.scope, predicate: c.predicate, value: c.value }) + "\n";
+    const line = JSON.stringify({ id: c.claim_id, scope: c.scope, predicate: c.predicate,
+      value: c.value,
+      // The claim's own date: without it the reader cannot order events at
+      // all (temporal questions), and the direct arm's raw context does carry
+      // a date per message. Provenance timestamp is the source message's
+      // timestamp; omit the field when a record has no provenance.
+      date: (c.provenance && c.provenance.timestamp) || undefined }) + "\n";
     if (prefix.length + output.length + line.length > max) continue;
     output += line;
     perKind[c.kind] = (perKind[c.kind] || 0) + 1;
