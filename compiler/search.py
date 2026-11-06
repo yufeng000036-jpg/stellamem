@@ -851,6 +851,7 @@ def recall(
     subject: str | None = None,
     usage_tracker=None,
     subjects: set[str] | None = None,
+    hit_votes=None,
 ) -> dict:
     """严格召回（F3：可选时效衰减）。
 
@@ -868,6 +869,10 @@ def recall(
     与偏好卡使用同一个可信主体；
     注入项明确标注 kind，不破坏 398 候选域语义；
     usage_tracker: 可选的 UsageTracker，注入项命中时记一次。
+    hit_votes: 可选的 HitVotes（compiler/hit_votes.py）。只在去重/top-k
+    之后才加分重排——没过 min_score 的记录投了票也不会进来；加分封顶
+    0.10。自动命中只对实际进入注入文本的普通记录记（budget 裁剪之后），
+    偏好卡/规律项仍走 usage_tracker，不重复记。
     """
     intent = detect_intent(prompt)
     # Subject isolation at the database level: when a subject is specified,
@@ -902,6 +907,23 @@ def recall(
         picked.append(rec)
         if len(picked) >= max_items:
             break
+
+    # Hit 投票加分：只对已过 min_score、进入 top-k 的记录重排。
+    # 没进候选池的记录投了票也不会被召回；加分封顶 0.10，盖不过相关度。
+    # 主体取记录自己的 subject（canonical 后须是合法主体，否则不加分），
+    # 绝不用其他主体的票。
+    if hit_votes is not None:
+        for rec in picked:
+            try:
+                canon = subjects_mod.canonical_subject(rec.get("subject") or "")
+                if canon not in subjects_mod.SUBJECTS or not rec.get("id"):
+                    continue
+                boost = hit_votes.boost(canon, rec["id"])
+            except Exception:  # noqa: BLE001 - 加分是增强项，绝不能影响召回
+                continue
+            if boost:
+                rec["vote_boost"] = boost
+        picked.sort(key=lambda r: (-(r["score"] + r.get("vote_boost", 0.0)), r.get("id", "")))
 
     # 可选注入：偏好卡 / 规律项（带配额、有证据链）。独立匹配通道，
     # 只占 max_items 剩余额度。主体来自可信请求上下文，未知则失败关闭。
@@ -968,6 +990,21 @@ def recall(
             try:
                 usage_tracker.record_hit(rec["_usage_id"], kind=rec.get("kind", ""))
             except Exception:
+                pass
+
+    # Hit 投票自动命中：只对实际进入注入文本的普通记录记（budget 裁剪之后）。
+    # 偏好卡/规律项（带 _usage_id）已走 usage_tracker，这里跳过，不重复记。
+    # 主体取记录自己的 subject；未分类主体不记票，失败关闭。
+    if hit_votes is not None:
+        for rec in picked[: len(lines)]:
+            if "_usage_id" in rec or not rec.get("id"):
+                continue
+            try:
+                canon = subjects_mod.canonical_subject(rec.get("subject") or "")
+                if canon not in subjects_mod.SUBJECTS:
+                    continue
+                hit_votes.record_hit(canon, rec["id"], kind=rec.get("kind", ""))
+            except Exception:  # noqa: BLE001 - 记票失败绝不能影响召回返回
                 pass
 
     return {

@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from compiler.memory_purge import run_memory_purge
+from compiler.hit_votes import HitVotes, validate_vote
 from compiler.preference_summary import PreferenceCardStore, PreferenceEvidenceError
 from compiler.subjects import SUBJECTS as VALID_SUBJECTS
 from compiler.subjects import validate_subject
@@ -72,6 +73,11 @@ class StellamemMCPServer:
         self._pref_store = PreferenceCardStore(
             audit_path=self.workspace_dir / "preference_history.jsonl"
         )
+        # Hit 投票：持久化在 MCP 工作区的 system/hit-votes/ 下。
+        # 召回时传给 live_recall：自动命中只记实际注入的记录，
+        # 加分只重排已过 min_score 的 top-k。记票失败绝不搞挂召回
+        # （recall() 内部对 hit_votes 的每次调用都有 try/except）。
+        self._hit_votes = HitVotes(self.workspace_dir / "system" / "hit-votes" / "votes.json")
         # Optional path to the Stellamem index SQLite DB for live recall.
         # If unset or missing, stellamem_recall returns wired:false (scaffold).
         self.index_db_path = Path(index_db_path).resolve() if index_db_path else None
@@ -143,6 +149,18 @@ class StellamemMCPServer:
                         "max_chars": {"type": "integer", "default": 2000},
                     },
                     "required": ["subject", "query"],
+                },
+            },
+            {
+                "name": "stellamem_vote",
+                "description": "Manually vote for a recalled record (upvote only; there is no downvote). A manual vote counts at half weight toward the recall re-ranking boost (capped at 0.10) and never sinks a record. The voted subject must match the record's own subject; votes for another subject's record are refused.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "subject": {"type": "string", "enum": sorted(VALID_SUBJECTS)},
+                        "record_id": {"type": "string"},
+                    },
+                    "required": ["subject", "record_id"],
                 },
             },
             {
@@ -324,6 +342,7 @@ class StellamemMCPServer:
                             max_items=6,
                             pref_subject=subj,
                             subject=subj,
+                            hit_votes=self._hit_votes,
                         )
                     finally:
                         con.close()
@@ -363,6 +382,47 @@ class StellamemMCPServer:
             # Scaffolding only: the live recall pipeline is not wired here yet.
             # `wired: false` lets callers distinguish "no results" from "not connected".
             return {"status": "ok", "subject": subj, "query": query, "items": [], "wired": False}
+
+        if name == "stellamem_vote":
+            # 手动投票：只加赞成票，没有反对票；只影响已获准召回内的排序。
+            # 目标记录必须存在，且记录主体与投票主体是同一命名空间，否则拒绝。
+            subj = str(args.get("subject") or "").strip()
+            if subj not in VALID_SUBJECTS:
+                raise ValueError("Explicit valid subject required for vote")
+            if not self._subject_allowed(subj):
+                raise ValueError(
+                    f"Subject '{subj}' is not in this server's allowed subjects "
+                    f"({sorted(self.allowed_subjects)}); host authorization binding "
+                    "refuses the vote"
+                )
+            record_id = str(args.get("record_id") or "").strip()
+            if not record_id:
+                raise ValueError("record_id required for vote")
+            if not (self.index_db_path and self.index_db_path.is_file()):
+                raise ValueError("index not configured; cannot validate vote target")
+            import sqlite3
+
+            con = sqlite3.connect(str(self.index_db_path))
+            con.row_factory = sqlite3.Row
+            try:
+                row = con.execute(
+                    "SELECT id, subject, kind FROM records WHERE id = ? LIMIT 1",
+                    (record_id,),
+                ).fetchone()
+                if row is None:
+                    row = con.execute(
+                        "SELECT id, subject, kind FROM records WHERE claim_id = ? "
+                        "ORDER BY occurred_at DESC LIMIT 1",
+                        (record_id,),
+                    ).fetchone()
+            finally:
+                con.close()
+            if row is None:
+                raise ValueError(f"record not found: {record_id}")
+            if not validate_vote(subj, row["subject"] or ""):
+                raise ValueError("vote refused: record belongs to another subject")
+            snap = self._hit_votes.vote(subj, row["id"], kind=row["kind"] or "")
+            return {"status": "ok", **snap}
 
         if name == "stellamem_propose_preference":
             subj = str(args.get("subject") or self.active_subject or "").strip()

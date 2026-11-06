@@ -29,6 +29,7 @@ import reliability as rel
 import search as S
 import snapshots
 import subjects
+from hit_votes import HitVotes, validate_vote
 from storage import Transaction, load_records
 
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
@@ -71,6 +72,9 @@ class MemoryService:
         self._rebuild_error = None
         self.token_path = self.root / "system" / "api-token"
         self.token_scopes_path = self.root / "system" / "api-token-scopes.json"
+        # Hit 投票：持久化在记忆根的 system/hit-votes/ 下（不在索引指纹范围里，
+        # 记票本身不会让索引变旧）。/v1/recall 与 /v1/vote 共用这一个实例。
+        self.hit_votes = HitVotes(self.root / "system" / "hit-votes" / "votes.json")
 
     # ---------------- 内部 ----------------
 
@@ -541,6 +545,7 @@ class Handler(BaseHTTPRequestHandler):
                     explain_decay=bool(payload.get("explain_decay", False)),
                     subject=req_subject,
                     subjects=allowed,
+                    hit_votes=svc.hit_votes,
                 )
             # P0 修复：过滤 items 后必须同步重建 text/chars，否则 text 泄露越权主体的正文
             # （DB 层已按 subjects 过滤，这里是防御性二次过滤）
@@ -564,6 +569,35 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(*_json(HTTPStatus.FORBIDDEN, {"error": "scoped token is read-only"}))
         try:
             payload = self._read_json()
+            if path == "/v1/vote":
+                # 手动投票：只加赞成票，没有反对票；只影响已获准召回内的排序。
+                # 受限 Token 只读，投不了票（与 approve/reject 同一条线）。
+                subj = str(payload.get("subject") or "").strip()
+                record_id = str(payload.get("record_id") or "").strip()
+                if not subj or not record_id:
+                    return self._send(
+                        *_json(
+                            HTTPStatus.BAD_REQUEST,
+                            {"error": "subject and record_id required"},
+                        )
+                    )
+                try:
+                    subj = subjects.validate_subject(subj)
+                except ValueError:
+                    return self._send(
+                        *_json(HTTPStatus.BAD_REQUEST, {"error": f"unknown subject: {subj}"})
+                    )
+                rec = svc.find_record(record_id)
+                if not rec:
+                    return self._send(
+                        *_json(HTTPStatus.NOT_FOUND, {"error": "not found", "id": record_id})
+                    )
+                # 投票主体与记录主体必须是同一命名空间，否则拒绝（不透露正文）。
+                if not validate_vote(subj, rec.get("subject") or ""):
+                    return self._send(*_json(HTTPStatus.FORBIDDEN, {"error": "subject mismatch"}))
+                snap = svc.hit_votes.vote(subj, rec["id"], kind=rec.get("kind") or "")
+                return self._send(*_json(HTTPStatus.OK, {"ok": True, **snap}))
+
             if path in {"/v1/approve", "/v1/reject"}:
                 status = "active" if path.endswith("approve") else "rejected"
                 ident = payload.get("claim_id") or payload.get("id")
