@@ -106,6 +106,23 @@ python compiler/inbox.py edit    <id> --value "..."/--predicate "..."   # 修改
 > ⚠️ `core/identity.md` 与 `core/user-core.md` 是**硬保护**文件，无法通过
 > `approve` 写入；对这类候选会**明确报错**，需手动编辑。
 
+### 自动批准（默认开，宽限期 72 小时）
+
+干净的 user 主体候选（证据已核验、PRIVATE、关系 NEW、无敏感无冲突、无占用槽位）在收件箱里满宽限期无人操作后，可由显式命令批量批准；宽限期内随时可以人工复核/否决：
+
+```bash
+python compiler/inbox.py auto-approve --dry-run   # 先看会批哪些，什么都不写
+python compiler/inbox.py auto-approve              # 执行一批，输出 JSON 汇总
+python compiler/inbox.py withdraw <id>             # 撤回一条自动批准的记录，回待审
+```
+
+- 每条自动批准都写进版本链与复核日志（`review_action: "auto-approve"`，含规则与 `pending_since`），并在记录上标 `approved_via: "auto"`。
+- `withdraw` 只对自动批准的记录生效；撤回后该记录不再有 `pending_since`，**永远不再自动批准**，只有人工能再批它（撤回即否决）。
+- 敏感、身份、矛盾（CONTRADICTS / UNCERTAIN / COMPATIBLE 等非 NEW 关系）、未核验、含密钥、目标为硬保护文件、槽位已被占用、非 user 主体（persona / viewer / 未分类）的候选**永远不自动批准**。
+- 上线前已在收件箱里的积压没有 `pending_since` 时间戳，**永远不自动批准**，仍需人工处理。
+- 配置（`config.json`）：`pending_auto_approve_enabled`（默认 `true`，改 `false` 即关闭）、`pending_auto_approve_hours`（默认 `72`，可配 1–720 小时）。改配置不需要改代码；非法值启动即报错。
+- 夜间结算（`nightly_settlement`）是只读的，不触发自动批准；自动批准只能由上面这条显式命令触发。
+
 ---
 
 ## 9. 接入宿主（以 OpenClaw 为例）

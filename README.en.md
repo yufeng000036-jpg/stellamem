@@ -5,9 +5,9 @@
 >
 > **v0.4.0 (2026-11-06): the universal-client release.** From v0.3.0 to v0.4.0, the project made one directional decision: Stellamem does not serve any single host. It is a **memory governance layer any AI client can connect to** — today the production host is the DSH desktop assistant; tomorrow it can be any client that supports MCP or HTTP. See the "Vision" section below.
 >
-> **Current status (2026-11-06, main):** full regression **771 Python + 13 Node** passing; CI has 7 jobs (Linux / Windows / macOS × Python 3.10 / 3.12 + code quality); third-party review score **8.8/10** (final acceptance, 2026-11-05); LongMemEval 500-question independent measurement completed (see "Measured results" below). Details in the v0.4.0 section of CHANGELOG.md.
+> **Current status (2026-11-06, main):** full regression **798 Python + 18 Node** passing; CI has 7 jobs (Linux / Windows / macOS × Python 3.10 / 3.12 + code quality); third-party review score **8.8/10** (final acceptance, 2026-11-05); LongMemEval 500-question independent measurement completed (see "Measured results" below). Details in the v0.4.0 section of CHANGELOG.md.
 >
-> **Compatibility:** projection defaults to requester `user` and scope `global`; use explicit `requesterSubject` / `activeScopes` for other namespaces/tasks. An explicit invalid namespace fails closed. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
+> **Compatibility:** projection defaults to requester `user` and scope `global`; use explicit `requesterSubject` / `activeScopes` for other namespaces/tasks. An explicit invalid namespace fails closed. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. Clean user-subject pending claims auto-approve after the configured grace period (default 72h); sensitive, identity, conflicting and pre-feature backlog claims still need a human. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
 
 Stellamem is a **local-first, auditable AI long-term memory governance layer**.
 It makes an AI's long-term memory **inspectable, traceable, versioned, reviewable, and reversible** — instead of an invisible black box.
@@ -119,7 +119,7 @@ Full report: `benchmark/longmemeval/` and the workspace report (see CHANGELOG).
 ### Production: DSH desktop assistant, 597 real records
 
 - The DSH desktop assistant completed deployment in three stages — isolated test → real data → daily operation — and is now in daily use: health check every day at 23:30, snapshot backup every week at 23:45.
-- Production database: **597 records** (user 591 / persona 6), with 33 pending records in the inbox waiting for user review.
+- Production database: **597 records** (user 591 / persona 6), with 33 pending records in the inbox waiting for user review. These 33 pre-date the feature, carry no auto-approval timestamp, and stay manual even after auto-approval ships.
 - 2026-11-04 deployment acceptance: isolated install 21 files all green, MCP recall 3/3 hits word-for-word identical, real preference writes 3/3 read back identically.
 - The production Stellamem app currently lags behind main (main is already at v0.4.0); the update task is queued — full backup with hashes and rollback before any update.
 
@@ -210,7 +210,7 @@ A fact can evolve; the old revision enters the version chain instead of vanishin
 Eight relations: `NEW` / `DUPLICATE` / `REINFORCES` / `REFINES` / `COMPATIBLE` / `SUPERSEDES` / `CONTRADICTS` / `UNCERTAIN`.
 
 ### Human Review
-Sensitive, identity, low-confidence, and suspicious content goes to an inbox for human `approve` / `reject` / `edit`. Tiered approval (🟢/🟡/🔴) only decides presentation and batch-operation style — it never changes the "a human must approve" rule; 🔴 is always one by one; approving a tier requires reading the full text plus a confirmation phrase.
+Sensitive, identity, low-confidence, and suspicious content goes to an inbox for human `approve` / `reject` / `edit`; clean user-subject claims auto-approve via `inbox auto-approve` after the grace period (default 72h with no human action), each one written to the version chain and review log (`review_action: "auto-approve"`) and reversible with `inbox withdraw`. Tiered approval (🟢/🟡/🔴) only decides presentation and batch-operation style; the green tier's default auto-approval applies only to clean, evidence-verified, non-conflicting claims created after the feature landed — 🔴 is always one by one and always human; approving a tier requires reading the full text plus a confirmation phrase. Sensitive, identity, contradictory, unverified, and pre-feature backlog claims never auto-approve.
 
 ### Secret Gate
 Secrets are deterministically detected and blocked **before any model call** — not written, not logged, not exfiltrated.
@@ -403,7 +403,7 @@ Short version below; full version in [`SECURITY.md`](SECURITY.md).
 - **Whether multi-client isolation is fully complete is waiting for the reviewer to re-check against the latest main** — the mechanism has landed (PR #64 subject binding); until the re-check passes, we do not claim it is complete to the outside.
 - **Recall still trails raw-text stuffing** (LongMemEval 0.222 vs 0.602) — claim-level projection inherently loses information; recall@5 0.637 is the biggest weakness right now.
 - **Semantic retrieval is downgraded to literal matching in production** (port 8082 is occupied, the semantic service is offline); resolving the port or writing a formal downgrade decision is still pending.
-- **About 3948 pending records in production are not activated** — batch keep / task / drop cleanup needs separate approval and must not be activated casually; 5 core identity candidates are unapproved and must not be written.
+- **About 3948 pending records in production are not activated** — batch keep / task / drop cleanup needs separate approval and must not be activated casually; 5 core identity candidates are unapproved and must not be written. Auto-approval only applies to clean claims created after the feature landed that carry a `pending_since` timestamp; it never touches this backlog.
 - **Subject tagging has only been dry-run** — `namespace` has not been written into any real data; writing real data still needs a full backup, a dry-run checklist, a rollback plan, and an approver — all of them, no exceptions.
 - **Persona events syncing into the user database is not implemented** — the sync candidate package is implemented (reviewed events only, approval required, all-or-nothing batches), but the actual database write is not; it needs a separately approved human task to consume.
 - **The bridge GUI is implemented and hardened** — loopback binding + per-server random token + POST origin check; terminal text approval remains the fallback; the 72-hour TTL is a low-confidence guess; the keyword blacklist can be bypassed by rephrasing — the real boundary is a human reading the full text before approving.

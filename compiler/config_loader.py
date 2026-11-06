@@ -42,6 +42,12 @@ def load_config():
         timeout = config.get("model_timeout", 90)
         if not isinstance(timeout, (int, float)) or not 1 <= timeout <= 300:
             raise ValueError()
+        auto_enabled = config.get("pending_auto_approve_enabled", True)
+        if type(auto_enabled) is not bool:
+            raise ValueError()
+        auto_hours = config.get("pending_auto_approve_hours", 72)
+        if type(auto_hours) is not int or not 1 <= auto_hours <= 720:
+            raise ValueError()
         return config
     except (OSError, ValueError, TypeError, RuntimeError):
         raise ValueError(

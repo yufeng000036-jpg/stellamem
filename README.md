@@ -5,9 +5,9 @@
 >
 > **v0.4.0（2026-11-06）：通用客户端版本。** 从 v0.3.0 到 v0.4.0，项目做了一次方向上的收束：Stellamem 不为某一个宿主服务，它是**任何 AI 客户端都能接的记忆治理层**——今天的生产宿主是 DSH 桌面助手，明天可以是任何支持 MCP 或 HTTP 的客户端。愿景见下方“愿景”一节。
 >
-> **当前状态（2026-11-06，main）：** 全量回归 **771 Python + 13 Node** 通过；CI 7 个 job（Linux / Windows / macOS × Python 3.10 / 3.12 + 代码质量）；第三方审查评分 **8.8/10**（2026-11-05 最终验收）；LongMemEval 500 题独立测量已跑完（见下方“量化效果”）。详见 CHANGELOG.md 的 v0.4.0 一节。
+> **当前状态（2026-11-06，main）：** 全量回归 **798 Python + 18 Node** 通过；CI 7 个 job（Linux / Windows / macOS × Python 3.10 / 3.12 + 代码质量）；第三方审查评分 **8.8/10**（2026-11-05 最终验收）；LongMemEval 500 题独立测量已跑完（见下方“量化效果”）。详见 CHANGELOG.md 的 v0.4.0 一节。
 >
-> **Compatibility:** projection defaults to requester `user` and scope `global`; use explicit `requesterSubject` / `activeScopes` for other namespaces/tasks. An explicit invalid namespace fails closed. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
+> **Compatibility:** projection defaults to requester `user` and scope `global`; use explicit `requesterSubject` / `activeScopes` for other namespaces/tasks. An explicit invalid namespace fails closed. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. Clean user-subject pending claims auto-approve after the configured grace period (default 72h); sensitive, identity, conflicting and pre-feature backlog claims still need a human. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
 
 Stellamem 是一个**本地优先、可审计的 AI 长期记忆治理层**。
 它让 AI 的长期记忆可以被**查看、溯源、版本化、复核、回滚** —— 而不是变成一个不可见的黑箱。
@@ -120,7 +120,7 @@ Version history —— 旧版本保留，可回滚
 ### 生产运行：DSH 桌面助手，597 条真实记录
 
 - DSH 桌面助手按“隔离测试 → 真实数据 → 日常运行”三阶段完成部署，已投入日常运行：每日 23:30 健康检查、每周 23:45 快照备份。
-- 生产库 **597 条记录**（用户 591 / 人格 6），33 条待审在收件箱里等用户复核。
+- 生产库 **597 条记录**（用户 591 / 人格 6），33 条待审在收件箱里等用户复核。这 33 条是上线前产生的积压，不带自动批准所需的时间戳，自动批准上线后也不会动它们，仍需人工复核。
 - 2026-11-04 的部署验收：隔离安装 21 文件全绿、MCP 召回 3/3 命中逐字一致、真实偏好写入 3/3 查回一致。
 - 生产部署的 Stellamem 应用版本目前落后于 main（main 已到 v0.4.0），更新任务已排队——更新前全量备份、记哈希、可回滚。
 
@@ -211,7 +211,7 @@ Conversation → Claim → Evidence → Scope → Revision → Relation → Memo
 支持 8 种关系：`NEW` / `DUPLICATE` / `REINFORCES` / `REFINES` / `COMPATIBLE` / `SUPERSEDES` / `CONTRADICTS` / `UNCERTAIN`。
 
 ### Human Review（人工复核）
-敏感、身份、低置信度、可疑内容进入收件箱，人工 `approve` / `reject` / `edit`。分档批复（🟢/🟡/🔴）只决定呈现与批量操作方式，不改变“必须人批”的前提；🔴 永远逐条；按档批要先看全文加确认短语。
+敏感、身份、低置信度、可疑内容进入收件箱，人工 `approve` / `reject` / `edit`；干净的 user 主体主张在宽限期（默认 72 小时，无人操作）后由 `inbox auto-approve` 自动批准，每条都写进版本链与复核日志（`review_action: "auto-approve"`），并可用 `inbox withdraw` 撤回。分档批复（🟢/🟡/🔴）只决定呈现与批量操作方式；🟢 档干净主张的“默认自动批准”只适用于上线后新产生、证据已核验、无敏感、无冲突的记录，🔴 永远逐条、永远人工；按档批要先看全文加确认短语。敏感、身份、矛盾、未核验与上线前积压的主张永远不自动批准。
 
 ### Secret Gate（密钥门禁）
 密钥在**任何模型调用之前**被确定性识别并阻断，不写库、不进日志、不外发。
@@ -405,7 +405,7 @@ Run the built-in checks and report whether installation succeeded.
 - **多客户端隔离的彻底完成，正在等评审按最新 main 复核**——机制已落地（PR #64 主体绑定），复核通过之前不对外宣称已完成。
 - **召回仍落后于直接塞原文**（LongMemEval 0.222 vs 0.602）——claim 级投影先天丢信息；召回@5 0.637 是当前最大短板。
 - **语义检索在生产环境降级为字面匹配**（8082 端口被占用，语义服务离线）；解决端口还是书面降级，待定。
-- **生产侧约 3948 条 pending 未激活**——批量 keep / task / drop 清理需单独批准，不能顺手激活；5 个核心身份候选未获批准，不得写入。
+- **生产侧约 3948 条 pending 未激活**——批量 keep / task / drop 清理需单独批准，不能顺手激活；5 个核心身份候选未获批准，不得写入。自动批准只对上线后新产生且带 `pending_since` 时间戳的干净主张生效，不碰这批积压。
 - **主体标签只到干跑**——`namespace` 尚未写入任何真实数据；写入真实数据前仍需要全量备份、干跑清单核对、回滚方案与批准人，缺一不可。
 - **人格事件同步到用户库未实现**——同步候选包已实现（仅 reviewed 事件、批准要求、批量全有或全无），实际写库仍未实现，需另行人工批准的任务才能消费。
 - **桥接图形界面已实现并加固**——环回绑定 + 每服务器随机令牌 + POST 来源校验，终端文本审批仍为兜底；72 小时 TTL 为低置信猜测；关键词黑名单可被改写绕过，真正边界是人工看全文批准。

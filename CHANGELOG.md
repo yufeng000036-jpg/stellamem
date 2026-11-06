@@ -4,6 +4,28 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased — 待审自动批准（PR #80）
+
+用户 2026-11-06 亲口要求：不再逐条人工批，什么都不做就该自动批。以前的默认是“显式人工批准才进正式记忆”，人工复核仍随时可用，但不再是唯一入口；上线前已在收件箱里的积压仍需人工处理，不参与自动批准。
+
+### 新增
+
+- **待审自动批准（默认开，宽限期 72 小时）**：干净的 user 主体主张在收件箱里满 `pending_auto_approve_hours`（默认 72）无人操作后，由显式命令 `inbox auto-approve [--dry-run]` 批量批准。宽限期内人工 `approve` / `reject` / `edit` 照常可用。`inbox list` 显示每条的 `pending_since` 与自动批准状态（`eligible` / `in <n>h` / `never: <原因>`，`--json` 另给 `eligible_at`）。
+- **可撤回**：`inbox withdraw <id>` 把一条自动批准的记录送回待审；撤回即否决——撤回后该记录不再有 `pending_since`，永远不再自动批准，只有人工能再批它。只对自动批准的记录生效，人工批准的记录不接受撤回。
+- **配置**：`config.json` / `config.example.json` 新增 `pending_auto_approve_enabled`（默认 `true`，改 `false` 即关闭）与 `pending_auto_approve_hours`（默认 `72`，可配 1–720 小时），非法值在 `load_config()` 即拒绝。
+- **时间戳**：`store.ingest()` 给每条新进收件箱的主张打 `pending_since`（进入收件箱的时刻，不是来源消息时间）。没有这个时间戳的记录（即上线前的全部积压）永远不自动批准；人工 `edit` 不补打也不重置它。
+
+### 不变（仍需人工）
+
+- 桥接跨主体仍默认拒绝、每条全文人工批准（`bridge.py` 未动）；5 个核心身份候选仍不得写入（硬保护文件拒绝未动）。
+- 敏感、身份、矛盾（CONTRADICTS / UNCERTAIN / 非 NEW 关系）、未核验证据、含密钥、目标为硬保护文件、槽位已被占用、非 user 主体（persona / viewer / 未分类）的候选永远不自动批准；无法分类为安全的，一律留在收件箱。
+- 夜间结算仍只读，不触发自动批准；摄入时自动写（ingest-time auto-write）的窄口径未动。
+- 每次自动批准都写进版本链与复核日志（`review_action: "auto-approve"`，含规则与 `pending_since`），并在记录上标 `approved_via: "auto"`；`inbox approve` 的既有行为与输出未变（LongMemEval 的 `worker.py` 调用点未动）。
+
+### 测试
+
+- 新增 `tests/test_pending_auto_approve.py`（27 项）：72 小时边界前后、全部排除项、积压排除、非 user 主体、关闭配置、dry-run、二次扫幂等、审计标记、`withdraw` 往返、配置默认值与非法值拒绝。全量 **798 Python + 18 Node 通过**，`ruff check` 与 `ruff format --check` 全过，`secret_scan.py` 干净，`demo/run_demo.py --offline` 通过。
+
 ## 2026-11-06 — v0.4.0 通用客户端版本
 
 方向收束：不为某一个宿主服务，做任何 AI 客户端都能接的记忆治理层。今天的生产宿主是 DSH 桌面助手；接线方式是 MCP（stdio）与 HTTP API，启动时用 `--allowed-subjects` / `STELLAMEM_ALLOWED_SUBJECTS` 绑定主体。README 按此愿景重写（OpenClaw 不再作为主角出现）。
