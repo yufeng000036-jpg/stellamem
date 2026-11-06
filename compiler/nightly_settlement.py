@@ -14,7 +14,8 @@
    preference / lesson / decision / project / fact + 其他；
    persona / viewer 只报总数（不报内容）；pending（inbox 未审）单列；
    superseded / rejected 只计入“历史”，不进各层。
-2. 桌面多少字节：桌面页未做，报“未启用”，不编数。
+2. 桌面多少字节：按主体报桌面页真实字节数（见 compiler/desktop_page.py）；
+   没有桌面页的主体不报，全部没有时报“未启用”，不编数。
 3. 今晚动了几条：自上次结算以来写入链新增的事件数。基线存在
    上次结算的状态文件里（时间戳 + 事件总数）；首次运行没有基线，
    报“首次结算、无上次基线”，不猜。批准/驳回等状态流转不经过写入链，
@@ -47,11 +48,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 try:  # 包内与扁平导入都要能用（测试只把 compiler/ 加进 sys.path）
+    from . import desktop_page
     from . import hit_votes
     from . import indexer
     from . import subjects
     from .storage import load_records
 except ImportError:  # pragma: no cover - flat layout
+    import desktop_page
     import hit_votes
     import indexer
     import subjects
@@ -62,9 +65,6 @@ SETTLEMENT_DIRNAME = "nightly-settlement"
 BASELINE_FILENAME = "baseline.json"
 LOG_PREFIX = "settlement-"
 VERSION_CHAIN_REL = "system/version-chain.json"
-
-# 桌面页未落地前的固定取值：不是测量值，不许改成估算的数字。
-DESKTOP_STATUS = "未启用"
 
 
 def _parse_time(value):
@@ -313,7 +313,7 @@ def build_report(
         "root": str(root),
         "db_path": str(db_path) if db_path is not None else None,
         "counts": counts,
-        "desktop": DESKTOP_STATUS,
+        "desktop": desktop_page.desktop_status_text(root),
         "changed": delta["changed"],
         "changed_since": since_text,
         "total_events": delta["total_events"],
