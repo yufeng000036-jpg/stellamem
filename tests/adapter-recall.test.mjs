@@ -79,6 +79,69 @@ test("bigram overlap is topical: it passes the technical carve-out for preferenc
   assert.ok(out.includes("冰滴咖啡"), "topical bigram must pass the carve-out: " + out);
 });
 
+test("evidence rescues a claim whose value was translated away from the question language", async () => {
+  // LongMemEval 重跑 2026-11-06 的头号损失：提取常把英文原文的值写成中文
+  // （82% 的英文源 claim 值是中文），而问题是英文，值面词面为 0、bigram
+  // 为 0，gold claim 被相关性门拦掉，reader 直接 abstain。evidence 是源
+  // 消息的原文引用，带着问题自己的词，应当参与相关性打分。
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [
+    record({ claim_id: "c-gold", revision_id: "r-gold", kind: "fact",
+      predicate: "used coupon",
+      value: "在沃尔玛用 Luvs 纸尿裤买一送一券",
+      evidence: "I used a Buy One Get One Free coupon on Luvs diapers at Walmart today" }),
+  ]);
+  const out = await project(root, "What coupon did I use on Luvs diapers at Walmart?");
+  assert.ok(out.includes("在沃尔玛"), "evidence-overlap claim must be injected: " + out);
+  // 同一条 claim，问无关问题时 evidence 也不应把它拖进来。
+  assert.equal(await project(root, "今天天气怎么样"), "");
+  assert.equal(await project(root, "法国的首都是哪里"), "");
+});
+
+test("a value match still outranks an evidence-only match", async () => {
+  // evidence 只补信号、不抢分：值面直接命中的 claim 保持原来的高分，
+  // 排在只靠 evidence 命中的 claim 前面；两者都注入，但顺序不能反。
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [
+    record({ claim_id: "c-ev", revision_id: "r-ev", kind: "fact",
+      predicate: "used coupon",
+      value: "在沃尔玛用券",
+      evidence: "I used a coupon at Walmart" }),
+    record({ claim_id: "c-val", revision_id: "r-val", kind: "fact",
+      predicate: "used coupon",
+      value: "Walmart coupon",
+      evidence: "Walmart coupon" }),
+  ]);
+  const out = await project(root, "What coupon did I use at Walmart?");
+  assert.ok(out.includes("Walmart coupon"), "value match must inject: " + out);
+  assert.ok(out.includes("在沃尔玛用券"), "evidence match must inject: " + out);
+  assert.ok(out.indexOf("Walmart coupon") < out.indexOf("在沃尔玛用券"),
+    "value match must rank above evidence-only match: " + out);
+});
+
+test("projected lines carry the claim date when provenance has a timestamp", async () => {
+  // LongMemEval 重跑：时间推理 127 题判分只有 0.079；投影行没有日期，reader
+  // 排不了事件顺序（直接塞原文臂每行自带 date）。provenance.timestamp 是源
+  // 消息的时间戳，有就带上，没有就不出 date 字段、不报错。
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [
+    record({ claim_id: "c-dated", revision_id: "r-dated", kind: "fact",
+      predicate: "used coupon", value: "Walmart coupon",
+      evidence: "I used a coupon at Walmart",
+      provenance: { precision: "message", session_id: "s1", message_id: "s1:0",
+        timestamp: "2023-04-10T17:50:00+00:00" } }),
+    record({ claim_id: "c-undated", revision_id: "r-undated", kind: "fact",
+      predicate: "bought", value: "Walmart gift card", evidence: "Walmart gift card" }),
+  ]);
+  const out = await project(root, "What coupon did I use at Walmart?");
+  const lines = out.split("\n").slice(1).filter(Boolean).map((l) => JSON.parse(l));
+  assert.equal(lines.length, 2, "both matching claims must project: " + out);
+  const dated = lines.find((l) => l.id === "c-dated");
+  const undated = lines.find((l) => l.id === "c-undated");
+  assert.equal(dated.date, "2023-04-10T17:50:00+00:00");
+  assert.ok(!("date" in undated), "claim without provenance must not gain a date field");
+});
+
 test("irrelevant prompts still inject nothing", async () => {
   const root = await fixture();
   await writeRecords(root, "semantic/profile.md", [
