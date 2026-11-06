@@ -134,7 +134,7 @@ class StellamemMCPServer:
             },
             {
                 "name": "stellamem_recall",
-                "description": "Recall subject-isolated memories with strict token budget and 90-day decay weighting. Wired to live recall when the server was constructed with index_db_path; otherwise returns wired:false.",
+                "description": "Recall subject-isolated memories with strict token budget and 90-day decay weighting. Wired to live recall when the server was constructed with index_db_path; otherwise returns wired:false. Irrelevant questions are gated to zero injection (status gated, see compiler/injection_gate.py); set STELLAMEM_INJECTION_GATE=0 to disable the gate.",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
@@ -283,6 +283,40 @@ class StellamemMCPServer:
                     con = sqlite3.connect(str(self.index_db_path))
                     con.row_factory = sqlite3.Row
                     try:
+                        # P1 注入门（调用方实体/关键词门）：问题与记忆没有词面
+                        # 关联时不注入，budget=0。规则借 OpenClaw 适配器的
+                        # lexical 门（compiler/injection_gate.py）。
+                        # HTTP API 默认行为不变；门只在 MCP 召回入口生效；
+                        # STELLAMEM_INJECTION_GATE=0 可关。门自己出错时
+                        # 失败放行（照常召回），绝不因为门查不到而搞挂召回。
+                        if max_chars > 0:
+                            try:
+                                from compiler.injection_gate import (
+                                    check as _gate_check,
+                                )
+                                from compiler.injection_gate import (
+                                    gate_enabled as _gate_enabled,
+                                )
+
+                                if _gate_enabled():
+                                    gate = _gate_check(con, query, subject=subj)
+                                    if not gate["allow"]:
+                                        return {
+                                            "status": "gated",
+                                            "subject": subj,
+                                            "query": query,
+                                            "items": [],
+                                            "wired": True,
+                                            "chars": 0,
+                                            "budget": 0,
+                                            "reason": (f"injection gate blocked: {gate['reason']}"),
+                                            "gate": gate,
+                                        }
+                            except Exception as exc:  # noqa: BLE001
+                                print(
+                                    f"stellamem: injection gate failed open: {exc}",
+                                    file=sys.stderr,
+                                )
                         result = live_recall(
                             con,
                             query,

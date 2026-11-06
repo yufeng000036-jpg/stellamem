@@ -173,8 +173,10 @@ class ServerBindingTests(unittest.TestCase):
             f"绑定内 user 召回应命中虚构记录：{out}",
         )
         # 同一台绑定 server 上，查 persona 记录的词也不应漏出来。
+        # 注入门 P1：该问题在本主体下没有任何词面命中，门直接拦住
+        # （gated），与空召回等价——关键是不漏出 persona 记录。
         out = self._call(srv, "stellamem_recall", {"subject": "user", "query": "桂花乌龙"})
-        self.assertEqual(out["status"], "ok")
+        self.assertEqual(out["status"], "gated")
         self.assertEqual(out["items"], [])
 
     def test_bound_recall_via_active_subject_blocked(self):
