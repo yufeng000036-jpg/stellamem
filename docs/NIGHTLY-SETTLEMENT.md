@@ -18,6 +18,8 @@ python compiler/nightly_settlement.py --root <记忆数据根目录> [--db <索�
 1. **各层几条**：active 记录按主体 × 类型计数。user 主体分
    preference / lesson / decision / project / fact + 其他；
    persona / viewer 只报总数，不报内容；pending（inbox 未审）单列；
+   结算本身只读，从不批准——自动批准由显式运行的 `inbox auto-approve` 做，
+   不由结算触发；
    superseded / rejected 只计入“历史”，不进各层。
 2. **桌面多少字节**：按主体报桌面页真实字节数（见 `docs/DESKTOP-PAGE.md`）；
    没有桌面页的主体不报，全部没有时报“未启用”，不编数。

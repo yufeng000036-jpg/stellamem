@@ -77,6 +77,8 @@ AI 对话 ──(daily-autolog hook)──▶ daily/*.md 日记        [自动]
 ```bash
 python compiler/sleep_purify.py --mode review   # 读取来源 → 编译 → 记忆/收件箱
 python compiler/inbox.py list                   # 查看待人工确认的候选
+python compiler/inbox.py auto-approve --dry-run # 宽限期后自动批准哪些干净的 user 主体候选（只看不写）
+python compiler/inbox.py withdraw <id>          # 撤回一条自动批准的记录，回待审
 ```
 
 （`extract.py` 是一个**单独的调试 CLI**，把单篇来源的 Claim 打到 stdout，不参与主流程；主流程统一走 `sleep_purify.py`。）

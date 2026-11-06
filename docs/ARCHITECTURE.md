@@ -60,4 +60,4 @@ Adapter 契约：`inject_core / inject_recall / healthcheck`。
 - 本地代码已加入四字段去重和 legacy 读取并通过 78 项 Python / 3 组 JS 测试（合成数据）；真实模型仅完成工程性验证，真实宿主端到端仍未验证。
 - 模型客户端仅允许环回 endpoint（`127.0.0.1` / `localhost`），拒绝远程 API、重定向与系统代理。
 - 来源不复制原文，只保存指针与 hash（`daily/*.sources.json`）；指针解析失败时报 `SourceError`，不伪造来源。
-- 人工审批闭环：`compiler/inbox.py`（list / show / approve / reject / edit）。
+- 人工审批闭环：`compiler/inbox.py`（list / show / approve / reject / edit；另有 `auto-approve`：干净的 user 主体主张在宽限期（默认 72 小时）后自动批准，`withdraw`：撤回自动批准的记录）。
