@@ -215,22 +215,22 @@ class LoadKeyConfigTests(unittest.TestCase):
 
     def test_env_key_used_when_nothing_configured(self):
         self._clean_env()
-        os.environ["DEEPSEEK_API_KEY"] = "sk-fictional-test-key-0001"
-        self.assertEqual(load_key(), "sk-fictional-test-key-0001")
+        os.environ["DEEPSEEK_API_KEY"] = "fictional-test-key-0001"
+        self.assertEqual(load_key(), "fictional-test-key-0001")
 
     def test_explicit_key_file_wins(self):
         self._clean_env()
         key_file = Path(self.tmp.name) / "deepseek.key"
-        key_file.write_text("sk-fictional-test-key-0002\n", encoding="utf-8")
-        os.environ["DEEPSEEK_API_KEY"] = "sk-fictional-test-key-0001"
-        self.assertEqual(load_key(key_file), "sk-fictional-test-key-0002")
+        key_file.write_text("fictional-test-key-0002\n", encoding="utf-8")
+        os.environ["DEEPSEEK_API_KEY"] = "fictional-test-key-0001"
+        self.assertEqual(load_key(key_file), "fictional-test-key-0002")
 
     def test_key_file_from_env_var(self):
         self._clean_env()
         key_file = Path(self.tmp.name) / "deepseek.key"
-        key_file.write_text("sk-fictional-test-key-0003", encoding="utf-8")
+        key_file.write_text("fictional-test-key-0003", encoding="utf-8")
         os.environ["STELLAMEM_DEEPSEEK_KEY_FILE"] = str(key_file)
-        self.assertEqual(load_key(), "sk-fictional-test-key-0003")
+        self.assertEqual(load_key(), "fictional-test-key-0003")
 
 
 if __name__ == "__main__":
