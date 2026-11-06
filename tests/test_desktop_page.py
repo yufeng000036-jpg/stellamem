@@ -5,12 +5,14 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import tempfile
 import threading
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
@@ -214,12 +216,53 @@ class SettlementDesktopTests(unittest.TestCase):
 
 class CLITests(unittest.TestCase):
     def _run(self, *args):
-        return subprocess.run(
+        # 模拟 Windows 控制台：PYTHONIOENCODING=cp1252、PYTHONUTF8=0。
+        # 子进程必须自己把 stdout/stderr 切到 UTF-8（main() 里做），
+        # 否则印中文就炸——这就是 CI 上 Windows 两档红的原因。
+        # 父进程侧按 UTF-8 严格解码，不靠 locale 猜。
+        proc = subprocess.run(
             [sys.executable, str(REPO / "compiler" / "desktop_page.py"), *args],
             capture_output=True,
-            text=True,
+            env=dict(os.environ, PYTHONIOENCODING="cp1252", PYTHONUTF8="0"),
             timeout=30,
         )
+        return SimpleNamespace(
+            returncode=proc.returncode,
+            stdout=proc.stdout.decode("utf-8", errors="strict"),
+            stderr=proc.stderr.decode("utf-8", errors="strict"),
+        )
+
+    def test_main_reconfigures_stdout_to_utf8(self):
+        # 进程内证明：main() 启动时把 stdout 切到 UTF-8。
+        # FakeStdout 模拟 Windows 控制台：切之前印中文就炸。
+        import desktop_page
+        from unittest.mock import patch
+
+        class FakeStdout:
+            def __init__(self):
+                self.encoding = "cp936"
+                self.buffer = []
+
+            def reconfigure(self, encoding=None, errors=None):
+                self.encoding = encoding
+
+            def write(self, text):
+                if self.encoding != "utf-8" and any(ord(c) > 127 for c in text):
+                    raise UnicodeEncodeError("cp936", text, 0, 1, "not encodable")
+                self.buffer.append(text)
+                return len(text)
+
+            def flush(self):
+                pass
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "memories"
+            fake = FakeStdout()
+            with patch.object(sys, "stdout", fake):
+                rc = desktop_page.main(["--root", str(root), "--subject", "user", "--status"])
+            self.assertEqual(rc, 0)
+            self.assertEqual(fake.encoding, "utf-8")
+            self.assertIn("未启用", "".join(fake.buffer))
 
     def test_cli_status_show_rewrite(self):
         with tempfile.TemporaryDirectory() as td:
