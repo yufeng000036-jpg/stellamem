@@ -426,7 +426,7 @@ The DSH desktop assistant completed its three-stage deployment acceptance and we
 
 ### Security hardening after v0.3.0 (2026-11-05, PRs #42–#51)
 
-Six rounds of external review + fixes: subject isolation (exact matching, three Scoped Token holes, SQL IN filtering, empty scope fail-closed, alias compatibility), token permissions (Bearer authentication, token-to-subject binding, illegal configuration rejects authentication, budget=0 genuinely turns recall off). Third-party review score 8.8/10.
+Six rounds of external review + fixes: subject isolation (exact matching, three Scoped Token holes, SQL IN filtering, empty scope fail-closed, alias compatibility), token permissions (Bearer-token authentication, token-to-subject binding, illegal configuration rejects authentication, budget=0 genuinely turns recall off). Third-party review score 8.8/10.
 
 ---
 
