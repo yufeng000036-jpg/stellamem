@@ -369,11 +369,29 @@ class MCPVoteTests(unittest.TestCase):
         self.assertEqual(out["manual"], 2)
 
     def test_vote_cross_subject_refused(self):
+        # 存在性不泄露：越权记录与不存在的记录报同一条错（audit 修复）。
+        # 之前是 "vote refused: record belongs to another subject"，
+        # 与 "record not found" 的区分能被拿来探测别的主体有没有某条记录。
         is_err, out = self._call(
             "stellamem_vote", {"subject": "user", "record_id": "c-vote-persona"}
         )
         self.assertTrue(is_err)
-        self.assertIn("another subject", str(out))
+        self.assertEqual(str(out), "Error: record not found: c-vote-persona")
+
+    def test_vote_cross_subject_indistinguishable_from_missing(self):
+        is_err_a, out_a = self._call(
+            "stellamem_vote", {"subject": "user", "record_id": "c-vote-persona"}
+        )
+        is_err_b, out_b = self._call(
+            "stellamem_vote", {"subject": "user", "record_id": "c-no-such"}
+        )
+        self.assertTrue(is_err_a)
+        self.assertTrue(is_err_b)
+        # 两条报错除 id 外完全相同：不能用报错区分去探测别的主体有没有某条记录。
+        self.assertEqual(
+            str(out_a).replace("c-vote-persona", "X"),
+            str(out_b).replace("c-no-such", "X"),
+        )
 
     def test_vote_missing_record_refused(self):
         is_err, _out = self._call("stellamem_vote", {"subject": "user", "record_id": "c-no-such"})

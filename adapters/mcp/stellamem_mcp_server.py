@@ -420,7 +420,9 @@ class StellamemMCPServer:
             if row is None:
                 raise ValueError(f"record not found: {record_id}")
             if not validate_vote(subj, row["subject"] or ""):
-                raise ValueError("vote refused: record belongs to another subject")
+                # 存在性不泄露：越权记录与不存在的记录报同一条错，
+                # 不能用报错区分去探测别的主体有没有某条记录。
+                raise ValueError(f"record not found: {record_id}")
             snap = self._hit_votes.vote(subj, row["id"], kind=row["kind"] or "")
             return {"status": "ok", **snap}
 
