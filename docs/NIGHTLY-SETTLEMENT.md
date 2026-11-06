@@ -4,7 +4,7 @@
 模块：`compiler/nightly_settlement.py`，CLI：
 
 ```bash
-python compiler/nightly_settlement.py --root <记忆数据根目录> [--db <索引库路径>]
+python compiler/nightly_settlement.py --root <记忆数据根目录> [--db <索引库路径>] [--votes <投票文件路径>]
 ```
 
 报告打到 stdout，同时写当日日志与基线状态文件（默认
@@ -28,6 +28,11 @@ python compiler/nightly_settlement.py --root <记忆数据根目录> [--db <索�
 另附两行状态：后台重建最近一次成功还是失败、索引行数与生产库最后写入时间。
 后台重建的状态：服务对象在场（同进程）时用它的真实失败记录；冷启动的 CLI
 没有那个进程，只能用索引新鲜度推断，措辞上不把推断说成实测。
+
+另附一节“命中投票”（`--votes` 给出投票文件路径时才有；不给或文件不存在
+时报“未启用”）：今日 / 累计命中数（分主体，自动/手动分开）+ 命中最多的
+主体 × 类型（仅主体 + 类型 + 次数，不含记录 id 与正文）。投票文件损坏时
+结算失败，不报不准的数。详见 `docs/HIT-VOTES.md`。
 
 ## 只读边界
 

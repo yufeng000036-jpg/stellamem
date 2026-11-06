@@ -2,6 +2,9 @@
 
 只读统计：读 MANAGED 记忆文件与 append-only 写入链
 （``system/version-chain.json``），产出四个数 + 两行状态。
+另可接 Hit 投票文件（``--votes``，见 ``docs/HIT-VOTES.md``），
+多报一节命中数（今日 / 累计，分主体；只报数，不报内容）。
+投票文件不存在时命中一节报“未启用”，损坏时结算失败，不报不准的数。
 只写两样东西：带日期的结算日志，与下次结算用的基线状态文件。
 绝不写记忆库、不改任何记录、不碰注入策略、不碰主体隔离与桥治理。
 
@@ -44,10 +47,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 try:  # 包内与扁平导入都要能用（测试只把 compiler/ 加进 sys.path）
+    from . import hit_votes
     from . import indexer
     from . import subjects
     from .storage import load_records
 except ImportError:  # pragma: no cover - flat layout
+    import hit_votes
     import indexer
     import subjects
     from storage import load_records
@@ -279,8 +284,14 @@ def last_write_time(root) -> str | None:
 # ---------------- 报告 ----------------
 
 
-def build_report(root, db_path=None, now=None, service=None, baseline=None, log_path=None) -> dict:
-    """产出本次结算的结构化报告与文本；不写任何文件。"""
+def build_report(
+    root, db_path=None, now=None, service=None, baseline=None, log_path=None, votes_path=None
+) -> dict:
+    """产出本次结算的结构化报告与文本；不写任何文件。
+
+    votes_path：Hit 投票文件路径（可选）。给出的文件不存在时命中一节报
+    “未启用”；文件存在但损坏时直接抛错，结算失败，不报不准的数。
+    """
     root = Path(root)
     now = now or datetime.now().astimezone()
     counts = collect_counts(root)
@@ -291,6 +302,11 @@ def build_report(root, db_path=None, now=None, service=None, baseline=None, log_
         since_text = baseline.get("last_settlement_at")
     delta = count_changed_since(root, since)
     idx = index_status(root, db_path)
+    hits = None
+    if votes_path is not None:
+        votes_file = Path(votes_path)
+        if votes_file.exists():
+            hits = hit_votes.HitVotes(votes_file, strict=True).summary(date=now.date().isoformat())
     report = {
         "settlement_date": now.date().isoformat(),
         "generated_at": now.isoformat(timespec="seconds"),
@@ -302,6 +318,7 @@ def build_report(root, db_path=None, now=None, service=None, baseline=None, log_
         "changed_since": since_text,
         "total_events": delta["total_events"],
         "undated_events": delta["undated"],
+        "hits": hits,
         "log_path": str(log_path) if log_path is not None else None,
         "rebuild": rebuild_status(service=service, root=root, db_path=db_path),
         "index_records": idx.get("records"),
@@ -348,6 +365,25 @@ def render_report(report: dict) -> str:
         )
     if report["undated_events"]:
         lines.append(f"（另有 {report['undated_events']} 个事件无有效日期，未计入）")
+    hits = report.get("hits")
+    if hits is None:
+        lines.append("命中投票：未启用（无投票记录文件）")
+    else:
+        lines.append("命中投票（今日 / 累计，分主体；只报数，不报内容）：")
+        for subject in ("user", "persona", "viewer"):
+            today = hits["today"].get(subject, {"auto": 0, "manual": 0})
+            total = hits["total"].get(subject, {"auto": 0, "manual": 0})
+            lines.append(
+                f"- {subject}：今日 {today['auto'] + today['manual']} 次"
+                f"（自动 {today['auto']} / 手动 {today['manual']}），"
+                f"累计 {total['auto'] + total['manual']} 次"
+                f"（自动 {total['auto']} / 手动 {total['manual']}）"
+            )
+        if hits["top_kinds"]:
+            top = "、".join(
+                f"{row['subject']} {row['kind']} ×{row['hits']}" for row in hits["top_kinds"]
+            )
+            lines.append(f"- 命中最多：{top}（仅主体 + 类型 + 次数）")
     if report["log_path"]:
         lines.append(f"结算日志：{report['log_path']}")
     lines.append("")
@@ -362,7 +398,7 @@ def render_report(report: dict) -> str:
 
 
 def run_settlement(
-    root, db_path=None, out_dir=None, now=None, service=None, date_override=None
+    root, db_path=None, out_dir=None, now=None, service=None, date_override=None, votes_path=None
 ) -> dict:
     """跑一次结算：写当日日志 + 更新基线，返回报告。
 
@@ -384,6 +420,7 @@ def run_settlement(
         service=service,
         baseline=old_baseline,
         log_path=log_path,
+        votes_path=votes_path,
     )
     report["log_path"] = str(log_path)
     report["baseline_path"] = str(baseline_path)
@@ -411,6 +448,11 @@ def main(argv=None) -> int:
     parser.add_argument(
         "--date", default=None, help="结算日期 YYYY-MM-DD（默认今天；只影响日志文件名）"
     )
+    parser.add_argument(
+        "--votes",
+        default=None,
+        help="Hit 投票文件路径（可选；不给则命中一节报“未启用”）",
+    )
     args = parser.parse_args(argv)
     root = Path(args.root)
     if not root.is_dir():
@@ -418,7 +460,11 @@ def main(argv=None) -> int:
         return 2
     try:
         report = run_settlement(
-            root, db_path=args.db, out_dir=args.out_dir, date_override=args.date
+            root,
+            db_path=args.db,
+            out_dir=args.out_dir,
+            date_override=args.date,
+            votes_path=args.votes,
         )
     except (ValueError, OSError) as exc:
         print(f"settlement: 结算失败：{exc}", file=sys.stderr)
