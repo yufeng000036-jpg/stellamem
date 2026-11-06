@@ -48,5 +48,14 @@ class ScannerBoundaryTests(unittest.TestCase):
         block = "-----BEGIN " + "PRIVATE KEY-----\\nFAKEBODYLINEEXTRA\\n-----END PRIVATE KEY-----"
         self.assertEqual(scanner.scan_text(block), [1])
 
+    def test_bearer_prose_phrase_is_allowlisted(self):
+        # "Bearer authentication" is ordinary English prose (README.en.md
+        # describing Bearer-token auth), matched by the value-shaped
+        # Bearer pattern only because "authentication" is 14 word characters.
+        self.assertEqual(scanner.scan_text("Bearer authentication"), [])
+
+    def test_real_bearer_token_still_flagged(self):
+        self.assertEqual(scanner.scan_text("Bearer " + "a9B2c8D4e7F6g5H3j1K0m9N8"), [1])
+
     def test_safe_text_and_line_numbers(self):
         self.assertEqual(scanner.scan_text("ordinary text\n" + self.key), [2])

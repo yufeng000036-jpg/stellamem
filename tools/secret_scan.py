@@ -35,11 +35,19 @@ VALUE_RULES = [
 # next to a split, repeated-character token fixture, in a file whose header
 # states all numbers are synthetic samples. It is computed here, not written
 # as one contiguous string, so this file itself never contains the fixture.
+# Prose false positive (not a fabricated fixture): "Bearer authentication" is
+# ordinary English in README.en.md describing Bearer-token auth. The Bearer
+# value-shaped pattern matches it because "authentication" is 14 word
+# characters. It is not a credential. Allowlisted because the line is already
+# in public history (commit 2640589, PR #71) and --history scans all commits;
+# the working-tree line itself was reworded to "Bearer-token authentication".
+# The exemption is exact-match only: any other "Bearer <token>" still flags.
 HISTORY_ALLOWLIST = (
     "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjMifQ.signature",
     "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
     "MIIEfakefakefake",
     "FAKEBODYLINE",
+    "Bearer authentication",
     "sk-" + "".join(chr(ord("a") + i) for i in range(24)),
 )
 # A fabricated private-key body is only allowlisted when the surrounding block is
