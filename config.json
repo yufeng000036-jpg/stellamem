@@ -19,5 +19,7 @@
     "extract_backend": "local",
     "cloud_model": "deepseek-chat",
     "cloud_budget_cny": 50,
-    "cloud_budget_state": "./stellamem-data/budget.json"
+    "cloud_budget_state": "./stellamem-data/budget.json",
+    "cloud_key_file": "",
+    "cloud_redact_names": [],
 }
