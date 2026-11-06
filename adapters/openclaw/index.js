@@ -39,11 +39,20 @@ export function records(text) {
 // Intent words per kind. They decide *which class* of memory a question is
 // about, not which individual claim: "项目" should surface project claims even
 // when the claim text never says "项目".
+// fact has a name/title entry, not a topic entry: questions that ask for a
+// name ("叫什么名字", "what is the name of ...?") are asking for a fact,
+// and kind drift labels title facts as fact, not project — without this,
+// "我的绘本项目叫什么名字？" injects nothing even though the title fact
+// exists (E2E doc, P1 narrow recall). It only grants the usual 0.05
+// intent-only score, capped at 3/kind, so a name question with no memory
+// answer can still surface unrelated facts; that is the same trade-off
+// type-only recall already makes for project/lesson/decision.
 const KIND_INTENT = {
   project: /项目|进展|开发|在做|进度|完成|project/i,
   preference: /偏好|喜欢|prefer|favorite|习惯/i,
   lesson: /教训|踩坑|经验|避免|lesson/i,
   decision: /决定|决策|选择|方案|decision/i,
+  fact: /叫什么|名字|叫啥|名称|title|name|called/i,
 };
 const NEVER = /$a/;
 const STOPWORDS = new Set([
@@ -58,15 +67,46 @@ function contentWords(text) {
   return words.filter((word) => !STOPWORDS.has(word));
 }
 
+// CJK bigram overlap: contentWords() returns whole CJK runs as single words
+// ("星球邮差" is one word), so a natural question mentioning only part of a
+// run ("绘本") scores zero lexical. Shared two-character chunks are the
+// missing middle signal between full-word match and no match at all.
+// Latin is intentionally excluded: shared adjacent word pairs add nothing
+// over shared words there, because a shared pair implies shared words and
+// contentWords already catches those (unless every shared word is a
+// stopword, which a pair cannot rescue either).
+function cjkBigrams(text) {
+  const grams = new Set();
+  for (const run of (text.toLowerCase().match(/[\u4e00-\u9fff]+/g) || [])) {
+    for (let i = 0; i + 1 < run.length; i++) grams.add(run.slice(i, i + 2));
+  }
+  return grams;
+}
+function sharedBigrams(claimText, query) {
+  const claim = cjkBigrams(claimText);
+  const prompt = cjkBigrams(query);
+  let shared = 0;
+  for (const g of claim) if (prompt.has(g)) shared += 1;
+  return shared;
+}
+
 function relevance(claim, prompt) {
   const query = prompt.toLowerCase();
-  const words = contentWords([claim.subject, claim.predicate, claim.value].join(" "));
+  const text = [claim.subject, claim.predicate, claim.value].join(" ");
+  const words = contentWords(text);
   let hit = 0;
   for (const word of words) if (query.includes(word)) hit += 1;
   const lexical = hit > 0;
   const base = words.length ? hit / words.length : 0;
   const intent = (KIND_INTENT[claim.kind] || NEVER).test(query);
-  return { score: base + (intent ? 0.35 : 0), lexical, intent };
+  // Bigram-only matches score below lexical: 0.05 base + 0.05 per shared
+  // bigram, capped at 0.25 total. At least 2 shared bigrams are required,
+  // so a single stray character pair cannot drag a claim in.
+  const shared = sharedBigrams(text, query);
+  const bigram = shared >= 2;
+  const bigramScore = bigram ? 0.05 + Math.min(0.20, 0.05 * shared) : 0;
+  const score = (lexical ? base : bigramScore) + (intent ? 0.35 : 0);
+  return { score, lexical, bigram, intent, sharedBigrams: shared };
 }
 
 function namespaceOf(c) {
@@ -154,14 +194,19 @@ export async function project(root, prompt, config = {}) {
         if (c.kind === "preference") {
           // Topical overlap required. A generic "我有哪些偏好" may fall back to
           // the top few, but a technical prompt ("偏好 8081 端口") may not.
-          if (!r.lexical && !(r.intent && !technical)) continue;
-        } else if (!r.lexical && !r.intent) {
+          // Bigram overlap is topical like lexical, so it passes even when
+          // technical; only intent alone is blocked by the carve-out.
+          if (!r.lexical && !r.bigram && !(r.intent && !technical)) continue;
+        } else if (!r.lexical && !r.bigram && !r.intent) {
           // Project/lesson/decision allow type-only recall, so "我有哪些项目"
           // works even when no claim text contains the word "项目".
           continue;
         }
       }
-      const score = always ? 2 : (r.lexical ? r.score : 0.05);
+      // Intent-only keeps the old 0.05; bigram-only scores 0.15-0.25, so a
+      // partial-overlap paraphrase outranks a type-only guess but stays
+      // below a real lexical hit.
+      const score = always ? 2 : (r.lexical || r.bigram ? r.score : 0.05);
       candidates.push({ c, score });
     }
   }

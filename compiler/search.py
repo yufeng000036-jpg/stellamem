@@ -14,7 +14,7 @@ import re
 import sqlite3
 import time
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 try:  # 包内导入（compiler.search）与扁平导入（sys.path 加 compiler/）都要能用
     from . import semantic
@@ -240,6 +240,62 @@ def _filter_sql(kinds, layers, status, person, persons=None):
     return (" AND ".join(clause) if clause else "1=1"), params
 
 
+def _empty_pool_fallback(con, intent, want_recent, limit, status, person, persons):
+    """空池兜底：词面候选与语义都为空时才调用。
+
+    意图问题按类型取同类记录（复用 broad_recall），时间问句取近 30 天记录
+    （与打分循环里 want_recent 的 30 天口径一致）。返回的记录一律标
+    fallback + 弱分：overlap 0（诚实：没有任何词面命中）、match="fallback"、
+    score 0.10（低于 recall() 默认 min_score 0.18，recall() 凭 fallback
+    标志放过）。上层凭 recall() 算出的 weak 标志决定是否注入。
+    无意图、无时间信号时返回 []，不兜底。
+    """
+    out = []
+    if intent:
+        for kind in sorted(INTENTS[intent][1]):
+            out.extend(
+                broad_recall(
+                    con,
+                    kind,
+                    limit=limit,
+                    status=status or ("active", "pending"),
+                    subject=person,
+                    subjects=persons,
+                )
+            )
+            if len(out) >= limit:
+                break
+    elif want_recent:
+        where, params = _filter_sql(None, None, status, person, persons)
+        cutoff = (date.today() - timedelta(days=30)).isoformat()
+        rows = con.execute(
+            f"SELECT * FROM records WHERE {where} AND COALESCE(occurred_at, '') >= ? "
+            "ORDER BY occurred_at DESC LIMIT ?",
+            list(params) + [cutoff, limit],
+        ).fetchall()
+        for row in rows:
+            rec = dict(row)
+            if rec.get("redacted") or not rec.get("value"):
+                continue
+            out.append(rec)
+            if len(out) >= limit:
+                break
+    seen, deduped = set(), []
+    for rec in out:
+        if rec["id"] in seen:
+            continue
+        seen.add(rec["id"])
+        rec["score"] = 0.10
+        rec["overlap"] = 0.0
+        rec["semantic"] = 0.0
+        rec["match"] = "fallback"
+        rec["fallback"] = True
+        deduped.append(rec)
+        if len(deduped) >= limit:
+            break
+    return deduped
+
+
 def search(
     con: sqlite3.Connection,
     query: str,
@@ -363,6 +419,16 @@ def search(
     intent = detect_intent(query)
     intent_kinds = set(INTENTS[intent][1]) if intent else set()
     want_recent = bool(re.search(r"最近|这几天|最近在|近期", query or ""))
+
+    # 空池兜底（P2）：词面候选（C1/C2/C3）与语义（C4）都为空时，search()
+    # 本来直接返回 []，哪怕问题明明问的是某类记忆（意图）或最近的事
+    # （时间问句）。只在池空时兜底，不碰已有候选的打分路径。
+    # 真正的零词面重叠意译仍需语义通道（L6，8082 端口未决），这里不解决。
+    if not pool:
+        fallback = _empty_pool_fallback(con, intent, want_recent, limit, status, person, persons)
+        for rec in fallback:
+            rec["elapsed_ms"] = round((time.perf_counter() - started) * 1000, 2)
+        return fallback
 
     scored = []
     for rec in pool.values():
@@ -820,7 +886,10 @@ def recall(
     # 去重：同一 claim 只留最高分那条；同值不同 id 也折叠。
     seen_claims, seen_values, picked = set(), set(), []
     for rec in hits:
-        if rec["score"] < min_score:
+        # 空池兜底条目（fallback）分数 0.10 低于 min_score，但它们是池空时
+        # 唯一的信号，放过 min_score；weak 标志（overlap 0）已标上，
+        # 上层凭它决定是否注入。
+        if rec["score"] < min_score and not rec.get("fallback"):
             continue
         key = rec.get("claim_id")
         value_key = re.sub(r"\s+", "", (rec.get("value") or ""))[:40]
