@@ -19,7 +19,8 @@ python compiler/nightly_settlement.py --root <记忆数据根目录> [--db <索�
    preference / lesson / decision / project / fact + 其他；
    persona / viewer 只报总数，不报内容；pending（inbox 未审）单列；
    superseded / rejected 只计入“历史”，不进各层。
-2. **桌面多少字节**：桌面页未做，报“未启用”，不编数。
+2. **桌面多少字节**：按主体报桌面页真实字节数（见 `docs/DESKTOP-PAGE.md`）；
+   没有桌面页的主体不报，全部没有时报“未启用”，不编数。
 3. **今晚动了几条**：自上次结算以来写入链（`system/version-chain.json`）
    新增的事件数。基线存在上次结算的状态文件里（时间戳 + 事件总数）；
    首次运行没有基线，报“首次结算、无上次基线”，不猜。
