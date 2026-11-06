@@ -26,3 +26,21 @@ def ensure_utf8_stdout():
     except Exception:
         return False
     return True
+
+
+def ensure_utf8_stderr():
+    """Reconfigure stderr to UTF-8 when possible; never raise.
+
+    与 ensure_utf8_stdout 同一个道理：Windows 控制台默认编码下，
+    报错信息里的中文也会炸（桌面页 CLI 在 CI run 42171748727 的
+    Windows 两档上就是这么红的）。同样 best-effort，失败不抛错。
+    """
+    stream = getattr(sys, "stderr", None)
+    reconfigure = getattr(stream, "reconfigure", None)
+    if reconfigure is None:
+        return False
+    try:
+        reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        return False
+    return True
