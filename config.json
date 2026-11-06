@@ -22,4 +22,6 @@
     "cloud_budget_state": "./stellamem-data/budget.json",
     "cloud_key_file": "",
     "cloud_redact_names": [],
+    "pending_auto_approve_enabled": true,
+    "pending_auto_approve_hours": 72
 }

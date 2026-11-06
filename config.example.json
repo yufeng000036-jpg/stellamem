@@ -10,5 +10,7 @@
   "context_size": 16384,
   "model_timeout": 90,
   "gpu_layers": 0,
-  "telemetry": false
+  "telemetry": false,
+  "pending_auto_approve_enabled": true,
+  "pending_auto_approve_hours": 72
 }

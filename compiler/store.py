@@ -111,6 +111,7 @@ class MemoryStore:
                 old["valid_to"] = c["provenance"]["timestamp"]
                 old["expired_at"] = _now
                 self.dirty.add(active[0][0])
+            _now = datetime.now(timezone.utc).isoformat()
             c.update(
                 claim_id=cid,
                 revision_id=rev,
@@ -118,6 +119,14 @@ class MemoryStore:
                 status="active" if allowed else "pending",
                 relation=relation,
             )
+            if not allowed:
+                # Time-based second chance (pending auto-approval): stamp the
+                # moment this claim entered the inbox. Only records stamped
+                # here can ever auto-approve. Anything that landed before
+                # this field existed has no stamp and stays manual forever.
+                # Never derive this from provenance.timestamp: a new claim
+                # may quote an old message.
+                c["pending_since"] = _now
             rel = ROUTE[c["kind"]] if allowed else INBOX
             self.records[rel].append(c)
             if allowed:
