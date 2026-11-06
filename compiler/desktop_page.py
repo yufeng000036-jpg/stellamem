@@ -30,9 +30,11 @@ from pathlib import Path
 
 try:  # 包内与扁平导入都要能用（测试只把 compiler/ 加进 sys.path）
     from . import subjects as subjects_mod
+    from .cli_output import ensure_utf8_stdout
     from .file_lock import atomic_write_text
 except ImportError:  # pragma: no cover - flat layout
     import subjects as subjects_mod  # type: ignore
+    from cli_output import ensure_utf8_stdout  # type: ignore
     from file_lock import atomic_write_text  # type: ignore
 
 MAX_BYTES = 4096
@@ -216,11 +218,33 @@ def desktop_status_text(root) -> str:
     return "；".join(parts) if parts else "未启用"
 
 
+def _ensure_utf8_stderr() -> bool:
+    """Best-effort：stderr 也切 UTF-8。
+
+    与 cli_output.ensure_utf8_stdout 同一个道理：Windows 控制台默认编码
+    下，报错信息里的中文也会炸（UnicodeEncodeError）。拿不到
+    reconfigure 或切失败时返回 False，不抛错、不影响主流程。
+    """
+    stream = getattr(sys, "stderr", None)
+    reconfigure = getattr(stream, "reconfigure", None)
+    if reconfigure is None:
+        return False
+    try:
+        reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        return False
+    return True
+
+
 # ---------------- CLI ----------------
 
 
 def main(argv=None) -> int:
     """无头 CLI：看桌面页、改写桌面页、报字节数。"""
+    # Windows 控制台默认编码不是 UTF-8，印中文会炸（仓库里 inbox 在
+    # CI run 41391359251 栽过同一个坑）。启动时先切 stdout 与 stderr。
+    ensure_utf8_stdout()
+    _ensure_utf8_stderr()
     parser = argparse.ArgumentParser(description="4K 桌面页：每主体一张，4096 字节上限。")
     parser.add_argument("--root", required=True, help="记忆数据根目录")
     parser.add_argument("--subject", default="user", help="主体（user/persona/viewer，别名认）")
