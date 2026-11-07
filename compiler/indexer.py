@@ -228,12 +228,19 @@ class Index:
 
     @_locked
     def build(self, root, include_daily=True, include_pending=True) -> dict:
+        # Records and freshness metadata commit together, or roll back together.
+        with self.con:
+            return self._build(root, include_daily, include_pending)
+
+    def _build(self, root, include_daily=True, include_pending=True):
         try:  # 包内与扁平导入都要能用（MCP stdio 只加了仓库根，compiler/ 不在 sys.path）
             from .storage import load_records
         except ImportError:  # pragma: no cover - flat layout
             from storage import load_records
 
         root = Path(root)
+        initial_fingerprint = source_fingerprint(root, include_daily)
+        initial_content_hash = source_content_hash(root, include_daily)
         self.con.execute("DELETE FROM records")
         self.con.execute("DELETE FROM records_fts")
         self.con.execute("DELETE FROM records_grams")
@@ -247,8 +254,8 @@ class Index:
                 continue
             try:
                 _, records = load_records(path)
-            except ValueError:
-                continue
+            except ValueError as exc:
+                raise ValueError(f"index incomplete: cannot parse {rel_path}") from exc
             for rec in records:
                 status = rec.get("status")
                 if status == "pending" and not include_pending:
@@ -314,7 +321,8 @@ class Index:
                     )
                     doc_count += 1
 
-        self.con.commit()
+        if source_fingerprint(root, include_daily) != initial_fingerprint:
+            raise RuntimeError("memory sources changed during index build; retry")
         meta = {
             "built_at": __import__("datetime")
             .datetime.now(__import__("datetime").timezone.utc)
@@ -324,8 +332,8 @@ class Index:
             "redacted": redacted,
             "root": str(root),
             "schema": "3",
-            "source_fingerprint": source_fingerprint(root, include_daily),
-            "source_content_hash": source_content_hash(root, include_daily),
+            "source_fingerprint": initial_fingerprint,
+            "source_content_hash": initial_content_hash,
         }
         for key, value in meta.items():
             self.con.execute("INSERT OR REPLACE INTO meta VALUES (?,?)", (key, str(value)))
