@@ -94,9 +94,7 @@ class StellamemMCPServer:
         """MCP 直接读 index.db：召回前先比对源文件指纹，过期就重建。
 
         记忆根从库里 meta 的 `root` 读（build 时写进），不依赖
-        workspace_dir（它不一定是记忆根）。失败时打 stderr 日志，
-        读旧索引比不读好，下次调用再试（验收第三轮：原来这里静默吞错，
-        stdio 模式下重建失败也看不出来）。
+        workspace_dir（它不一定是记忆根）。失败时拒绝召回，避免删除或撤回后的旧内容继续被注入。
         """
         if not self.index_db_path or not self.index_db_path.is_file():
             return
@@ -111,7 +109,7 @@ class StellamemMCPServer:
             finally:
                 con.close()
             if not root_row:
-                return
+                raise RuntimeError("index source root is missing")
             idx = Index(self.index_db_path)
             try:
                 if idx.is_stale(Path(root_row[0])):
@@ -120,6 +118,7 @@ class StellamemMCPServer:
                 idx.close()
         except Exception as exc:  # noqa: BLE001
             print(f"stellamem: index refresh failed: {exc}", file=sys.stderr)
+            raise RuntimeError("index freshness unavailable; recall blocked") from exc
 
     def list_tools(self) -> list[dict[str, Any]]:
         return [
@@ -291,7 +290,15 @@ class StellamemMCPServer:
             # Live recall when an index DB is configured; otherwise scaffold.
             # 验收 P1：MCP 直接读 index.db，同样会被旧索引坑——召回前先
             # 比对源文件指纹，过期就重建。
-            self._ensure_index_fresh()
+            try:
+                self._ensure_index_fresh()
+            except RuntimeError:
+                return {
+                    "status": "fail_closed",
+                    "items": [],
+                    "wired": True,
+                    "reason": "index freshness unavailable; recall blocked",
+                }
             if self.index_db_path and self.index_db_path.is_file():
                 try:
                     import sqlite3

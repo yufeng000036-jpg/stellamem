@@ -62,6 +62,7 @@ class AutoApproveTests(unittest.TestCase):
             kwargs.setdefault("value", "决定改用本地模型，因为云端太慢")
         kwargs.setdefault("confidence", 0.5)
         store = MemoryStore(self.mem)
+        kwargs.setdefault("evidence", kwargs.get("value", "concise"))
         c = verified(kind=kind, **kwargs)
         store.ingest(c)
         store.commit()
@@ -150,6 +151,14 @@ class AutoApproveTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(result["approved"], [])
         self.assertEqual([r["status"] for r in self.pending_records()], ["pending"])
+
+    def test_verified_quote_does_not_approve_contradictory_value(self):
+        self.seed(value="决定换城市，因为想换工作", evidence="我决定不换城市，因为现在的工作很好")
+        cid = self.pending_records()[0]["claim_id"]
+        self.age_pending(cid, 100)
+        _, result = self.cli_json(["auto-approve"])
+        self.assertEqual(result["approved"], [])
+        self.assertIn("manual review", result["skipped"][0]["reason"])
 
     def test_grace_just_after_72h_auto_approves(self):
         self.seed()
@@ -308,6 +317,7 @@ class AutoApproveTests(unittest.TestCase):
             "sensitivity": "PRIVATE",
             "source": "user",
             "evidence": "x",
+            "value": "x",
             "evidence_verified": True,
             "relation": "NEW",
             "write_policy": "allow",

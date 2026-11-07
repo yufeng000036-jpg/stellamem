@@ -117,6 +117,16 @@ def auto_approve_eligible(record, store, grace_hours, now, duplicate_keys=None):
         return False, "source is not the user"
     if not record.get("evidence") or record.get("evidence_verified") is not True:
         return False, "evidence not verified"
+    # Literal evidence matching proves provenance, not semantic entailment.
+    # Only exact quotations may pass unattended; paraphrases need human review.
+    value = record.get("value")
+    evidence = record.get("evidence")
+    if (
+        not isinstance(value, str)
+        or not isinstance(evidence, str)
+        or value.strip() != evidence.strip()
+    ):
+        return False, "value is not an exact evidence quote; manual review required"
     if record.get("relation") != "NEW":
         return False, "relation is not NEW"
     if record.get("write_policy") != "allow":
