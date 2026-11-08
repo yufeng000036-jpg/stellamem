@@ -174,6 +174,27 @@ test("projection header carries the entity-match guard, and empty projection sta
   assert.equal(await project(root, "今天天气怎么样"), "");
 });
 
+test("projection output after the first line is all JSON lines (worker.py contract)", async () => {
+  // benchmark/longmemeval/worker.py parses the projection as
+  // context.splitlines()[1:] and json.loads() every line: the header must
+  // be exactly one line. PR #79 split it into two and every question with
+  // a non-empty projection failed with JSONDecodeError (smoke, 2026-11-08).
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [
+    record({ claim_id: "c-one", revision_id: "r-one", kind: "fact",
+      predicate: "used coupon", value: "Walmart coupon",
+      evidence: "I used a coupon at Walmart" }),
+  ]);
+  const out = await project(root, "What coupon did I use at Walmart?");
+  const lines = out.split("\n");
+  assert.ok(lines.length >= 2, "projection must have a header and a claim line: " + out);
+  for (const line of lines.slice(1)) {
+    if (line === "") continue;
+    assert.equal(JSON.parse(line).id, "c-one",
+      "every line after the header must be a JSON claim line: " + line);
+  }
+});
+
 test("guard does not change which claims are projected", async () => {
   // The guard is header text: selection is decided before the prefix is
   // assembled, so the projected claim set must be exactly the matching one.
