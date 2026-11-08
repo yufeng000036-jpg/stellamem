@@ -4,6 +4,20 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased — 修 PR #94 的 Windows CI 红（验证脚本读中文文件缺 encoding）
+
+PR #94 合后 CI 3/7：ubuntu-3.12、macos-3.12、quality 绿；ubuntu-3.10 与 macos-3.10 红在 `actions/setup-python`（504，基础设施问题，与代码无关）；windows-3.12 与 windows-3.10 红在 `unittest discover`。根因是本 PR 新加的 `abstain_validation.py` 用不带 encoding 的 `read_text()` 读中文 JSON（`negative_samples.json`），Windows 默认 cp1252 下直接 `UnicodeDecodeError`——本地 UTF-8 模式的机器上跑不出来，Windows CI 上两档全红。已在子进程里复现（`PYTHONUTF8=0` + `LC_ALL=C` 下同一行报错）。
+
+### 改动
+
+- `benchmark/longmemeval/abstain_validation.py`：全部 11 处 `read_text()`/`write_text()` 补 `encoding="utf-8"`。
+- `tests/test_abstain_validation.py`（新增 1 个回归测试，共 10 个）：子进程模拟非 UTF-8 默认编码（仓库既有模式：`PYTHONIOENCODING=cp1252`、`PYTHONUTF8=0`，再加 `LC_ALL=C` / `PYTHONCOERCECLOCALE=0`），调 `build_negative_cases` 读真实中文文件，断言 7 条全读出来。修之前该测试在子进程里以 `UnicodeDecodeError` 失败，修之后通过。
+- 另：`abstain_experiment.py` / `claim_tracking.py` 里同样的裸 `read_text()` 是既有 latent（其测试用 ASCII 夹具所以 Windows 上一直是绿的），本次不动，另记跟进。
+
+### 测试
+
+- 全量 **901 Python + 31 Node 通过**（900 + 1 新增 Python；Node 不变）。
+
 ## Unreleased — 拒答改法验证（1a/1b 先验证再改）
 
 2026-11-08 外部评估（7.8/10）的 P1 与 silver 12:13 的两个改法：生成前 CoT 预检（1a）与语义级 LLM-as-a-judge（1b）。先在小样本上验证再决定进不进生产路径——验证结论是两个都不进（见下），本 PR 只落验证工具与这次测量的阴性结论，不改任何生产路径。
