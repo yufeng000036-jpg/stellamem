@@ -57,12 +57,14 @@ try:  # 包内与扁平导入都要能用（测试只把 compiler/ 加进 sys.pa
     from . import hit_votes
     from . import indexer
     from . import subjects
+    from .cli_output import ensure_utf8_stderr, ensure_utf8_stdout
     from .storage import BLOCK, MARK, load_records
 except ImportError:  # pragma: no cover - flat layout
     import desktop_page
     import hit_votes
     import indexer
     import subjects
+    from cli_output import ensure_utf8_stderr, ensure_utf8_stdout  # type: ignore
     from storage import BLOCK, MARK, load_records
 
 KINDS_REPORTED = ("preference", "lesson", "decision", "project", "fact")
@@ -509,6 +511,11 @@ def run_settlement(
 
 def main(argv=None) -> int:
     """无头 CLI：对指定数据目录跑一次结算，报告打到 stdout，同时写日志文件。"""
+    # Windows 控制台默认编码（cp936/cp1252）下结算报告的中文会炸
+    # （CI 里 Windows 两档就是这么红的）；入口先重配成 UTF-8，
+    # best-effort，失败不抛错（见 compiler/cli_output.py）。
+    ensure_utf8_stdout()
+    ensure_utf8_stderr()
     parser = argparse.ArgumentParser(description="夜间结算报数：只读统计记忆库，报四个数。")
     parser.add_argument("--root", required=True, help="记忆数据根目录")
     parser.add_argument("--db", default=None, help="索引库路径（可选；不给则不查索引）")

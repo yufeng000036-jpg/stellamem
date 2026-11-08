@@ -9,6 +9,7 @@ PROTOCOL.md、manifest.json、freeze.py）的哈希与物理 byte_count，两者
 import argparse
 import hashlib
 import json
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -28,7 +29,9 @@ FROZEN_FILE_BYTE_COUNTS = {
     "manifest.json": 25455,
     # freeze.py 自身只核对字节数：自哈希无法自举；改动 freeze.py 会改变其
     # 字节数从而触发拦截，除非改动者同步更新期望值，那是有意、可复核的改动。
-    "freeze.py": 5627,
+    # 2026-11-08：__main__ 加 UTF-8 输出重配（Windows 控制台中文会炸，
+    # 见 _ensure_utf8_streams），字节数 5627 → 6856。
+    "freeze.py": 6856,
 }
 
 
@@ -109,7 +112,36 @@ def freeze(path):
     }
 
 
+def _ensure_utf8_streams():
+    """CLI 输出改 UTF-8（best-effort，失败不抛错）。
+
+    Windows 控制台默认编码（cp936/cp1252）下中文报错/输出会炸
+    （CI 里 Windows 两档就是这么红的：ValueError 里的中文在
+    traceback 里被转义成 \\uXXXX，测试断言不到原文）。脚本直接
+    运行时仓库根不在 sys.path，先补上再复用 compiler/cli_output
+    的共享 helper；复用失败就地重配，同样 best-effort。
+    """
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+        from compiler.cli_output import ensure_utf8_stderr, ensure_utf8_stdout
+
+        ensure_utf8_stdout()
+        ensure_utf8_stderr()
+        return
+    except Exception:
+        pass
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
+
 if __name__ == "__main__":
+    _ensure_utf8_streams()
     p = argparse.ArgumentParser()
     p.add_argument(
         "--verify", action="store_true", help="只核对冻结文件（哈希 + 字节数），不生成 manifest"

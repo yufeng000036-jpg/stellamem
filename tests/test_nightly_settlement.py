@@ -379,6 +379,26 @@ class SettlementCliTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("今晚动了：1 条", buf.getvalue())
 
+    def test_cli_prints_report_under_cp1252_stdout(self):
+        """Windows 控制台默认编码（cp1252）下结算报告的中文也不能炸。
+
+        main() 入口先把 stdout/stderr 重配成 UTF-8（compiler/cli_output，
+        best-effort）。直接把 sys.stdout 换成 cp1252 编码的
+        TextIOWrapper 复现：修之前 print 报告就报 UnicodeEncodeError；
+        修之后写出 UTF-8 字节，解出来仍是中文报告。
+        """
+        raw = io.BytesIO()
+        wrapper = io.TextIOWrapper(raw, encoding="cp1252")
+        old_stdout = sys.stdout
+        try:
+            sys.stdout = wrapper
+            code = nightly_settlement.main(["--root", str(self.root)])
+        finally:
+            sys.stdout = old_stdout
+            wrapper.flush()
+        self.assertEqual(code, 0)
+        self.assertIn("夜间结算", raw.getvalue().decode("utf-8"))
+
     def test_cli_missing_root_returns_2(self):
         code = nightly_settlement.main(["--root", str(self.root / "nope")])
         self.assertEqual(code, 2)

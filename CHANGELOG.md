@@ -4,6 +4,17 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased — 修 Windows CI 红：新 CLI 在 cp1252 控制台下中文输出会炸
+
+#98 合后 CI 5/7：两个 Windows 作业红在 `unittest discover`。根因与 PR #94 同类：新加的两个 CLI 在 Windows 默认编码（cp1252）下输出中文就炸——`nightly_settlement.main()` 直接 `print` 中文报告报 `UnicodeEncodeError`；`freeze.py --verify` 失败时 traceback 里的中文被转义成 `\uXXXX`，测试断言不到原文。修法沿用仓库既有模式（`compiler/cli_output.py`，PR #69）：CLI 入口先把 stdout/stderr 重配成 UTF-8（best-effort）；freeze 测试的子进程按 UTF-8 接输出。
+
+### 改动
+
+- `compiler/nightly_settlement.py`：`main()` 入口调用 `ensure_utf8_stdout()` / `ensure_utf8_stderr()`。
+- `benchmark/longmemeval/freeze.py`：`__main__` 入口加 `_ensure_utf8_streams()`（复用 `compiler/cli_output`，复用失败就地重配）；自身字节数期望值 5627 → 6856（改动 freeze.py 须同步更新常量，见文件内注释）。
+- `tests/test_freeze_verification.py`：CLI 子进程按 `encoding="utf-8"` 接输出。
+- `tests/test_nightly_settlement.py`（新增 1 个回归测试，共 925 个 Python）：`main()` 在 cp1252 编码的 stdout 下照常打印中文报告；去掉重配调用时该测试必失败（已做反向验证）。
+
 ## Unreleased — 验证卫生：结算必红臂 + 冻结 byte_count + 2^53 检查 + NOT_EXECUTED
 
 第三波（拒答攻坚）：让“验证通过”本身可信。结算账本加独立重数必红臂（对不上就不写日志、不更新基线）；冻结文件核对哈希与物理字节数（`freeze.py --verify`）；2^53 id 精度实测无问题（只钉回归测试，不虚构修法）；负样本 runner 增加第三种 verdict `NOT_EXECUTED`，报表上永不折算成 0。
