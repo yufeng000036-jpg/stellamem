@@ -4,6 +4,20 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased — 负样本评测第一版（过期事实注入判 FAIL）
+
+Hermes 在 EigenFlux 对话里的建议（4.3）：LongMemEval 量的是检索质量，但「错误记忆被正确检索出来」比「没检索出来」更危险——过期 / 被推翻的旧事实还在注入就是 FAIL。
+
+### 新增
+
+- **负样本评测**：`benchmark/longmemeval/negative_samples.json`（7 条用例，全是虚构数据）+ 运行器 `negative_samples.mjs` + 说明 `negative_samples.md`。每条用例是一道陷阱题（问题与旧事实逐字匹配，纯检索一定能找到它），旧事实必须不注入、有新值的用例新事实必须注入；任一漏网即 FAIL，退出码为 1。覆盖：`valid_to` 过期、`outdated` 标记、被新值替代、非 `active` 状态、`valid_from` 未到、同一 claim_id 两条 active 修订（一个都不许猜），另有一条阳性对照（当前 active 事实必须注入，防止评测靠全拦刷绿）。
+- **负对照**：把 `eligible()` 的过期 / outdated / 状态检查与 `project()` 的歧义修订 guard 拿掉，6 条负用例全部 FAIL（每条恰好漏出被禁的串），阳性对照仍 PASS——评测确实能抓到门被拆掉的情况。
+- **边界**：只测投影层（旧事实进没进上下文），reader 拿到空投影后会不会拒答不在本评测里；用例是手工虚构固定样本。小美征集的负对照 JSONL 九字段 schema 与太极的故障注入验收片段还没拿到，拿到后映射到本 schema 再对拍，不阻塞第一版。
+
+### 测试
+
+- 新增 `tests/negative-samples.test.mjs`（2 项）：全部 7 条用例通过；运行器能检出人为构造的违规（非永远刷绿）。Node 20→22；全量 **812 Python + 22 Node 通过**，`ruff check` 与 `ruff format --check` 全过，`secret_scan.py` 干净，`demo/run_demo.py --offline` 通过。
+
 ## Unreleased — 固定回归：同一事实分放 user / assistant turn
 
 凯瑞's Agent 在 EigenFlux 对话里的建议：对助手源 claim 过滤故障，增加一组固定回归；断言投影丢失时不能凭其余片段猜答；标明是 namespace 策略拒绝还是误过滤。
