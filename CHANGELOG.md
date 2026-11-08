@@ -4,6 +4,24 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased — 关闭删除链的 Index 连接（修 Windows CI 8 失败）
+
+2026-11-08 主线 CI 上 `tests (windows-latest, 3.12)` 在 6c9ce7f（PR #87）与 17acc45（PR #88）两次失败，8 个测试全在 `tests/test_deletion_chain.py`，其余 5 个 job 与质量检查全过。浏览器读日志确认：不是断言失败，是清理临时目录时 `PermissionError: [WinError 32]`——`memories\index.db` 仍被占用。
+
+### 根因
+
+`Index` 实例会进引用环，引用计数释放不了它、只有循环 GC 才关文件；Linux 下删打开的文件没事，Windows 下删不掉。`forget_record()` 里 `Index(db_path).build(root)` 是裸调用、从不 close；测试 fixture 里 `Index(self.db).build(self.root)` 同样。仓库里其余三处（api.py 后台重建、MCP 服务器、test_d1d3 的 tearDown）本来就是 try/finally 或 tearDown 里 close，只有删除链这两处漏了。
+
+### 修复
+
+- `compiler/deletion_chain.py`：`forget_record()` 的 index 重建改成 try/finally 里 `idx.close()`。
+- `tests/test_deletion_chain.py`：fixture 里留住 Index 引用并 `addCleanup(self._index.close)`（LIFO，先关连接、再删临时目录）。
+
+### 测试
+
+- 新增 `test_forget_closes_index_connection`：spy 断言 `forget_record()` 调了 `Index.close()`，不依赖 GC 时机。
+- 全量 **870 Python + 24 Node 通过**（869 + 1 新增）。
+
 ## Unreleased — LongMemEval 第四轮追踪表更新（0.354 / 0.857 / 0.800）
 
 2026-11-08 第四轮全量重跑（main `9034cde`，PR #79 窄 guard 在位；协议 `v2-full-route-B`，与前三轮相同；中途两次虚拟机重启，检查点续跑完成；总计 $1.2862，10,871 次调用）。工作区报告 `longmemeval-rerun3-20261108.md`。

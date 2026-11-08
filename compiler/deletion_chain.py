@@ -286,9 +286,19 @@ def forget_record(
         "note": "diary lines are the user's own journal; the operator decides",
     }
     # Index: rebuild from the (modified) files, then re-check.
+    # The connection MUST be closed explicitly: Index instances end up in
+    # a reference cycle, so refcounting does not free them and only the
+    # cyclic GC closes the file — on Windows the still-open index.db then
+    # blocks deletion of the directory (WinError 32; CI windows-3.12 failed
+    # 8/8 deletion-chain tests this way). api.py and the MCP server already
+    # close in try/finally; this call site did not.
     db_path = Path(index_db) if index_db else root / "index.db"
     if db_path.exists():
-        Index(db_path).build(root)
+        idx = Index(db_path)
+        try:
+            idx.build(root)
+        finally:
+            idx.close()
         report["layers"]["index"] = {
             "action": "rebuilt",
             "active_remaining": _index_has_active(db_path, claim_id),

@@ -80,9 +80,15 @@ class FixtureMixin(unittest.TestCase):
             f"# 日档（user · 2026-11-06）\n\n## 变\n\n- {DEL_VALUE}\n",
             encoding="utf-8",
         )
-        # Index built from the live files.
+        # Index built from the live files. Close it explicitly: the Index
+        # ends up in a reference cycle, so refcounting does not free it and
+        # only the cyclic GC closes the file — on Windows the still-open
+        # index.db then blocks TemporaryDirectory cleanup (WinError 32).
+        # addCleanup runs LIFO, so this close runs before tmp.cleanup.
         self.db = self.root / "index.db"
-        Index(self.db).build(self.root)
+        self._index = Index(self.db)
+        self.addCleanup(self._index.close)
+        self._index.build(self.root)
         # Derived cache entry for the facts file.
         self.cache = DerivedMarkdownCache(self.root)
         self.cache.get_or_parse(facts, lambda text, path: {"parsed": True})
@@ -214,6 +220,27 @@ class ForgetTests(FixtureMixin):
     def test_unknown_mode_rejected(self):
         with self.assertRaises(ValueError):
             forget_record(self.root, "c-del", mode="shred")
+
+    def test_forget_closes_index_connection(self):
+        # Regression: forget_record() used to build the index with a bare
+        # `Index(db).build(root)` and never close it. The Index ends up in
+        # a reference cycle, so only the cyclic GC closes the file — on
+        # Windows the still-open index.db then blocks directory deletion
+        # (WinError 32; CI windows-3.12 failed 8/8 deletion-chain tests).
+        # This spy asserts close() is called, without relying on GC timing.
+        import deletion_chain
+        from unittest import mock
+
+        closed = []
+
+        class ClosingIndex(Index):
+            def close(self):
+                closed.append(str(self.path))
+                super().close()
+
+        with mock.patch.object(deletion_chain, "Index", ClosingIndex):
+            forget_record(self.root, "c-del", index_db=self.db)
+        self.assertIn(str(self.db), closed)
 
 
 if __name__ == "__main__":
