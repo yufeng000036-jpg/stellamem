@@ -4,6 +4,17 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased — 验证卫生：结算必红臂 + 冻结 byte_count + 2^53 检查 + NOT_EXECUTED
+
+第三波（拒答攻坚）：让“验证通过”本身可信。结算账本加独立重数必红臂（对不上就不写日志、不更新基线）；冻结文件核对哈希与物理字节数（`freeze.py --verify`）；2^53 id 精度实测无问题（只钉回归测试，不虚构修法）；负样本 runner 增加第三种 verdict `NOT_EXECUTED`，报表上永不折算成 0。
+
+### 改动
+
+- `compiler/nightly_settlement.py`：新增 `recount_ledger_raw()`（与 `collect_counts` 不共享计数代码路径的原文重数）+ `verify_ledger_arm()`，`build_report` 里计数产出后立即逐桶对账。
+- `benchmark/longmemeval/freeze.py`：新增 `verify_frozen_files()` + `freeze.py --verify`，5 个冻结文件逐个核对哈希与物理字节数；冻结内容口径不动。
+- `benchmark/longmemeval/negative_samples.mjs`：`runCase`/`runAll` 增加 `verdict`（PASS/FAIL/NOT_EXECUTED）与 `contract_version`/`actual_version`；`summarize()` 通过率只按已执行 case 算，未执行既不计分子也不计分母，零执行时为 null；退出码：全 PASS 为 0、有 FAIL 或哨兵为 1、仅 NOT_EXECUTED 为 2。七字段与哨兵口径不变（第二波）。
+- `tests/test_nightly_settlement.py`、`tests/test_freeze_verification.py`、`tests/test_id_precision_2pow53.py`、`tests/id-precision.test.mjs`（新增）：共 17 个 Python + 6 个 Node 回归测试。
+
 ## Unreleased — 负样本评测做实：哨兵 + 池轮换 + 七字段
 
 第二波（拒答攻坚）：负样本评测本身不能变假绿。加哨兵、给池子版本化

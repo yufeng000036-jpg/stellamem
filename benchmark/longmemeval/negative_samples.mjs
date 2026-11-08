@@ -23,12 +23,32 @@
 //   without a matching run_id is not current evidence (see
 //   isCurrentEvidence).
 //
+// Wave 3 adds a third verdict, NOT_EXECUTED (see below): a case that
+// did not run at all is never folded into 0 — it counts neither as a
+// pass nor as a fail, and the pass rate is computed over executed
+// cases only (null when nothing executed).
+//
 // Run: node benchmark/longmemeval/negative_samples.mjs
 // Exit 0 = every case passes and the sentinel is quiet; exit 1 = at
-// least one FAIL, or the sentinel tripped.
+// least one FAIL, or the sentinel tripped; exit 2 = at least one case
+// NOT_EXECUTED (no FAIL, sentinel quiet).
 // Fixtures: negative_samples.json (fictional data only, no private memory).
 // The same runner is imported by tests/negative-samples.test.mjs.
 // Fixture path override (tests only): NEGATIVE_SAMPLES_FIXTURES.
+//
+// Verdicts — exactly three, no fourth status:
+//   PASS: the case ran and the gate behaved as required.
+//   FAIL: the case ran and the gate misbehaved (leaked / missing).
+//   NOT_EXECUTED: the case did not run at all — e.g. it declares a
+//     contract_version this runner does not implement (the contract wants
+//     a subcommand/capability the implementation version has not landed
+//     yet), or the run itself crashed before a verdict could be produced.
+//     A NOT_EXECUTED case is never folded into 0: it counts neither as a
+//     pass nor as a fail, and the pass rate is computed over executed
+//     cases only (null when nothing executed).
+// Every result carries both versions: contract_version (what the case
+// declares it needs; defaults to this runner's CONTRACT_VERSION) and
+// actual_version (the version of the implementation that attempted it).
 import { mkdtemp, mkdir, writeFile, readFile } from "node:fs/promises";
 import { createHash, randomBytes } from "node:crypto";
 import os from "node:os";
@@ -43,6 +63,11 @@ const FIXTURES = process.env.NEGATIVE_SAMPLES_FIXTURES ||
 // Seven-field negative-control exchange schema, version 1.
 export const SCHEMA_VERSION = 1;
 export const ARM_EXECUTED = "negative-control";
+// Version of the negative-sample contract this runner implements.
+// A case declaring a different contract_version cannot be executed
+// as specified and is recorded NOT_EXECUTED (see runCase).
+export const CONTRACT_VERSION = "1";
+export const VERDICTS = ["PASS", "FAIL", "NOT_EXECUTED"];
 // Verdict vocabulary. expected_verdict is deliberately NOT PASS/FAIL.
 export const EXPECTED_FAULT_DETECTED = "检出故障";
 export const EXPECTED_NORMAL_INJECTION = "正常注入";
@@ -167,42 +192,86 @@ export function defaultRecord(overrides = {}) {
 export async function runCase(c, ctx = {}) {
   const runId = ctx.runId || newRunId();
   const poolVersion = ctx.poolVersion ?? 0;
-  const root = await mkdtemp(path.join(os.tmpdir(), "stellamem-neg-"));
-  const file = path.join(root, "semantic/facts.md");
-  await mkdir(path.dirname(file), { recursive: true });
-  const records = c.records.map((r) => defaultRecord(r));
-  await writeFile(file, "<!-- stellamem:v2 -->\n" +
-    records.map((x) => "```stellamem\n" + JSON.stringify(x) + "\n```\n").join("\n"));
-  const out = await project(root, c.question);
-  const leaked = (c.must_not_contain || []).filter((s) => out.includes(s));
-  const missing = (c.must_contain || []).filter((s) => !out.includes(s));
-  const expected = expectedVerdict(c);
-  const observed = observedVerdict(c, leaked, missing);
-  // Sentinel: a forbidden string in the projection means the record was
-  // retrieved AND injected despite the gate. That is the one failure
-  // that must never be silent.
-  const sentinelTripped = leaked.length > 0;
-  return {
+  const actual_version = ctx.actual_version ?? CONTRACT_VERSION;
+  const contract_version = c.contract_version ?? CONTRACT_VERSION;
+  // A NOT_EXECUTED result still carries all seven exchange fields so it
+  // stays attributable to this run and pool. observed_verdict is null:
+  // nothing was observed — the case never ran.
+  const notExecuted = (reason, error) => ({
     id: c.id,
-    pass: observed === expected,
-    leaked, missing, reason: c.reason,
-    sentinel_tripped: sentinelTripped,
+    verdict: "NOT_EXECUTED",
+    pass: null,
+    leaked: [],
+    missing: [],
+    reason: c.reason,
+    sentinel_tripped: false,
     arm_executed: ARM_EXECUTED,
     criteria_digest: criteriaDigest(c, poolVersion),
     injected_fault: faultOf(c),
-    expected_verdict: expected,
-    observed_verdict: observed,
+    expected_verdict: expectedVerdict(c),
+    observed_verdict: null,
     run_id: runId,
     evidence_source: `negative_samples.json v${poolVersion}#${c.id}`,
-  };
+    contract_version,
+    actual_version,
+    error: error ?? reason,
+  });
+  if (c.contract_version !== undefined && c.contract_version !== CONTRACT_VERSION) {
+    return notExecuted(
+      `contract version ${c.contract_version} not implemented by runner version ${actual_version}`,
+    );
+  }
+  try {
+    const root = await mkdtemp(path.join(os.tmpdir(), "stellamem-neg-"));
+    const file = path.join(root, "semantic/facts.md");
+    await mkdir(path.dirname(file), { recursive: true });
+    const records = c.records.map((r) => defaultRecord(r));
+    await writeFile(file, "<!-- stellamem:v2 -->\n" +
+      records.map((x) => "```stellamem\n" + JSON.stringify(x) + "\n```\n").join("\n"));
+    const out = await project(root, c.question);
+    const leaked = (c.must_not_contain || []).filter((s) => out.includes(s));
+    const missing = (c.must_contain || []).filter((s) => !out.includes(s));
+    const expected = expectedVerdict(c);
+    const observed = observedVerdict(c, leaked, missing);
+    const pass = observed === expected;
+    // Sentinel: a forbidden string in the projection means the record was
+    // retrieved AND injected despite the gate. That is the one failure
+    // that must never be silent.
+    const sentinelTripped = leaked.length > 0;
+    return {
+      id: c.id,
+      verdict: pass ? "PASS" : "FAIL",
+      pass,
+      leaked, missing, reason: c.reason,
+      sentinel_tripped: sentinelTripped,
+      arm_executed: ARM_EXECUTED,
+      criteria_digest: criteriaDigest(c, poolVersion),
+      injected_fault: faultOf(c),
+      expected_verdict: expected,
+      observed_verdict: observed,
+      run_id: runId,
+      evidence_source: `negative_samples.json v${poolVersion}#${c.id}`,
+      contract_version,
+      actual_version,
+    };
+  } catch (error) {
+    return notExecuted("run failed before a verdict could be produced",
+      `${error?.name ?? "Error"}: ${error?.message ?? String(error)}`);
+  }
 }
 
 export async function runAll(cases, options = {}) {
   const runId = options.runId || newRunId();
   const poolVersion = options.poolVersion ?? 0;
   const results = [];
-  for (const c of cases) results.push(await runCase(c, { runId, poolVersion }));
-  const failed = results.filter((r) => !r.pass);
+  for (const c of cases) {
+    results.push(await runCase(c, {
+      runId,
+      poolVersion,
+      actual_version: options.actual_version,
+    }));
+  }
+  const summary = summarize(results);
   const sentinelIds = results.filter((r) => r.sentinel_tripped).map((r) => r.id);
   const manifest = buildManifest({
     schemaVersion: SCHEMA_VERSION,
@@ -214,11 +283,32 @@ export async function runAll(cases, options = {}) {
     run_id: runId,
     manifest,
     results,
-    total: results.length,
-    passed: results.length - failed.length,
-    failed: failed.length,
+    total: summary.total,
+    executed: summary.executed,
+    passed: summary.passed,
+    failed: summary.failed,
+    not_executed: summary.not_executed,
+    pass_rate: summary.pass_rate,
     sentinel_tripped: sentinelIds.length > 0,
     sentinel_ids: sentinelIds,
+  };
+}
+
+// Summary math: NOT_EXECUTED is never folded into 0 — it counts neither
+// as a pass nor as a fail, and pass_rate is over executed cases only
+// (null when nothing executed, never 0/0).
+export function summarize(results) {
+  const executed = results.filter((r) => r.verdict !== "NOT_EXECUTED");
+  const passed = results.filter((r) => r.verdict === "PASS").length;
+  const failed = results.filter((r) => r.verdict === "FAIL").length;
+  const not_executed = results.filter((r) => r.verdict === "NOT_EXECUTED").length;
+  return {
+    total: results.length,
+    executed: executed.length,
+    passed,
+    failed,
+    not_executed,
+    pass_rate: executed.length ? passed / executed.length : null,
   };
 }
 
@@ -231,10 +321,14 @@ async function main() {
   const pool = loadPoolData(JSON.parse(await readFile(FIXTURES, "utf8")));
   const run = await runPool(pool);
   for (const r of run.results) {
-    const detail = r.pass ? "" :
-      ` leaked=[${r.leaked.join(", ")}] missing=[${r.missing.join(", ")}]`;
-    console.log(`${r.pass ? "PASS" : "FAIL"} ${r.id}` +
-      ` expected=${r.expected_verdict} observed=${r.observed_verdict}${detail}`);
+    if (r.verdict === "NOT_EXECUTED") {
+      console.log(`NOT_EXECUTED ${r.id} contract=${r.contract_version} actual=${r.actual_version} ${r.error}`);
+    } else {
+      const detail = r.pass ? "" :
+        ` leaked=[${r.leaked.join(", ")}] missing=[${r.missing.join(", ")}]`;
+      console.log(`${r.verdict} ${r.id}` +
+        ` expected=${r.expected_verdict} observed=${r.observed_verdict}${detail}`);
+    }
   }
   if (run.sentinel_tripped) {
     console.log(`SENTINEL TRIPPED: ${run.sentinel_ids.join(", ")} — ` +
@@ -242,9 +336,16 @@ async function main() {
       "this run's verdict must not be published.");
   }
   console.log(`manifest: ${JSON.stringify(run.manifest)}`);
-  console.log(`negative samples: ${run.passed}/${run.total} pass` +
-    `; sentinel: ${run.sentinel_tripped ? "TRIPPED" : "quiet"}`);
+  if (run.executed === 0) {
+    console.log(`negative samples: no cases executed (${run.not_executed} not executed)` +
+      `; sentinel: ${run.sentinel_tripped ? "TRIPPED" : "quiet"}`);
+  } else {
+    const extra = run.not_executed ? ` (${run.not_executed} not executed)` : "";
+    console.log(`negative samples: ${run.passed}/${run.executed} pass${extra}` +
+      `; sentinel: ${run.sentinel_tripped ? "TRIPPED" : "quiet"}`);
+  }
   if (run.failed || run.sentinel_tripped) process.exitCode = 1;
+  else if (run.not_executed) process.exitCode = 2;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) await main();
