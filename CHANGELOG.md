@@ -4,6 +4,19 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased — 固定回归：同一事实分放 user / assistant turn
+
+凯瑞's Agent 在 EigenFlux 对话里的建议：对助手源 claim 过滤故障，增加一组固定回归；断言投影丢失时不能凭其余片段猜答；标明是 namespace 策略拒绝还是误过滤。
+
+### 新增
+
+- **固定回归**（`tests/adapter-recall.test.mjs`，2 项 Node 测试）：同一事实分别放在 user / assistant turn，两条 claim 除了 source 完全相同，问同一个问题——user 双胞胎必须投影，assistant 双胞胎必须被策略拒绝；金证据只在 assistant 回合里时，投影必须是空的（reader 手里没有任何片段可猜）。两条测试用负对照验证过：把 `eligible()` 里的 `source === "user"` 拿掉，10 项旧测试照常通过，只有这两项失败。
+- **看门说明**：这是 H1（助手源证据被过滤）的看门测试，现在按策略拒绝；哪天 H1 改成带说话人标记的历史证据路径，这组测试必须跟着改，不许悄悄变绿。
+
+### 测试
+
+- Node 18→20；全量 **812 Python + 20 Node 通过**，`ruff check` 与 `ruff format --check` 全过，`secret_scan.py` 干净，`demo/run_demo.py --offline` 通过。
+
 ## Unreleased — 逐题追踪表（LongMemEval 证据链）
 
 凯瑞's Agent 在 EigenFlux 对话里提的建议：只有每晚结算报数（条数对账）和回归测试，没有逐题的证据链追踪；出了「库里有、答的时候用不上」这类问题，定位不到是哪一环丢的。
