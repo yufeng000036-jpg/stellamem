@@ -312,8 +312,9 @@ class StellamemMCPServer:
                         # 关联时不注入，budget=0。规则借 OpenClaw 适配器的
                         # lexical 门（compiler/injection_gate.py）。
                         # HTTP API 默认行为不变；门只在 MCP 召回入口生效；
-                        # STELLAMEM_INJECTION_GATE=0 可关。门自己出错时
-                        # 失败放行（照常召回），绝不因为门查不到而搞挂召回。
+                        # STELLAMEM_INJECTION_GATE=0 可显式关闭相关性门。
+                        # 启用的门异常/返回无效判定时只阻止本次召回；
+                        # 无法确认故障属于相关性还是安全过滤，不能猜测放行。
                         if max_chars > 0:
                             try:
                                 from compiler.injection_gate import (
@@ -325,6 +326,12 @@ class StellamemMCPServer:
 
                                 if _gate_enabled():
                                     gate = _gate_check(con, query, subject=subj)
+                                    if (
+                                        not isinstance(gate, dict)
+                                        or type(gate.get("allow")) is not bool
+                                        or not isinstance(gate.get("reason"), str)
+                                    ):
+                                        raise ValueError("invalid injection gate verdict")
                                     if not gate["allow"]:
                                         return {
                                             "status": "gated",
@@ -338,10 +345,27 @@ class StellamemMCPServer:
                                             "gate": gate,
                                         }
                             except Exception as exc:  # noqa: BLE001
+                                # Exception messages may contain memory text,
+                                # SQL parameters or paths. Log only the type.
+                                error_type = type(exc).__name__
                                 print(
-                                    f"stellamem: injection gate failed open: {exc}",
+                                    f"stellamem: injection gate failed closed ({error_type})",
                                     file=sys.stderr,
                                 )
+                                return {
+                                    "status": "fail_closed",
+                                    "subject": subj,
+                                    "items": [],
+                                    "wired": True,
+                                    "chars": 0,
+                                    "budget": 0,
+                                    "reason": "injection gate unavailable; recall blocked",
+                                    "gate": {
+                                        "allow": False,
+                                        "reason": "gate_error",
+                                        "error_type": error_type,
+                                    },
+                                }
                         result = live_recall(
                             con,
                             query,

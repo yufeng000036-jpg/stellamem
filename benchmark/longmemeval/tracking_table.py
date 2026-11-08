@@ -38,6 +38,8 @@ import csv
 import json
 from collections import Counter, defaultdict
 
+from score_integrity import audit_row, summarize
+
 
 def judge_label(arm):
     """judge is a dict {'judge_response': 'yes'/'no', 'judge_label': bool,
@@ -152,6 +154,15 @@ def build(results_path, prev_results_path, oracle_path, out_path):
             }
         )
 
+    # Historical judge/loss fields remain verbatim. New consumers get a
+    # separately named corrected verdict; failures cannot masquerade as passes.
+    audited = [audit_row(row) for row in rows]
+    for row, checked in zip(rows, audited):
+        row["integrity_correct"] = checked["corrected_correct"]
+        row["integrity_citation_qualified"] = checked["citation_qualified_correct"]
+        row["integrity_issues"] = ";".join(checked["issues"])
+    print("score-integrity-v1:", json.dumps(summarize(audited), sort_keys=True))
+
     fields = list(rows[0].keys())
     with open(out_path, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=fields)
@@ -166,7 +177,7 @@ def build(results_path, prev_results_path, oracle_path, out_path):
     ab = [r for r in rows if r["category"] == "abstention"]
     ab_ok = sum(1 for r in ab if r["correct_abstention"])
     print("rows:", n)
-    print("judge pass main: %d/500 = %.3f" % (judge_pass, judge_pass / 500))
+    print("legacy judge pass main: %d/500 = %.3f" % (judge_pass, judge_pass / 500))
     print("recall@5 mean non-abstention: %.3f" % (sum(r5) / len(r5)))
     print("abstention correct: %d/30 = %.3f" % (ab_ok, ab_ok / 30))
     print("loss_stage counts:", dict(Counter(r["loss_stage"] for r in rows)))

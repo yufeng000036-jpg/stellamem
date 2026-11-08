@@ -16,6 +16,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stderr
 from pathlib import Path
+from unittest.mock import patch
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
@@ -230,6 +231,72 @@ class GateMCPTest(unittest.TestCase):
                 os.environ.pop("STELLAMEM_INJECTION_GATE", None)
             else:
                 os.environ["STELLAMEM_INJECTION_GATE"] = old
+
+    def test_gate_exceptions_block_recall_without_leaking_exception_text(self):
+        server = self._server(allowed_subjects={"user"})
+        for error in (RuntimeError, PermissionError, ValueError, sqlite3.DatabaseError):
+            with self.subTest(error=error.__name__):
+                stderr = io.StringIO()
+                with (
+                    patch.dict(os.environ, {"STELLAMEM_INJECTION_GATE": "1"}),
+                    patch("compiler.injection_gate.check", side_effect=error("private sentinel")),
+                    patch("compiler.search.recall") as recall,
+                    redirect_stderr(stderr),
+                ):
+                    result = server._call_tool(
+                        "stellamem_recall", {"query": "冰滴咖啡多少钱", "subject": "user"}
+                    )
+                recall.assert_not_called()
+                self.assertEqual(result["status"], "fail_closed")
+                self.assertEqual(result["items"], [])
+                self.assertEqual(result["chars"], 0)
+                self.assertEqual(result["budget"], 0)
+                self.assertEqual(result["gate"]["reason"], "gate_error")
+                self.assertEqual(result["gate"]["error_type"], error.__name__)
+                self.assertNotIn("private sentinel", str(result) + stderr.getvalue())
+
+    def test_invalid_gate_verdict_is_not_truthy_authorization(self):
+        server = self._server(allowed_subjects={"user"})
+        for verdict in ({"allow": "false"}, {"allow": 1}, {"allow": None}, {}, None):
+            with self.subTest(verdict=verdict):
+                with (
+                    patch.dict(os.environ, {"STELLAMEM_INJECTION_GATE": "1"}),
+                    patch("compiler.injection_gate.check", return_value=verdict),
+                    patch("compiler.search.recall") as recall,
+                    redirect_stderr(io.StringIO()),
+                ):
+                    result = server._call_tool(
+                        "stellamem_recall", {"query": "冰滴咖啡多少钱", "subject": "user"}
+                    )
+                recall.assert_not_called()
+                self.assertEqual(result["status"], "fail_closed")
+
+    def test_authorization_precedes_gate_even_when_gate_is_broken(self):
+        server = self._server(allowed_subjects={"user"})
+        with (
+            patch("compiler.injection_gate.check", side_effect=RuntimeError("broken")) as gate,
+            patch("compiler.search.recall") as recall,
+        ):
+            result = server._call_tool(
+                "stellamem_recall", {"query": "桂花乌龙", "subject": "persona"}
+            )
+        gate.assert_not_called()
+        recall.assert_not_called()
+        self.assertEqual(result["status"], "fail_closed")
+
+    def test_gate_failure_does_not_poison_next_healthy_recall(self):
+        server = self._server(allowed_subjects={"user"})
+        args = {"query": "冰滴咖啡多少钱", "subject": "user"}
+        with (
+            patch.dict(os.environ, {"STELLAMEM_INJECTION_GATE": "1"}),
+            patch("compiler.injection_gate.check", side_effect=RuntimeError("broken")),
+            redirect_stderr(io.StringIO()),
+        ):
+            failed = server._call_tool("stellamem_recall", args)
+        self.assertEqual(failed["status"], "fail_closed")
+        recovered = server._call_tool("stellamem_recall", args)
+        self.assertEqual(recovered["status"], "ok")
+        self.assertTrue(any("冰滴咖啡" in it["text"] for it in recovered["items"]))
 
 
 if __name__ == "__main__":

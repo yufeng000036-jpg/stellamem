@@ -1,0 +1,390 @@
+{
+  "20261106": {
+    "schema_version": "score-integrity-v1",
+    "input_sha256": "86b70ddba6b37e6aa8092a32d42b90c1f4cf1cdb42ebfd97c04cf16f36148a29",
+    "auditor_sha256": "2724bf8bd7adfef9edfe6ffde36435d83760d16a4ae8963f401296d86540b0ac",
+    "limitations": [
+      "raw_response_schema_not_available",
+      "semantic_entailment_not_measured"
+    ],
+    "summary": {
+      "all": {
+        "n": 500,
+        "legacy_judge_correct": 175,
+        "corrected_correct": 172,
+        "corrected_rate": 0.344,
+        "citation_qualified_correct": 172,
+        "false_positives_detected": 3,
+        "issues": {
+          "abstained_answerable": 233,
+          "answered_unanswerable": 5,
+          "empty_answer": 261,
+          "execution_error": 29,
+          "missing_response_state": 29
+        }
+      },
+      "answerable": {
+        "n": 470,
+        "legacy_judge_correct": 149,
+        "corrected_correct": 148,
+        "corrected_rate": 0.3148936170212766,
+        "citation_qualified_correct": 148,
+        "false_positives_detected": 1,
+        "issues": {
+          "abstained_answerable": 233,
+          "empty_answer": 261,
+          "execution_error": 28,
+          "missing_response_state": 28
+        }
+      },
+      "abstention": {
+        "n": 30,
+        "legacy_judge_correct": 26,
+        "corrected_correct": 24,
+        "corrected_rate": 0.8,
+        "citation_qualified_correct": 24,
+        "false_positives_detected": 2,
+        "issues": {
+          "answered_unanswerable": 5,
+          "execution_error": 1,
+          "missing_response_state": 1
+        }
+      },
+      "by_category": {
+        "abstention": {
+          "n": 30,
+          "legacy_judge_correct": 26,
+          "corrected_correct": 24,
+          "corrected_rate": 0.8,
+          "citation_qualified_correct": 24,
+          "false_positives_detected": 2,
+          "issues": {
+            "answered_unanswerable": 5,
+            "execution_error": 1,
+            "missing_response_state": 1
+          }
+        },
+        "knowledge-update": {
+          "n": 72,
+          "legacy_judge_correct": 41,
+          "corrected_correct": 41,
+          "corrected_rate": 0.5694444444444444,
+          "citation_qualified_correct": 41,
+          "false_positives_detected": 0,
+          "issues": {
+            "abstained_answerable": 16,
+            "empty_answer": 16
+          }
+        },
+        "multi-session": {
+          "n": 121,
+          "legacy_judge_correct": 16,
+          "corrected_correct": 16,
+          "corrected_rate": 0.1322314049586777,
+          "citation_qualified_correct": 16,
+          "false_positives_detected": 0,
+          "issues": {
+            "abstained_answerable": 68,
+            "empty_answer": 83,
+            "execution_error": 15,
+            "missing_response_state": 15
+          }
+        },
+        "single-session-assistant": {
+          "n": 56,
+          "legacy_judge_correct": 4,
+          "corrected_correct": 4,
+          "corrected_rate": 0.07142857142857142,
+          "citation_qualified_correct": 4,
+          "false_positives_detected": 0,
+          "issues": {
+            "abstained_answerable": 50,
+            "empty_answer": 50
+          }
+        },
+        "single-session-preference": {
+          "n": 30,
+          "legacy_judge_correct": 9,
+          "corrected_correct": 9,
+          "corrected_rate": 0.3,
+          "citation_qualified_correct": 9,
+          "false_positives_detected": 0,
+          "issues": {
+            "abstained_answerable": 15,
+            "empty_answer": 15
+          }
+        },
+        "single-session-user": {
+          "n": 64,
+          "legacy_judge_correct": 44,
+          "corrected_correct": 44,
+          "corrected_rate": 0.6875,
+          "citation_qualified_correct": 44,
+          "false_positives_detected": 0,
+          "issues": {
+            "abstained_answerable": 18,
+            "empty_answer": 18
+          }
+        },
+        "temporal-reasoning": {
+          "n": 127,
+          "legacy_judge_correct": 35,
+          "corrected_correct": 34,
+          "corrected_rate": 0.2677165354330709,
+          "citation_qualified_correct": 34,
+          "false_positives_detected": 1,
+          "issues": {
+            "abstained_answerable": 66,
+            "empty_answer": 79,
+            "execution_error": 13,
+            "missing_response_state": 13
+          }
+        }
+      },
+      "semantic_support_rate": null,
+      "new_model_calls": 0
+    },
+    "rows": [
+      {
+        "question_id": "gpt4_a1b77f9c",
+        "category": "temporal-reasoning",
+        "legacy_judge_correct": true,
+        "corrected_correct": false,
+        "correct_abstention": null,
+        "citation_qualified_correct": false,
+        "semantic_support": null,
+        "issues": [
+          "execution_error",
+          "missing_response_state",
+          "empty_answer"
+        ],
+        "false_positive_detected": true
+      },
+      {
+        "question_id": "6456829e_abs",
+        "category": "abstention",
+        "legacy_judge_correct": true,
+        "corrected_correct": false,
+        "correct_abstention": false,
+        "citation_qualified_correct": false,
+        "semantic_support": null,
+        "issues": [
+          "answered_unanswerable"
+        ],
+        "false_positive_detected": true
+      },
+      {
+        "question_id": "gpt4_372c3eed_abs",
+        "category": "abstention",
+        "legacy_judge_correct": true,
+        "corrected_correct": false,
+        "correct_abstention": false,
+        "citation_qualified_correct": false,
+        "semantic_support": null,
+        "issues": [
+          "execution_error",
+          "missing_response_state"
+        ],
+        "false_positive_detected": true
+      }
+    ],
+    "row_selection": "false positives only; full audit available via CLI"
+  },
+  "20261108": {
+    "schema_version": "score-integrity-v1",
+    "input_sha256": "fe7994351789cf2359a8cb6c66264959df4a2be618f11cb6a685890df93c88a6",
+    "auditor_sha256": "2724bf8bd7adfef9edfe6ffde36435d83760d16a4ae8963f401296d86540b0ac",
+    "limitations": [
+      "raw_response_schema_not_available",
+      "semantic_entailment_not_measured"
+    ],
+    "summary": {
+      "all": {
+        "n": 500,
+        "legacy_judge_correct": 177,
+        "corrected_correct": 174,
+        "corrected_rate": 0.348,
+        "citation_qualified_correct": 174,
+        "false_positives_detected": 3,
+        "issues": {
+          "abstained_answerable": 232,
+          "answered_unanswerable": 5,
+          "empty_answer": 263,
+          "execution_error": 32,
+          "missing_response_state": 32
+        }
+      },
+      "answerable": {
+        "n": 470,
+        "legacy_judge_correct": 151,
+        "corrected_correct": 150,
+        "corrected_rate": 0.3191489361702128,
+        "citation_qualified_correct": 150,
+        "false_positives_detected": 1,
+        "issues": {
+          "abstained_answerable": 232,
+          "empty_answer": 263,
+          "execution_error": 31,
+          "missing_response_state": 31
+        }
+      },
+      "abstention": {
+        "n": 30,
+        "legacy_judge_correct": 26,
+        "corrected_correct": 24,
+        "corrected_rate": 0.8,
+        "citation_qualified_correct": 24,
+        "false_positives_detected": 2,
+        "issues": {
+          "answered_unanswerable": 5,
+          "execution_error": 1,
+          "missing_response_state": 1
+        }
+      },
+      "by_category": {
+        "abstention": {
+          "n": 30,
+          "legacy_judge_correct": 26,
+          "corrected_correct": 24,
+          "corrected_rate": 0.8,
+          "citation_qualified_correct": 24,
+          "false_positives_detected": 2,
+          "issues": {
+            "answered_unanswerable": 5,
+            "execution_error": 1,
+            "missing_response_state": 1
+          }
+        },
+        "knowledge-update": {
+          "n": 72,
+          "legacy_judge_correct": 41,
+          "corrected_correct": 41,
+          "corrected_rate": 0.5694444444444444,
+          "citation_qualified_correct": 41,
+          "false_positives_detected": 0,
+          "issues": {
+            "abstained_answerable": 19,
+            "empty_answer": 20,
+            "execution_error": 1,
+            "missing_response_state": 1
+          }
+        },
+        "multi-session": {
+          "n": 121,
+          "legacy_judge_correct": 15,
+          "corrected_correct": 15,
+          "corrected_rate": 0.12396694214876033,
+          "citation_qualified_correct": 15,
+          "false_positives_detected": 0,
+          "issues": {
+            "abstained_answerable": 69,
+            "empty_answer": 85,
+            "execution_error": 16,
+            "missing_response_state": 16
+          }
+        },
+        "single-session-assistant": {
+          "n": 56,
+          "legacy_judge_correct": 4,
+          "corrected_correct": 4,
+          "corrected_rate": 0.07142857142857142,
+          "citation_qualified_correct": 4,
+          "false_positives_detected": 0,
+          "issues": {
+            "abstained_answerable": 50,
+            "empty_answer": 51,
+            "execution_error": 1,
+            "missing_response_state": 1
+          }
+        },
+        "single-session-preference": {
+          "n": 30,
+          "legacy_judge_correct": 9,
+          "corrected_correct": 9,
+          "corrected_rate": 0.3,
+          "citation_qualified_correct": 9,
+          "false_positives_detected": 0,
+          "issues": {
+            "abstained_answerable": 13,
+            "empty_answer": 15,
+            "execution_error": 2,
+            "missing_response_state": 2
+          }
+        },
+        "single-session-user": {
+          "n": 64,
+          "legacy_judge_correct": 45,
+          "corrected_correct": 45,
+          "corrected_rate": 0.703125,
+          "citation_qualified_correct": 45,
+          "false_positives_detected": 0,
+          "issues": {
+            "abstained_answerable": 17,
+            "empty_answer": 17
+          }
+        },
+        "temporal-reasoning": {
+          "n": 127,
+          "legacy_judge_correct": 37,
+          "corrected_correct": 36,
+          "corrected_rate": 0.28346456692913385,
+          "citation_qualified_correct": 36,
+          "false_positives_detected": 1,
+          "issues": {
+            "abstained_answerable": 64,
+            "empty_answer": 75,
+            "execution_error": 11,
+            "missing_response_state": 11
+          }
+        }
+      },
+      "semantic_support_rate": null,
+      "new_model_calls": 0
+    },
+    "rows": [
+      {
+        "question_id": "gpt4_a1b77f9c",
+        "category": "temporal-reasoning",
+        "legacy_judge_correct": true,
+        "corrected_correct": false,
+        "correct_abstention": null,
+        "citation_qualified_correct": false,
+        "semantic_support": null,
+        "issues": [
+          "execution_error",
+          "missing_response_state",
+          "empty_answer"
+        ],
+        "false_positive_detected": true
+      },
+      {
+        "question_id": "6456829e_abs",
+        "category": "abstention",
+        "legacy_judge_correct": true,
+        "corrected_correct": false,
+        "correct_abstention": false,
+        "citation_qualified_correct": false,
+        "semantic_support": null,
+        "issues": [
+          "answered_unanswerable"
+        ],
+        "false_positive_detected": true
+      },
+      {
+        "question_id": "gpt4_372c3eed_abs",
+        "category": "abstention",
+        "legacy_judge_correct": true,
+        "corrected_correct": false,
+        "correct_abstention": false,
+        "citation_qualified_correct": false,
+        "semantic_support": null,
+        "issues": [
+          "execution_error",
+          "missing_response_state"
+        ],
+        "false_positive_detected": true
+      }
+    ],
+    "row_selection": "false positives only; full audit available via CLI"
+  }
+}
