@@ -114,6 +114,20 @@ class MemoryService:
                     return {"built_at": stats["built_at"], "records": stats["records"]}
             thread.join()
 
+    def ensure_readable_index(self):
+        """Wait for a fresh index; never serve a stale snapshot after revocation."""
+        try:
+            self.ensure_index()
+            with self.lock:
+                thread = self._rebuild_thread
+            if thread is not None:
+                thread.join()
+            with self.lock:
+                if self.index.is_stale(self.root):
+                    raise RuntimeError("index is stale")
+        except Exception as exc:
+            raise RuntimeError("index freshness unavailable; retry later") from exc
+
     def _rebuild_in_background(self):
         """后台重建：独立连接，快照 + 重建，失败打 stderr 日志，不静默。"""
         try:
@@ -363,7 +377,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path in {"/v1/health", "/health"}:
                 # health 也要先保鲜：否则重启后 health 报的还是旧记录数。
-                svc.ensure_index()
+                svc.ensure_readable_index()
                 stats = svc.index.stats()
                 return self._send(
                     *_json(
@@ -389,7 +403,7 @@ class Handler(BaseHTTPRequestHandler):
             # 读接口每次先保鲜索引：文件在服务运行时被改写（如本地 agent
             # 直接写 markdown）时，不靠重启也能读到新记忆。指纹没变时
             # 只是 stat 几个文件，不重建。
-            svc.ensure_index()
+            svc.ensure_readable_index()
 
             if path == "/v1/search":
                 q = (query.get("q") or [""])[0]
@@ -417,6 +431,7 @@ class Handler(BaseHTTPRequestHandler):
                         person=req_person,
                         limit=limit,
                         persons=allowed,
+                        status=("active",),
                     )
                 return self._send(
                     *_json(HTTPStatus.OK, {"query": q, "count": len(hits), "items": hits})
@@ -501,6 +516,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(
                 *_json(HTTPStatus.NOT_FOUND, {"error": "unknown endpoint", "path": path})
             )
+        except RuntimeError as exc:
+            return self._send(*_json(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}))
         except ValueError as exc:
             return self._send(*_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)}))
 
@@ -518,7 +535,10 @@ class Handler(BaseHTTPRequestHandler):
             return
         allowed = self._allowed_subjects()
         # recall 读索引，先保鲜（同 do_GET 的读接口）。
-        svc.ensure_index()
+        try:
+            svc.ensure_readable_index()
+        except RuntimeError as exc:
+            return self._send(*_json(HTTPStatus.SERVICE_UNAVAILABLE, {"error": str(exc)}))
 
         if path == "/v1/recall":
             payload = self._read_json()

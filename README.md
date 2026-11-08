@@ -7,7 +7,7 @@
 >
 > **当前状态（2026-11-08，main）：** 全量回归 **870 Python + 24 Node** 通过；CI 7 个 job（Linux / Windows / macOS × Python 3.10 / 3.12 + 代码质量）；第三方审查评分 **8.8/10**（2026-11-05 最终验收）；LongMemEval 500 题独立测量已跑完（见下方“量化效果”）。详见 CHANGELOG.md 的 v0.4.0 一节。
 >
-> **Compatibility:** projection defaults to requester `user` and scope `global`; use explicit `requesterSubject` / `activeScopes` for other namespaces/tasks. An explicit invalid namespace fails closed. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. Clean user-subject pending claims auto-approve after the configured grace period (default 72h); sensitive, identity, conflicting and pre-feature backlog claims still need a human. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
+> **Compatibility:** projection defaults to requester `user` and scope `global`; use explicit `requesterSubject` / `activeScopes` for other namespaces/tasks. An explicit invalid namespace fails closed. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. Clean user-subject pending claims whose value exactly matches verified evidence (ignoring outer whitespace) are eligible for `inbox auto-approve` after the configured grace period (default 72h); paraphrases require human review and no scheduler is installed; sensitive, identity, conflicting and pre-feature backlog claims still need a human. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
 
 Stellamem 是一个**本地优先、可审计的 AI 长期记忆治理层**。
 它让 AI 的长期记忆可以被**查看、溯源、版本化、复核、回滚** —— 而不是变成一个不可见的黑箱。
@@ -212,7 +212,7 @@ Conversation → Claim → Evidence → Scope → Revision → Relation → Memo
 支持 8 种关系：`NEW` / `DUPLICATE` / `REINFORCES` / `REFINES` / `COMPATIBLE` / `SUPERSEDES` / `CONTRADICTS` / `UNCERTAIN`。
 
 ### Human Review（人工复核）
-敏感、身份、低置信度、可疑内容进入收件箱，人工 `approve` / `reject` / `edit`；干净的 user 主体主张在宽限期（默认 72 小时，无人操作）后由 `inbox auto-approve` 自动批准，每条都写进版本链与复核日志（`review_action: "auto-approve"`），并可用 `inbox withdraw` 撤回。分档批复（🟢/🟡/🔴）只决定呈现与批量操作方式；🟢 档干净主张的“默认自动批准”只适用于上线后新产生、证据已核验、无敏感、无冲突的记录，🔴 永远逐条、永远人工；按档批要先看全文加确认短语。敏感、身份、矛盾、未核验与上线前积压的主张永远不自动批准。
+敏感、身份、低置信度、可疑内容进入收件箱，人工 `approve` / `reject` / `edit`；干净的 user 主体主张在宽限期（默认 72 小时，无人操作）后由 `inbox auto-approve` 自动批准，每条都写进版本链与复核日志（`review_action: "auto-approve"`），并可用 `inbox withdraw` 撤回。分档批复（🟢/🟡/🔴）只决定呈现与批量操作方式；🟢 档干净主张的“默认自动批准”只适用于上线后新产生、证据已核验、value 与 evidence 去除首尾空白后完全相等、无敏感、无冲突的记录，🔴 永远逐条、永远人工；按档批要先看全文加确认短语。敏感、身份、矛盾、未核验与上线前积压的主张永远不自动批准。改写或概括的 value 仍需人工复核；精确引用也不能证明主体、时间和上下文归属正确。72 小时只是资格门槛，必须显式执行命令，本项目没有为其安装定时任务。
 
 ### Secret Gate（密钥门禁）
 密钥在**任何模型调用之前**被确定性识别并阻断，不写库、不进日志、不外发。
