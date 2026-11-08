@@ -262,8 +262,12 @@ def build_negative_cases(negative_path: Path, header: str):
     """PR #84 negative samples rebuilt as reader cases: the trap record IS
     in the context (as if projection leaked it). The reader cannot see
     valid_to / outdated / status — projection lines carry no validity
-    metadata — so these cases bound what a reader-side fix can do."""
-    cases = json.loads(negative_path.read_text(encoding="utf-8"))
+    metadata — so these cases bound what a reader-side fix can do.
+    The pool file is versioned (PR #93): either a bare array (v1) or
+    {"version": ..., "cases": [...]} (v2); both shapes are accepted and
+    the current pool is read as-is."""
+    raw = json.loads(negative_path.read_text(encoding="utf-8"))
+    cases = raw["cases"] if isinstance(raw, dict) else raw
     out = []
     for case in cases:
         lines = [header.strip()]

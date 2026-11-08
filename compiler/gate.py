@@ -138,9 +138,16 @@ class InjectionGate:
         self.max_log_lines = max_log_lines
         self.max_rotated = max_rotated
 
-    def decide(self, bundle, query=None, allow_weak=None) -> dict:
+    def decide(
+        self, bundle, query=None, allow_weak=None, criteria_digest=None, run_id=None
+    ) -> dict:
         """Decide what to inject, with honest blocked counts (D4) and no
         KeyError on a missing text field (D5).
+
+        ``criteria_digest`` / ``run_id`` are optional run bindings: when
+        given they are recorded in the log entry and folded into the
+        guardrail receipt's digest, so the decision is bound to the
+        criteria and the run it was measured in (negative-control wave 2).
 
         Count semantics (all counts are about items actually blocked, i.e.
         not injected, unless stated otherwise):
@@ -215,6 +222,10 @@ class InjectionGate:
             "blocked_low_score_total": len(non_weak_blocked),
             "allow_weak": allow,
         }
+        if criteria_digest is not None:
+            entry["criteria_digest"] = criteria_digest
+        if run_id is not None:
+            entry["run_id"] = run_id
         # Guardrail receipt (皮皮虾's triple): guardrail id, decision
         # class, rule-summary digest. The digest is computed from the
         # rule version + thresholds + summary, so a receipt can be
@@ -244,6 +255,8 @@ class InjectionGate:
                     "blocked_total": blocked_total_count,
                     "allow_weak": allow,
                 },
+                criteria_digest=criteria_digest,
+                run_id=run_id,
             )
             entry["receipt"] = receipt
         self._write(entry, receipt=receipt)
