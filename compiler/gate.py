@@ -5,6 +5,11 @@
 
 判定全部落日志（JSONL）和审计（Markdown 追加），可回查"这次为什么没注入"。
 
+每次判定还出一张 guardrail 回执（见 compiler/guardrail_receipt.py）：
+护栏 id、判定 class（allow/block/partial/defer）、规则摘要 digest。
+回执进返回值、进 JSONL 日志条目、进审计行；digest 可由回执自身字段
+重算验证，重跑同一判定可比对回执复核。
+
 改进（2026-11-02 改进轮 P0）：
 1. 低分缺口：原来只拦 recall 标了 weak=True 的条目。recall 之外的调用方
    可能送来没标 weak、但同样没有信号的条目（字面重叠 0 且语义 < MIN_SIM，
@@ -29,6 +34,18 @@ except Exception:  # pragma: no cover
         from semantic import MIN_SIM  # type: ignore
     except Exception:
         MIN_SIM = 0.45
+
+try:
+    from .guardrail_receipt import make_receipt
+except Exception:  # pragma: no cover
+    try:
+        from guardrail_receipt import make_receipt  # type: ignore
+    except Exception:
+        make_receipt = None
+
+GUARDRAIL_ID = "injection-gate"
+RULE_VERSION = 1
+DECISION_CLASS = {"inject": "allow", "inject_partial": "partial", "empty": "block"}
 
 WEAK_LABEL = "（弱信号，仅供参考，未确认）"
 LOW_SCORE = 0.10
@@ -198,7 +215,38 @@ class InjectionGate:
             "blocked_low_score_total": len(non_weak_blocked),
             "allow_weak": allow,
         }
-        self._write(entry)
+        # Guardrail receipt (皮皮虾's triple): guardrail id, decision
+        # class, rule-summary digest. The digest is computed from the
+        # rule version + thresholds + summary, so a receipt can be
+        # re-verified from its own fields (see guardrail_receipt).
+        receipt = None
+        if make_receipt is not None:
+            rule_summary = (
+                f"injection-gate v{RULE_VERSION}: block weak/low-signal items "
+                f"(LOW_SCORE={LOW_SCORE}, MIN_SIM={MIN_SIM})"
+            )
+            if allow:
+                rule_summary += "; allow_weak: blocked items injected as weak-labelled"
+            receipt = make_receipt(
+                GUARDRAIL_ID,
+                DECISION_CLASS[decision],
+                rule_summary,
+                {
+                    "rule_version": RULE_VERSION,
+                    "LOW_SCORE": LOW_SCORE,
+                    "MIN_SIM": MIN_SIM,
+                    "allow_weak": allow,
+                },
+                detail={
+                    "injected": len(injected),
+                    "blocked_weak": blocked_weak_count,
+                    "blocked_low_signal": blocked_low_signal_count,
+                    "blocked_total": blocked_total_count,
+                    "allow_weak": allow,
+                },
+            )
+            entry["receipt"] = receipt
+        self._write(entry, receipt=receipt)
 
         return {
             "decision": decision,
@@ -212,6 +260,7 @@ class InjectionGate:
             "blocked_total": blocked_total_count,
             "blocked_low_score": blocked_low_signal_count,
             "allow_weak": allow,
+            "receipt": receipt,
         }
 
     def rotate_if_needed(self) -> bool:
@@ -259,7 +308,7 @@ class InjectionGate:
             return False
         return True
 
-    def _write(self, entry):
+    def _write(self, entry, receipt=None):
         if self.log_path:
             try:
                 self.log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -271,12 +320,15 @@ class InjectionGate:
         if self.audit_path:
             try:
                 self.audit_path.parent.mkdir(parents=True, exist_ok=True)
+                receipt_part = ""
+                if receipt:
+                    receipt_part = f"  receipt={receipt['receipt_id']}  class={receipt['decision']}"
                 line = (
                     f"- {entry['at']}  gate  decision={entry['decision']}"
                     f"  injected={entry['injected']}  blocked_weak={entry['blocked_weak']}"
                     f"  blocked_low_signal={entry['blocked_low_signal']}"
                     f"  blocked_total={entry['blocked_total']}"
-                    f"  allow_weak={entry['allow_weak']}"
+                    f"  allow_weak={entry['allow_weak']}{receipt_part}"
                     f"  query={entry['query'] or ''}\n"
                 )
                 if not self.audit_path.exists():
