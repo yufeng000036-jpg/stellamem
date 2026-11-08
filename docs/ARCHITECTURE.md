@@ -76,3 +76,20 @@ Adapter 契约：`inject_core / inject_recall / healthcheck`。
 - **90 天降级（`compiler/memory_purge.py` 的 `demote_decayed`）**：非置顶、非核心 kind、状态 active、超过 90 天未更新且零命中的记录，降级为归档层（`status="archived"` + `archived_at` + `archived_reason="90d-no-hit"`）。记录留在原文件、留在索引、留在审计里，但不再自动注入：JS 适配器 `eligible()` 要求 `status === "active"`，Python 召回默认只取 `("active", "pending")`。降级可逆：`status` 是可变字段，恢复就是通过正常编辑路径改回 `active`。`run_memory_purge(..., demote=True)` 才会真的降级，默认只标 `decayed_candidate`（标记）；降级数恒 ≤ 标记数（pending 记录只标不降）。
 - **删除派生链（`compiler/deletion_chain.py`）**：删除请求追踪整条链——原文（MANAGED 文件里的 claim 块）、摘要（长期文件里引用该值的合成行）、日记（只追踪、不自动改）、索引（改完重建再查）、缓存（失效受影响文件的条目）、原始档案（按 provenance record_id 从会话流里删、重建 manifest、ledger 留删除记录）。默认 tombstone 模式：内容换成 `[已删除]` 标记、保留 claim id 与 provenance，删除本身可审计；purge 模式彻底移除。调用两次是幂等的。诚实边界：摘要追踪按值文本匹配，改写过的摘要查不到；4K 桌面页是派生渲染，下次重建时才掉出，中间的旧页是已知滞后、不是残留。
 - **增量总结标记（`compiler/daily_diary.py`）**：`synthesize_long_term` 成功后把当天写进 `<root>/system/diary-summary-state.json` 的 `summarized_days`。`rebuild_summary_state()` 在启动时从文件重建：长期文件里合成行的来源日 = 已总结的日子，日档里「变」一段非空的日子 = 有变化的日子，两者之差是断层（gap_days），调用方按 gap 补跑合成即可。标记是派生状态，丢了或坏了都能从文件重建；标记写失败不拖垮合成。
+
+---
+
+## 选型口径与自主性分级（2026-11-08 追加）
+
+- **选型口径**：见 `docs/SELECTION-CRITERIA.md`——来源可引用 > 状态隔离 >
+  可审计 > MCP 接入。按顺序卡：前两项不过，后面再好也否决；不做跨系统排名
+  （77 系统横评没有原始分表，公开数字只用于同跑道臂间比较）。
+- **自主性分级**：见 `compiler/autonomy.py`——L1 只读感知、L2 建议/起草、
+  L3 有条件自主执行、L4 受托自主（须用户书面授权）。权限边界是三元组：
+  能力集合 + 资源预算 + 回撤/撤销。升级须阳性与阴性故障注入验收双双通过，
+  记进 guardrail 回执账本。当前是最小实现：分级、检查、升级记录；
+  调用点接线（MCP 服务器 / CLI 在执行前调 `check()`）是后续工作，不在本轮。
+- **注入门放行评估**：见 `docs/INJECTION-GATE-FAILOPEN-ASSESSMENT.md`——
+  唯一的真放行点是 MCP 召回入口的 try/except；放行是可用性风险，
+  不是回答正确性风险；读者实测误答率（20%）是更大的风险，不在门内；
+  `gate.py` 的弱信号拦门当前只在测试里跑，不在生产路径上。
