@@ -34,6 +34,11 @@
 文件损坏时，本次结算直接失败（CLI 非零退出，不写日志、不更新基线），
 绝不拿不准的数当真的报。
 
+账本必红臂：结算计数产出后，立即用一条与 collect_counts 不共享代码路径的
+原文重数逐桶对账（active / pending / history）。两边对不上说明有记录应
+在账却没进账，结算直接失败，不写日志、不更新基线，本轮结论不对外——
+漏账时必红，正常时不误报。
+
 借鉴致谢见 ``docs/NIGHTLY-SETTLEMENT.md``（外部致谢节）。
 """
 
@@ -52,13 +57,13 @@ try:  # 包内与扁平导入都要能用（测试只把 compiler/ 加进 sys.pa
     from . import hit_votes
     from . import indexer
     from . import subjects
-    from .storage import load_records
+    from .storage import BLOCK, MARK, load_records
 except ImportError:  # pragma: no cover - flat layout
     import desktop_page
     import hit_votes
     import indexer
     import subjects
-    from storage import load_records
+    from storage import BLOCK, MARK, load_records
 
 KINDS_REPORTED = ("preference", "lesson", "decision", "project", "fact")
 SETTLEMENT_DIRNAME = "nightly-settlement"
@@ -145,6 +150,67 @@ def collect_counts(root) -> dict:
                 # 未分类主体（自由文本旧 subject）：不归入任何一方。
                 counts["unclassified"] += 1
     return counts
+
+
+# ---------------- 账本必红臂 ----------------
+
+
+def recount_ledger_raw(root) -> dict:
+    """独立重数：直接读 MANAGED 文件原文逐块解析，只按 status 分桶。
+
+    与 collect_counts 刻意不共享计数代码路径（不用 load_records）：结算
+    计数漏掉任何一条记录时，两边总数对不上，臂就报红。格式本身仍以
+    storage.MARK / BLOCK 为准，不另立口径。
+    """
+    root = Path(root)
+    buckets = {"active": 0, "pending": 0, "history": 0, "total": 0}
+    for rel_path, _layer in indexer.MANAGED:
+        path = root / rel_path
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        if MARK not in text:
+            continue
+        _prefix, managed = text.split(MARK, 1)
+        for match in BLOCK.finditer(managed):
+            try:
+                record = json.loads(match[1])
+            except ValueError as exc:
+                raise ValueError(f"账本自检：{rel_path} 有读不懂的记录块：{exc}") from exc
+            if not isinstance(record, dict):
+                raise ValueError(f"账本自检：{rel_path} 有非对象记录块")
+            status = record.get("status")
+            buckets["total"] += 1
+            if status == "pending":
+                buckets["pending"] += 1
+            elif status == "active":
+                buckets["active"] += 1
+            else:
+                buckets["history"] += 1
+    return buckets
+
+
+def verify_ledger_arm(root, counts) -> dict:
+    """账本必红臂：结算计数与原文重数逐桶对账，对不上就报红。
+
+    口径：臂不通，本轮结算结论不对外——build_report 直接抛错，
+    run_settlement 不写日志、不更新基线，CLI 非零退出。
+    返回原文重数（active / pending / history / total）。
+    """
+    raw = recount_ledger_raw(root)
+    expected = {
+        "active": counts["total_active"],
+        "pending": counts["pending"],
+        "history": counts["history"],
+    }
+    mismatches = {k: (expected[k], raw[k]) for k in expected if expected[k] != raw[k]}
+    if mismatches:
+        detail = "、".join(
+            f"{key}：结算数 {got} ≠ 原文重数 {want}"
+            for key, (got, want) in sorted(mismatches.items())
+        )
+        raise ValueError(f"账本自检未通过（漏账必红臂）：{detail}；本轮结算结论不对外")
+    return raw
 
 
 # ---------------- 写入链与基线 ----------------
@@ -295,6 +361,7 @@ def build_report(
     root = Path(root)
     now = now or datetime.now().astimezone()
     counts = collect_counts(root)
+    ledger_arm = verify_ledger_arm(root, counts)
     since = None
     since_text = None
     if baseline is not None:
@@ -313,6 +380,7 @@ def build_report(
         "root": str(root),
         "db_path": str(db_path) if db_path is not None else None,
         "counts": counts,
+        "ledger_arm": ledger_arm,
         "desktop": desktop_page.desktop_status_text(root),
         "changed": delta["changed"],
         "changed_since": since_text,
@@ -354,6 +422,8 @@ def render_report(report: dict) -> str:
     if counts["history"]:
         lines.append(f"- 历史（superseded/rejected）：{counts['history']} 条")
     lines.append(f"- 合计 active：{counts['total_active']} 条")
+    arm = report.get("ledger_arm") or {}
+    lines.append(f"账本自检：通过（漏账必红臂：原文重数 {arm.get('total', 0)} 条与结算计数一致）")
     lines.append("")
     lines.append(f"桌面：{report['desktop']}")
     lines.append("")

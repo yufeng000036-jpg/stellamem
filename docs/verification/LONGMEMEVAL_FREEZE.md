@@ -35,6 +35,14 @@ then shuts it down. It never uses production config, user diaries or paid APIs.
 The repository and four locked files must stay fixed throughout measurement.
 Regression CI does not download the model or run this CPU benchmark.
 
+Pre-run freeze check (2026-11-08): `python benchmark/longmemeval/freeze.py
+--verify` checks all five frozen files (worker.py, evaluate.py, PROTOCOL.md,
+manifest.json, freeze.py) by SHA-256 and by physical byte_count, both of
+which must match. The hash catches encoding conversion and equal-length
+tampering; the byte count catches a truncated file that was never fully
+written to disk. Either check failing blocks the rerun; the lock hashes and
+the frozen content themselves never change.
+
 Rollback: `git revert <freeze-commit>` removes only evaluation assets/tests/docs;
 it does not alter product data. Discard its scratch work directory to remove
 temporary public benchmark text/caches. Keep PR draft and release gate closed.

@@ -7,6 +7,9 @@
 // expected_verdict / observed_verdict / run_id / evidence_source) with a
 // four-element run manifest (schema version, criteria_digest, run_id,
 // pool version).
+// Wave 3 adds a third verdict, NOT_EXECUTED: a case that did not run at
+// all (newer contract version, or a crash before any verdict) is recorded
+// with pass: null and is never folded into 0 by summarize().
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
@@ -17,6 +20,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import {
   ARM_EXECUTED,
+  CONTRACT_VERSION,
   SCHEMA_VERSION,
   buildManifest,
   criteriaDigest,
@@ -26,6 +30,7 @@ import {
   runAll,
   runCase,
   runPool,
+  summarize,
 } from "../benchmark/longmemeval/negative_samples.mjs";
 
 const execFileAsync = promisify(execFile);
@@ -46,7 +51,9 @@ test("negative samples: no expired or superseded fact is injected", async () => 
   const pool = await loadPool();
   assert.ok(pool.cases.length >= 9, "second version must have at least 9 cases");
   const run = await runPool(pool);
-  const failed = run.results.filter((r) => !r.pass);
+  // Filter by verdict, not by !pass: a NOT_EXECUTED result carries
+  // pass: null, which must never read as a failure.
+  const failed = run.results.filter((r) => r.verdict === "FAIL");
   assert.deepEqual(failed, [],
     "negative-sample failures: " + JSON.stringify(failed));
 });
@@ -142,6 +149,7 @@ test("sentinel trips when a forbidden record is retrieved and injected", async (
     reason: "meta-test: the sentinel must catch an injected forbidden string",
   });
   assert.equal(result.pass, false);
+  assert.equal(result.verdict, "FAIL");
   assert.deepEqual(result.leaked, ["枫叶红"]);
   assert.equal(result.sentinel_tripped, true);
   assert.equal(result.expected_verdict, "检出故障");
@@ -221,5 +229,70 @@ test("the runner detects a violation instead of always passing", async () => {
     reason: "meta-test: the runner must catch an injected forbidden string",
   });
   assert.equal(result.pass, false);
+  assert.equal(result.verdict, "FAIL");
   assert.deepEqual(result.leaked, ["枫叶红"]);
+});
+
+test("a case requiring a newer contract version is NOT_EXECUTED, not a fail", async () => {
+  // The contract wants something the implementation version has not landed
+  // yet: the case cannot run, so it must be recorded NOT_EXECUTED with
+  // both versions — never folded into 0, never PASS/FAIL.
+  const result = await runCase({
+    id: "meta-future-contract",
+    question: "我最喜欢什么颜色？",
+    must_not_contain: [],
+    must_contain: [],
+    records: [],
+    contract_version: "99",
+    reason: "meta-test: contract version the runner does not implement",
+  });
+  assert.equal(result.verdict, "NOT_EXECUTED");
+  assert.equal(result.pass, null);
+  assert.equal(result.contract_version, "99");
+  assert.equal(result.actual_version, CONTRACT_VERSION);
+  assert.equal(result.error.length > 0, true);
+});
+
+test("a case that crashes before running is NOT_EXECUTED, not PASS/FAIL", async () => {
+  const result = await runCase({
+    id: "meta-broken-case",
+    question: "我最喜欢什么颜色？",
+    must_not_contain: [],
+    must_contain: [],
+    records: null, // malformed input: .map throws before any verdict exists
+    reason: "meta-test: malformed case cannot execute",
+  });
+  assert.equal(result.verdict, "NOT_EXECUTED");
+  assert.equal(result.pass, null);
+  assert.equal(typeof result.error, "string");
+  assert.ok(result.error.length > 0);
+});
+
+test("NOT_EXECUTED is never folded into 0 in the summary", async () => {
+  const pool = await loadPool();
+  const run = await runPool(pool);
+  const results = run.results;
+  const s = summarize(results);
+  // Real fixtures: everything executed, everything passed.
+  assert.equal(s.total, results.length);
+  assert.equal(s.not_executed, 0);
+  assert.equal(s.executed, s.total);
+  assert.equal(s.passed, s.total);
+  assert.equal(s.failed, 0);
+  assert.equal(s.pass_rate, 1);
+  // Mixed with a not-executed case: it counts in neither numerator nor
+  // denominator, and the pass rate stays over executed cases only.
+  const mixed = [
+    ...results,
+    { id: "x", verdict: "NOT_EXECUTED", pass: null },
+  ];
+  const ms = summarize(mixed);
+  assert.equal(ms.total, s.total + 1);
+  assert.equal(ms.executed, s.total);
+  assert.equal(ms.passed, s.total);
+  assert.equal(ms.failed, 0);
+  assert.equal(ms.not_executed, 1);
+  assert.equal(ms.pass_rate, 1);
+  // Nothing executed at all: pass rate is null, never 0/0.
+  assert.equal(summarize([{ id: "y", verdict: "NOT_EXECUTED", pass: null }]).pass_rate, null);
 });

@@ -9,6 +9,7 @@ import unittest
 from contextlib import redirect_stdout
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "compiler"))
 
@@ -67,6 +68,20 @@ def seed_root(root: Path, records):
         path = root / rel
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(render_records("# 测试\n", recs), encoding="utf-8")
+
+
+def append_record(root: Path, record):
+    """往 kind 对应的 MANAGED 文件尾追加一条记录（不重写已有内容）。"""
+    path = root / ROUTE[record["kind"]]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    block = "```stellamem\n" + json.dumps(record, ensure_ascii=False) + "\n```\n"
+    if path.exists():
+        text = path.read_text(encoding="utf-8")
+        if not text.endswith("\n"):
+            text += "\n"
+        path.write_text(text + block, encoding="utf-8")
+    else:
+        path.write_text(render_records("# 测试\n", [record]), encoding="utf-8")
 
 
 def write_chain(root: Path, events):
@@ -367,6 +382,90 @@ class SettlementCliTests(unittest.TestCase):
     def test_cli_missing_root_returns_2(self):
         code = nightly_settlement.main(["--root", str(self.root / "nope")])
         self.assertEqual(code, 2)
+
+
+class LedgerArmTests(unittest.TestCase):
+    """账本必红臂：漏账必红、正常不误报；臂不通则结论不对外。"""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name) / "mem"
+        self.root.mkdir()
+        seed_root(
+            self.root,
+            [
+                make_record("u-pref", "preference", "user"),
+                make_record("u-fact", "fact", "user"),
+                make_record("p-fact", "fact", "persona"),
+                make_record("u-pending", "fact", "user", status="pending"),
+                make_record("u-old", "fact", "user", status="superseded"),
+            ],
+        )
+        self.now = datetime(2026, 11, 5, 23, 30, tzinfo=UTC)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_arm_passes_on_normal_fixture(self):
+        report = nightly_settlement.build_report(self.root, now=self.now)
+        self.assertEqual(
+            report["ledger_arm"],
+            {"active": 3, "pending": 1, "history": 1, "total": 5},
+        )
+        self.assertIn("账本自检：通过（漏账必红臂", report["text"])
+
+    def test_arm_goes_red_when_canary_record_is_dropped(self):
+        """哨兵记录应在账、故意不让它进账：臂必须报红，且不写日志、不建基线。"""
+        append_record(self.root, make_record("u-canary", "fact", "user"))
+        real_collect = nightly_settlement.collect_counts
+
+        def dropping_collect(root):
+            counts = real_collect(root)
+            counts["total_active"] -= 1  # 哨兵那条被结算计数漏掉
+            counts["user"]["total"] -= 1
+            counts["user"]["fact"] -= 1
+            return counts
+
+        out_dir = self.root / "system" / "nightly-settlement"
+        with mock.patch.object(nightly_settlement, "collect_counts", dropping_collect):
+            with self.assertRaisesRegex(ValueError, "漏账必红臂"):
+                nightly_settlement.run_settlement(self.root, now=self.now)
+        # 臂不通则结论不对外：没有当日日志、没有基线
+        self.assertEqual(list(out_dir.glob("settlement-*.txt")), [])
+        self.assertFalse((out_dir / "baseline.json").exists())
+
+    def test_arm_goes_red_when_record_added_after_counting(self):
+        """不靠 monkeypatch 的漏账：计数算完后又多一条记录，臂必须报红。"""
+        counts = nightly_settlement.collect_counts(self.root)
+        append_record(self.root, make_record("u-late", "fact", "user"))
+        with self.assertRaisesRegex(ValueError, "漏账必红臂"):
+            nightly_settlement.verify_ledger_arm(self.root, counts)
+
+    def test_verify_arm_accepts_exact_counts(self):
+        counts = nightly_settlement.collect_counts(self.root)
+        raw = nightly_settlement.verify_ledger_arm(self.root, counts)
+        self.assertEqual(raw["total"], 5)
+        tampered = dict(counts)
+        tampered["pending"] = 0  # 篡改任一桶都必须报红
+        with self.assertRaisesRegex(ValueError, "pending：结算数 0 ≠ 原文重数 1"):
+            nightly_settlement.verify_ledger_arm(self.root, tampered)
+
+    def test_arm_failure_via_cli_returns_1_and_writes_nothing(self):
+        real_collect = nightly_settlement.collect_counts
+
+        def dropping_collect(root):
+            counts = real_collect(root)
+            counts["total_active"] -= 1
+            return counts
+
+        with mock.patch.object(nightly_settlement, "collect_counts", dropping_collect):
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = nightly_settlement.main(["--root", str(self.root)])
+        self.assertEqual(code, 1)
+        out_dir = self.root / "system" / "nightly-settlement"
+        self.assertEqual(list(out_dir.glob("settlement-*.txt")), [])
+        self.assertFalse((out_dir / "baseline.json").exists())
 
 
 if __name__ == "__main__":
