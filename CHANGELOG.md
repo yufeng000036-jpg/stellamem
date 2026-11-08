@@ -23,6 +23,42 @@
 - `tests/negative-samples.test.mjs`：2 个测试 → 10 个。新增：七字段齐全与 digest 自洽、expected/observed 永不是 PASS/FAIL、manifest 四要素、缺 run_id 不算当前证据、门正常时哨兵安静、哨兵必响（元测试 + CLI 级退出码 1 与 `SENTINEL TRIPPED` 文字）、池版本 + changelog + 遗留裸数组可识别为 version 0。
 - `tests/test_guardrail_receipt.py`：9 个测试 → 15 个。新增：绑定回执验签通过、绑定改 digest、篡改 criteria_digest / run_id / 删字段即验签失败、空绑定值拒绝、gate 透传进回执与日志、不带绑定时与原来一样。
 
+## Unreleased — 修 PR #94 的 Windows CI 红（验证脚本读中文文件缺 encoding）
+
+PR #94 合后 CI 3/7：ubuntu-3.12、macos-3.12、quality 绿；ubuntu-3.10 与 macos-3.10 红在 `actions/setup-python`（504，基础设施问题，与代码无关）；windows-3.12 与 windows-3.10 红在 `unittest discover`。根因是本 PR 新加的 `abstain_validation.py` 用不带 encoding 的 `read_text()` 读中文 JSON（`negative_samples.json`），Windows 默认 cp1252 下直接 `UnicodeDecodeError`——本地 UTF-8 模式的机器上跑不出来，Windows CI 上两档全红。已在子进程里复现（`PYTHONUTF8=0` + `LC_ALL=C` 下同一行报错）。
+
+### 改动
+
+- `benchmark/longmemeval/abstain_validation.py`：全部 11 处 `read_text()`/`write_text()` 补 `encoding="utf-8"`。
+- `tests/test_abstain_validation.py`（新增 1 个回归测试，共 10 个）：子进程模拟非 UTF-8 默认编码（仓库既有模式：`PYTHONIOENCODING=cp1252`、`PYTHONUTF8=0`，再加 `LC_ALL=C` / `PYTHONCOERCECLOCALE=0`），调 `build_negative_cases` 读真实中文文件，断言 7 条全读出来。修之前该测试在子进程里以 `UnicodeDecodeError` 失败，修之后通过。
+- 另：`abstain_experiment.py` / `claim_tracking.py` 里同样的裸 `read_text()` 是既有 latent（其测试用 ASCII 夹具所以 Windows 上一直是绿的），本次不动，另记跟进。
+
+### 测试
+
+- 全量 **901 Python + 31 Node 通过**（900 + 1 新增 Python；Node 不变）。
+
+## Unreleased — 拒答改法验证（1a/1b 先验证再改）
+
+2026-11-08 外部评估（7.8/10）的 P1 与 silver 12:13 的两个改法：生成前 CoT 预检（1a）与语义级 LLM-as-a-judge（1b）。先在小样本上验证再决定进不进生产路径——验证结论是两个都不进（见下），本 PR 只落验证工具与这次测量的阴性结论，不改任何生产路径。
+
+### 改动
+
+- `benchmark/longmemeval/abstain_validation.py`（新增）：验证脚本。拒答集 15 题（第四轮原投影臂的 5 道翻车题 + 24 道答对拒答题里固定种子 20261108 抽的 10 道）、阳性对照 10 题（第四轮判对的非拒答题，有 sidecar，同种子抽样）、负样本读者案 7 条（PR #84 的负样本重建成读者案：陷阱记录就在上下文里，假装投影漏了它）。基线臂复用第四轮缓存（cache key 完全一致，$0）；脚本可续跑、绝不写第四轮缓存；费用从 proxy usage 日志按 flash 非高峰官价算（与第四轮 merge.py 同口径）。
+- `benchmark/longmemeval/abstain_validation.md`（新增）：方法、验证集、0ddfec37 的数（已核实）、结论。简报初稿写 0ddfec37“抽了 21 条”——sidecar 里没这个数，不要引用；核实值是 projected_n=7、candidates_n=18、2 个会话、投出 7 条里引用 1 条。
+- `tests/test_abstain_validation.py`（新增 9 个）：1a 保持基线前缀、调用缓存键随 system 变、judge 解析与 judge 用户前缀、费用口径、验证集固定、负样本读者案带陷阱记录且不带有效性元数据。
+
+### 验证结果（2026-11-08，60 次新鲜调用、36,052 token、$0.0059；全程 $0.0063）
+
+- 基线臂完整复现第四轮：拒答集 10/15 拒答、5 道翻车题原样翻车；阳性对照 10/10 保住。
+- 1a：拒答 5/5 翻过来了，但阳性对照只保住 5/10——充分性指令把门槛抬到了所有题上，证据充足的答题也被拒了。作为通用改法验证无效，不进生产路径；需加作用域（只在证据薄弱/近似时启用，或措辞放软），那是下一轮的设计。
+- 1b：拒答 2/5 翻过来，阳性对照保住 9/10，净 +2/−1。judge 判断不可靠：0ddfec37 判对了但理由是错的（无中生有说题目问橄榄球）；3 道翻车题被表面匹配骗过；阳性对照误杀 1 道。全量 30 题外推约 0.87，不够 0.90 门，且每次答题多一次云调用。单独不够，验证无效（作生产路径）。
+- 负样本读者案：三个臂都是 4/7，构成不同。1a 多抓了歧义修订（看得见的冲突），但把 superseded 的正确答案也拒了；过期/状态失效两案三个臂全漏——读者看不见 valid_to/outdated/status，投影行里没这些元数据。有效性必须在投影层拦，读者侧修不掉。neg-future-01 的“干净”是检查口径的 artifact（答案“明年”不含“火星”），已在文档里注明。
+
+### 测试
+
+- 全量 **900 Python + 31 Node 通过**（891 + 9 新增 Python；Node 不变）。
+
+
 ## Unreleased — 拒答三组对照实验 + 第四轮 claim 级回填表
 
 2026-11-08 外部评估（7.8/10）的 P1：拒答不要再堆关键词规则（PR #79 窄 guard 净效果为零），改做有证据/无证据/错误证据三组对照，看读者是不是真的遵守拒答约束。本 PR 做这个实验，并补上 PR #91 里承诺的第四轮 claim 级回填表（诊断重放已跑完）。
