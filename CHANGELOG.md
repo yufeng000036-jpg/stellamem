@@ -4,6 +4,25 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased — 负样本评测做实：哨兵 + 池轮换 + 七字段
+
+第二波（拒答攻坚）：负样本评测本身不能变假绿。加哨兵、给池子版本化
+轮换、把负控交换格式改成七字段 + 四要素 manifest；guardrail 回执
+可绑 criteria_digest 与 run_id。
+
+### 改动
+
+- `benchmark/longmemeval/negative_samples.mjs`：每条结果改为七字段（arm_executed / criteria_digest / injected_fault / expected_verdict / observed_verdict / run_id / evidence_source）；expected_verdict 是独立判级（`检出故障` / `正常注入`），不是 PASS/FAIL；每轮输出四要素 manifest（schema 版本、criteria_digest、run_id、池版本）；哨兵：被禁串一旦注入即 `sentinel_tripped`，CLI 打印 `SENTINEL TRIPPED`、退出码 1，本轮结论不许对外；`isCurrentEvidence`：缺 run_id 的必失败样不算当前证据；fixture 路径可用 `NEGATIVE_SAMPLES_FIXTURES` 覆盖（仅供测试）。
+- `benchmark/longmemeval/negative_samples.json`：池子版本化为 `{version, changelog, cases}`（当前 v2）；每条用例加 `fault` 字段；新增 `neg-expired-02`（过期健身房年卡）与 `neg-superseded-02`（旧手机号被新号替代），均为虚构数据；v1 裸数组读入时认作 version 0。
+- `benchmark/longmemeval/negative_samples.md`：写清哨兵规则、每季度一轮的轮换周期与口径（每轮新增 ≥ 2 条、淘汰记 changelog、version +1）、七字段与 manifest 四要素、run_id 绑定口径。
+- `compiler/guardrail_receipt.py`：`make_receipt` 可选带 `criteria_digest` 与 `run_id`，带上后两者一并折进 `rule_digest`，`verify_receipt` 同规则重算；不带时与原来完全一样。
+- `compiler/gate.py`：`InjectionGate.decide()` 透传 `criteria_digest` / `run_id`（可选），并记入 JSONL 日志条目。
+
+### 测试
+
+- `tests/negative-samples.test.mjs`：2 个测试 → 10 个。新增：七字段齐全与 digest 自洽、expected/observed 永不是 PASS/FAIL、manifest 四要素、缺 run_id 不算当前证据、门正常时哨兵安静、哨兵必响（元测试 + CLI 级退出码 1 与 `SENTINEL TRIPPED` 文字）、池版本 + changelog + 遗留裸数组可识别为 version 0。
+- `tests/test_guardrail_receipt.py`：9 个测试 → 15 个。新增：绑定回执验签通过、绑定改 digest、篡改 criteria_digest / run_id / 删字段即验签失败、空绑定值拒绝、gate 透传进回执与日志、不带绑定时与原来一样。
+
 ## Unreleased — 修 PR #94 的 Windows CI 红（验证脚本读中文文件缺 encoding）
 
 PR #94 合后 CI 3/7：ubuntu-3.12、macos-3.12、quality 绿；ubuntu-3.10 与 macos-3.10 红在 `actions/setup-python`（504，基础设施问题，与代码无关）；windows-3.12 与 windows-3.10 红在 `unittest discover`。根因是本 PR 新加的 `abstain_validation.py` 用不带 encoding 的 `read_text()` 读中文 JSON（`negative_samples.json`），Windows 默认 cp1252 下直接 `UnicodeDecodeError`——本地 UTF-8 模式的机器上跑不出来，Windows CI 上两档全红。已在子进程里复现（`PYTHONUTF8=0` + `LC_ALL=C` 下同一行报错）。
@@ -38,6 +57,7 @@ PR #94 合后 CI 3/7：ubuntu-3.12、macos-3.12、quality 绿；ubuntu-3.10 与 
 ### 测试
 
 - 全量 **900 Python + 31 Node 通过**（891 + 9 新增 Python；Node 不变）。
+
 
 ## Unreleased — 拒答三组对照实验 + 第四轮 claim 级回填表
 

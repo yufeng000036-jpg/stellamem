@@ -120,5 +120,98 @@ class GateReceiptTests(unittest.TestCase):
         self.assertTrue(R.verify_receipt(receipt))
 
 
+class ReceiptRunBindingTests(unittest.TestCase):
+    """Negative-control wave 2: a receipt can be bound to the criteria
+    digest and the run it was measured in. The binding is folded into
+    the rule digest, so re-attaching a receipt to other criteria or
+    another run breaks verification. Receipts without the binding still
+    verify exactly as before.
+    """
+
+    def test_bound_receipt_verifies_and_carries_both_fields(self):
+        receipt = R.make_receipt(
+            "injection-gate",
+            "block",
+            "rule summary",
+            {"rule_version": 1},
+            criteria_digest="a" * 64,
+            run_id="neg-20261108T100000Z-abcdef",
+        )
+        self.assertEqual(receipt["criteria_digest"], "a" * 64)
+        self.assertEqual(receipt["run_id"], "neg-20261108T100000Z-abcdef")
+        self.assertTrue(R.verify_receipt(receipt))
+
+    def test_binding_changes_the_digest(self):
+        base = R.make_receipt("injection-gate", "block", "rule summary", {"rule_version": 1})
+        bound = R.make_receipt(
+            "injection-gate",
+            "block",
+            "rule summary",
+            {"rule_version": 1},
+            criteria_digest="a" * 64,
+            run_id="neg-20261108T100000Z-abcdef",
+        )
+        self.assertNotEqual(base["rule_digest"], bound["rule_digest"])
+        self.assertTrue(R.verify_receipt(base))
+        self.assertTrue(R.verify_receipt(bound))
+
+    def test_verify_fails_when_binding_tampered(self):
+        base = R.make_receipt(
+            "injection-gate",
+            "block",
+            "rule summary",
+            {"rule_version": 1},
+            criteria_digest="a" * 64,
+            run_id="neg-20261108T100000Z-abcdef",
+        )
+        for mutate in (
+            lambda r: r.update(criteria_digest="b" * 64),
+            lambda r: r.update(run_id="neg-20261108T100000Z-000000"),
+            lambda r: r.pop("criteria_digest"),
+            lambda r: r.pop("run_id"),
+            lambda r: r.update(criteria_digest=""),
+            lambda r: r.update(run_id=123),
+        ):
+            tampered = json.loads(json.dumps(base))
+            mutate(tampered)
+            self.assertFalse(R.verify_receipt(tampered), f"tamper not caught: {tampered}")
+
+    def test_empty_binding_values_rejected(self):
+        for kwargs in (
+            {"criteria_digest": ""},
+            {"criteria_digest": "   "},
+            {"run_id": ""},
+            {"criteria_digest": 123},
+        ):
+            with self.assertRaises(ValueError, msg=str(kwargs)):
+                R.make_receipt(
+                    "injection-gate", "block", "rule summary", {"rule_version": 1}, **kwargs
+                )
+
+    def test_gate_decide_passes_binding_through(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            log = Path(tmp) / "gate_log.jsonl"
+            out = G.InjectionGate(log_path=log).decide(
+                {"items": [weak_flagged()]},
+                query="占位查询",
+                criteria_digest="c" * 64,
+                run_id="neg-20261108T100000Z-abcdef",
+            )
+            receipt = out["receipt"]
+            self.assertEqual(receipt["criteria_digest"], "c" * 64)
+            self.assertEqual(receipt["run_id"], "neg-20261108T100000Z-abcdef")
+            self.assertTrue(R.verify_receipt(receipt))
+            entry = json.loads(log.read_text(encoding="utf-8").strip().splitlines()[-1])
+            self.assertEqual(entry["criteria_digest"], "c" * 64)
+            self.assertEqual(entry["run_id"], "neg-20261108T100000Z-abcdef")
+            self.assertTrue(R.verify_receipt(entry["receipt"]))
+
+    def test_gate_decide_without_binding_is_unchanged(self):
+        out = G.InjectionGate().decide({"items": [strong()]}, query="占位查询")
+        self.assertNotIn("criteria_digest", out["receipt"])
+        self.assertNotIn("run_id", out["receipt"])
+        self.assertTrue(R.verify_receipt(out["receipt"]))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -118,7 +118,7 @@ class TestValidationSets(unittest.TestCase):
             / "negative_samples.json",
             header,
         )
-        self.assertEqual(len(cases), 7)
+        self.assertEqual(len(cases), 9)  # pool v2 (PR #93): 7 + 2 new cases
         by_id = {c["id"]: c for c in cases}
         expired = by_id["neg-expired-01"]
         self.assertIn("买一送一", expired["memory"])
@@ -146,7 +146,7 @@ class WindowsEncodingTests(unittest.TestCase):
         # 编码（仓库既有模式：PYTHONIOENCODING=cp1252、PYTHONUTF8=0，
         # 再加 LC_ALL=C / PYTHONCOERCECLOCALE=0 让 open() 的默认编码
         # 不是 UTF-8）。修之前这个测试在子进程里以 UnicodeDecodeError
-        # 失败；修之后 7 条全读出来。
+        # 失败；修之后全读出来（池子 v2 共 9 条）。
         code = (
             "import sys; sys.path.insert(0, 'benchmark/longmemeval');"
             "from pathlib import Path;"
@@ -170,7 +170,7 @@ class WindowsEncodingTests(unittest.TestCase):
             timeout=60,
         )
         self.assertEqual(proc.returncode, 0, proc.stderr.decode("utf-8", "replace"))
-        self.assertEqual(proc.stdout.decode("utf-8", "strict").strip(), "7")
+        self.assertEqual(proc.stdout.decode("utf-8", "strict").strip(), "9")
 
 
 if __name__ == "__main__":
