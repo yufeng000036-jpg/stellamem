@@ -1,12 +1,20 @@
-# LongMemEval 逐题追踪表（路线 B，2026-11-06 第三轮）
+# LongMemEval 逐题追踪表（路线 B，2026-11-06 第三轮 / 2026-11-08 第四轮）
 
 > 给复核方（凯瑞's Agent、silver）看的表。按「从 source turn → claim →
 > 审批/版本 → 检索候选 → 投影入上下文 → 最终回答/拒答」逐题记「源里有没
 > 有、claim 有没有、候选有没有、投影有没有、回答是否引用并被证据蕴含」。
+>
+> **第四轮（20261108 版，最新）**：`tracking_table_20261108.csv`——main
+> `9034cde`（PR #79 窄 guard 在位），判分 177/500 = 0.354、recall@5 均值
+> 0.857、正确拒答 24/30 = 0.800；断点分布 project/cite 211、pass 175、
+> answer/use 57、extract 37、retrieve 14、answer 6。轮间变化：判分对上一轮
+> 提升 28 题、退步 26 题、446 题不变（净 +2）。拒答失败集：修好了 a96c20ee
+> 与 f685340e（#78 回归题），新翻了 0ddfec37 与 gpt4_93159ced，净变化 0——
+> PR #79 在全量上没有净效果，见工作区报告 `longmemeval-rerun3-20261108.md`。
 
 ## 文件
 
-- **表本体（CSV，500 行）**：`tracking_table_20261106.csv`
+- **表本体（CSV，500 行）**：`tracking_table_20261108.csv`（最新，第四轮）；`tracking_table_20261106.csv`（第三轮，保留对照）
 - **生成脚本（可复跑）**：`tracking_table.py`（见用法，下方）
 - **本轮报告**：工作区报告 `longmemeval-rerun2-20261106.md`（数字来源；报告与
   原始逐题结果 `results.json` 随每轮评测保存在工作区，不进仓库）

@@ -1,0 +1,501 @@
+question_id,category,in_manifest,gold_sessions_n,gold_evidence_role,extracted_n,extracted_coverage,recall@1,recall@5,retrieved_n,cited_n,citation_valid,citation_gold_recall,judge_main,judge_hypothesis,exact_main,abstain,correct_abstention,error,logical_calls,loss_stage,loss_detail,judge_prev_round,judge_direct,judge_none
+720133ac,multi-session,False,2,user,32,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_d31cdae3,temporal-reasoning,False,2,user,26,1.0,0.5,1.0,2,1,True,0.5,False,solo trip to Europe,False,False,,,15,answer/use,recall@5=1.000 citation_valid=true but judge=false,True,True,False
+80ec1f4f_abs,abstention,False,3,,34,,,,2,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,18,pass,,True,True,True
+07741c45,knowledge-update,False,2,user,20,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,15,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+gpt4_4edbafa2,temporal-reasoning,False,2,user,26,1.0,0.5,1.0,2,1,True,0.5,True,6月3日,False,False,,,17,pass,,True,True,False
+c4f10528,single-session-assistant,False,1,assistant,6,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,5,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,True,False
+bcbe585f,temporal-reasoning,False,1,user,10,1.0,1.0,1.0,1,1,True,1.0,True,4 weeks ago,False,False,,,7,pass,,True,True,False
+gpt4_7fce9456,multi-session,False,5,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+1d4da289,single-session-assistant,False,1,assistant,3,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_6ed717ea,temporal-reasoning,False,2,user,39,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,19,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+70b3e69b,single-session-assistant,False,1,assistant,9,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,8,retrieve,recall@5=0.0,False,True,False
+09ba9854,multi-session,False,2,user,19,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+gpt4_e414231f,temporal-reasoning,True,2,user,25,1.0,0.5,1.0,2,1,True,0.5,True,公路车（road bike）,False,False,,,19,pass,,True,False,False
+54026fce,single-session-preference,True,1,user,10,1.0,1.0,1.0,1,1,True,1.0,False,与同事的社交互动和闲聊,False,False,,,9,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+b6019101,knowledge-update,False,2,user,25,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,15,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_93f6379c,temporal-reasoning,False,3,user,45,1.0,0.3333333333333333,1.0,3,2,True,0.6666666666666666,False,Marketing Professionals,False,False,,,33,answer/use,recall@5=1.000 citation_valid=true but judge=false,True,True,False
+00ca467f,multi-session,False,3,user,45,1.0,0.3333333333333333,0.3333333333333333,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,29,project/cite,recall@5=0.333 cited=0 citation_valid=False,False,False,False
+a08a253f,multi-session,False,2,user,31,1.0,0.5,1.0,2,2,True,1.0,False,3,False,False,,,14,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+58bf7951,single-session-user,True,1,user,13,1.0,1.0,1.0,1,1,True,1.0,True,《玻璃动物园》,False,False,,,6,pass,,True,True,False
+4f54b7c9,multi-session,False,2,user,26,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,19,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_cd90e484,temporal-reasoning,False,2,user,25,1.0,0.5,1.0,2,1,True,0.5,False,about three weeks,False,False,,,18,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+c8c3f81d,single-session-user,False,1,user,6,1.0,1.0,1.0,1,1,True,1.0,True,Nike,True,False,,,8,pass,,True,True,False
+2c63a862,temporal-reasoning,False,2,user,28,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,17,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+06878be2,single-session-preference,False,1,user,24,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+6456829e,multi-session,False,2,user,20,1.0,0.5,1.0,2,2,True,1.0,True,5 tomato plants and 3 cucumber plants,False,False,,,15,pass,,True,True,False
+ceb54acb,single-session-assistant,True,1,assistant,0,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,2,extract,error=None extracted=0 logical_calls=2,False,True,False
+6071bd76,knowledge-update,False,2,user,28,1.0,0.5,1.0,2,2,True,1.0,True,less water per tablespoon,False,False,,,13,pass,,True,True,False
+2311e44b,multi-session,True,2,user,25,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+a3045048,temporal-reasoning,False,2,user,35,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+a11281a2,multi-session,False,2,user,33,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,26,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+ad7109d1,single-session-user,True,1,user,13,1.0,1.0,1.0,1,1,True,1.0,True,500 Mbps,True,False,,,10,pass,,True,True,False
+a2f3aa27,knowledge-update,False,2,user,21,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,16,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+7405e8b1,multi-session,False,2,user,15,1.0,0.5,0.5,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,14,project/cite,recall@5=0.500 cited=0 citation_valid=False,False,True,False
+3249768e,single-session-assistant,False,1,assistant,2,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+c6853660,knowledge-update,False,2,user,24,1.0,0.5,1.0,2,2,True,1.0,True,increase,False,False,,,14,pass,,True,True,False
+1de5cff2,single-session-assistant,False,1,assistant,8,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,4,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_fa19884d,temporal-reasoning,False,2,user,27,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,21,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,False,False
+36580ce8,single-session-user,False,1,user,12,1.0,1.0,1.0,1,1,True,1.0,True,支气管炎,False,False,,,10,pass,,True,True,False
+b01defab,knowledge-update,True,2,user,30,1.0,0.5,1.0,2,1,True,0.5,True,Yes,True,False,,,13,pass,,True,True,False
+bc8a6e93_abs,abstention,True,1,,14,,,,1,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,12,pass,,True,True,True
+gpt4_2f56ae70,temporal-reasoning,False,3,user,34,0.6666666666666666,0.3333333333333333,0.6666666666666666,2,1,True,0.3333333333333333,False,Apple TV+,False,False,,,23,answer/use,recall@5=0.667 citation_valid=true but judge=false (partial recall: contributing factor),False,True,False
+gpt4_fe651585,temporal-reasoning,False,2,user,34,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,20,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+61f8c8f8,multi-session,False,2,user,21,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,16,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+488d3006,single-session-assistant,False,1,assistant,9,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,4,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+eaca4986,single-session-assistant,False,1,assistant,2,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+6222b6eb,single-session-assistant,False,1,assistant,15,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,7,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_b0863698,temporal-reasoning,False,1,user,16,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,8,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+2ebe6c90,temporal-reasoning,False,2,user,27,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,18,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+eac54add,temporal-reasoning,False,2,user,40,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,22,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+51a45a95,single-session-user,False,1,user,14,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,7,retrieve,recall@5=0.0,False,True,False
+195a1a1b,single-session-preference,True,1,user,14,1.0,1.0,1.0,1,1,True,1.0,True,guided meditation or meditation apps for bedtime relaxation,False,False,,,10,pass,,True,True,False
+gpt4_d9af6064,temporal-reasoning,False,2,user,34,1.0,0.5,1.0,2,2,True,1.0,True,new router,True,False,,,19,pass,,False,False,False
+ef66a6e5,multi-session,False,2,user,30,1.0,0.5,1.0,2,2,True,1.0,True,2,False,False,,,17,pass,,True,False,False
+ac031881,single-session-assistant,False,1,assistant,16,0.0,1.0,1.0,1,1,True,1.0,False,"name A, EXPERIMENT IN PROGRESS",False,False,,,5,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+e3038f8c,multi-session,False,4,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+e8a79c70,single-session-assistant,True,1,assistant,3,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,retrieve,recall@5=0.0,False,True,False
+gpt4_fa19884c,temporal-reasoning,False,2,user,25,1.0,0.5,1.0,2,2,True,1.0,True,6,False,False,,,19,pass,,True,True,False
+87f22b4a,multi-session,False,2,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,16,extract,error=ChunkFailure extracted=0 logical_calls=16,False,False,False
+f35224e0,multi-session,False,2,user,32,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,15,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_7de946e7,temporal-reasoning,False,2,user,45,1.0,0.5,1.0,2,1,True,0.5,False,skin tag removal,False,False,,,15,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+gpt4_b4a80587,temporal-reasoning,False,2,user,33,1.0,0.5,1.0,2,1,True,0.5,False,road trip to the coast,False,False,,,19,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+b5ef892d,multi-session,False,3,user,53,1.0,0.3333333333333333,1.0,3,1,True,0.3333333333333333,False,5,False,False,,,26,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+gpt4_7f6b06db,temporal-reasoning,False,3,user,48,1.0,0.3333333333333333,1.0,3,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,22,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+65240037,single-session-assistant,True,1,assistant,16,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,6,retrieve,recall@5=0.0,False,True,False
+gpt4_15e38248,multi-session,False,4,user,50,1.0,0.25,0.75,3,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,23,project/cite,recall@5=0.750 cited=0 citation_valid=False,False,False,False
+86f00804,single-session-user,False,1,user,15,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,9,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_385a5000,temporal-reasoning,False,2,user,23,1.0,0.5,1.0,2,1,True,0.5,False,marigolds,False,False,,,13,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+0f05491a,knowledge-update,False,2,user,27,1.0,0.5,1.0,2,1,True,0.5,True,120 stars,False,False,,,10,pass,,False,False,False
+6aeb4375,knowledge-update,False,2,user,22,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,True,False
+27016adc,multi-session,False,2,user,32,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,25,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,False,False
+60bf93ed_abs,abstention,False,2,,29,,,,2,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,17,pass,,True,True,True
+1e043500,single-session-user,False,1,user,11,1.0,1.0,1.0,1,1,True,1.0,True,Summer Vibes,True,False,,,8,pass,,True,True,False
+gpt4_68e94288,temporal-reasoning,False,2,user,25,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,15,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+1b9b7252,single-session-assistant,False,1,assistant,5,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,4,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_18c2b244,temporal-reasoning,False,3,user,35,1.0,0.3333333333333333,1.0,3,2,True,0.6666666666666666,False,"I redeemed $12 cashback for a $10 Amazon gift card from Ibotta, then I signed up for the rewards program at ShopRite; the Walmart Luvs coupon event is not in memory",False,False,,,22,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+031748ae_abs,abstention,True,2,,22,,,,1,1,True,,False,4 engineers,False,False,False,,14,answer,answered instead of abstaining; retrieved 1 session(s) before answering,False,False,True
+gpt4_88806d6e,temporal-reasoning,False,2,user,27,1.0,0.5,0.5,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,15,project/cite,recall@5=0.500 cited=0 citation_valid=False,False,False,False
+6b168ec8,single-session-user,True,1,user,15,1.0,1.0,1.0,1,1,True,1.0,True,3,False,False,,,12,pass,,True,True,False
+c14c00dd,single-session-user,False,1,user,12,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,7,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+06db6396,knowledge-update,False,2,user,25,1.0,0.5,1.0,2,1,True,0.5,True,5,True,False,,,22,pass,,False,False,False
+89941a94,knowledge-update,True,2,user,35,1.0,0.5,1.0,2,1,True,0.5,True,是，还有一辆公路车,False,False,,,19,pass,,True,True,False
+e831120c,multi-session,False,2,user,26,1.0,0.5,1.0,2,2,True,1.0,True,两周内看完22部漫威电影，一周半内看完星球大战全部主线电影,False,False,,,12,pass,,True,True,False
+gpt4_70e84552_abs,abstention,True,2,user,27,,,,2,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,22,pass,,True,False,True
+2e6d26dc,multi-session,False,4,user,56,1.0,0.25,0.75,3,1,True,0.25,False,2,False,False,,,28,answer/use,recall@5=0.750 citation_valid=true but judge=false (partial recall: contributing factor),False,False,False
+gpt4_78cf46a3,temporal-reasoning,False,2,user,9,0.5,0.5,1.0,2,2,True,1.0,False,narrator losing their phone charger,False,False,,,15,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+gpt4_59149c77,temporal-reasoning,True,2,user,34,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,23,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+8ebdbe50,single-session-user,False,1,user,9,1.0,1.0,1.0,1,1,True,1.0,True,数据科学认证,False,False,,,13,pass,,True,True,False
+gpt4_70e84552,temporal-reasoning,False,2,user,26,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,22,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,True,False
+gpt4_372c3eed,multi-session,True,3,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+gpt4_194be4b3,multi-session,False,5,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+gpt4_93159ced,temporal-reasoning,False,2,user,32,1.0,0.5,1.0,2,1,True,0.5,False,9年,False,False,,,20,answer/use,recall@5=1.000 citation_valid=true but judge=false,True,False,False
+95bcc1c8,single-session-user,False,1,user,18,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_a56e767c,multi-session,False,3,user,49,1.0,0.3333333333333333,0.6666666666666666,2,1,True,0.3333333333333333,False,2,False,False,,,31,answer/use,recall@5=0.667 citation_valid=true but judge=false (partial recall: contributing factor),False,False,False
+eac54adc,temporal-reasoning,False,2,user,42,1.0,0.5,1.0,2,2,True,1.0,True,19,False,False,,,22,pass,,True,False,False
+gpt4_4929293b,temporal-reasoning,False,2,user,23,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,22,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,False,False
+6b7dfb22,single-session-preference,False,1,user,17,1.0,1.0,1.0,1,1,True,1.0,False,社交媒体,False,False,,,16,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+0a995998,multi-session,True,3,user,38,1.0,0.3333333333333333,0.6666666666666666,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,19,project/cite,recall@5=0.667 cited=0 citation_valid=False,False,False,False
+gpt4_f49edff3,temporal-reasoning,False,3,user,26,1.0,0.3333333333333333,1.0,3,3,True,1.0,True,"helped friend prepare nursery (2023-02-05), helped cousin pick out baby shower items (2023-02-10), ordered customized phone case (2023-02-20)",False,False,,,20,pass,,True,True,False
+c2ac3c61,multi-session,False,2,user,24,1.0,0.5,1.0,2,2,True,1.0,True,5,True,False,,,24,pass,,True,True,False
+1a1907b4,single-session-preference,True,1,user,14,1.0,1.0,1.0,1,1,True,1.0,True,Pimm's Cup with a Twist,False,False,,,8,pass,,True,True,False
+6ae235be,single-session-assistant,False,1,assistant,5,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ModelError,5,extract,error=ModelError extracted=5 logical_calls=5,False,True,False
+09ba9854_abs,abstention,True,2,user,16,,,,2,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,12,pass,,True,True,True
+c4ea545c,knowledge-update,True,2,user,25,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,13,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+66f24dbb,single-session-user,True,1,user,8,1.0,1.0,1.0,1,1,True,1.0,True,黄色连衣裙和配套耳环,False,False,,,4,pass,,True,True,False
+c18a7dc8,multi-session,False,2,user,35,1.0,0.5,0.5,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,24,project/cite,recall@5=0.500 cited=0 citation_valid=False,False,False,False
+gpt4_65aabe59,temporal-reasoning,True,2,user,35,1.0,0.5,1.0,2,2,True,1.0,True,智能恒温器,False,False,,,19,pass,,True,True,False
+6e984302,temporal-reasoning,False,2,user,29,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,24,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+0bc8ad93,temporal-reasoning,False,3,user,46,1.0,0.3333333333333333,1.0,3,1,True,0.3333333333333333,True,"with father, not a friend",False,False,,,23,pass,,False,False,False
+gpt4_b5700ca9,temporal-reasoning,False,1,user,13,1.0,1.0,1.0,1,1,True,1.0,True,4,False,False,,,8,pass,,True,True,False
+f4f1d8a4_abs,abstention,False,1,,17,,,,1,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,7,pass,,True,True,True
+gpt4_7ddcf75f,temporal-reasoning,False,1,user,16,1.0,1.0,1.0,1,1,True,1.0,True,3,False,False,,,11,pass,,True,True,False
+c8090214,temporal-reasoning,False,2,user,30,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,14,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+88432d0a_abs,abstention,False,4,,58,,,,3,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,31,pass,,True,True,True
+ce6d2d27,knowledge-update,False,2,user,27,1.0,0.5,1.0,2,1,True,0.5,True,Friday,True,False,,,13,pass,,True,True,False
+41275add,single-session-assistant,False,1,assistant,0,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,2,extract,error=None extracted=0 logical_calls=2,False,True,False
+gpt4_f2262a51,multi-session,False,3,user,45,1.0,0.3333333333333333,1.0,3,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,28,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+08e075c7,knowledge-update,False,2,user,32,1.0,0.5,1.0,2,1,True,0.5,False,6个月,False,False,,,16,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+6aeb4375_abs,abstention,True,2,,23,,,,2,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,12,pass,,True,True,True
+b46e15ee,temporal-reasoning,False,4,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+dd2973ad,multi-session,False,2,user,23,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,14,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+94f70d80,single-session-user,False,1,user,13,1.0,1.0,1.0,1,1,True,1.0,True,4小时,False,False,,,11,pass,,True,True,False
+ccb36322,single-session-user,True,1,user,12,1.0,1.0,1.0,1,1,True,1.0,True,Spotify,True,False,,,8,pass,,True,True,False
+b29f3365,temporal-reasoning,True,2,user,31,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,17,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+b9cfe692,temporal-reasoning,True,3,user,42,1.0,0.3333333333333333,1.0,3,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,18,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+gpt4_59c863d7,multi-session,False,4,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+aae3761f,multi-session,False,3,user,52,1.0,0.3333333333333333,0.6666666666666666,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,24,project/cite,recall@5=0.667 cited=0 citation_valid=False,False,False,False
+gpt4_4929293a,temporal-reasoning,True,2,user,22,1.0,0.5,1.0,2,2,True,1.0,True,Michael's engagement party,True,False,,,22,pass,,True,False,False
+75832dbd,single-session-preference,False,1,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,12,extract,error=ChunkFailure extracted=0 logical_calls=12,False,False,False
+c5e8278d,single-session-user,False,1,user,5,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,11,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+b759caee,single-session-assistant,False,1,assistant,0,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,4,extract,error=None extracted=0 logical_calls=4,False,True,False
+726462e0,single-session-user,False,1,user,12,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,10,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+29f2956b_abs,abstention,True,1,,14,,,,1,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,14,pass,,True,True,True
+e982271f,single-session-assistant,True,1,assistant,3,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,retrieve,recall@5=0.0,False,True,False
+caf9ead2,single-session-user,False,1,user,10,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,5,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+8752c811,single-session-assistant,True,1,assistant,0,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,6,extract,error=None extracted=0 logical_calls=6,False,True,False
+a3332713,multi-session,False,2,user,26,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,9,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+gpt4_1e4a8aec,temporal-reasoning,False,2,user,35,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,18,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+982b5123,temporal-reasoning,False,2,user,30,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,15,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+71a3fd6b,single-session-assistant,False,1,assistant,5,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,2,retrieve,recall@5=0.0,False,True,False
+8464fc84,single-session-assistant,False,1,assistant,6,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,4,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+0bc8ad92,temporal-reasoning,False,3,user,44,1.0,0.3333333333333333,0.6666666666666666,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,22,project/cite,recall@5=0.667 cited=0 citation_valid=False,False,False,False
+d23cf73b,multi-session,False,4,user,67,1.0,0.25,1.0,4,3,True,0.75,False,3,False,False,,,32,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+fea54f57,single-session-assistant,False,1,assistant,6,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,5,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+6cb6f249,multi-session,False,2,user,33,1.0,0.5,1.0,2,1,True,0.5,False,10 days,False,False,,,20,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+e56a43b9,multi-session,False,2,user,30,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_468eb063,temporal-reasoning,False,1,user,12,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+7161e7e2,single-session-assistant,True,1,assistant,8,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,4,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+0ddfec37_abs,abstention,True,2,,21,,,,2,1,True,,False,15,False,False,False,,17,answer,answered instead of abstaining; retrieved 2 session(s) before answering,True,False,True
+gpt4_e061b84g,temporal-reasoning,False,3,user,34,1.0,0.3333333333333333,1.0,3,1,True,0.3333333333333333,True,慈善足球锦标赛,False,False,,,28,pass,,True,False,False
+cf22b7bf,knowledge-update,True,2,user,29,1.0,0.5,1.0,2,1,True,0.5,True,10磅,False,False,,,22,pass,,True,True,False
+7527f7e2,single-session-user,False,1,user,22,1.0,1.0,1.0,1,1,True,1.0,True,800美元,False,False,,,11,pass,,True,True,False
+gpt4_d6585ce8,temporal-reasoning,False,5,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+gpt4_af6db32f,temporal-reasoning,False,1,user,15,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,7,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+69fee5aa,knowledge-update,True,2,user,26,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,18,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+7e974930,knowledge-update,True,2,user,23,0.5,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,13,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_7ca326fa,temporal-reasoning,False,3,user,38,1.0,0.3333333333333333,1.0,3,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,21,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+5d3d2817,single-session-user,False,1,user,17,1.0,1.0,1.0,1,1,True,1.0,False,市场专员,False,False,,,11,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+157a136e,multi-session,False,2,user,24,1.0,0.5,1.0,2,2,True,1.0,True,43,True,False,,,21,pass,,True,False,False
+1a8a66a6,multi-session,True,4,user,43,1.0,0.25,0.75,3,2,True,0.5,False,1,False,False,,,28,answer/use,recall@5=0.750 citation_valid=true but judge=false (partial recall: contributing factor),False,True,False
+gpt4_c27434e8,temporal-reasoning,False,2,user,39,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,19,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+a89d7624,single-session-preference,True,1,user,15,1.0,1.0,1.0,1,1,True,1.0,False,丹佛的音乐场馆和音乐节,False,False,,,8,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+gpt4_2f8be40d,multi-session,False,3,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+gpt4_85da3956,temporal-reasoning,False,1,user,14,1.0,1.0,1.0,1,1,True,1.0,True,3,False,False,,,7,pass,,True,True,False
+7a8d0b71,single-session-assistant,False,1,assistant,9,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,7,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+2698e78f_abs,abstention,True,2,,32,,,,1,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,17,pass,,True,True,True
+545bd2b5,single-session-user,False,1,user,10,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+ed4ddc30,knowledge-update,False,2,user,32,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,19,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+3f1e9474,single-session-user,False,1,user,18,1.0,1.0,1.0,1,1,True,1.0,True,Sarah,True,False,,,13,pass,,True,True,False
+faba32e5,single-session-user,False,1,user,12,1.0,1.0,1.0,1,1,True,1.0,True,24 hours before grilling,False,False,,,10,pass,,True,True,False
+4388e9dd,single-session-assistant,False,1,user,5,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,4,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+0e4e4c46,knowledge-update,False,2,user,35,1.0,0.5,1.0,2,1,True,0.5,True,132分,False,False,,,19,pass,,True,True,False
+8e91e7d9,multi-session,False,2,user,15,1.0,0.5,1.0,2,1,True,0.5,False,1,False,False,,,22,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+gpt4_31ff4165,multi-session,False,5,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+28bcfaac,single-session-assistant,False,1,assistant,2,0.0,1.0,1.0,1,1,True,1.0,True,MusicTheory.net,True,False,,,3,pass,,True,True,False
+0e5e2d1a,single-session-assistant,False,1,assistant,0,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,extract,error=None extracted=0 logical_calls=3,False,True,False
+a96c20ee,multi-session,False,2,user,23,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,18,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,True,False
+af082822,temporal-reasoning,False,1,user,15,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,9,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+2b8f3739,multi-session,True,3,user,54,1.0,0.3333333333333333,0.6666666666666666,2,1,True,0.3333333333333333,False,$120,False,False,,,33,answer/use,recall@5=0.667 citation_valid=true but judge=false (partial recall: contributing factor),False,False,False
+b3c15d39,multi-session,False,2,user,27,1.0,0.5,1.0,2,2,True,1.0,True,5 days,False,False,,,16,pass,,False,False,False
+2133c1b5_abs,abstention,False,2,,31,,,,2,1,True,,False,3个月,False,False,False,,14,answer,answered instead of abstaining; retrieved 2 session(s) before answering,False,True,True
+8077ef71,temporal-reasoning,False,1,user,7,1.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,5,retrieve,recall@5=0.0,False,True,False
+60d45044,single-session-user,False,1,user,11,1.0,1.0,1.0,1,1,True,1.0,True,日本短粒米,False,False,,,8,pass,,True,True,False
+affe2881,knowledge-update,False,2,user,25,1.0,0.5,1.0,2,1,True,0.5,False,27,False,False,,,16,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+4dfccbf7,temporal-reasoning,True,2,user,42,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,16,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+36b9f61e,multi-session,False,3,user,41,1.0,0.3333333333333333,1.0,3,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,27,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+8a137a7f,single-session-user,True,1,user,11,1.0,1.0,1.0,1,1,True,1.0,True,Philips LED bulb,True,False,,,11,pass,,True,True,False
+18bc8abd,knowledge-update,True,2,user,27,1.0,0.5,1.0,2,1,True,0.5,True,Kansas City Masterpiece BBQ sauce,False,False,,,17,pass,,True,True,False
+c960da58,single-session-user,True,1,user,19,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,10,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+f523d9fe,single-session-assistant,True,1,user,9,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,4,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+1c549ce4,multi-session,False,2,user,31,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,14,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+1c0ddc50,single-session-preference,False,1,user,12,1.0,1.0,1.0,1,1,True,1.0,False,听播客,False,False,,,12,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+031748ae,knowledge-update,False,2,user,23,1.0,0.5,0.5,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,14,project/cite,recall@5=0.500 cited=0 citation_valid=False,False,True,False
+603deb26,knowledge-update,False,2,user,40,1.0,0.5,1.0,2,1,True,0.5,True,10 times,False,False,,,18,pass,,True,True,False
+c19f7a0b,single-session-user,True,1,user,12,1.0,1.0,1.0,1,1,True,1.0,True,工作日约18:30到家,False,False,,,7,pass,,True,True,False
+5a4f22c0,knowledge-update,False,2,user,37,1.0,0.5,1.0,2,1,True,0.5,True,TechCorp,True,False,,,15,pass,,True,True,False
+6a27ffc2,knowledge-update,True,2,user,34,1.0,0.5,1.0,2,1,True,0.5,True,30,True,False,,,26,pass,,True,False,False
+a9f6b44c,multi-session,False,3,user,36,1.0,0.3333333333333333,0.6666666666666666,2,1,True,0.3333333333333333,False,1,False,False,,,17,answer/use,recall@5=0.667 citation_valid=true but judge=false (partial recall: contributing factor),False,False,False
+gpt4_5dcc0aab,temporal-reasoning,False,5,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,True,False
+gpt4_1d80365e,temporal-reasoning,True,2,user,27,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,20,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+5a7937c8,multi-session,False,3,user,27,1.0,0.3333333333333333,0.6666666666666666,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,28,project/cite,recall@5=0.667 cited=0 citation_valid=False,False,False,False
+3ba21379,knowledge-update,False,2,user,43,1.0,0.5,1.0,2,1,True,0.5,False,Ford Mustang Shelby GT350R 模型,False,False,,,26,answer/use,recall@5=1.000 citation_valid=true but judge=false,True,True,False
+28dc39ac,multi-session,False,5,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+60472f9c,multi-session,False,3,user,45,1.0,0.3333333333333333,1.0,3,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,33,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+b86304ba,single-session-user,True,1,user,5,1.0,1.0,1.0,1,1,True,1.0,True,约为购入价的三倍,False,False,,,9,pass,,True,True,False
+a346bb18,multi-session,False,2,user,43,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,19,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,False,False
+75499fd8,single-session-user,True,1,user,10,1.0,1.0,1.0,1,1,True,1.0,True,金毛寻回犬,False,False,,,9,pass,,True,True,False
+15745da0,single-session-user,True,1,user,20,1.0,1.0,1.0,1,1,True,1.0,True,三个月,False,False,,,14,pass,,True,True,False
+f9e8c073,knowledge-update,False,2,user,35,1.0,0.5,1.0,2,1,True,0.5,False,三次,False,False,,,20,answer/use,recall@5=1.000 citation_valid=true but judge=false,True,False,False
+311778f1,single-session-user,True,1,user,17,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+d6233ab6,single-session-preference,True,1,user,18,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,9,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+7e00a6cb,single-session-assistant,False,1,assistant,2,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,retrieve,recall@5=0.0,False,True,False
+01493427,knowledge-update,False,2,user,29,1.0,0.5,1.0,2,1,True,0.5,False,17,False,False,,,18,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+9d25d4e0,multi-session,False,3,user,51,1.0,0.3333333333333333,1.0,3,1,True,0.3333333333333333,False,1,False,False,,,27,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+gpt4_45189cb4,temporal-reasoning,False,3,user,31,1.0,0.3333333333333333,0.6666666666666666,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,21,project/cite,recall@5=0.667 cited=0 citation_valid=False,False,False,False
+59524333,knowledge-update,False,2,user,16,1.0,0.5,1.0,2,1,True,0.5,True,下午6点,False,False,,,16,pass,,True,False,False
+1f2b8d4f,multi-session,False,2,user,21,1.0,0.5,1.0,2,2,True,1.0,True,750美元,False,False,,,19,pass,,True,True,False
+gpt4_213fd887,temporal-reasoning,True,2,user,37,1.0,0.5,1.0,2,1,True,0.5,False,charity 5K run,False,False,,,23,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+a1cc6108,multi-session,False,2,user,32,1.0,0.5,0.5,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,16,project/cite,recall@5=0.500 cited=0 citation_valid=False,False,False,False
+gpt4_1d4ab0c9,temporal-reasoning,False,2,user,31,1.0,0.5,1.0,2,2,True,1.0,True,24,False,False,,,22,pass,,True,False,False
+07741c44,knowledge-update,False,2,user,20,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,15,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_59149c78,temporal-reasoning,True,2,user,31,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,23,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+8b9d4367,single-session-assistant,True,1,assistant,5,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,4,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+2bf43736,single-session-assistant,True,1,assistant,17,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,6,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_93159ced_abs,abstention,False,2,,32,,,,2,1,True,,False,9年,False,False,False,,20,answer,answered instead of abstaining; retrieved 2 session(s) before answering,True,False,True
+6d550036,multi-session,False,4,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+e01b8e2f,single-session-user,True,1,user,15,1.0,1.0,1.0,1,1,True,1.0,True,Hawaii,True,False,,,11,pass,,True,True,False
+8aef76bc,single-session-assistant,False,1,assistant,5,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_98f46fc6,temporal-reasoning,False,2,user,30,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,15,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+8979f9ec,multi-session,False,2,user,27,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,15,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+4adc0475,multi-session,False,2,user,33,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,26,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+71017276,temporal-reasoning,False,1,user,14,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+f8c5f88b,single-session-user,False,1,user,11,1.0,1.0,1.0,1,1,True,1.0,True,市中心体育用品店,False,False,,,9,pass,,True,True,False
+21436231,single-session-user,False,1,user,16,1.0,1.0,1.0,1,1,True,1.0,True,12 largemouth bass,False,False,,,9,pass,,False,True,False
+gpt4_68e94287,temporal-reasoning,True,2,user,21,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,15,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+10e09553,knowledge-update,True,2,user,23,1.0,0.5,1.0,2,1,True,0.5,True,7,True,False,,,16,pass,,True,True,False
+9ee3ecd6,multi-session,False,2,user,24,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,14,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+3c1045c8,multi-session,True,2,user,32,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,24,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_b5700ca0,temporal-reasoning,False,1,user,10,1.0,1.0,1.0,1,1,True,1.0,True,Episcopal Church,False,False,,,8,pass,,True,True,False
+2318644b,multi-session,False,2,user,25,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,20,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+d24813b1,single-session-preference,True,1,user,12,1.0,1.0,1.0,1,1,True,1.0,False,口感松软的巧克力曲奇,False,False,,,13,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+ba358f49_abs,abstention,True,2,,38,,,,2,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,20,pass,,True,True,True
+b46e15ed,temporal-reasoning,False,4,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+dcfa8644,temporal-reasoning,False,2,user,26,1.0,0.5,1.0,2,2,True,1.0,True,15 days,False,False,,,15,pass,,True,True,False
+6ade9755,single-session-user,False,1,user,13,1.0,1.0,1.0,1,1,True,1.0,True,Serenity Yoga,True,False,,,6,pass,,True,True,False
+gpt4_4cd9eba1,temporal-reasoning,False,2,user,31,1.0,0.5,0.5,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,25,project/cite,recall@5=0.500 cited=0 citation_valid=False,False,False,False
+078150f1,multi-session,False,2,mixed,26,0.6666666666666666,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,23,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+eace081b,knowledge-update,False,2,user,21,1.0,0.5,0.5,1,1,True,0.5,True,Oahu,True,False,,,19,pass,,True,False,False
+gpt4_8279ba03,temporal-reasoning,False,1,user,12,1.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,11,retrieve,recall@5=0.0,False,True,False
+7a87bd0c,knowledge-update,False,2,user,24,1.0,0.5,1.0,2,1,True,0.5,True,4周,False,False,,,19,pass,,True,True,False
+67e0d0f2,multi-session,False,2,user,24,1.0,0.5,1.0,2,2,True,1.0,True,20,True,False,,,22,pass,,True,False,False
+51b23612,single-session-assistant,False,1,assistant,5,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,5,retrieve,recall@5=0.0,False,True,False
+8a2466db,single-session-preference,True,1,user,26,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,16,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_a1b77f9c,temporal-reasoning,False,6,user,0,0.0,0.0,0.0,0,0,False,0.0,True,,False,,,ChunkFailure,33,pass,,True,False,False
+0bb5a684,temporal-reasoning,True,2,user,24,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,24,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+edced276,multi-session,False,2,user,24,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,20,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+45dc21b6,knowledge-update,True,2,user,27,1.0,0.5,1.0,2,1,True,0.5,True,3,True,False,,,17,pass,,True,True,False
+7401057b,knowledge-update,True,2,user,25,1.0,0.5,1.0,2,1,True,0.5,True,两晚,False,False,,,17,pass,,True,False,False
+9bbe84a2,knowledge-update,False,2,user,25,1.0,0.5,1.0,2,1,True,0.5,False,达到150级,False,False,,,18,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+gpt4_2f91af09,multi-session,False,3,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+37d43f65,single-session-user,False,1,user,14,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,11,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+2ebe6c92,temporal-reasoning,False,2,user,30,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,18,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_4ef30696,temporal-reasoning,False,2,user,23,1.0,0.5,1.0,2,2,True,1.0,True,1,False,False,,,20,pass,,False,False,False
+e3fc4d6e,single-session-assistant,False,1,assistant,7,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+d682f1a2,multi-session,False,3,user,31,1.0,0.3333333333333333,0.6666666666666666,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,23,project/cite,recall@5=0.667 cited=0 citation_valid=False,False,False,False
+0db4c65d,temporal-reasoning,False,2,user,28,1.0,0.5,0.5,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,21,project/cite,recall@5=0.500 cited=0 citation_valid=False,False,False,False
+e47becba,single-session-user,False,1,mixed,14,0.5,1.0,1.0,1,1,True,1.0,True,工商管理学位,False,False,,,13,pass,,True,True,False
+577d4d32,single-session-user,False,1,user,9,1.0,1.0,1.0,1,1,True,1.0,True,晚上7点后,False,False,,,9,pass,,True,True,False
+81507db6,multi-session,True,5,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+3fe836c9,multi-session,False,2,user,15,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,22,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+76d63226,single-session-user,False,1,user,10,1.0,1.0,1.0,1,1,True,1.0,True,55-inch,True,False,,,9,pass,,True,True,False
+06f04340,single-session-preference,True,1,user,17,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,13,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_2d58bcd6,temporal-reasoning,False,2,user,32,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,24,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,False,False
+a40e080f,single-session-assistant,True,1,assistant,4,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+bc149d6b,multi-session,False,2,user,26,1.0,0.5,0.5,1,1,True,0.5,False,50磅,False,False,,,16,answer/use,recall@5=0.500 citation_valid=true but judge=false (partial recall: contributing factor),False,True,False
+gpt4_ab202e7f,multi-session,False,5,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+e61a7584,knowledge-update,False,2,user,22,1.0,0.5,1.0,2,1,True,0.5,True,约9个月,False,False,,,17,pass,,True,True,False
+35a27287,single-session-preference,False,1,user,12,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,16,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+72e3ee87,knowledge-update,False,2,user,28,1.0,0.5,1.0,2,1,True,0.5,True,50,True,False,,,20,pass,,True,False,False
+8550ddae,single-session-user,True,1,user,23,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,10,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+370a8ff4,temporal-reasoning,False,2,user,25,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,20,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+bc8a6e93,single-session-user,False,1,user,11,1.0,1.0,1.0,1,1,True,1.0,True,柠檬蓝莓蛋糕,False,False,,,12,pass,,True,True,False
+37f165cf,multi-session,True,2,user,22,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,19,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+8c18457d,temporal-reasoning,False,2,user,23,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,11,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+fca762bc,single-session-assistant,True,1,assistant,5,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+08f4fc43,temporal-reasoning,False,2,user,30,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,21,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+dccbc061,single-session-user,True,1,user,17,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,14,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+f4f1d8a4,single-session-user,False,1,user,18,1.0,1.0,1.0,1,1,True,1.0,True,姐姐,False,False,,,7,pass,,True,True,False
+gpt4_2312f94c,temporal-reasoning,True,2,user,33,1.0,0.5,1.0,2,1,True,0.5,True,Samsung Galaxy S22,True,False,,,15,pass,,False,True,False
+88432d0a,multi-session,False,4,user,74,1.0,0.25,1.0,4,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,32,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+efc3f7c2,multi-session,False,2,user,20,0.5,0.5,1.0,2,2,True,1.0,True,30 minutes earlier,False,False,,,7,pass,,True,True,False
+5831f84d,knowledge-update,False,2,user,23,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,17,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_8c8961ae,temporal-reasoning,False,2,user,33,1.0,0.5,1.0,2,2,True,1.0,True,solo trip to Thailand,False,False,,,22,pass,,False,True,False
+001be529,single-session-user,False,1,user,17,1.0,1.0,1.0,1,1,True,1.0,True,over a year,True,False,,,9,pass,,True,True,False
+1faac195,single-session-user,False,1,user,12,1.0,1.0,1.0,1,1,True,1.0,True,丹佛,False,False,,,11,pass,,True,True,False
+58ef2f1c,single-session-user,False,1,user,11,1.0,1.0,1.0,1,1,True,1.0,False,情人节“Love is in the Air”筹款晚宴,False,False,,,8,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+f685340e_abs,abstention,False,2,,31,,,,2,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,12,pass,,False,True,True
+d7c942c3,knowledge-update,False,2,user,22,1.0,0.5,1.0,2,1,True,0.5,True,yes,True,False,,,12,pass,,True,False,False
+2311e44b_abs,abstention,False,2,,23,,,,2,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,13,pass,,True,True,True
+gpt4_f420262d,temporal-reasoning,False,5,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+95228167,single-session-preference,True,1,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,9,extract,error=ChunkFailure extracted=0 logical_calls=9,False,True,False
+58470ed2,single-session-assistant,True,1,assistant,2,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,4,retrieve,recall@5=0.0,False,True,False
+60036106,multi-session,False,2,user,29,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,20,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+gpt4_7abb270c,temporal-reasoning,False,6,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,24,extract,error=ChunkFailure extracted=0 logical_calls=24,False,False,False
+75f70248,single-session-preference,False,1,user,8,1.0,1.0,1.0,1,1,True,1.0,True,"possibly, due to cat hair; keep the living room dust-free",False,False,,,11,pass,,True,False,False
+8cf4d046,multi-session,False,2,user,29,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,26,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,False,False
+29f2956b,single-session-user,False,1,user,15,1.0,1.0,1.0,1,1,True,1.0,True,30分钟,False,False,,,14,pass,,True,True,False
+e5ba910e_abs,abstention,True,2,user,23,,,,2,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,13,pass,,True,True,True
+e25c3b8d,multi-session,False,2,user,18,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,13,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+71315a70,knowledge-update,True,2,user,29,1.0,0.5,1.0,2,1,True,0.5,True,10-12 hours,True,False,,,23,pass,,True,True,False
+60bf93ed,multi-session,False,2,user,26,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,17,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+71017277,temporal-reasoning,False,1,user,14,1.0,1.0,1.0,1,1,True,1.0,True,aunt,False,False,,,12,pass,,False,False,False
+16c90bf4,single-session-assistant,True,1,assistant,10,0.0,1.0,1.0,1,1,True,1.0,True,Pilsner beer,False,False,,,4,pass,,True,True,False
+gpt4_8e165409,temporal-reasoning,True,2,user,34,1.0,0.5,1.0,2,2,True,1.0,True,14,False,False,,,19,pass,,True,True,False
+gpt4_2487a7cb,temporal-reasoning,True,2,user,23,1.0,0.5,0.5,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,22,project/cite,recall@5=0.500 cited=0 citation_valid=False,False,True,False
+caf03d32,single-session-preference,True,1,user,24,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+0977f2af,knowledge-update,False,2,user,33,1.0,0.5,1.0,2,1,True,0.5,True,Instant Pot pressure cooker,False,False,,,13,pass,,True,True,False
+561fabcd,single-session-assistant,False,1,user,17,1.0,1.0,1.0,1,1,True,1.0,True,Fissionator,True,False,,,6,pass,,True,True,False
+10d9b85a,multi-session,False,2,user,41,1.0,0.5,1.0,2,2,True,1.0,True,3 days,True,False,,,24,pass,,True,False,False
+a06e4cfe,single-session-user,False,1,user,13,1.0,1.0,1.0,1,1,True,1.0,True,3:1,True,False,,,10,pass,,True,True,False
+b320f3f8,single-session-user,True,1,user,15,1.0,1.0,1.0,1,1,True,1.0,True,rare blue Snaggletooth,False,False,,,13,pass,,True,True,False
+1192316e,multi-session,False,2,user,24,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,22,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+618f13b2,knowledge-update,True,2,user,31,1.0,0.5,0.5,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,13,project/cite,recall@5=0.500 cited=0 citation_valid=False,False,True,False
+852ce960,knowledge-update,True,2,user,30,1.0,0.5,1.0,2,1,True,0.5,True,"$400,000",True,False,,,14,pass,,True,True,False
+gpt4_2ba83207,multi-session,False,4,user,66,1.0,0.25,1.0,4,1,True,0.25,True,Thrive Market,True,False,,,27,pass,,False,False,False
+85fa3a3f,multi-session,True,2,user,30,0.6666666666666666,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,10,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+cc6d1ec1,temporal-reasoning,False,2,user,25,1.0,0.5,1.0,2,1,True,0.5,False,about three months,False,False,,,16,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+c7dc5443,knowledge-update,False,2,user,47,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,19,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+gpt4_ec93e27f,temporal-reasoning,False,2,user,30,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,14,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+2698e78f,knowledge-update,False,2,user,37,1.0,0.5,1.0,2,1,True,0.5,True,每周一次,False,False,,,17,pass,,True,False,False
+89941a93,knowledge-update,False,2,user,38,1.0,0.5,1.0,2,1,True,0.5,False,three,False,False,,,19,answer/use,recall@5=1.000 citation_valid=true but judge=false,True,False,False
+gpt4_2655b836,temporal-reasoning,False,3,user,46,0.5,0.3333333333333333,1.0,3,1,True,0.3333333333333333,True,GPS系统故障,False,False,,,25,pass,,False,False,False
+57f827a0,single-session-preference,True,1,user,13,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,11,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+cc539528,single-session-assistant,True,1,assistant,3,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,4,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+830ce83f,knowledge-update,False,2,user,22,1.0,0.5,1.0,2,1,True,0.5,True,郊区,False,False,,,14,pass,,True,False,False
+gpt4_8279ba02,temporal-reasoning,False,1,user,16,1.0,1.0,1.0,1,1,True,1.0,True,10,False,False,,,10,pass,,True,True,False
+gpt4_e061b84f,temporal-reasoning,False,3,user,38,1.0,0.3333333333333333,1.0,3,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,28,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+ef9cf60a,multi-session,True,2,user,19,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,16,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+982b5123_abs,abstention,True,2,user,28,,,,2,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,15,pass,,True,True,True
+4100d0a0,single-session-user,True,1,user,8,1.0,1.0,1.0,1,1,True,1.0,True,爱尔兰和意大利混血,False,False,,,9,pass,,True,True,False
+099778bb,multi-session,False,2,user,27,1.0,0.5,1.0,2,2,True,1.0,True,20%,True,False,,,22,pass,,True,True,False
+d905b33f,multi-session,False,2,user,27,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_d84a3211,multi-session,False,4,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+gpt4_e072b769,temporal-reasoning,False,1,user,15,1.0,1.0,1.0,1,1,True,1.0,True,3,False,False,,,7,pass,,True,True,False
+1568498a,single-session-assistant,False,1,assistant,3,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,retrieve,recall@5=0.0,False,False,False
+c9f37c46,temporal-reasoning,True,2,user,24,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,21,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,True,False
+a96c20ee_abs,abstention,True,2,,21,,,,2,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,18,pass,,False,True,True
+2ce6a0f2,multi-session,False,4,user,49,1.0,0.25,1.0,4,2,True,0.5,False,2,False,False,,,27,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+edced276_abs,abstention,False,2,user,24,,,,1,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,20,pass,,True,True,True
+1cea1afa,knowledge-update,False,2,user,28,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,20,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+60159905,multi-session,False,2,user,29,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,17,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+4baee567,single-session-assistant,False,1,assistant,3,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,5,retrieve,recall@5=0.0,False,True,False
+0100672e,multi-session,False,2,user,23,1.0,0.5,1.0,2,1,True,0.5,False,60美元,False,False,,,16,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+a1eacc2a,knowledge-update,True,2,user,29,1.0,0.5,1.0,2,1,True,0.5,True,7,False,False,,,21,pass,,True,False,False
+80ec1f4f,multi-session,True,3,user,36,1.0,0.3333333333333333,1.0,3,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,18,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+3fdac837,multi-session,False,2,user,21,1.0,0.5,0.5,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,10,project/cite,recall@5=0.500 cited=0 citation_valid=False,False,True,False
+5025383b,multi-session,False,2,user,29,1.0,0.5,1.0,2,2,True,1.0,True,photography and cooking,True,False,,,17,pass,,True,True,False
+32260d93,single-session-preference,False,1,user,8,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+4c36ccef,single-session-assistant,False,1,assistant,3,0.0,1.0,1.0,1,1,True,1.0,True,Roscioli,True,False,,,3,pass,,False,True,False
+89527b6b,single-session-assistant,False,1,assistant,0,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,extract,error=None extracted=0 logical_calls=3,False,True,False
+f0853d11,temporal-reasoning,False,2,user,28,0.5,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,22,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,True,False
+gpt4_d6585ce9,temporal-reasoning,False,5,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+118b2229,single-session-user,True,1,user,9,1.0,1.0,1.0,1,1,True,1.0,True,45 minutes one way,False,False,,,8,pass,,True,True,False
+cc5ded98,knowledge-update,False,2,user,23,1.0,0.5,1.0,2,1,True,0.5,True,约两小时,False,False,,,20,pass,,True,True,False
+19b5f2b3_abs,abstention,True,1,,9,,,,1,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,9,pass,,True,True,True
+6456829e_abs,abstention,True,2,user,21,,,,2,1,True,,True,5 tomato plants; chili pepper count not provided,False,False,False,,15,answer,answered instead of abstaining; retrieved 2 session(s) before answering,True,False,True
+25e5aa4f,single-session-user,False,1,user,20,1.0,1.0,1.0,1,1,True,1.0,True,UCLA,False,False,,,14,pass,,False,True,False
+945e3d21,knowledge-update,False,2,user,31,1.0,0.5,1.0,2,1,True,0.5,True,three times a week,True,False,,,17,pass,,False,True,False
+gpt4_1a1dc16d,temporal-reasoning,False,2,user,30,1.0,0.5,1.0,2,2,True,1.0,True,meeting with Rachel,False,False,,,19,pass,,False,True,False
+gpt4_5438fa52,temporal-reasoning,False,2,user,41,1.0,0.5,1.0,2,2,True,1.0,True,start of Spanish classes,False,False,,,24,pass,,False,False,False
+e4e14d04,temporal-reasoning,False,2,user,27,1.0,0.5,1.0,2,1,True,0.5,False,三周,False,False,,,18,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+853b0a1d,single-session-user,False,1,user,16,1.0,1.0,1.0,1,1,True,1.0,True,18,True,False,,,8,pass,,True,True,False
+4dfccbf8,temporal-reasoning,False,2,user,40,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,16,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,False,False
+0862e8bf_abs,abstention,True,1,,14,,,,1,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,8,pass,,True,True,True
+gpt4_61e13b3c,temporal-reasoning,False,2,user,29,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,19,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+1da05512,single-session-preference,True,1,user,12,0.5,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,13,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+gpt4_a2d1d1f6,temporal-reasoning,False,1,user,14,1.0,1.0,1.0,1,1,True,1.0,True,3,False,False,,,7,pass,,True,True,False
+e66b632c,knowledge-update,False,2,user,52,1.0,0.5,1.0,2,1,True,0.5,True,27分45秒,False,False,,,14,pass,,True,True,False
+d851d5ba,multi-session,False,4,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+21d02d0d,multi-session,True,2,user,34,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,17,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+0ddfec37,knowledge-update,False,2,user,20,1.0,0.5,1.0,2,1,True,0.5,True,15,True,False,,,17,pass,,True,True,False
+129d1232,multi-session,False,3,user,42,1.0,0.3333333333333333,0.6666666666666666,2,2,True,0.6666666666666666,False,5250美元,False,False,,,29,answer/use,recall@5=0.667 citation_valid=true but judge=false (partial recall: contributing factor),False,True,False
+e6041065,multi-session,False,2,user,27,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,16,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+gpt4_1916e0ea,temporal-reasoning,False,2,user,22,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,16,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+6f9b354f,single-session-user,True,1,user,13,1.0,1.0,1.0,1,1,True,1.0,True,浅灰色,False,False,,,9,pass,,True,True,False
+c8f1aeed,single-session-assistant,False,1,assistant,8,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,4,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_e05b82a6,multi-session,False,4,user,53,1.0,0.25,0.75,3,2,True,0.5,False,6,False,False,,,29,answer/use,recall@5=0.750 citation_valid=true but judge=false (partial recall: contributing factor),False,False,False
+gpt4_0a05b494,temporal-reasoning,True,2,user,26,1.0,0.5,1.0,2,2,True,1.0,True,the woman selling jam at the farmer's market,True,False,,,19,pass,,True,False,False
+d596882b,single-session-assistant,False,1,assistant,6,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,4,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+c4a1ceb8,multi-session,True,4,user,63,1.0,0.25,1.0,4,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,31,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+gpt4_7bc6cf22,temporal-reasoning,False,1,user,19,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,13,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+c8090214_abs,abstention,False,2,user,26,,,,2,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,14,pass,,True,True,True
+c7cf7dfd,single-session-assistant,True,1,assistant,10,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,6,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+d52b4f67,single-session-user,False,1,user,14,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,7,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,True,False
+gpt4_731e37d7,multi-session,False,4,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+f0e564bc,multi-session,False,2,user,31,0.5,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,23,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+cc06de0d,multi-session,True,2,user,26,1.0,0.5,1.0,2,1,True,0.5,False,12美元,False,False,,,14,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+07b6f563,single-session-preference,True,1,user,12,1.0,1.0,1.0,1,1,True,1.0,True,手机钱包壳（用于 iPhone 13 Pro）、高质量品牌移动电源,False,False,,,15,pass,,True,True,False
+eeda8a6d,multi-session,True,2,user,26,1.0,0.5,0.5,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,16,project/cite,recall@5=0.500 cited=0 citation_valid=False,False,False,False
+gpt4_2f584639,temporal-reasoning,False,2,user,30,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+2133c1b5,knowledge-update,False,2,user,29,1.0,0.5,1.0,2,1,True,0.5,True,3个月,False,False,,,14,pass,,True,False,False
+9aaed6a3,multi-session,False,2,user,16,1.0,0.5,0.5,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,6,project/cite,recall@5=0.500 cited=0 citation_valid=False,False,False,False
+gpt4_1e4a8aeb,temporal-reasoning,False,2,user,27,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,17,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,True,False
+a3838d2b,temporal-reasoning,False,6,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+8e9d538c,single-session-user,False,1,mixed,14,0.5,1.0,1.0,1,1,True,1.0,True,17 skeins,False,False,,,9,pass,,True,True,False
+e493bb7c,knowledge-update,False,2,user,25,1.0,0.5,1.0,2,1,True,0.5,False,床头,False,False,,,19,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+18dcd5a5,single-session-assistant,True,1,assistant,2,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,4,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+26bdc477,knowledge-update,True,2,user,27,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,17,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_f420262c,temporal-reasoning,False,5,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,33,extract,error=ChunkFailure extracted=0 logical_calls=33,False,False,False
+ba61f0b9,knowledge-update,True,2,user,27,1.0,0.5,1.0,2,1,True,0.5,True,6,True,False,,,22,pass,,False,False,False
+0862e8bf,single-session-user,False,1,user,18,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,8,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+afdc33df,single-session-preference,True,1,user,14,1.0,1.0,1.0,1,1,True,1.0,False,最大化厨具筒空间，保持台面整洁,False,False,,,16,answer/use,recall@5=1.000 citation_valid=true but judge=false,True,False,False
+dc439ea3,single-session-assistant,False,1,user,5,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+9a707b82,temporal-reasoning,False,2,user,31,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,17,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+15745da0_abs,abstention,True,1,,23,,,,1,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,14,pass,,True,True,True
+55241a1f,multi-session,False,2,user,24,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,20,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+681a1674,multi-session,False,2,user,27,1.0,0.5,0.5,1,1,True,0.5,False,four,False,False,,,21,answer/use,recall@5=0.500 citation_valid=true but judge=false (partial recall: contributing factor),False,False,False
+993da5e2,temporal-reasoning,False,2,user,27,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,13,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+38146c39,single-session-preference,True,1,user,11,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,13,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+73d42213,multi-session,False,2,user,27,1.0,0.5,0.5,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,15,project/cite,recall@5=0.500 cited=0 citation_valid=False,False,False,False
+b6025781,single-session-preference,True,1,user,7,1.0,1.0,1.0,1,1,True,1.0,True,配菜或加料搭配豌豆博洛尼亚酱和藜麦；quinoa and roasted vegetables protein ideas,False,False,,,7,pass,,True,False,False
+a4996e51,multi-session,True,2,user,35,1.0,0.5,1.0,2,1,True,0.5,False,45 hours,False,False,,,19,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+e48988bc,single-session-assistant,True,1,assistant,2,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+d6062bb9,multi-session,False,2,user,25,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,21,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+bf659f65,multi-session,True,3,user,39,1.0,0.3333333333333333,1.0,3,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,20,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+2788b940,multi-session,True,4,user,56,1.0,0.25,0.75,3,2,True,0.5,False,3,False,False,,,30,answer/use,recall@5=0.750 citation_valid=true but judge=false (partial recall: contributing factor),False,False,False
+6c49646a,multi-session,False,2,user,26,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,13,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_fe651585_abs,abstention,True,2,user,38,,,,2,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,20,pass,,True,True,True
+gpt4_6dc9b45b,temporal-reasoning,False,1,user,16,1.0,1.0,1.0,1,1,True,1.0,True,4,False,False,,,14,pass,,True,True,False
+f685340e,knowledge-update,True,2,user,29,1.0,0.5,1.0,2,2,True,1.0,False,Previously every two weeks on Sunday; now weekly,False,False,,,12,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+7024f17c,multi-session,False,3,user,41,1.0,0.3333333333333333,0.6666666666666666,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,25,project/cite,recall@5=0.667 cited=0 citation_valid=False,False,False,False
+fca70973,single-session-preference,False,1,user,5,1.0,1.0,1.0,1,1,True,1.0,True,Halloween-themed events; Universal Studios Hollywood VIP Experience (Gourmet Buffet and Behind-the-Scenes Tour); Halloween Horror Nights VIP Experience behind-the-scenes tour add-on,False,False,,,11,pass,,True,False,False
+77eafa52,multi-session,False,2,user,25,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,12,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_74aed68e,temporal-reasoning,False,2,user,25,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,23,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+gpt4_4fc4f797,temporal-reasoning,False,2,user,32,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,21,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+22d2cb42,knowledge-update,False,2,user,27,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,14,project/cite,recall@5=1.000 cited=0 citation_valid=False,True,False,False
+db467c8c,knowledge-update,False,2,user,32,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,24,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+4d6b87c8,knowledge-update,False,2,user,21,1.0,0.5,1.0,2,2,True,1.0,False,3,False,False,,,16,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+4b24c848,knowledge-update,True,2,user,26,1.0,0.5,1.0,2,1,True,0.5,True,五件,False,False,,,13,pass,,False,True,False
+3a704032,multi-session,False,3,user,45,1.0,0.3333333333333333,1.0,3,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,26,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+b0479f84,single-session-preference,True,1,user,8,1.0,1.0,1.0,1,1,True,1.0,True,"Our Planet, Free Solo, Tiger King",False,False,,,14,pass,,False,True,False
+5e1b23de,temporal-reasoning,True,1,user,10,1.0,1.0,1.0,1,1,True,1.0,True,3,True,False,,,12,pass,,True,True,False
+8fb83627,knowledge-update,False,2,user,23,1.0,0.5,1.0,2,1,True,0.5,True,五期,False,False,,,15,pass,,True,True,False
+gpt4_2c50253f,temporal-reasoning,False,2,user,34,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,19,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+gpt4_7a0daae1,temporal-reasoning,False,2,user,24,1.0,0.5,1.0,2,2,True,1.0,True,1 week,True,False,,,22,pass,,False,False,False
+50635ada,knowledge-update,False,2,user,36,1.0,0.5,1.0,2,1,True,0.5,True,Premier Silver,True,False,,,13,pass,,True,False,False
+3e321797,single-session-assistant,True,1,assistant,3,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+bbf86515,temporal-reasoning,False,2,user,28,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,17,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+19b5f2b3,single-session-user,False,1,user,9,1.0,1.0,1.0,1,1,True,1.0,True,两周,False,False,,,9,pass,,True,True,False
+3d86fd0a,single-session-user,False,1,user,10,1.0,1.0,1.0,1,1,True,1.0,True,城市里的一家咖啡店,False,False,,,5,pass,,True,True,False
+ec81a493,single-session-user,False,1,user,12,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,10,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+0edc2aef,single-session-preference,False,1,user,20,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,10,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+4bc144e2,multi-session,False,2,user,30,1.0,0.5,1.0,2,2,True,1.0,True,car wash $15; parking ticket $50,False,False,,,10,pass,,False,True,False
+ba358f49,multi-session,False,2,user,38,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,20,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+5c40ec5b,knowledge-update,False,2,user,24,1.0,0.5,1.0,2,1,True,0.5,True,两次,False,False,,,13,pass,,False,True,False
+6a1eabeb,knowledge-update,False,2,user,31,1.0,0.5,1.0,2,1,True,0.5,False,27:12,False,False,,,23,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,True,False
+6613b389,temporal-reasoning,False,3,user,52,1.0,0.3333333333333333,1.0,3,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,22,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+e9327a54,single-session-assistant,False,1,assistant,7,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,7,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_9a159967,temporal-reasoning,True,3,user,37,1.0,0.3333333333333333,0.6666666666666666,2,1,True,0.3333333333333333,True,美联航,False,False,,,24,pass,,True,True,False
+505af2f5,single-session-preference,False,1,user,11,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,13,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+1903aded,single-session-assistant,False,1,assistant,0,0.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,2,extract,error=None extracted=0 logical_calls=2,False,True,False
+92a0aa75,multi-session,False,2,user,42,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,23,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+2a1811e2,temporal-reasoning,False,2,user,29,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,16,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+0ea62687,multi-session,False,2,user,22,0.5,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,18,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+778164c6,single-session-assistant,True,1,assistant,5,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,3,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+352ab8bd,single-session-assistant,True,1,assistant,18,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,6,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+af8d2e46,single-session-user,False,1,user,8,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,8,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+gpt4_372c3eed_abs,abstention,True,3,,0,,,,0,0,False,,True,,False,,False,ChunkFailure,33,answer,answered instead of abstaining,True,True,True
+gpt4_d12ceb0e,multi-session,False,3,user,48,1.0,0.3333333333333333,0.6666666666666666,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,28,project/cite,recall@5=0.667 cited=0 citation_valid=False,False,False,False
+9a707b81,temporal-reasoning,False,2,user,36,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,17,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+4fd1909e,single-session-user,False,1,user,16,1.0,1.0,1.0,1,1,True,1.0,True,Xfinity Center,True,False,,,5,pass,,True,True,False
+41698283,knowledge-update,False,2,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,14,extract,error=ChunkFailure extracted=0 logical_calls=14,True,True,False
+gpt4_5501fe77,multi-session,True,3,user,41,1.0,0.3333333333333333,1.0,3,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,30,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+8cf51dda,single-session-assistant,False,1,assistant,2,0.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,2,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+91b15a6e,multi-session,True,2,user,25,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,19,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+bb7c3b45,multi-session,False,2,user,20,1.0,0.5,1.0,2,2,True,1.0,True,约300美元,False,False,,,16,pass,,True,True,False
+5809eb10,single-session-assistant,False,1,user,20,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,6,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+86b68151,single-session-user,False,1,user,12,1.0,1.0,1.0,1,1,True,1.0,True,IKEA,True,False,,,8,pass,,True,True,False
+6e984301,temporal-reasoning,False,2,user,28,1.0,0.5,1.0,2,2,True,1.0,False,6 weeks,False,False,,,24,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+0a34ad58,single-session-preference,True,1,user,22,1.0,1.0,1.0,1,1,True,1.0,True,Use a Suica card,False,False,,,11,pass,,True,True,False
+42ec0761,knowledge-update,False,2,user,24,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,16,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+dfde3500,knowledge-update,True,2,user,17,1.0,0.5,1.0,2,1,True,0.5,True,Wednesday,True,False,,,11,pass,,True,True,False
+184da446,knowledge-update,False,2,user,29,1.0,0.0,0.0,0,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,25,retrieve,recall@5=0.0,False,False,False
+dad224aa,knowledge-update,False,2,user,27,1.0,0.5,1.0,2,1,True,0.5,True,7:30 am,True,False,,,16,pass,,True,False,False
+3b6f954b,single-session-user,False,1,user,13,1.0,1.0,1.0,1,1,True,1.0,True,墨尔本大学,False,False,,,10,pass,,True,True,False
+d01c6aa8,temporal-reasoning,True,2,user,40,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,23,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+46a3abf7,multi-session,False,3,user,65,1.0,0.3333333333333333,1.0,3,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,31,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+gpt4_76048e76,temporal-reasoning,False,2,user,41,1.0,0.5,0.5,1,1,True,0.5,True,bike,True,False,,,15,pass,,False,True,False
+9ea5eabc,knowledge-update,False,2,user,27,0.5,0.5,1.0,2,1,True,0.5,True,巴黎,False,False,,,20,pass,,True,True,False
+gpt4_468eb064,temporal-reasoning,False,1,user,0,0.0,0.0,0.0,0,0,False,0.0,False,,False,,,ChunkFailure,4,extract,error=ChunkFailure extracted=0 logical_calls=4,False,True,False
+09d032c9,single-session-preference,True,1,user,17,1.0,1.0,1.0,1,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,18,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,False,False
+gpt4_21adecb5,temporal-reasoning,False,2,user,34,1.0,0.5,1.0,2,2,True,1.0,True,6,False,False,,,26,pass,,False,True,False
+gpt4_483dd43c,temporal-reasoning,False,2,user,34,1.0,0.5,1.0,2,2,True,1.0,False,The Crown,False,False,,,17,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+gpt4_e414231e,temporal-reasoning,False,2,user,21,1.0,0.5,1.0,2,2,True,1.0,True,4,False,False,,,19,pass,,False,True,False
+51c32626,multi-session,False,2,user,29,1.0,0.5,1.0,2,1,True,0.5,False,2023-05-23,False,False,,,16,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+gpt4_0b2f1d21,temporal-reasoning,False,2,user,29,1.0,0.5,1.0,2,2,True,1.0,False,purchase of the coffee maker,False,False,,,16,answer/use,recall@5=1.000 citation_valid=true but judge=false,False,False,False
+a82c026e,single-session-user,True,1,user,8,1.0,1.0,1.0,1,1,True,1.0,True,Dark Souls 3 DLC,True,False,,,8,pass,,True,True,False
+gpt4_c27434e8_abs,abstention,True,2,user,40,,,,2,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,19,pass,,True,False,True
+eeda8a6d_abs,abstention,True,2,,31,,,,2,0,False,,True,[The model abstained: it returned an empty answer and marked abstain=true.],True,True,True,,16,pass,,True,True,True
+d3ab962e,multi-session,False,2,user,27,1.0,0.5,1.0,2,0,False,0.0,False,[The model abstained: it returned an empty answer and marked abstain=true.],False,True,,,17,project/cite,recall@5=1.000 cited=0 citation_valid=False,False,True,False
+1d4e3b97,single-session-preference,True,1,user,14,1.0,1.0,1.0,1,1,True,1.0,True,"Chain and cassette were replaced on 2024-02-01, improving performance",False,False,,,9,pass,,True,True,False

@@ -21,6 +21,7 @@ tracking = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(tracking)
 
 CSV_PATH = BENCH / "tracking_table_20261106.csv"
+CSV_PATH_R4 = BENCH / "tracking_table_20261108.csv"
 KNOWN_CATEGORIES = {
     "abstention",
     "knowledge-update",
@@ -33,34 +34,56 @@ KNOWN_CATEGORIES = {
 KNOWN_STAGES = {"pass", "extract", "retrieve", "project/cite", "answer/use", "answer"}
 
 
-def load_rows():
-    with open(CSV_PATH, newline="", encoding="utf-8") as f:
+def load_rows(path=CSV_PATH):
+    with open(path, newline="", encoding="utf-8") as f:
         return list(csv.DictReader(f))
 
 
 class TrackingTableReconciliationTests(unittest.TestCase):
-    def test_csv_reconciles_with_rerun_report(self):
-        rows = load_rows()
+    def _reconcile(self, path, judge_pass, recall_at_5, stages):
+        rows = load_rows(path)
         self.assertEqual(len(rows), 500)
         self.assertEqual(len({r["question_id"] for r in rows}), 500)
         self.assertTrue({r["category"] for r in rows} <= KNOWN_CATEGORIES)
         self.assertTrue({r["loss_stage"] for r in rows} <= KNOWN_STAGES)
-        judge_pass = sum(1 for r in rows if r["judge_main"] == "True")
-        self.assertEqual(judge_pass, 175)
+        self.assertEqual(sum(1 for r in rows if r["judge_main"] == "True"), judge_pass)
         non_ab = [r for r in rows if r["category"] != "abstention"]
         r5 = [float(r["recall@5"]) for r in non_ab if r["recall@5"] not in ("", None)]
         self.assertEqual(len(non_ab), 470)
-        self.assertAlmostEqual(sum(r5) / len(r5), 0.870, places=3)
+        self.assertAlmostEqual(sum(r5) / len(r5), recall_at_5, places=3)
         ab = [r for r in rows if r["category"] == "abstention"]
         self.assertEqual(len(ab), 30)
         self.assertEqual(sum(1 for r in ab if r["correct_abstention"] == "True"), 24)
-        self.assertEqual(
-            dict(Counter(r["loss_stage"] for r in rows)),
+        self.assertEqual(dict(Counter(r["loss_stage"] for r in rows)), stages)
+
+    def test_csv_reconciles_with_rerun_report(self):
+        self._reconcile(
+            CSV_PATH,
+            175,
+            0.870,
             {
                 "project/cite": 211,
                 "pass": 173,
                 "answer/use": 61,
                 "extract": 35,
+                "retrieve": 14,
+                "answer": 6,
+            },
+        )
+
+    def test_csv_r4_reconciles_with_rerun3_report(self):
+        # Fourth round (main 9034cde, PR #79 guard in place): judge 177/500,
+        # recall@5 0.857, abstention still 24/30. Stage mix barely moved,
+        # which is the point — the guard changed nothing at full scale.
+        self._reconcile(
+            CSV_PATH_R4,
+            177,
+            0.857,
+            {
+                "project/cite": 211,
+                "pass": 175,
+                "answer/use": 57,
+                "extract": 37,
                 "retrieve": 14,
                 "answer": 6,
             },

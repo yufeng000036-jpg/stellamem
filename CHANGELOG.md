@@ -4,6 +4,24 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased — LongMemEval 第四轮追踪表更新（0.354 / 0.857 / 0.800）
+
+2026-11-08 第四轮全量重跑（main `9034cde`，PR #79 窄 guard 在位；协议 `v2-full-route-B`，与前三轮相同；中途两次虚拟机重启，检查点续跑完成；总计 $1.2862，10,871 次调用）。工作区报告 `longmemeval-rerun3-20261108.md`。
+
+### 新增
+
+- **追踪表第四轮版**：`benchmark/longmemeval/tracking_table_20261108.csv`（500 行，同一份 `tracking_table.py` 生成，`--prev-results` 为第三轮）。核验对上报告：判分 177/500 = 0.354、recall@5 均值 0.857、正确拒答 24/30 = 0.800；断点分布 project/cite 211、pass 175、answer/use 57、extract 37、retrieve 14、answer 6；轮间判分提升 28 题、退步 26 题、446 题不变。
+- **PR #79 验证结论**：窄 guard 在真实全量上没有净效果——修好了 a96c20ee 与 f685340e（#78 回归题），新翻了 0ddfec37 与 gpt4_93159ced，正确拒答 exact 24/30（0.800）与 judge 26/30（0.867）与第三轮逐字相同；拒答门（≥90%）仍是 CLOSED。召回@5 0.857（-0.013 是抖动，direct 臂 0.909 未变）。
+
+### 文档
+
+- README.md / README.en.md 的 LongMemEval 一节更新到第四轮数字；`tracking_table.md` 追加第四轮版说明。
+
+### 测试
+
+- `tests/test_tracking_table.py` 追加第四轮 CSV 核验（500 行、判分 177、recall@5 0.857、拒答 24/30、断点分布），与第三轮核验共用同一 `_reconcile`。
+- 全量 **869 Python + 24 Node 通过**（868 + 1 新增核验；追踪表测试文件现 15 项）。
+
 ## Unreleased — 注入门放行评估 + 选型口径 + L1-L4 最小实现
 
 凯瑞（注入门放行评估 1.4、选型口径 1.1）与太极（L1-L4 5.1/5.2）在

@@ -103,16 +103,16 @@ The conclusion first: **on the line "remembers, remembers correctly, doesn't mix
 - CI has 7 jobs: Linux / Windows / macOS × Python 3.10 / 3.12 + code quality. Note: on 2026-11-06, main had one failure on `windows-latest, 3.10`; it was located (a concurrent-rewrite race in `test_concurrent_rewrites_leave_complete_file`) and fixed by PR #74, and that job has been green since; see the v0.4.0 section of CHANGELOG.md.
 - Third-party review score **8.8/10** (final acceptance, 2026-11-05; earlier 7.2 → 8.3 → 8.4 → 8.6 → 8.7 → 8.8). Review conclusion: fit for formal use in a single-user trusted environment; whether multi-client isolation is fully complete is waiting for the reviewer to re-check against the latest main — until that re-check passes, we do not claim "fully complete" to the outside.
 
-### Independent measurement: LongMemEval, 500 questions, with memory 0.350 / without 0.060
+### Independent measurement: LongMemEval, 500 questions, with memory 0.354 / without 0.060
 
-LongMemEval full third round, completed 2026-11-06 (500 questions, main c46a6fa, PR #78 recall fix merged; only the cheapest deepseek-flash for answering + judging, total $1.2783, $0.00256 per question):
+LongMemEval full fourth round, completed 2026-11-08 (500 questions, main 9034cde, PR #79 narrow guard in place and PR #85 prefix fix merged; only the cheapest deepseek-flash for answering + judging, total $1.2862, $0.00257 per question; two VM restarts mid-run, resumed from checkpoints):
 
-- **With memory 0.350 vs without memory 0.060, delta +0.290** — memory is genuinely doing something, up 0.128 from the first round (0.222).
-- **Recall@5 is 0.870, passing the 80% gate for the first time**; stuffing the raw text directly scores 0.582, so the recall gap shrank from 27 points to 3.9 points — claim-level projection inherently loses information, but recall is no longer the biggest weakness.
-- Weakest two categories: single-session-assistant 0.071 (flat, evidence coverage only 0.089) and multi-session 0.132; strongest: single-session-user 0.688, knowledge update 0.569.
-- On abstention questions, the memory arm still regressed (0.800 vs 1.000, exact; 0.867 by judge) — with memory, the model answers questions it should have refused, and the correct-abstention gate (≥90%) is still CLOSED; PR #79's narrow entity-match guard is merged, its effect waits for the next re-run.
-- The 32-call cap was pierced by 25 questions (5.0%); 29 extraction failures; semantic support and factual precision were not measured this time.
-- Per-question tracking table: `benchmark/longmemeval/tracking_table_20261106.csv` — of 325 wrong questions, 65% break at projection/citation (found but not cited), only 14 at retrieval. See `tracking_table.md` in the same directory.
+- **With memory 0.354 vs without memory 0.060, delta +0.294** — essentially flat vs the third round (0.350).
+- **Recall@5 is 0.857, still above the 80% gate** (third round 0.870; the −0.013 is jitter — the direct arm's recall@5 is unchanged at 0.909); stuffing the raw text directly scores 0.588, so the recall gap is 5.2 points.
+- Weakest two categories: single-session-assistant 0.071 (flat, evidence coverage only 0.089) and multi-session 0.124; strongest: single-session-user 0.703, knowledge update 0.569.
+- On abstention questions, the memory arm still regressed (0.800 vs 1.000, exact; 0.867 by judge) — PR #79's narrow entity-match guard had no net effect at full scale: it fixed its two target questions (a96c20ee, f685340e) but two new ones flipped (0ddfec37, gpt4_93159ced), 24/30 stays 24/30; the correct-abstention gate (≥90%) is still CLOSED.
+- The 32-call cap was pierced by 25 questions (5.0%); 32 extraction failures; semantic support and factual precision were not measured this time.
+- Per-question tracking table: `benchmark/longmemeval/tracking_table_20261108.csv` (fourth round; the third-round table `tracking_table_20261106.csv` is still there) — of 325 wrong questions, 65% break at projection/citation (found but not cited), only 14 at retrieval. See `tracking_table.md` in the same directory.
 - This is not a full-distractor official score — only comparable between arms on the same track, never to be pasted onto the official leaderboard. A re-run costs about ¥9.
 
 Full report: `benchmark/longmemeval/` and the workspace report (see CHANGELOG).
