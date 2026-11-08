@@ -45,7 +45,7 @@
 | 拒答验证/实验 | `work/abstain-validation/validation_results.json`、`work/abstain-experiment/abstain_results.json` | 各 16 KB | ✅ 在 |
 | 运行脚本 | `full.py`、`merge.py`、`run_full.sh`、`run_smoke.sh`、`monitor.py` | 14 / 6.5 / 2.0 / 1.2 / 1.8 KB | ✅ 在 |
 | smoke 结果 | `work/smoke/results.json` | 32 KB | ✅ 在 |
-| claim-replay-smoke | `work/claim-replay-smoke/` | 仅 `usage.jsonl`（19 KB） | ⚠️ 无 sidecar、无 replay 结果（见 §5） |
+| claim-replay-smoke | `work/claim-replay-smoke/` | manifest（2 条）+ replay 结果（2 题）+ 2 个 sidecar + 缓存副本（23 文件）+ usage.jsonl（19 KB，见 §5.4 注） | ✅ 已补齐（2026-11-09 第三波：对 2 道 smoke 题用冻结 worker + 已保存缓存重放，0 物理调用、保真 0 偏差；usage.jsonl 本身是拒答实验的流量，见 §5.4） |
 
 仓库（main `e4f5cd9`，2026-11-09 只读克隆核查）已有：
 `benchmark/longmemeval/claim_tracking_20261108.csv`、
@@ -93,9 +93,37 @@
    重放日志：`ran=495 skipped=5 errors=0 physical_calls_total=0 fidelity_mismatch=0`；
    重放的 32 个 error 与 `results.json` 的 main 臂 32 个 error 逐题相同。
    这证明 **main 臂投影重放零新调用**。
-6. **验证脚本自检。** `verify_replay.py` 在真实数据上 10/10 通过
-   （加审计器时 11/11）；把 1 个 judge 标签翻转为 True 的篡改版
-   `results.json` 能被正确判 FAIL。
+6. **验证脚本自检。** `verify_replay.py` 在真实数据上 13/13 通过
+   （第 8、9 项为第三波新增：raw 对账与 claim replay 对账，见下）；
+   把 1 个 judge 标签翻转为 True 的篡改版
+   `results.json` 能被正确判 FAIL（同时触发 summary、by_category、raw 三项）。
+7. **三臂验证——已做（第三波，零新模型调用）。** 2,000 个 raw worker 输出
+   逐题与 `results.json` 对上（error / extracted / retrieved / cited /
+   citation_valid / 逻辑 / 物理 / 缓存命中，零差异）；candidate 与 main
+   在全部 verdict 字段上逐题相同（答案文本与哈希、error、extracted、
+   retrieved/cited 集合、字面匹配、拒答、judge 标签与 hypothesis），
+   仅运行期元数据不同（candidate 物理调用 0/500、缓存命中 7,889；
+   none 物理 477 + 缓存命中 23，direct 物理 499 + 缓存命中 1）；
+   2,000 个 judge 标签全部能用 runner 规则（`"yes" in response.lower()`）
+   从已存的 `judge_response` 重新推导出来。两处如实记录的非失败差异：
+   ①12 道题的 judge 响应仅大小写不同（`no` vs `No`），标签全同——
+   temperature=0 仍有大小写抖动，但标签稳定；
+   ②4 条 judge 为真却 hypothesis 为空（`gpt4_a1b77f9c`、
+   `gpt4_372c3eed_abs` 各 × main/candidate），正是 PR #100 检出的
+   3 个误判中的 2 个，空 hypothesis 在原始证据里核对属实。
+   仍不能做的：judge 标签本身无法零成本独立重算（判分不走 worker 缓存，
+   见 §5.1）。
+8. **前三轮合并级复现——已做（第三波，零新模型调用）。** 第一、二、三轮
+   各自的 4 个分片 `results.json` + `usage.jsonl` 齐全、oracle SHA 与
+   DATA_SHA 一致、冻结文件在四轮的 repo SHA 下哈希全同
+   （evaluate.py `03c89774…`、worker.py `2ee87a90…`、freeze.py
+   `467503b6…`）；用各轮冻结 `evaluate.py` 重跑各轮 `merge.py`，
+   输出与存档 `work/full/results.json` **逐字节相同**：
+   第一轮 `b08ae636…`（9,051,604 字节）、第二轮 `f0f9e2e8…`
+   （9,074,061 字节）、第三轮 `8fc01a53…`（9,135,999 字节）。
+   三轮 headline 与费用用 `verify_replay.py` 的同一套重算逻辑复核全清；
+   第三轮审计 `tracking_table_20261106.csv` 重跑为 legacy 175 →
+   corrected 172，3 个误判与第四轮相同。
 
 ## 4. 归档策略：什么进 git，什么只留哈希
 
@@ -103,7 +131,9 @@
 | --- | --- | --- |
 | `results-20261108-summary.json`（556 KB） | ✅ 进 git | 每题 verdict（judge/exact/拒答/召回/错误/调用数）+ summary + by_category + cost；**不含答案文本、judge hypothesis、usage 日志、session/turn id 列表**，与冻结 `evaluate.py` 的“不发布对话或预测文本”规则一致；可独立重算 headline |
 | `results-20261108-hashes.json`（6 KB） | ✅ 进 git | 全部原始产物的 SHA-256 + 字节数 + 目录级哈希（含缓存并集、sidecar 目录、冻结文件） |
-| `verify_replay.py`（15 KB） | ✅ 进 git | 离线验证脚本，标准库 only，零模型调用 |
+| `verify_replay.py`（26 KB） | ✅ 进 git | 离线验证脚本，标准库 only，零模型调用；第三波新增第 8 项 raw 对账与第 9 项 claim replay 对账 |
+| `merge.py`（8 KB） | ✅ 进 git | 四轮共用的合并脚本仓库版：仅路径解析改成相对路径（`--run-dir` / `--repo`），判分、费用、breach 签名与输出格式与存档版完全一致；四轮真实分片逐字节复现已验证 |
+| `tests/test_longmemeval_merge.py`、`tests/test_verify_replay.py` | ✅ 进 git | merge.py 与 verify_replay 新增检查的合成夹具测试（离线，unittest） |
 | 本文件 | ✅ 进 git | 复现说明 |
 | 完整 `results.json`（8.8 MB） | ❌ 只留哈希 + 磁盘位置 | 体积大且含答案文本/usage 日志；SHA `dee1d928…`，位置 `~/workspace/longmemeval-rerun3-20261108/work/full/results.json`；可由分片 + usage.jsonl 逐字节重建（§3.1） |
 | 数据集 oracle（15 MB） | ❌ 只留哈希 | 上游 LongMemEval 数据，非本仓库产物；SHA `821a2034…` |
@@ -114,38 +144,79 @@
 
 ## 5. 不能复现 / 有缺口的部分（直说）
 
-1. **完整端到端重跑不能零成本。** 判分调用（2,000 次，$0.0486）不走
+1. **完整端到端重跑不能零成本（仍 open，须用户另批）。** 判分调用（2,000 次，$0.0486）不走
    worker 缓存：`full.py` 的 `judge()` 经 `chat_via_proxy` 直调，
    proxy 只记 usage、不存响应；判分输出只存在于 `results.json` 的
    `judge.usage_calls` 结构里（响应文本在 `judge_response`，无独立缓存键）。
    因此 `full.py` 全量重跑至少需要约 2,000 次新判分调用（约 $0.05），
    且 temperature=0 也不保证判分标签逐题不变——重跑是**新的测量**，
    不是对 177/500 的复现。Worker 侧（提取/回答）只对 main 臂证明了
-   零新调用重放；candidate/none/direct 三臂未单独重跑过（缓存文件在，
-   但没跑过验证）。整轮重跑仍须用户另批（任务红线：本次未跑）。
-2. **`merge.py` 写死了已消失的路径。** 它 `sys.path.insert(0,
-   "/tmp/stellamem-lme-rerun3/benchmark/longmemeval")`；该 /tmp 克隆在
-   2026-11-08 虚拟机重启时被清空，报告 §5 的两次续跑也是现场重拉的。
-   本次复现是在 /tmp 重建该路径后才跑通的。以后任何人复现都必须先重建
-   9034cde 的克隆并放到该路径，或改 `merge.py` 用相对路径（改脚本本身
-   不在本包范围，且 `merge.py` 不是冻结文件、但改动须另行评审）。
-3. **重放跳过 5 题。** `claim-replay-full` 的 `ran=495 skipped=5`：
-   被跳过的 5 题（`0bb5a684`、`2a1811e2`、`f0853d11`、`gpt4_2655b836`、
-   `gpt4_93159ced`，即 manifest 前 5 条）因 sidecar 已存在而跳过，
-   其 sidecar 确实在磁盘上，但本次核查没能确定它们是哪一次运行写下的
-   （smoke 重放目录里没有 sidecar；可能是 full 重放中途续跑所留）。
-   不影响结论（495 题 0 物理调用 + 5 题 sidecar 齐全），但来源没完全闭环。
-4. **smoke 重放无产物。** `work/claim-replay-smoke/` 只有 `usage.jsonl`，
-   没有 replay 结果、manifest、sidecar——smoke 重放的投影结果无从复核。
-5. **审计器当时未合入。** PR #100 在核查时只存在于 `refs/pull/100/head`，
-   main `e4f5cd9` 里没有 `score_integrity.py`。本包的 `verify_replay.py`
-   因此把审计步骤做成可选：有审计器时跑，无时 SKIP、不判 FAIL。
-   若 PR #100 合入后路径变化，须同步。
-6. **前三轮未纳入本次验证。** `longmemeval-full-20261106` /
-   `longmemeval-rerun-20261106` / `longmemeval-rerun2-20261106`
-   各有自己的 `results.json`（8.7–8.8 MB）与缓存（各 ~84 MB），
-   本次只清点了第四轮；第三轮的 175→172 修正随 PR #100 的审计 JSON
-   一并复现过（summary 一致），但未对第三轮做合并级复现。
+   零新调用重放；candidate/none/direct 三臂已用已保存材料验证完毕
+   （§3.7：2,000 raw 逐题对账 + candidate==main + judge 标签重推导），
+   但三臂同样没有独立重跑过——它们的判分标签也只能等一次花钱重跑才能
+   独立再测。整轮重跑仍须用户另批（任务红线：本次未跑）。
+2. **`merge.py` 写死的路径——已修（第三波）。** 存档的四份 `merge.py`
+   都 `sys.path.insert(0, "/tmp/stellamem-lme[-rerun2|-rerun3]/benchmark/longmemeval")`；
+   该 /tmp 克隆在 2026-11-08 虚拟机重启时被清空，复现须先重建。
+   修法：仓库新增 `benchmark/longmemeval/merge.py`（与存档版 diff 证实
+   只改了路径解析 + `--run-dir` / `--repo` 参数，判分逻辑一字未动），
+   并用它对四轮真实分片逐字节复现通过（第四轮 `dee1d928…`、
+   第一轮 `b08ae636…`、第二轮 `f0f9e2e8…`、第三轮 `8fc01a53…`），
+   合成夹具测试 `tests/test_longmemeval_merge.py` 覆盖输出正确性与
+   fail-closed（重复题 / 缺分片均非零退出）。存档的四份 `merge.py`
+   是历史产物，未动。仍遗留：`full.py` / `monitor.py` / `run_*.sh`
+   同样写死 `/tmp/stellamem-lme-rerun3`，只影响“重跑”，不影响“复现”，
+   本次未改（改它们等于改运行工具，需另行评审）。
+3. **重放跳过 5 题——已闭环（第三波）。** `claim-replay-full` 的
+   `ran=495 skipped=5`：被跳过的 5 题（`0bb5a684`、`2a1811e2`、
+   `f0853d11`、`gpt4_2655b836`、`gpt4_93159ced`，即 manifest 前 5 条）
+   的 sidecar 是第一次重放调用写下的（mtime 04:35:16–04:35:19），
+   有日志的第二次调用从 04:50:35 起跑完后 495 题（日志首行即
+   `[6/500]`，中间空 15 分钟），因 sidecar 已存在而跳过它们。
+   第一次调用的命令行与日志没有留存（可能是 `--limit 5` 试跑，也可能
+   是中途停掉的运行，无法区分），但内容已闭环：第三波用冻结 worker
+   （`2ee87a90…`，9034cde 与 main 相同）+ 诊断适配器 + 已保存缓存，
+   以 `--only` + `--force` 在 /tmp 重放这 5 题，0 物理调用、保真 0 偏差，
+   5 个 sidecar 与存档**逐字节相同**（SHA：`37a3336a…`、`1f5c93c8…`、
+   `a835bf20…`、`ce031602…`、`0adda22a…`），extracted 计数也与
+   `results.json` 的 main 臂逐题一致。注意一个关键细节：诊断 sidecar
+   能力来自 `adapters/openclaw/index.js` 的 `7596cc7` 提交，在
+   9034cde 之后——用 9034cde 原样重放写不出 sidecar，必须用含该提交
+   的 checkout（本次用 main `fe20014`；worker.py 本身两边哈希相同）。
+   存档的 `replay_results.json` 仍只有 495 条（5 题的条目只存在于本次
+   /tmp 重放结果中，未写回存档——存档文件已进哈希清单，不改写历史），
+   5 条重放记录见下表：
+
+   | question_id | error | physical | extracted | retrieved_sessions |
+   | --- | --- | --- | --- | --- |
+   | `gpt4_2655b836` | null | 0 | 46 | `answer_4be1b6b4_2/3/1` |
+   | `0bb5a684` | null | 0 | 24 | `answer_e936197f_1/2` |
+   | `2a1811e2` | null | 0 | 29 | `answer_1cc3cd0c_2/1` |
+   | `f0853d11` | null | 0 | 28 | `answer_932ea3bf_1/2` |
+   | `gpt4_93159ced` | null | 0 | 32 | `answer_e5131a1b_2/1`（cited `…_1`） |
+4. **smoke 重放无产物——已补齐（第三波），另有一处来源勘误。**
+   原 `work/claim-replay-smoke/` 只有 `usage.jsonl`（19 KB）。
+   第三波查清：那 60 行**不是 smoke 重放的日志**——它是拒答实验
+   （`abstain_experiment.py`，30 道拒答题 × 2 个变体 = 60 次回答调用，
+   结果文件写于同一时刻 04:59:27）的流量，因共用 38189 代理、而代理
+   启动时 usage 路径指向了 `work/claim-replay-smoke/usage.jsonl`，
+   被误记到了 smoke 目录下；费用约 $0.0039（25,760 prompt / 901
+   completion tokens）。代理日志里另有 2 次 `FileNotFoundError`：
+   该目录在 04:54:26 才创建，在此之前到达的 2 次请求已调通 DeepSeek、
+   却在记 usage 时崩掉、没回包给调用方——实验脚本的重试逻辑（代码里
+   明确写了“缓存的失败调用不是结果，重试”）把它们重跑了，损失只有
+   2 次未记账的调用（约 $0.0002 量级），无法再精确还原。
+   真正的 smoke 重放已补：第三波用冻结 worker + 已保存缓存对 2 道
+   smoke 题（`778164c6`、`eeda8a6d_abs`）重放，`ran=2 skipped=0
+   errors=0 physical_calls_total=0 fidelity_mismatch=0`，
+   生成的 `manifest.json`、`replay_results.json`、2 个 sidecar 与缓存
+   副本已装进 `work/claim-replay-smoke/`（原 `usage.jsonl` 未动，
+   哈希仍为 `eb32b0d8…`；新文件哈希见哈希清单）。
+5. **审计器当时未合入——已过时。** PR #100 已随 PR #103 合入 main，
+   `score_integrity.py` 现就在仓库里；`verify_replay.py` 的审计步骤
+   在传 `--tracking-csv` 时直接跑，不再是可选 SKIP。
+6. **前三轮未纳入本次验证——已做（第三波）。** 见 §3.8：三轮合并
+   逐字节复现 + headline/费用复核 + 第三轮审计 175→172 全部通过。
 
 ## 6. 复现步骤（零成本）
 
@@ -159,16 +230,20 @@ python benchmark/longmemeval/verify_replay.py \
   --hashes benchmark/longmemeval/results-20261108-hashes.json \
   --cache-root ~/workspace/longmemeval-rerun3-20261108/work/full \
   --diagnostics ~/workspace/longmemeval-rerun3-20261108/work/claim-replay-full/diagnostics
-# 预期：11 passed（含审计器时）/ 10 passed（无审计器时，审计 SKIP），0 failed
+# 预期：13 passed，0 failed（第 8 项 raw 对账与第 9 项 replay 对账
+# 会自动从 --usage-dir 派生：shard raw/ 目录与旁边的 claim-replay-full/；
+# 目录不存在时 SKIP，不判 FAIL）
 
-# 2. 合并逐字节复现（只读输入；输出写 /tmp）
-#    先在 /tmp/stellamem-lme-rerun3 放一份 9034cde 的 benchmark/longmemeval
-#    （evaluate.py + freeze.py），再把 merge.py 与 work/full/shard*/{results.json,usage.jsonl}
-#    复制到 /tmp 后跑 merge.py，对比 work/full/results.json 的 SHA-256 dee1d928…
-# 3. 审计器复现（需 PR #100 的 score_integrity.py）
+# 2. 合并逐字节复现（仓库版 merge.py，不再需要重建 /tmp 路径）
+python benchmark/longmemeval/merge.py --run-dir <run 根目录，含 work/full/shard*>
+# 预期：输出 work/full/results.json 与存档逐字节相同。
+# 第四轮 SHA-256 dee1d928e8a64169166257eb6e3d77b042083ae4533039f50e00634c6031421d；
+# 第一轮 b08ae636…、第二轮 f0f9e2e8…、第三轮 8fc01a53…（三轮分片齐全时同法验证）
+# 3. 审计器复现
 python benchmark/longmemeval/score_integrity.py \
   benchmark/longmemeval/tracking_table_20261108.csv --out /tmp/score-audit.json
 # 预期：legacy 177、corrected 174、3 个误判；exit 1 表示“检出已知误判”，不是失败
+# 第三轮：tracking_table_20261106.csv，预期 legacy 175、corrected 172、同样 3 个误判
 ```
 
 ## 7. 隐私 / 密钥核查
