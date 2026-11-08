@@ -98,3 +98,27 @@ drop_reason, cited, judge_main, gold_evidence_role`
 - The replay reproduces the run only if the repo code on the eval path is
   unchanged since the round (extraction, ingest, approval, projection).
   The fidelity check in step 1 fails loudly if it is not.
+
+## Round-4 results (2026-11-08, main 9034cde)
+
+Full replay: 495 ran + 5 skipped (smoke), 0 errors, 0 new model calls
+(100% cache hits), fidelity mismatch 0 — the replay reproduces the run
+exactly. CSV: `benchmark/longmemeval/claim_tracking_20261108.csv`
+(7,851 rows: 7,639 gold claims + 212 gold turns without a claim).
+
+- 7,639 gold claims: 2,084 projected (27.3%), 5,555 dropped — `no-relevance`
+  2,608, `kind-cap` 1,831, `ineligible:temporary-flag` 1,115,
+  `ineligible:outdated-flag` 1.
+- Projected gold claims actually cited by the answer: 286/2,084 (13.7%).
+  When the reader cites the gold claim, its question is usually judged
+  right (207/286 rows); when it does not cite it, usually wrong (543/1,798
+  rows are in judged-right questions). The answer/cite stage is the
+  largest remaining loss after projection.
+- 212 gold turns produced no active claim. 109 of those are from the 31
+  questions whose extraction crashed entirely (`ChunkFailure`, no sidecar);
+  of the remaining 103, 66 were never extracted and 37 were extracted but
+  refused at review. The 51 single-session-assistant gold turns are all in
+  the never-extracted group and none are from crashed questions: the
+  extractor sees assistant speech but yields no evidence-verified claim
+  from it. The H1 fix (speaker-tagged history evidence) has to span
+  extraction, not only review/projection.
