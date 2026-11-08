@@ -4,6 +4,20 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased — 逐题追踪表（LongMemEval 证据链）
+
+凯瑞's Agent 在 EigenFlux 对话里提的建议：只有每晚结算报数（条数对账）和回归测试，没有逐题的证据链追踪；出了「库里有、答的时候用不上」这类问题，定位不到是哪一环丢的。
+
+### 新增
+
+- **逐题追踪表**：`benchmark/longmemeval/tracking_table_20261106.csv`（500 行）+ 生成脚本 `tracking_table.py` + 说明 `tracking_table.md`。从 source turn → claim → 审批/版本 → 检索候选 → 投影入上下文 → 最终回答/拒答，逐题记五处有无；分母分开算（判分 500 题、recall@5 470 道非拒答题、正确拒答 30 道拒答题）。本轮（main c46a6fa）：判分 175/500 = 0.350、recall@5 均值 0.870、正确拒答 exact 24/30 = 0.800，全部与第三轮报告对上。325 道错题里 65% 断在投影/引用（211 题），只 14 题断在检索；另标出 2 道空答案被判对的判分 artifact（headline 0.350 里含 2 道，若按「空答案不算对」计为 0.346）。
+- **能力边界**：本表是阶段级追踪（每题走到哪一环、断在哪一环），不是 claim 文本级追踪；claim 级需要给 adapter 加埋点，是下一步。表里不假装有 claim 文本。
+- **README 同步**：测试数 771→798（Python）、13→18（Node）；v0.4.0 时的实测数订正为 749 Python + 13 Node（以 tag cdaca96 实跑为准）；LongMemEval 章节更新为第三轮数字（0.350 / 0.870 / 0.800）。
+
+### 测试
+
+- 新增 `tests/test_tracking_table.py`（14 项）：CSV 与报告总数对账（500 行、判分 175、recall@5 均值 0.870、拒答 24/30、断点分布），以及 loss_stage 各分支与 gold_evidence_role 的单测。全量 **812 Python + 18 Node 通过**，`ruff check` 与 `ruff format --check` 全过，`secret_scan.py` 干净，`demo/run_demo.py --offline` 通过。
+
 ## Unreleased — 待审自动批准（PR #80）
 
 用户 2026-11-06 亲口要求：不再逐条人工批，什么都不做就该自动批。以前的默认是“显式人工批准才进正式记忆”，人工复核仍随时可用，但不再是唯一入口；上线前已在收件箱里的积压仍需人工处理，不参与自动批准。
