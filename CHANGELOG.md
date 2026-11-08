@@ -4,6 +4,25 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased — 90 天降级 + 删除派生链 + 增量总结标记
+
+Hermes（遗忘链路 4.2）与布雷登（增量总结标记 3.2）在 EigenFlux 对话里的建议；删除派生链落实栖流引的论文结论（只删原文时派生摘要仍约 20% 可恢复）。
+
+### 新增
+
+- **90 天降级（`compiler/memory_purge.py` 的 `demote_decayed`）**：非置顶、非核心 kind（identity / user-core / core 永不降级，与 rank.py 的永不衰减清单一致）、状态 active、超过 90 天未更新且零命中的记录，降级为归档层（`status="archived"` + `archived_at` + `archived_reason="90d-no-hit"`）。记录留在原文件、留在索引、留在审计里，但不再自动注入：JS 适配器 `eligible()` 要求 `status === "active"`，Python 召回默认只取 `("active", "pending")`。降级可逆（`status` 是可变字段，恢复就是改回 `active`）。`run_memory_purge(..., demote=True)` 才会真的降级，默认只标 `decayed_candidate`；降级数恒 ≤ 标记数（pending 记录只标不降）。
+- **删除派生链（`compiler/deletion_chain.py`）**：`trace()` 只读追踪整条链；`forget_record()` 按层执行，默认 tombstone（内容换成 `[已删除]` 标记、保留 claim id 与 provenance，删除本身可审计），`mode="purge"` 彻底移除。覆盖原文、摘要（长期文件里引用该值的合成行）、索引（改完重建再查，active 须为 0）、缓存（失效受影响文件的条目）、原始档案（按 provenance record_id 从会话流里删、重建 manifest、ledger 留删除记录）。日记只追踪、不自动改（日记是用户自己的日志，改写历史由操作方决定）。调用两次是幂等的。诚实边界写在模块 docstring 里：摘要追踪按值文本匹配，改写过的摘要查不到；4K 桌面页是派生渲染，下次重建时才掉出。
+- **增量总结标记（`compiler/daily_diary.py`）**：`synthesize_long_term` 成功后把当天写进 `<root>/system/diary-summary-state.json`；`rebuild_summary_state()` 在启动时从文件重建（长期文件来源日 = 已总结，日档「变」非空 = 有变化，两者之差是断层 gap_days），调用方按 gap 补跑合成即可。标记是派生状态，丢了或坏了都能重建；标记写失败不拖垮合成。CLI 新增 `--rebuild-summary-state`。
+- **缓存失效（`compiler/derived_cache.py` 的 `DerivedMarkdownCache.invalidate()`）**：删除链用的公开入口；缓存本身也会在下次读取时按内容哈希自愈，但删除不等下次读取。
+
+### 测试
+
+- 新增 `tests/test_demote.py`（7 项）：90 天零命中降级、近期/有命中不降、置顶与核心 kind 永不降、非 active 不降、purge 的 demote 开关、默认只标不降、降级数是标记数的子集。
+- 新增 `tests/test_deletion_chain.py`（9 项）：追踪找全六层、无 provenance 时档案层报 no-provenance-link、未知 claim 查无、tombstone 全链（原文打标记、摘要行打标记、索引 active 归零、缓存失效、档案删记录、ledger 留痕、日记原样不动）、purge 全链、幂等、未知模式拒绝。
+- 新增 `tests/test_diary_summary_state.py`（7 项）：合成后写标记、noop 不写标记、重建找断层、标记丢失后重建、干净时无断层、无变化的日子不进断层、损坏的标记文件可重建。
+- 适配器新增 1 项：archived 记录不投影、active 孪生照常投影（降级停注入的注入侧证明）。
+- 全量 **855 Python + 24 Node 通过**（833 + 22 新增），`ruff check` 与 `ruff format --check` 全过，`secret_scan.py` 干净，`demo/run_demo.py --offline` 通过。
+
 ## Unreleased — 护栏回执三件套 + 桥双向审计行
 
 皮皮虾（guardrail_receipt）与 Hermes（桥双向审计行）在 EigenFlux 对话里的建议。

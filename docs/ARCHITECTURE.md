@@ -68,3 +68,11 @@ Adapter 契约：`inject_core / inject_recall / healthcheck`。
 
 - **Guardrail receipt（`compiler/guardrail_receipt.py`）**：每次护栏判定出一张回执，三件套——护栏 id、判定 class（allow/block/partial/defer）、规则摘要 digest。digest 绑定护栏 id、规则（版本、摘要、输入参数）与判定本身：把 `block` 改标成 `allow` 同样会破 digest。`verify_receipt()` 可由回执自身字段重算验证，无需外部输入；重跑同一判定比对回执即复核。规则改动时 bump `rule_version`，旧规则的回执无法冒充新规则的判定。回执只记录判定，不授权任何动作。目前接在注入门（`compiler/gate.py` 的 `InjectionGate.decide()`）上：返回值、JSONL 日志条目、审计行都带回执。
 - **桥双向审计行（`compiler/bridge.py` 的 `BridgeStore.access_audit`）**：桥是主体间唯一通道；每次访问（建请求=写、读出批准副本=读、查请求/列队列=读）都记一行：谁 / 哪个主体 / 读还是写 / 命中还是拒绝。访问日志是追加式、永不回滚：事务保护只快照 `requests` 与生命周期审计，不碰访问日志，被拒绝的访问尝试同样留痕。生命周期审计（创建/批准/拒绝/撤回/过期）记的是决定，访问审计记的是越界与读取；批准本身是决定，只进生命周期审计。`actor` 未显式给出时按角色记：建请求记来源主体、读副本记目标主体、查请求与列队列记 reviewer（GUI 读队列时不记令牌持有人身份，令牌永不进日志）。
+
+---
+
+## 遗忘链路与增量总结标记（2026-11-08 追加）
+
+- **90 天降级（`compiler/memory_purge.py` 的 `demote_decayed`）**：非置顶、非核心 kind、状态 active、超过 90 天未更新且零命中的记录，降级为归档层（`status="archived"` + `archived_at` + `archived_reason="90d-no-hit"`）。记录留在原文件、留在索引、留在审计里，但不再自动注入：JS 适配器 `eligible()` 要求 `status === "active"`，Python 召回默认只取 `("active", "pending")`。降级可逆：`status` 是可变字段，恢复就是通过正常编辑路径改回 `active`。`run_memory_purge(..., demote=True)` 才会真的降级，默认只标 `decayed_candidate`（标记）；降级数恒 ≤ 标记数（pending 记录只标不降）。
+- **删除派生链（`compiler/deletion_chain.py`）**：删除请求追踪整条链——原文（MANAGED 文件里的 claim 块）、摘要（长期文件里引用该值的合成行）、日记（只追踪、不自动改）、索引（改完重建再查）、缓存（失效受影响文件的条目）、原始档案（按 provenance record_id 从会话流里删、重建 manifest、ledger 留删除记录）。默认 tombstone 模式：内容换成 `[已删除]` 标记、保留 claim id 与 provenance，删除本身可审计；purge 模式彻底移除。调用两次是幂等的。诚实边界：摘要追踪按值文本匹配，改写过的摘要查不到；4K 桌面页是派生渲染，下次重建时才掉出，中间的旧页是已知滞后、不是残留。
+- **增量总结标记（`compiler/daily_diary.py`）**：`synthesize_long_term` 成功后把当天写进 `<root>/system/diary-summary-state.json` 的 `summarized_days`。`rebuild_summary_state()` 在启动时从文件重建：长期文件里合成行的来源日 = 已总结的日子，日档里「变」一段非空的日子 = 有变化的日子，两者之差是断层（gap_days），调用方按 gap 补跑合成即可。标记是派生状态，丢了或坏了都能从文件重建；标记写失败不拖垮合成。
