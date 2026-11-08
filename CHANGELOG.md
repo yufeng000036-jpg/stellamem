@@ -4,6 +4,31 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased — 修复 PR #79 回归：投影前缀两行导致评测解析失败
+
+LongMemEval 冒烟测试发现：PR #79 把投影头从一行改成两行后，
+`benchmark/longmemeval/worker.py`（`context.splitlines()[1:]` 逐行
+`json.loads`）在每道有投影的题上都报 `JSONDecodeError`——main /
+candidate 两臂全灭，`none` / `direct` 两臂（不走投影）正常。根因已
+核实：c46a6fa 时前缀是一行，3761476 时是两行；`worker.py` 是冻结
+文件不动，修适配器一侧恢复一行前缀的旧约定。
+
+### 修复
+
+- **投影前缀改回一行**（`adapters/openclaw/index.js`）：guard 措辞
+  一个字没动，只把两句之间的换行去掉。冒烟测试验证：修复前两道题
+  main / candidate 全报 `JSONDecodeError`；修复后零错误，
+  `eeda8a6d_abs` 正确拒答，`778164c6` 正常判分（答错是模型的事，
+  不是管线故障）。
+
+### 测试
+
+- 新增 `tests/adapter-recall.test.mjs` 回归测试：断言投影输出除第
+  一行外全是 JSON claim 行（worker.py 的解析约定）。Node 22→23；
+  全量 **812 Python + 23 Node 通过**，`ruff check` 与
+  `ruff format --check` 全过，`secret_scan.py` 干净，
+  `demo/run_demo.py --offline` 通过。
+
 ## Unreleased — 负样本评测第一版（过期事实注入判 FAIL）
 
 Hermes 在 EigenFlux 对话里的建议（4.3）：LongMemEval 量的是检索质量，但「错误记忆被正确检索出来」比「没检索出来」更危险——过期 / 被推翻的旧事实还在注入就是 FAIL。
