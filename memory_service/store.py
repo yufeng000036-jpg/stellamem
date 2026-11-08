@@ -1,4 +1,12 @@
-"""Stellamem reusable memory store. Standard library; no model/network dependency."""
+"""Stellamem reusable memory store. Standard library; no model/network dependency.
+
+The bundled SQLite of some CPython releases (notably 3.10 on Windows/macOS,
+SQLite 3.40.1) predates the FTS5 ``secure-delete`` command (3.42.0) this
+store relies on to wipe full-text entries on deletion. When the stdlib
+SQLite is too old, the store uses pysqlite3 (``pysqlite3-binary`` wheels
+bundle a current SQLite) if it is installed; otherwise initialisation
+still fails loudly instead of silently running without secure deletion.
+"""
 
 from __future__ import annotations
 import contextlib
@@ -6,7 +14,31 @@ import hashlib
 import json
 import re
 import secrets
-import sqlite3
+
+
+def _select_sqlite():
+    """Return the sqlite3-compatible module the store must use.
+
+    Prefers the standard library. Falls back to pysqlite3 only when the
+    stdlib SQLite predates FTS5 ``secure-delete`` (3.42.0) and pysqlite3
+    bundles one new enough. Returns the stdlib module unchanged when no
+    newer module is available, so Store initialisation fails loudly at
+    the FTS5 command instead of silently dropping secure deletion.
+    """
+    import sqlite3
+
+    if sqlite3.sqlite_version_info >= (3, 42, 0):
+        return sqlite3
+    try:
+        import pysqlite3
+    except ImportError:
+        return sqlite3
+    if pysqlite3.sqlite_version_info >= (3, 42, 0):
+        return pysqlite3
+    return sqlite3
+
+
+sqlite3 = _select_sqlite()
 import threading
 import uuid
 from dataclasses import dataclass
