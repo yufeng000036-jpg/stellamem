@@ -128,6 +128,26 @@ class DerivedMarkdownCache:
         self._dirty = True
         return parsed
 
+    def invalidate(self, paths) -> int:
+        """Drop cache entries for the given (root-relative) paths.
+
+        Used by the deletion chain: after a file is modified, its
+        cached parse must go now, not on the next read (the cache
+        would self-heal via its content hash then, but a deletion
+        must not wait for a read).
+        """
+        removed = 0
+        for p in paths:
+            key = Path(p).as_posix()
+            if key in self._entries:
+                del self._entries[key]
+                removed += 1
+        if removed:
+            self._stats["evictions"] += removed
+            self._dirty = True
+            self.flush()
+        return removed
+
     def prune_deleted(self, existing_paths: set[Path]) -> int:
         """Remove cache entries whose authoritative Markdown files were deleted."""
         valid_keys: set[str] = set()

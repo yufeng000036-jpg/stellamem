@@ -209,6 +209,108 @@ def read_long_term(root, subject) -> str | None:
         return None
 
 
+# ---------------- 已总结标记（持久化 + 启动重建） ----------------
+# 布雷登 3.2：增量总结不能只按容量压缩，要带可持久化的「已总结」标记，
+# 并在启动时从备份重建断层，否则重启后历史总结会静默丢失。我方之前
+# 只靠每晚结算报数事后发现（条数对不上才知道丢了）；标记 + 重建把
+# 事后发现升级为主动防丢。
+# 标记文件是派生状态，不是权威库：权威永远是日档 + 长期文件本身。
+# 标记丢了或坏了，rebuild_summary_state() 就从文件重建它。
+
+_SUMMARY_STATE_FILENAME = "diary-summary-state.json"
+_SOURCE_DAY_RE = re.compile(r"来源：(\d{4}-\d{2}-\d{2})")
+
+
+def summary_state_path(root) -> Path:
+    """标记文件路径：<root>/system/diary-summary-state.json。"""
+    return Path(root) / "system" / _SUMMARY_STATE_FILENAME
+
+
+def _read_summary_state(root) -> dict:
+    path = summary_state_path(root)
+    try:
+        import json
+
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(data, dict) and isinstance(data.get("subjects"), dict):
+            return data
+    except (OSError, ValueError):
+        pass
+    return {"schema_version": 1, "subjects": {}}
+
+
+def _write_summary_state(root, state: dict) -> None:
+    import json
+    from datetime import datetime, timezone
+
+    state["schema_version"] = 1
+    state["updated_at"] = datetime.now(timezone.utc).isoformat()
+    path = summary_state_path(root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    atomic_write_text(path, json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+
+
+def record_summary(root, subject, day) -> dict:
+    """把一天记为已总结（synthesize_long_term 成功后调用）。"""
+    canon = subjects_mod.validate_subject(subject)
+    day = validate_date(day)
+    state = _read_summary_state(root)
+    entry = state["subjects"].setdefault(canon, {"summarized_days": []})
+    days = entry.setdefault("summarized_days", [])
+    if day not in days:
+        days.append(day)
+        days.sort()
+    entry["last_summarized_day"] = days[-1] if days else None
+    _write_summary_state(root, state)
+    return {"subject": canon, "summarized_days": list(days)}
+
+
+def rebuild_summary_state(root, subject) -> dict:
+    """启动时从文件重建标记：找出断层（有变化但未进长期的日子）。
+
+    权威是文件：长期文件里合成行的「来源：YYYY-MM-DD」给出已总结
+    的日子；日档里「变」一段非空的日子是有变化的日子。两者之差就
+    是断层。重建后把标记文件写回去；调用方按 gap_days 补跑
+    synthesize_long_term 即可。
+    """
+    canon = subjects_mod.validate_subject(subject)
+    root = Path(root)
+    summarized: set[str] = set()
+    text = read_long_term(root, canon)
+    if text:
+        for line in text.splitlines():
+            if _SYNTH_MARK in line:
+                m = _SOURCE_DAY_RE.search(line)
+                if m:
+                    summarized.add(m.group(1))
+    with_changes: set[str] = set()
+    diary_dir = root / "daily" / canon
+    if diary_dir.exists():
+        for path in sorted(diary_dir.glob("*.md")):
+            day = path.stem
+            try:
+                validate_date(day)
+            except ValueError:
+                continue
+            parsed = read_diary(root, canon, day)
+            if parsed and [x for x in parsed.get("变", []) if x.strip()]:
+                with_changes.add(day)
+    gap = sorted(with_changes - summarized)
+    state = _read_summary_state(root)
+    state["subjects"][canon] = {
+        "summarized_days": sorted(summarized),
+        "last_summarized_day": sorted(summarized)[-1] if summarized else None,
+        "gap_days": gap,
+    }
+    _write_summary_state(root, state)
+    return {
+        "subject": canon,
+        "summarized_days": sorted(summarized),
+        "gap_days": gap,
+        "state_path": str(summary_state_path(root)),
+    }
+
+
 def _already_recorded(existing_text: str | None, raw_line: str) -> bool:
     """这行变化是不是已经写进长期了（按原文去重，不看来源日）。"""
     if not existing_text:
@@ -255,6 +357,12 @@ def synthesize_long_term(root, subject, day) -> dict:
             for line in path.read_text(encoding="utf-8").splitlines()
             if line.startswith("- ") and _SYNTH_MARK in line
         )
+    # 持久化「已总结」标记：这一天的变化已经进长期了。标记写失败不
+    # 能拖垮合成本身（标记是派生状态，重建可恢复），静默跳过。
+    try:
+        record_summary(root, canon, day)
+    except OSError:
+        pass
     return {
         "status": "ok",
         "reason": "synthesized",
@@ -294,6 +402,11 @@ def main(argv=None) -> int:
         "--synthesize", action="store_true", help="22:35 那步：从当日日档提炼长期变化"
     )
     parser.add_argument("--long-term", action="store_true", help="打印长期“我变了什么”")
+    parser.add_argument(
+        "--rebuild-summary-state",
+        action="store_true",
+        help="启动重建：从日档 + 长期文件重建「已总结」标记并报告断层",
+    )
     args = parser.parse_args(argv)
     try:
         if args.append:
@@ -330,6 +443,17 @@ def main(argv=None) -> int:
                 print(f"{subjects_mod.validate_subject(args.subject)}：长期文件还没有内容")
             else:
                 print(text)
+            return 0
+        if args.rebuild_summary_state:
+            result = rebuild_summary_state(args.root, args.subject)
+            print(
+                f"已总结 {len(result['summarized_days'])} 天"
+                f"（{result['summarized_days'][-1] if result['summarized_days'] else '无'} 为止）"
+            )
+            if result["gap_days"]:
+                print(f"断层 {len(result['gap_days'])} 天未进长期：{', '.join(result['gap_days'])}")
+            else:
+                print("无断层")
             return 0
         parser.error("请指定 --append、--show、--synthesize 或 --long-term 其中一个")
         return 2

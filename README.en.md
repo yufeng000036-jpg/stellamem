@@ -5,7 +5,7 @@
 >
 > **v0.4.0 (2026-11-06): the universal-client release.** From v0.3.0 to v0.4.0, the project made one directional decision: Stellamem does not serve any single host. It is a **memory governance layer any AI client can connect to** — today the production host is the DSH desktop assistant; tomorrow it can be any client that supports MCP or HTTP. See the "Vision" section below.
 >
-> **Current status (2026-11-08, main):** full regression **833 Python + 23 Node** passing; CI has 7 jobs (Linux / Windows / macOS × Python 3.10 / 3.12 + code quality); third-party review score **8.8/10** (final acceptance, 2026-11-05); LongMemEval 500-question independent measurement completed (see "Measured results" below). Details in the v0.4.0 section of CHANGELOG.md.
+> **Current status (2026-11-08, main):** full regression **855 Python + 24 Node** passing; CI has 7 jobs (Linux / Windows / macOS × Python 3.10 / 3.12 + code quality); third-party review score **8.8/10** (final acceptance, 2026-11-05); LongMemEval 500-question independent measurement completed (see "Measured results" below). Details in the v0.4.0 section of CHANGELOG.md.
 >
 > **Compatibility:** projection defaults to requester `user` and scope `global`; use explicit `requesterSubject` / `activeScopes` for other namespaces/tasks. An explicit invalid namespace fails closed. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. Clean user-subject pending claims auto-approve after the configured grace period (default 72h); sensitive, identity, conflicting and pre-feature backlog claims still need a human. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
 
@@ -97,9 +97,9 @@ Version history —— old versions are kept, rollback is possible
 
 The conclusion first: **on the line "remembers, remembers correctly, doesn't mix things up, doesn't leak, can be checked, changed, and taken back," Stellamem is already something worth showing.** Every claim below is backed by a number or a production record, not a slogan.
 
-### Tests and review: 833 tests, 8.8/10
+### Tests and review: 855 tests, 8.8/10
 
-- Full regression **833 Python + 23 Node** passing (587 at v0.3.0 → 749 at v0.4.0 → 833 now, zero regressions).
+- Full regression **855 Python + 24 Node** passing (587 at v0.3.0 → 749 at v0.4.0 → 855 now, zero regressions).
 - CI has 7 jobs: Linux / Windows / macOS × Python 3.10 / 3.12 + code quality. Note: on 2026-11-06, main had one failure on `windows-latest, 3.10`; it was located (a concurrent-rewrite race in `test_concurrent_rewrites_leave_complete_file`) and fixed by PR #74, and that job has been green since; see the v0.4.0 section of CHANGELOG.md.
 - Third-party review score **8.8/10** (final acceptance, 2026-11-05; earlier 7.2 → 8.3 → 8.4 → 8.6 → 8.7 → 8.8). Review conclusion: fit for formal use in a single-user trusted environment; whether multi-client isolation is fully complete is waiting for the reviewer to re-check against the latest main — until that re-check passes, we do not claim "fully complete" to the outside.
 

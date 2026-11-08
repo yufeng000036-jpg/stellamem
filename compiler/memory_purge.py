@@ -30,6 +30,14 @@ def _pct(value: str) -> str:
 
 from compiler.file_lock import atomic_write_text
 
+# Kinds that never demote: the core portrait (same list as rank.py's
+# never-decay kinds). Demoting an identity/user-core record would break
+# the persona's identity; they stay active no matter how old or unhit.
+NEVER_DEMOTE_KINDS = ("identity", "user-core", "core")
+
+# Default demotion reason recorded on the record.
+DEMOTE_REASON_90D_NO_HIT = "90d-no-hit"
+
 NEGATION_PAIRS: tuple[tuple[str, str], ...] = (
     ("喜欢", "讨厌"),
     ("喜欢", "不喜欢"),
@@ -101,6 +109,8 @@ class PurgeReport:
     deduplicated_count: int = 0
     timestamp_fast_forwarded: int = 0
     decayed_archived_count: int = 0
+    demoted_count: int = 0
+    demoted_ids: list[str] = field(default_factory=list)
     llm_escalated_conflicts: int = 0
     conflicts_logged: list[dict[str, Any]] = field(default_factory=list)
 
@@ -110,9 +120,74 @@ class PurgeReport:
             "deduplicated_count": self.deduplicated_count,
             "timestamp_fast_forwarded": self.timestamp_fast_forwarded,
             "decayed_archived_count": self.decayed_archived_count,
+            "demoted_count": self.demoted_count,
+            "demoted_ids": self.demoted_ids,
             "llm_escalated_conflicts": self.llm_escalated_conflicts,
             "conflicts_logged": self.conflicts_logged,
         }
+
+
+def demote_decayed(
+    records: list[dict[str, Any]],
+    *,
+    now_ms: int | None = None,
+    archive_after_days: int = 90,
+    reason: str = DEMOTE_REASON_90D_NO_HIT,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Demote 90-day-no-hit records to the archive layer.
+
+    A record demotes when ALL of these hold: not pinned; kind not in
+    ``NEVER_DEMOTE_KINDS``; status is ``"active"``; last update older
+    than ``archive_after_days``; zero hits. Demotion sets
+    ``status="archived"`` plus ``archived_at`` and ``archived_reason``
+    — the record stays in its file, in the index, and in every audit,
+    but it is no longer auto-injected: the JS adapter's ``eligible()``
+    requires ``status === "active"``, and the Python recall path
+    defaults to status ``("active", "pending")``. Reversible: ``status``
+    is a mutable field, so restoring a record is setting it back to
+    ``"active"`` through the normal edit path (no new code needed).
+
+    ``decayed_candidate`` (the purge's triage mark) and demotion use
+    the same age/hit condition, but demotion additionally requires an
+    active status and a demotable kind — so ``demoted_count`` is a
+    subset of ``decayed_archived_count``, never larger. Returns the
+    (mutated) record list and a report dict.
+    """
+    from datetime import datetime, timezone
+
+    current_ms = now_ms if now_ms is not None else int(time.time() * 1000)
+    decay_cutoff_ms = current_ms - (archive_after_days * 86_400 * 1000)
+    demoted: list[str] = []
+    skipped_pinned = 0
+    skipped_core_kind = 0
+    skipped_not_active = 0
+    for item in records:
+        kind = str(item.get("kind") or "").strip().lower()
+        if item.get("pinned", False):
+            skipped_pinned += 1
+            continue
+        if kind in NEVER_DEMOTE_KINDS:
+            skipped_core_kind += 1
+            continue
+        if item.get("status", "active") != "active":
+            skipped_not_active += 1
+            continue
+        ts_ms = int(item.get("updated_at_ms") or item.get("occurred_at_ms") or current_ms)
+        if ts_ms >= decay_cutoff_ms:
+            continue
+        if int(item.get("hit_count", 0)) != 0:
+            continue
+        item["status"] = "archived"
+        item["archived_at"] = datetime.fromtimestamp(current_ms / 1000, tz=timezone.utc).isoformat()
+        item["archived_reason"] = reason
+        demoted.append(str(item.get("id") or item.get("claim_id") or ""))
+    return records, {
+        "demoted": demoted,
+        "demoted_count": len(demoted),
+        "skipped_pinned": skipped_pinned,
+        "skipped_core_kind": skipped_core_kind,
+        "skipped_not_active": skipped_not_active,
+    }
 
 
 def run_memory_purge(
@@ -122,6 +197,7 @@ def run_memory_purge(
     version_chain_path: Path | str | None = None,
     now_ms: int | None = None,
     archive_after_days: int = 90,
+    demote: bool = False,
 ) -> tuple[list[dict[str, Any]], PurgeReport]:
     """Execute deterministic memory health check, deduplication, and conflict triage.
 
@@ -131,6 +207,10 @@ def run_memory_purge(
       `decayed_candidate=True` (never silently deleted, preserving white-box auditability).
     - Deep semantic contradictions are appended to `conflict-log.md` and tracked in
       `version-chain.json`.
+    - With `demote=True`, the marked records are additionally demoted to the
+      archive layer (`status="archived"` + `archived_at` + `archived_reason`)
+      via `demote_decayed` — they stay in place and in the index, but stop
+      being auto-injected. Default False: marking only, current behavior.
     """
     current_ms = now_ms if now_ms is not None else int(time.time() * 1000)
     decay_cutoff_ms = current_ms - (archive_after_days * 86_400 * 1000)
@@ -223,6 +303,13 @@ def run_memory_purge(
         )
 
     retained = list(by_sig.values())
+
+    if demote:
+        _, demote_report = demote_decayed(
+            retained, now_ms=current_ms, archive_after_days=archive_after_days
+        )
+        report.demoted_count = demote_report["demoted_count"]
+        report.demoted_ids = demote_report["demoted"]
 
     if conflict_log_path is not None and report.conflicts_logged:
         _write_conflict_log(Path(conflict_log_path), report.conflicts_logged)

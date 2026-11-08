@@ -195,6 +195,22 @@ test("projection output after the first line is all JSON lines (worker.py contra
   }
 });
 
+test("archived record is not projected (90-day demotion stops injection)", async () => {
+  // Demotion sets status="archived"; eligible() requires status active,
+  // so a demoted record must stop injecting while its active twin keeps
+  // projecting. This is the injection-side proof of Hermes 4.2.
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [
+    record({ claim_id: "c-active", revision_id: "r-active",
+      value: "虚构：每周三去海边露营", evidence: "虚构：每周三去海边露营" }),
+    record({ claim_id: "c-archived", revision_id: "r-archived", status: "archived",
+      value: "虚构：每周三去海边露营", evidence: "虚构：每周三去海边露营" }),
+  ]);
+  const out = await project(root, "我每周三去哪里露营");
+  assert.ok(out.includes("海边露营"), "active twin must project: " + out);
+  assert.ok(!out.includes("c-archived"), "archived twin must not project: " + out);
+});
+
 test("guard does not change which claims are projected", async () => {
   // The guard is header text: selection is decided before the prefix is
   // assembled, so the projected claim set must be exactly the matching one.
