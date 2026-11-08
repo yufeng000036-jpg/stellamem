@@ -1,5 +1,6 @@
 // Claim-level projection. Never inject legacy free text or protected identity.
-import { readFile, access } from "node:fs/promises";
+import { readFile, access, writeFile, mkdir } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { hasSecret, matches, within } from "../../shared/runtime.mjs";
 
@@ -159,6 +160,39 @@ function eligible(c, scopes, requester) {
     !hasSecret(c) && !matches("injection", text) && !matches("sensitive", [c.kind, c.predicate, c.value, c.evidence].join(" ")) &&
     !matches("heavy", text);
 }
+// First failing check of eligible(), in the same order, for diagnostics.
+// Returns null when the claim is eligible. Used only to explain *why* a
+// record was dropped; it never changes the projection itself.
+function eligibilityReason(c, scopes, requester) {
+  const now = Date.now();
+  for (const field of ["valid_from", "valid_to"]) {
+    if (c[field] !== undefined && c[field] !== null && c[field] !== "") {
+      const when = Date.parse(c[field]);
+      if (!Number.isFinite(when) || (field === "valid_from" ? when > now : when <= now)) return "ineligible:valid-window";
+    }
+  }
+  if (namespaceOf(c) !== requester) return "ineligible:namespace";
+  if (c.schema_version !== 2) return "ineligible:schema-version";
+  if (c.status !== "active") return "ineligible:status";
+  if (c.source !== "user") return "ineligible:source";
+  if (c.evidence_verified !== true) return "ineligible:evidence";
+  if (c.write_policy !== "allow") return "ineligible:write-policy";
+  if (!["always", "recall"].includes(c.injection_policy)) return "ineligible:injection-policy";
+  if (!["PUBLIC", "PRIVATE"].includes(c.sensitivity)) return "ineligible:sensitivity";
+  if (!scopes.includes(c.scope)) return "ineligible:scope";
+  if (["identity", "user-core", "relationship"].includes(c.kind)) return "ineligible:kind";
+  if (c.sensitive) return "ineligible:sensitive-flag";
+  if (c.suspicious) return "ineligible:suspicious-flag";
+  if (c.sarcasm) return "ineligible:sarcasm-flag";
+  if (c.temporary) return "ineligible:temporary-flag";
+  if (c.outdated) return "ineligible:outdated-flag";
+  const text = JSON.stringify(c);
+  if (hasSecret(c)) return "ineligible:secret";
+  if (matches("injection", text)) return "ineligible:injection-match";
+  if (matches("sensitive", [c.kind, c.predicate, c.value, c.evidence].join(" "))) return "ineligible:sensitive-match";
+  if (matches("heavy", text)) return "ineligible:heavy-match";
+  return null;
+}
 async function pending(root) {
   try { await access(path.join(root, "system/transaction.json")); return true; }
   catch (error) { if (error.code === "ENOENT") return false; throw error; }
@@ -175,20 +209,61 @@ async function unresolvedConflicts(root) {
   } catch (error) { if (error.code === "ENOENT") return new Set(); throw error; }
 }
 export async function project(root, prompt, config = {}) {
-  if (await pending(root)) return "";
+  // Claim-level diagnostics (opt-in, off by default): when
+  // STELLAMEM_PROJECT_DIAGNOSTICS_DIR is set, every call writes one JSON
+  // sidecar named by sha256(prompt)[:16] with one record per candidate
+  // claim (projected/dropped + the first failing gate) and the exact
+  // context string. The returned string is byte-identical with or without
+  // diagnostics; a failed write never fails the projection.
+  const diagDir = process.env.STELLAMEM_PROJECT_DIAGNOSTICS_DIR || "";
+  const diagRecords = [];
+  let diagEmpty = null;
+  async function emitDiag(context) {
+    if (!diagDir) return;
+    try {
+      await mkdir(diagDir, { recursive: true });
+      const promptSha = createHash("sha256").update(prompt).digest("hex");
+      await writeFile(
+        path.join(diagDir, promptSha.slice(0, 16) + ".json"),
+        JSON.stringify({
+          prompt_sha256: promptSha,
+          context: context ?? "",
+          projected_n: diagRecords.filter((r) => r.stage === "projected").length,
+          candidates_n: diagRecords.length,
+          empty_reason: diagEmpty,
+          records: diagRecords,
+        }, null, 2),
+      );
+    } catch {
+      // Diagnostics are best-effort; never break the projection.
+    }
+  }
+  function diagEntry(c, score) {
+    return {
+      claim_id: c.claim_id ?? null,
+      session_id: (c.provenance && c.provenance.session_id) || null,
+      message_id: (c.provenance && c.provenance.message_id) || null,
+      kind: c.kind ?? null,
+      scope: c.scope ?? null,
+      score: score ?? null,
+      stage: "pending",
+      reason: null,
+    };
+  }
+  if (await pending(root)) { diagEmpty = "pending"; await emitDiag(""); return ""; }
   let blocked;
   try {
     blocked = await quarantinedIds(root);
     for (const id of await unresolvedConflicts(root)) blocked.add(id);
   } catch {
-    return "";
+    diagEmpty = "quarantine-error"; await emitDiag(""); return "";
   }
   const beforeGeneration = await generation(root);
   const max = Math.max(0, Math.min(16000, Number.isFinite(config.maxInjectChars) ? config.maxInjectChars : 4000));
   const requester = Object.hasOwn(config, "requesterSubject") ? config.requesterSubject : "user";
-  if (!["user", "persona", "viewer"].includes(requester)) return "";
+  if (!["user", "persona", "viewer"].includes(requester)) { diagEmpty = "invalid-config"; await emitDiag(""); return ""; }
   if (Object.hasOwn(config, "activeScopes") && (!Array.isArray(config.activeScopes) ||
-      config.activeScopes.some(scope => typeof scope !== "string"))) return "";
+      config.activeScopes.some(scope => typeof scope !== "string"))) { diagEmpty = "invalid-config"; await emitDiag(""); return ""; }
   const scopes = ["global", ...(config.activeScopes || [])];
   // Sufficiency guard: the reader must only use a line that is about the
   // same place, person, role, activity, or item the question asks about.
@@ -229,7 +304,25 @@ export async function project(root, prompt, config = {}) {
     try { text = await readFile(await within(root, rel), "utf8"); }
     catch (error) { if (error.code === "ENOENT") continue; throw error; }
     for (const c of records(text)) {
-      if (!eligible(c, scopes, requester) || seen.has(c.revision_id) || blocked.has(c.claim_id)) continue;
+      const ineligible = eligibilityReason(c, scopes, requester);
+      if (ineligible !== null) {
+        const entry = diagEntry(c, null);
+        entry.stage = "dropped"; entry.reason = ineligible;
+        diagRecords.push(entry);
+        continue;
+      }
+      if (seen.has(c.revision_id)) {
+        const entry = diagEntry(c, null);
+        entry.stage = "dropped"; entry.reason = "duplicate-revision";
+        diagRecords.push(entry);
+        continue;
+      }
+      if (blocked.has(c.claim_id)) {
+        const entry = diagEntry(c, null);
+        entry.stage = "dropped"; entry.reason = "blocked-quarantine-or-conflict";
+        diagRecords.push(entry);
+        continue;
+      }
       const always = c.injection_policy === "always";
       const r = relevance(c, prompt);
       if (!always) {
@@ -238,10 +331,18 @@ export async function project(root, prompt, config = {}) {
           // the top few, but a technical prompt ("偏好 8081 端口") may not.
           // Bigram overlap is topical like lexical, so it passes even when
           // technical; only intent alone is blocked by the carve-out.
-          if (!r.lexical && !r.bigram && !(r.intent && !technical)) continue;
+          if (!r.lexical && !r.bigram && !(r.intent && !technical)) {
+            const entry = diagEntry(c, r.score);
+            entry.stage = "dropped"; entry.reason = "no-relevance";
+            diagRecords.push(entry);
+            continue;
+          }
         } else if (!r.lexical && !r.bigram && !r.intent) {
           // Project/lesson/decision allow type-only recall, so "我有哪些项目"
           // works even when no claim text contains the word "项目".
+          const entry = diagEntry(c, r.score);
+          entry.stage = "dropped"; entry.reason = "no-relevance";
+          diagRecords.push(entry);
           continue;
         }
       }
@@ -249,7 +350,9 @@ export async function project(root, prompt, config = {}) {
       // partial-overlap paraphrase outranks a type-only guess but stays
       // below a real lexical hit.
       const score = always ? 2 : (r.lexical || r.bigram ? r.score : 0.05);
-      candidates.push({ c, score });
+      const entry = diagEntry(c, score);
+      candidates.push({ c, score, entry });
+      diagRecords.push(entry);
     }
   }
 
@@ -265,10 +368,25 @@ export async function project(root, prompt, config = {}) {
   const maxClaims = 12;
   let output = "";
   let count = 0;
-  for (const { c } of candidates) {
-    if (!c.claim_id || !c.revision_id || revisions.get(c.claim_id).size !== 1) continue;
-    if (count >= maxClaims) break;
-    if (perKind[c.kind] >= maxPerKind) continue;
+  for (let i = 0; i < candidates.length; i++) {
+    const { c, entry } = candidates[i];
+    if (!c.claim_id || !c.revision_id || revisions.get(c.claim_id).size !== 1) {
+      if (entry) { entry.stage = "dropped"; entry.reason = "ambiguous-revision"; }
+      continue;
+    }
+    if (count >= maxClaims) {
+      // The total cap is checked before kind-cap and char-cap in this loop,
+      // so every candidate still undecided at this point is cut by it.
+      for (let j = i; j < candidates.length; j++) {
+        const rest = candidates[j].entry;
+        if (rest && rest.stage === "pending") { rest.stage = "dropped"; rest.reason = "total-cap"; }
+      }
+      break;
+    }
+    if (perKind[c.kind] >= maxPerKind) {
+      if (entry) { entry.stage = "dropped"; entry.reason = "kind-cap"; }
+      continue;
+    }
     const line = JSON.stringify({ id: c.claim_id, scope: c.scope, predicate: c.predicate,
       value: c.value,
       // The claim's own date: without it the reader cannot order events at
@@ -276,15 +394,22 @@ export async function project(root, prompt, config = {}) {
       // a date per message. Provenance timestamp is the source message's
       // timestamp; omit the field when a record has no provenance.
       date: (c.provenance && c.provenance.timestamp) || undefined }) + "\n";
-    if (prefix.length + output.length + line.length > max) continue;
+    if (prefix.length + output.length + line.length > max) {
+      if (entry) { entry.stage = "dropped"; entry.reason = "char-cap"; }
+      continue;
+    }
     output += line;
     perKind[c.kind] = (perKind[c.kind] || 0) + 1;
     count += 1;
     seen.add(c.revision_id);
+    if (entry) { entry.stage = "projected"; entry.reason = null; }
   }
-  if (await pending(root)) return "";
-  if (await generation(root) !== beforeGeneration) return "";
-  return output ? prefix + output : "";
+  if (await pending(root)) { diagEmpty = "pending"; await emitDiag(""); return ""; }
+  if (await generation(root) !== beforeGeneration) { diagEmpty = "generation-changed"; await emitDiag(""); return ""; }
+  const result = output ? prefix + output : "";
+  if (!result) diagEmpty = diagRecords.length ? "all-dropped" : "no-candidates";
+  await emitDiag(result);
+  return result;
 }
 export default {
   id: "stellamem-adapter",

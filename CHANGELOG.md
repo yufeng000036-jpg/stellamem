@@ -4,6 +4,24 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased — claim 级追踪（定位 211 道投影/引用损失）
+
+2026-11-08 外部评估（7.8/10）的 P0：第四轮 500 题里 211 道卡在投影/引用，但逐题表只能说“卡在哪一步”，说不清“哪条证据被丢、为什么没注入、为什么回答没用它”。本 PR 补上这一层。
+
+### 改动
+
+- `adapters/openclaw/index.js`：`project()` 增加可选诊断（环境变量 `STELLAMEM_PROJECT_DIAGNOSTICS_DIR` 开启，默认关闭）。开启时每次调用写一个 sidecar JSON（文件名 `sha256(prompt)[:16]`），每条候选 claim 一行：`claim_id` / `session_id` / `message_id` / `kind` / `score` / `stage`（projected/dropped）/ 第一道没过的关（`ineligible:<检查>`、`duplicate-revision`、`blocked-quarantine-or-conflict`、`no-relevance`、`ambiguous-revision`、`kind-cap`、`total-cap`、`char-cap`），另附完整 context 字符串与空投影原因。返回的投影字符串开与关逐字节相同（有测试锁定）；写 sidecar 失败绝不影响投影本身。
+- `benchmark/longmemeval/replay_project.py`（新增）：对一轮评测的 main arm 逐题重放 `worker.py`（`worker.py` 冻结未动），只加诊断环境变量；用该轮已存的模型调用缓存重放，缓存完整时零新花销。逐题缓存先复制到重放工作区，缓存缺失绝不会污染原始缓存；重放后校验 `retrieved/cited_sessions` 与 `results.json` 一致（不一致即报错）。
+- `benchmark/longmemeval/claim_tracking.py`（新增）：把 `results.json` + oracle + sidecar + 模型调用缓存拼成 claim 级 CSV：每个到达适配器的金证据 claim 一行（投了/丢了、原因、引用了没有），每个没产出有效 claim 的金证据 turn 一行（`not-extracted` / `review-refused`）。引用来自回答调用的缓存输出，找不到时写 `unknown`、绝不猜。每 claim“是否被答案采用”不可观测，CSV 停在 `cited`，并附整题的 `judge_main`。
+- `benchmark/longmemeval/claim_tracking.md`（新增）：用法、CSV 列定义、已知限制。
+
+### 测试
+
+- `tests/adapter-diagnostics.test.mjs`（新增 7 个）：关默认不写 sidecar；各丢弃原因（`ineligible:source`、`no-relevance`、`kind-cap`、`total-cap`、`ambiguous-revision`、`char-cap`）；开与关返回字符串逐字节相同。
+- `tests/test_claim_tracking.py`（新增 7 个）：合成 fixture 上的行与汇总、引用命中/缺失/未引用三种情况、SYSTEM 漂移守卫（worker.py 冻结提示词一变即报错）。
+- 全量 **886 Python + 31 Node 通过**（878 + 8 新增 Python；24 + 7 新增 Node）。
+- 第四轮 500 题的 claim 级回填表是数据产物，不在本 PR 里；待诊断重放跑完后另发 PR（同 PR #89 的做法）。
+
 ## Unreleased — 关闭删除链的 Index 连接（修 Windows CI 8 失败）
 
 2026-11-08 主线 CI 上 `tests (windows-latest, 3.12)` 在 6c9ce7f（PR #87）与 17acc45（PR #88）两次失败，8 个测试全在 `tests/test_deletion_chain.py`，其余 5 个 job 与质量检查全过。浏览器读日志确认：不是断言失败，是清理临时目录时 `PermissionError: [WinError 32]`——`memories\index.db` 仍被占用。
