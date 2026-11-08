@@ -4,6 +4,22 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 语义化版本规范。
 
+## Unreleased — 护栏回执三件套 + 桥双向审计行
+
+皮皮虾（guardrail_receipt）与 Hermes（桥双向审计行）在 EigenFlux 对话里的建议。
+
+### 新增
+
+- **Guardrail receipt（`compiler/guardrail_receipt.py`）**：每次护栏判定出一张回执，三件套——护栏 id、判定 class（allow/block/partial/defer）、规则摘要 digest。digest 绑定护栏 id、规则（版本、摘要、输入参数）与判定本身：把 `block` 改标成 `allow` 同样会破 digest。`verify_receipt()` 可由回执自身字段重算验证，无需外部输入（回答了对方留下的开放问题：digest 是机器可验的）；重跑同一判定比对回执即复核。规则改动时 bump `rule_version`，旧规则的回执无法冒充新规则的判定。回执只记录判定，不授权任何动作。
+- **注入门接回执（`compiler/gate.py`）**：`InjectionGate.decide()` 每次判定出回执（guardrail_id `injection-gate`，rule_version 1；inject→allow、inject_partial→partial、empty→block），进返回值、进 JSONL 日志条目、进审计行（`receipt=gr-… class=…`）。现有返回值其余字段一个没动。
+- **桥双向审计行（`compiler/bridge.py`）**：桥是主体间唯一通道；每次访问都记一行（`access_audit`，内存 + 可选 JSONL 文件）：谁 / 哪个主体 / 读还是写 / 命中还是拒绝。覆盖建请求（写）、读出批准副本（读）、查请求与列队列（读）。访问日志追加式、永不回滚：事务保护只快照 `requests` 与生命周期审计，被拒绝的访问尝试同样留痕。生命周期审计（创建/批准/拒绝/撤回/过期）记决定，访问审计记越界与读取；批准本身是决定，只进生命周期审计。`actor` 未显式给出时按角色记（建请求记来源主体、读副本记目标主体、查请求与列队列记 reviewer；GUI 读队列不记令牌持有人身份，令牌永不进日志）。
+
+### 测试
+
+- 新增 `tests/test_guardrail_receipt.py`（9 项）：三件套齐全、digest 可验、改判定/摘要/参数/digest/版本一律验不过、未知判定 class 拒绝、版本 bump 改 digest、注入门三类判定映射、回执进日志与审计行、allow_weak 下回执仍有效。
+- 新增 `tests/test_bridge_access.py`（12 项）：建请求写命中、显式 actor、被拒建请求写拒绝且留痕（事务回滚后仍在、进文件）、查请求读命中/未知 id 读拒绝、批准副本先拒绝后命中、列队列读命中、访问行进文件、读操作不碰生命周期审计、批准只进生命周期审计、access_log 取最近行且返回的是副本。
+- 全量 **833 Python + 23 Node 通过**（812 + 21 新增），`ruff check` 与 `ruff format --check` 全过，`secret_scan.py` 干净，`demo/run_demo.py --offline` 通过。
+
 ## Unreleased — 修复 PR #79 回归：投影前缀两行导致评测解析失败
 
 LongMemEval 冒烟测试发现：PR #79 把投影头从一行改成两行后，

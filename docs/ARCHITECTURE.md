@@ -61,3 +61,10 @@ Adapter 契约：`inject_core / inject_recall / healthcheck`。
 - 模型客户端仅允许环回 endpoint（`127.0.0.1` / `localhost`），拒绝远程 API、重定向与系统代理。
 - 来源不复制原文，只保存指针与 hash（`daily/*.sources.json`）；指针解析失败时报 `SourceError`，不伪造来源。
 - 人工审批闭环：`compiler/inbox.py`（list / show / approve / reject / edit；另有 `auto-approve`：干净的 user 主体主张在宽限期（默认 72 小时）后自动批准，`withdraw`：撤回自动批准的记录）。
+
+---
+
+## 护栏回执与桥访问审计（2026-11-08 追加）
+
+- **Guardrail receipt（`compiler/guardrail_receipt.py`）**：每次护栏判定出一张回执，三件套——护栏 id、判定 class（allow/block/partial/defer）、规则摘要 digest。digest 绑定护栏 id、规则（版本、摘要、输入参数）与判定本身：把 `block` 改标成 `allow` 同样会破 digest。`verify_receipt()` 可由回执自身字段重算验证，无需外部输入；重跑同一判定比对回执即复核。规则改动时 bump `rule_version`，旧规则的回执无法冒充新规则的判定。回执只记录判定，不授权任何动作。目前接在注入门（`compiler/gate.py` 的 `InjectionGate.decide()`）上：返回值、JSONL 日志条目、审计行都带回执。
+- **桥双向审计行（`compiler/bridge.py` 的 `BridgeStore.access_audit`）**：桥是主体间唯一通道；每次访问（建请求=写、读出批准副本=读、查请求/列队列=读）都记一行：谁 / 哪个主体 / 读还是写 / 命中还是拒绝。访问日志是追加式、永不回滚：事务保护只快照 `requests` 与生命周期审计，不碰访问日志，被拒绝的访问尝试同样留痕。生命周期审计（创建/批准/拒绝/撤回/过期）记的是决定，访问审计记的是越界与读取；批准本身是决定，只进生命周期审计。`actor` 未显式给出时按角色记：建请求记来源主体、读副本记目标主体、查请求与列队列记 reviewer（GUI 读队列时不记令牌持有人身份，令牌永不进日志）。
