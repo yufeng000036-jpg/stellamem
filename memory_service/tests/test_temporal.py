@@ -4,10 +4,10 @@ import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 from store import Principal, Denied
-from test_service import MemoryTests
+import test_service
 
 
-class TemporalTests(MemoryTests):
+class TemporalTests(test_service.MemoryTests):
     def test_fact_time_travel(self):
         old = self.active(
             title="Address",

@@ -15,9 +15,9 @@ from server import Service
 
 class MemoryTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory(
-            dir=pathlib.Path(__file__).resolve().parents[1] / "work"
-        )
+        # A fresh checkout has no ignored work/ directory. Let tempfile use
+        # the OS temp root so CI and read-only source checkouts work too.
+        self.tmp = tempfile.TemporaryDirectory()
         self.root = pathlib.Path(self.tmp.name)
         self.s = Store(self.root / "test.sqlite3")
         self.p = Principal()
@@ -265,9 +265,7 @@ class MemoryTests(unittest.TestCase):
 
 class HttpTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory(
-            dir=pathlib.Path(__file__).resolve().parents[1] / "work"
-        )
+        self.tmp = tempfile.TemporaryDirectory()
         self.s = Service(self.tmp.name, 0)
         self.thread = threading.Thread(target=self.s.serve_forever, daemon=True)
         self.thread.start()

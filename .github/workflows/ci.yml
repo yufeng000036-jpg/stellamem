@@ -20,7 +20,13 @@ jobs:
         with:
           node-version: "22"
       - run: python -m unittest discover -s tests -v
+      - name: Memory service regression (separate import namespace)
+        run: python -m unittest discover -s memory_service/tests -v
       - run: npm test
+      - name: Fixed negative-memory controls (offline)
+        run: node benchmark/longmemeval/negative_samples.mjs
+      - name: Frozen evaluation integrity (offline)
+        run: python benchmark/longmemeval/freeze.py --verify
       - run: python demo/run_demo.py --offline
       - run: python tools/secret_scan.py
   quality:
