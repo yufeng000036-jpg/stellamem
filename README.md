@@ -5,7 +5,7 @@
 >
 > **v0.4.0（2026-11-06）：通用客户端版本。** 从 v0.3.0 到 v0.4.0，项目做了一次方向上的收束：Stellamem 不为某一个宿主服务，它是**任何 AI 客户端都能接的记忆治理层**——今天的生产宿主是 DSH 桌面助手，明天可以是任何支持 MCP 或 HTTP 的客户端。愿景见下方“愿景”一节。
 >
-> **当前状态（2026-11-08，main）：** 全量回归 **855 Python + 24 Node** 通过；CI 7 个 job（Linux / Windows / macOS × Python 3.10 / 3.12 + 代码质量）；第三方审查评分 **8.8/10**（2026-11-05 最终验收）；LongMemEval 500 题独立测量已跑完（见下方“量化效果”）。详见 CHANGELOG.md 的 v0.4.0 一节。
+> **当前状态（2026-11-08，main）：** 全量回归 **868 Python + 24 Node** 通过；CI 7 个 job（Linux / Windows / macOS × Python 3.10 / 3.12 + 代码质量）；第三方审查评分 **8.8/10**（2026-11-05 最终验收）；LongMemEval 500 题独立测量已跑完（见下方“量化效果”）。详见 CHANGELOG.md 的 v0.4.0 一节。
 >
 > **Compatibility:** projection defaults to requester `user` and scope `global`; use explicit `requesterSubject` / `activeScopes` for other namespaces/tasks. An explicit invalid namespace fails closed. Untagged topic-style legacy subjects need deliberate namespace tagging; no automatic migration runs. Generic inbox approval rejects occupied active slots and unresolved conflicts do not project. Clean user-subject pending claims auto-approve after the configured grace period (default 72h); sensitive, identity, conflicting and pre-feature backlog claims still need a human. GUI, nightly, semantic-health, pending-batch and persona-sync modules remain candidate/experimental; they are not wired into production.
 
@@ -98,9 +98,9 @@ Version history —— 旧版本保留，可回滚
 
 先说结论：**在“记得住、记不错、不记混、不泄露、能查能改能撤回”这条线上，Stellamem 已经是能拿出来的东西。** 下面每一条都有数字或生产记录撑着，不是口号。
 
-### 测试与审查：855 个测试，8.8/10
+### 测试与审查：868 个测试，8.8/10
 
-- 全量回归 **855 Python + 24 Node** 通过（v0.3.0 时 587 → v0.4.0 时 749 → 现在 855，零下跌）。
+- 全量回归 **868 Python + 24 Node** 通过（v0.3.0 时 587 → v0.4.0 时 749 → 现在 868，零下跌）。
 - CI 7 个 job：Linux / Windows / macOS × Python 3.10 / 3.12 + 代码质量。注：2026-11-06 的 main 曾在 `windows-latest, 3.10` 挂过一次，已定位（`test_concurrent_rewrites_leave_complete_file` 并发改写竞态）并由 PR #74 修掉，之后该档已绿；详见 CHANGELOG v0.4.0 一节。
 - 第三方审查评分 **8.8/10**（2026-11-05 最终验收；早期 7.2 → 8.3 → 8.4 → 8.6 → 8.7 → 8.8）。评审结论：适合单人可信环境正式使用；多客户端隔离的彻底完成，正在等评审按最新 main 复核——复核通过之前，不对外宣称“已彻底完成”。
 
