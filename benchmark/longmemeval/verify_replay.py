@@ -1,0 +1,356 @@
+#!/usr/bin/env python3
+"""Offline zero-cost verification for the LongMemEval round-4 (2026-11-08) record.
+
+Recomputes the headline numbers from a saved results.json (and, when given,
+the per-shard usage logs) and compares them with the stored summary. No model
+calls, no network, standard library only.
+
+What it checks:
+  1. File identity: protocol / repo_sha / dataset_sha256 / 500 unique questions.
+  2. Headline recompute per arm: judge_accuracy (count of judge_label true),
+     exact_match, correct_abstention (abstention questions only), recall@1/@5
+     (mean over non-null), citation_valid rate, coverage, logical/physical
+     calls, cache hits, error counters -- each compared with the stored
+     summary to 1e-9.
+  3. by_category recompute (same metrics per category, incl. judge_accuracy).
+  4. Cost recompute from shard usage.jsonl with merge.py pricing
+     (flash off-peak: miss $0.15/M, hit $0.003/M, output $0.6/M).
+  5. Budget-breach (25) and extract-failed (32) question lists recompute.
+  6. Optional: score-integrity audit (PR #100, score_integrity.py) against a
+     tracking CSV -- expects legacy 177, corrected 174 and the three known
+     false positives {gpt4_a1b77f9c, 6456829e_abs, gpt4_372c3eed_abs}.
+     Skipped (not failed) when the auditor module is absent.
+  7. Optional: cache-manifest check against results-20261108-hashes.json.
+
+Exit codes: 0 = all performed checks pass; 1 = a check failed;
+2 = usage/input error.
+
+Usage:
+    python verify_replay.py --results <results.json> [--usage-dir <work/full>]
+        [--tracking-csv <tracking_table_20261108.csv>]
+        [--hashes <results-20261108-hashes.json>]
+        [--cache-root <work/full>] [--diagnostics <work/claim-replay-full/diagnostics>]
+"""
+
+import argparse
+import hashlib
+import json
+import sys
+from collections import Counter
+from pathlib import Path
+
+ARMS = ("main", "candidate", "none", "direct")
+EXPECTED = {
+    "protocol": "v2-full-route-B",
+    "repo_sha": "9034cdec0bf709ee5d66c281b9af48bf17c515f7",
+    "dataset_sha256": "821a2034d219ab45846873dd14c14f12cfe7776e73527a483f9dac095d38620c",
+    "n_questions": 500,
+    "n_manifest_verified": 140,
+}
+MISS = 0.15 / 1_000_000
+HIT = 0.003 / 1_000_000
+OUT = 0.6 / 1_000_000
+KNOWN_FALSE_POSITIVES = {"gpt4_a1b77f9c", "6456829e_abs", "gpt4_372c3eed_abs"}
+
+
+def mean(xs):
+    xs = [x for x in xs if x is not None]
+    return sum(xs) / len(xs) if xs else None
+
+
+def arm_metrics(rows, arm):
+    rs = [r["arms"][arm] for r in rows]
+    return {
+        "n": len(rs),
+        "errors": dict(Counter(r["error"] for r in rs if r.get("error"))),
+        "exact_match": mean([r.get("exact_match") for r in rs]),
+        "correct_abstention": mean([r.get("correct_abstention") for r in rs]),
+        "recall_at_1": mean([r.get("retrieval_recall_at_1") for r in rs]),
+        "recall_at_5": mean([r.get("retrieval_recall_at_5") for r in rs]),
+        "citation_reference_valid_rate": mean([r.get("citation_valid") for r in rs]),
+        "extracted_evidence_turn_coverage": mean(
+            [r.get("extracted_evidence_turn_coverage") for r in rs]
+        ),
+        "logical_model_calls": sum(r.get("logical_calls") or 0 for r in rs),
+        "physical_model_calls": sum(r.get("physical_calls") or 0 for r in rs),
+        "cache_hits": sum(r.get("cache_hits") or 0 for r in rs),
+        "judge_accuracy": (
+            sum(1 for r in rs if (r.get("judge") or {}).get("judge_label")) / len(rs)
+            if rs
+            else None
+        ),
+    }
+
+
+def close(a, b, tol=1e-9):
+    if a is None or b is None:
+        return a is b
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        return abs(a - b) <= tol
+    return a == b
+
+
+def cost_of(call):
+    miss = call.get("prompt_cache_miss_tokens") or 0
+    hit = call.get("prompt_cache_hit_tokens") or 0
+    out = call.get("completion_tokens") or 0
+    if miss == 0 and hit == 0 and call.get("prompt_tokens"):
+        miss = call["prompt_tokens"]
+    return miss * MISS + hit * HIT + out * OUT
+
+
+def check_cost(usage_dir, stored):
+    usage_all = []
+    for i in range(4):
+        path = Path(usage_dir) / f"shard{i}" / "usage.jsonl"
+        for line in path.read_text().splitlines():
+            if line.strip():
+                usage_all.append(json.loads(line))
+    by_kind = {}
+    for entry in usage_all:
+        kind = entry.get("kind") or "unknown"
+        d = by_kind.setdefault(
+            kind, {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "cost_usd": 0.0}
+        )
+        d["calls"] += 1
+        d["prompt_tokens"] += entry.get("prompt_tokens") or 0
+        d["completion_tokens"] += entry.get("completion_tokens") or 0
+        d["cost_usd"] += cost_of(entry)
+    total_usd = sum(d["cost_usd"] for d in by_kind.values())
+    total_calls = sum(d["calls"] for d in by_kind.values())
+    for d in by_kind.values():
+        d["cost_usd"] = round(d["cost_usd"], 4)
+    recomputed = {
+        "by_kind": by_kind,
+        "total_calls": total_calls,
+        "total_usd": round(total_usd, 4),
+        "per_question_usd": round(total_usd / 500, 5),
+    }
+    problems = []
+    if recomputed["total_calls"] != stored["total_calls"]:
+        problems.append(
+            f"total_calls {recomputed['total_calls']} != stored {stored['total_calls']}"
+        )
+    if recomputed["total_usd"] != stored["total_usd"]:
+        problems.append(f"total_usd {recomputed['total_usd']} != stored {stored['total_usd']}")
+    if recomputed["per_question_usd"] != stored["per_question_usd"]:
+        problems.append("per_question_usd mismatch")
+    for kind, d in stored["by_kind"].items():
+        got = by_kind.get(kind)
+        if got is None:
+            problems.append(f"missing kind {kind}")
+            continue
+        for k in ("calls", "prompt_tokens", "completion_tokens", "cost_usd"):
+            if got[k] != d[k]:
+                problems.append(f"{kind}.{k}: {got[k]} != stored {d[k]}")
+    return problems
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--results", type=Path, required=True)
+    parser.add_argument("--usage-dir", type=Path, default=None)
+    parser.add_argument("--tracking-csv", type=Path, default=None)
+    parser.add_argument("--hashes", type=Path, default=None)
+    parser.add_argument("--cache-root", type=Path, default=None)
+    parser.add_argument("--diagnostics", type=Path, default=None)
+    args = parser.parse_args()
+
+    failures, passes, skips = [], [], []
+
+    try:
+        data = json.loads(args.results.read_text())
+    except (OSError, ValueError) as exc:
+        print(f"FAIL: cannot read results: {exc}")
+        return 2
+    cases = data.get("cases") or []
+
+    # 1. Identity.
+    ident_problems = []
+    for key, want in EXPECTED.items():
+        if data.get(key) != want:
+            ident_problems.append(f"{key}: {data.get(key)!r} != {want!r}")
+    qids = [c.get("question_id") for c in cases]
+    if len(cases) != 500 or len(set(qids)) != 500:
+        ident_problems.append(f"cases={len(cases)} unique_qids={len(set(qids))}")
+    if ident_problems:
+        failures.append("identity: " + "; ".join(ident_problems))
+    else:
+        passes.append("identity: protocol/repo_sha/dataset_sha256/500 unique questions")
+
+    # 2. Headline recompute per arm.
+    stored_summary = data.get("summary") or {}
+    for arm in ARMS:
+        got = arm_metrics(cases, arm)
+        want = stored_summary.get(arm) or {}
+        bad = []
+        for key, gv in got.items():
+            if key in ("mean_elapsed_seconds", "peak_worker_rss_kib"):
+                continue  # timing/RSS are not reproduced by recompute; stored as-is
+            if not close(gv, want.get(key)):
+                bad.append(f"{key}: recomputed {gv!r} != stored {want.get(key)!r}")
+        # deltas (merge.py second pass)
+        for key, gv in (
+            (
+                "judge_delta_vs_none",
+                got["judge_accuracy"] - arm_metrics(cases, "none")["judge_accuracy"],
+            ),
+            (
+                "exact_delta_vs_none",
+                (got["exact_match"] or 0) - (arm_metrics(cases, "none")["exact_match"] or 0),
+            ),
+        ):
+            if not close(gv, want.get(key)):
+                bad.append(f"{key}: recomputed {gv!r} != stored {want.get(key)!r}")
+        if bad:
+            failures.append(f"summary[{arm}]: " + "; ".join(bad))
+        else:
+            judge_n = sum(
+                1 for c in cases if (c["arms"][arm].get("judge") or {}).get("judge_label")
+            )
+            passes.append(
+                f"summary[{arm}]: judge {judge_n}/500 = {got['judge_accuracy']:.3f}, "
+                f"recall@5 {got['recall_at_5']:.3f}, abstention {got['correct_abstention']}"
+            )
+
+    # 3. by_category recompute.
+    stored_by_cat = data.get("by_category") or {}
+    cat_bad = []
+    for cat in sorted({c.get("category") for c in cases}):
+        rows = [c for c in cases if c.get("category") == cat]
+        for arm in ARMS:
+            got = arm_metrics(rows, arm)
+            want = (stored_by_cat.get(cat) or {}).get(arm) or {}
+            for key, gv in got.items():
+                if key in ("mean_elapsed_seconds", "peak_worker_rss_kib"):
+                    continue
+                if not close(gv, want.get(key)):
+                    cat_bad.append(f"{cat}/{arm}.{key}: {gv!r} != {want.get(key)!r}")
+            if not close(got["judge_accuracy"], want.get("judge_accuracy")):
+                cat_bad.append(f"{cat}/{arm}.judge_accuracy mismatch")
+    if cat_bad:
+        failures.append("by_category: " + "; ".join(cat_bad[:10]))
+    else:
+        passes.append(f"by_category: {len(stored_by_cat)} categories recompute clean")
+
+    # 4. Cost.
+    if args.usage_dir is not None:
+        try:
+            problems = check_cost(args.usage_dir, data.get("cost") or {})
+        except (OSError, ValueError, KeyError) as exc:
+            failures.append(f"cost: unreadable usage logs: {exc}")
+        else:
+            if problems:
+                failures.append("cost: " + "; ".join(problems))
+            else:
+                passes.append(
+                    f"cost: {data['cost']['total_calls']} calls, "
+                    f"${data['cost']['total_usd']} total recomputed from usage.jsonl"
+                )
+    else:
+        skips.append("cost: --usage-dir not given")
+
+    # 5. Breach / extract-failed lists.
+    breach = [
+        r["question_id"]
+        for r in cases
+        if r["arms"]["main"].get("error") == "ChunkFailure"
+        and r["arms"]["main"].get("extraction_failure_code") == "RuntimeError"
+        and (r["arms"]["main"].get("logical_calls") or 0) > 32
+        and r["arms"]["main"].get("extracted") == 0
+    ]
+    failed = [r["question_id"] for r in cases if r["arms"]["main"].get("error") is not None]
+    # Stored lists are in shard (row) order; cases are sorted by case hash,
+    # so compare as sets, not in order.
+    if sorted(breach) != sorted(data.get("budget_breach_question_ids") or []):
+        failures.append("budget_breach list mismatch")
+    elif sorted(failed) != sorted(data.get("extract_failed_main_question_ids") or []):
+        failures.append("extract_failed list mismatch")
+    else:
+        passes.append(f"lists: budget breach {len(breach)}, extract-failed {len(failed)}")
+
+    # 6. Score-integrity audit (optional, needs PR #100 module + tracking CSV).
+    if args.tracking_csv is not None:
+        here = Path(__file__).resolve().parent
+        sys.path.insert(0, str(here))
+        try:
+            import score_integrity
+        except ImportError:
+            skips.append("score-integrity audit: score_integrity.py not present beside this script")
+        else:
+            try:
+                report = score_integrity.audit_file(args.tracking_csv)
+            except (OSError, ValueError) as exc:
+                failures.append(f"score-integrity audit: invalid input: {exc}")
+            else:
+                s = report["summary"]["all"]
+                fps = {r["question_id"] for r in report["rows"] if r.get("false_positive_detected")}
+                if (
+                    s["legacy_judge_correct"] == 177
+                    and s["corrected_correct"] == 174
+                    and fps == KNOWN_FALSE_POSITIVES
+                ):
+                    passes.append(
+                        "score-integrity audit: legacy 177 -> corrected 174, "
+                        "3 known false positives, input "
+                        f"{report['input_sha256'][:12]}..."
+                    )
+                else:
+                    failures.append(
+                        "score-integrity audit: "
+                        f"legacy {s['legacy_judge_correct']} corrected "
+                        f"{s['corrected_correct']} fps {sorted(fps)}"
+                    )
+    else:
+        skips.append("score-integrity audit: --tracking-csv not given")
+
+    # 7. Cache/diagnostics manifest check (optional).
+    if args.hashes is not None and args.cache_root is not None:
+        try:
+            manifest = json.loads(args.hashes.read_text())
+            union = {}
+            for i in range(4):
+                root = Path(args.cache_root) / f"shard{i}" / "cache"
+                for p in sorted(root.rglob("*")):
+                    if p.is_file():
+                        union[str(p.relative_to(root))] = hashlib.sha256(p.read_bytes()).hexdigest()
+            blob = ("\n".join(f"{union[k]}  {k}" for k in sorted(union)) + "\n").encode()
+            got_hash = hashlib.sha256(blob).hexdigest()
+            want_hash = manifest["directories"]["work/full/shard{0..3}/cache (union)"][
+                "sha256_of_sorted_file_hash_list"
+            ]
+            if got_hash == want_hash and len(union) == 8859:
+                passes.append(f"cache union: 8859 files, hash {got_hash[:12]}... matches manifest")
+            else:
+                failures.append(
+                    f"cache union: {len(union)} files hash {got_hash[:12]}... "
+                    f"!= manifest {want_hash[:12]}..."
+                )
+        except (OSError, ValueError, KeyError) as exc:
+            failures.append(f"cache manifest check: {exc}")
+        if args.diagnostics is not None:
+            try:
+                n_diag = sum(1 for _ in Path(args.diagnostics).iterdir())
+                if n_diag == 469:
+                    passes.append("diagnostics: 469 sidecars present")
+                else:
+                    failures.append(f"diagnostics: {n_diag} files, expected 469")
+            except OSError as exc:
+                failures.append(f"diagnostics: {exc}")
+    elif args.hashes is not None:
+        skips.append("cache manifest check: --cache-root not given")
+    else:
+        skips.append("cache manifest check: --hashes not given")
+
+    for line in passes:
+        print("PASS: " + line)
+    for line in skips:
+        print("SKIP: " + line)
+    for line in failures:
+        print("FAIL: " + line)
+    print(f"result: {len(passes)} passed, {len(skips)} skipped, {len(failures)} failed")
+    return 1 if failures else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,153 @@
+{
+  "artifact": "results-20261108-hashes",
+  "artifact_version": 1,
+  "note": "SHA-256 inventory for the fourth LongMemEval round (2026-11-08, main 9034cde). Files listed here are NOT all in git: only the slim summary (results-20261108-summary.json) is proposed for git; everything else is hash + disk location. Disk root at capture time: ~/workspace/longmemeval-rerun3-20261108/.",
+  "files": {
+    "work/full/results.json": {
+      "bytes": 9130349,
+      "sha256": "dee1d928e8a64169166257eb6e3d77b042083ae4533039f50e00634c6031421d"
+    },
+    "work/full/shard0/results.json": {
+      "bytes": 2292298,
+      "sha256": "5303d4c0b20e1e5fc137c55441d62addb5abb8166f7c9df9f337595010b12cc2"
+    },
+    "work/full/shard1/results.json": {
+      "bytes": 2288241,
+      "sha256": "dc0ef10a219f623e84cb569b428f33f1421412717f946e280c2d56434450d53b"
+    },
+    "work/full/shard2/results.json": {
+      "bytes": 2330100,
+      "sha256": "1096cbc0120548c407acc3d806e6f51c6fa049afd9fb5973a52949ef0d7576a1"
+    },
+    "work/full/shard3/results.json": {
+      "bytes": 2219134,
+      "sha256": "86ab5ac949bb6195d330a00fa646a6b79f3b6047cada8bb59450614b1275adf7"
+    },
+    "work/full/shard0/usage.jsonl": {
+      "bytes": 851230,
+      "sha256": "9b5f014438fdf553b1eb420f324352135aa330c3500c6d3b7e95b582075b4439"
+    },
+    "work/full/shard1/usage.jsonl": {
+      "bytes": 846586,
+      "sha256": "aca92f03c9dc674fba7eb00b9ac3c35f6a79d2383c459154e10f73af25736ca1"
+    },
+    "work/full/shard2/usage.jsonl": {
+      "bytes": 879981,
+      "sha256": "8034f3b2604c2e1ec8299d3c9e5bcb0ef42370b2812b9c4760437ac8d90385f4"
+    },
+    "work/full/shard3/usage.jsonl": {
+      "bytes": 810442,
+      "sha256": "31db0f330d4a0109361b4dfa2ae6b2cde3e64f430b35876ddbe88e396c97285b"
+    },
+    "work/longmemeval_oracle.json": {
+      "bytes": 15388478,
+      "sha256": "821a2034d219ab45846873dd14c14f12cfe7776e73527a483f9dac095d38620c"
+    },
+    "work/claim_tracking_20261108.csv": {
+      "bytes": 1043597,
+      "sha256": "995cf5fe2e121ad269f11f8808f0152cf56923cc6c08eb1e2da74c71d95cf15d"
+    },
+    "work/claim-replay-full/replay_results.json": {
+      "bytes": 100659,
+      "sha256": "a2e817369f8a6dd0228862397626b8318f947414cc3d5e5f0e43fed869392a24"
+    },
+    "work/claim-replay-full/manifest.json": {
+      "bytes": 106163,
+      "sha256": "e9d6d387543ec0a6b052ccd8c2cd2e121390a88818ce252b26b0d7e8256728d2"
+    },
+    "work/claim-replay-full/replay-full.log": {
+      "bytes": 28591,
+      "sha256": "4e6a5f604f2c76ab6c1f78932d884f5d0dc7589724843101e69295cebfd9bdab"
+    },
+    "work/claim-replay-smoke/usage.jsonl": {
+      "bytes": 18469,
+      "sha256": "eb32b0d885ff8908d8adffbf180f7d6fd40daa4a951065c59c728fafb457ce46"
+    },
+    "work/abstain-validation/validation_results.json": {
+      "bytes": 16441,
+      "sha256": "125ce8fa8edde02b538f0ed064e054e84c3d9587ce9aa2a29052527c29767995"
+    },
+    "work/abstain-experiment/abstain_results.json": {
+      "bytes": 16545,
+      "sha256": "ce3eee80d065487b0e4d08d8dfec33c1f73255d18415ced7f70fe8670c11cf81"
+    },
+    "full.py": {
+      "bytes": 14478,
+      "sha256": "be0af04bb16c6f6e2318a0d5cc7235e1eecf01368c6ad8472c6ecf556621b753"
+    },
+    "merge.py": {
+      "bytes": 6558,
+      "sha256": "3f42bbe6c2d43c6ca8e662c0a35448928276aa9e71fce1c400f7ce6afaed1bc4"
+    },
+    "monitor.py": {
+      "bytes": 1854,
+      "sha256": "e7977f47506cc97b2f8038b7ecf449c21afae105cbcfb33bf16a96babb909523"
+    },
+    "run_full.sh": {
+      "bytes": 2014,
+      "sha256": "8e5279bd8e945b6457c119f41b722a752d3d1985b33f3808e1db2d5257c7013a"
+    },
+    "run_smoke.sh": {
+      "bytes": 1228,
+      "sha256": "225909aea9f3755c821843397b934c13a645c407df675bc1ba798408c28270df"
+    },
+    "repo:benchmark/longmemeval/tracking_table_20261108.csv": {
+      "bytes": 98952,
+      "sha256": "fe7994351789cf2359a8cb6c66264959df4a2be618f11cb6a685890df93c88a6"
+    },
+    "repo:benchmark/longmemeval/claim_tracking_20261108.csv": {
+      "bytes": 1043597,
+      "sha256": "995cf5fe2e121ad269f11f8808f0152cf56923cc6c08eb1e2da74c71d95cf15d"
+    }
+  },
+  "directories": {
+    "work/full/shard{0..3}/cache (union)": {
+      "n_files": 8859,
+      "bytes": 6749159,
+      "sha256_of_sorted_file_hash_list": "cb83c3f9289efb270f3b411cc7ee816ec6759c11ade45b292f7b039c731ad0e2"
+    },
+    "work/claim-replay-full/cache (copy of shard union)": {
+      "n_files": 8859,
+      "bytes": 6749159,
+      "sha256_of_sorted_file_hash_list": "cb83c3f9289efb270f3b411cc7ee816ec6759c11ade45b292f7b039c731ad0e2"
+    },
+    "work/claim-replay-full/diagnostics": {
+      "n_files": 469,
+      "bytes": 3006801,
+      "sha256_of_sorted_file_hash_list": "bb4047275240f38daa291d6b9393038113dc73b1bd93923052666967bc9a6861"
+    },
+    "work/full/shard{0..3}/raw": {
+      "n_files": 2000,
+      "note": "2000 raw worker outputs (500/shard x 4 arms each as 4 files? 500 files/shard); content hashes not listed (files embed model answer text); see results.json hashes above for the merged record."
+    }
+  },
+  "frozen_at_9034cde": {
+    "worker.py": {
+      "sha256": "2ee87a9072e8e9c0a53520f6f9ba109d2c4dfc941a5dabfeadb05850312e99bf",
+      "bytes": 11128
+    },
+    "evaluate.py": {
+      "sha256": "03c89774222239e9a453e18005702e7e0b5487a32ed981ce70bad8484e349204",
+      "bytes": 11862
+    },
+    "PROTOCOL.md": {
+      "sha256": "4f429d20358d3778340ef1b67ca164189e523eff5c4ec758250eaa51cdacd650",
+      "bytes": 5245
+    },
+    "manifest.json": {
+      "sha256": "2727ffec9bc2ded3a43fd1686e1410533ceb6bfb010358ecaec6b74de99d933f",
+      "bytes": 25455
+    },
+    "freeze.py": {
+      "sha256": "467503b6c8773c2dd3c1299688be057f17b24af70e6861fffd863e45f08a581b",
+      "bytes": 2010
+    },
+    "evaluation-lock.json (at 9034cde)": {
+      "worker.py": "2ee87a9072e8e9c0a53520f6f9ba109d2c4dfc941a5dabfeadb05850312e99bf",
+      "evaluate.py": "03c89774222239e9a453e18005702e7e0b5487a32ed981ce70bad8484e349204",
+      "PROTOCOL.md": "4f429d20358d3778340ef1b67ca164189e523eff5c4ec758250eaa51cdacd650",
+      "manifest.json": "2727ffec9bc2ded3a43fd1686e1410533ceb6bfb010358ecaec6b74de99d933f",
+      "note": "freeze.py has no lock entry (self-hash cannot bootstrap); lock values match blob sha256 exactly (verified 2026-11-09)."
+    }
+  }
+}
