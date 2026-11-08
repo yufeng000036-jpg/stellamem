@@ -1,7 +1,7 @@
 {
   "artifact": "results-20261108-hashes",
-  "artifact_version": 1,
-  "note": "SHA-256 inventory for the fourth LongMemEval round (2026-11-08, main 9034cde). Files listed here are NOT all in git: only the slim summary (results-20261108-summary.json) is proposed for git; everything else is hash + disk location. Disk root at capture time: ~/workspace/longmemeval-rerun3-20261108/.",
+  "artifact_version": 2,
+  "note": "SHA-256 inventory for the fourth LongMemEval round (2026-11-08, main 9034cde). Files listed here are NOT all in git: only the slim summary (results-20261108-summary.json) is proposed for git; everything else is hash + disk location. Disk root at capture time: ~/workspace/longmemeval-rerun3-20261108/. v2 (2026-11-09, third wave): added the completed claim-replay-smoke artifacts, the round-1..3 merged results (merge-level replay, byte-identical), and the repo merge.py hash; no v1 entry changed value.",
   "files": {
     "work/full/results.json": {
       "bytes": 9130349,
@@ -61,7 +61,33 @@
     },
     "work/claim-replay-smoke/usage.jsonl": {
       "bytes": 18469,
-      "sha256": "eb32b0d885ff8908d8adffbf180f7d6fd40daa4a951065c59c728fafb457ce46"
+      "sha256": "eb32b0d885ff8908d8adffbf180f7d6fd40daa4a951065c59c728fafb457ce46",
+      "note": "NOT a smoke-replay log: this is the abstain experiment's traffic (30 questions x 2 variants = 60 calls via the shared proxy, 2026-11-08 04:54:28-04:59:27, ~$0.0039); see REPRODUCIBILITY-20261109.md section 5.4."
+    },
+    "work/claim-replay-smoke/manifest.json": {
+      "bytes": 491,
+      "sha256": "3cce878a9c5dc6c1f9af6c52137c68775e82c9f755d00e05ef0debfcc19b423a",
+      "note": "Added 2026-11-09 (third wave): clean 2-question smoke replay, 0 physical calls."
+    },
+    "work/claim-replay-smoke/replay_results.json": {
+      "bytes": 390,
+      "sha256": "da3d71a1dd217c7ad016203d50ea3d1fa2614d465a0abd820524ee44da2fdea8",
+      "note": "Added 2026-11-09 (third wave): ran=2, physical_calls_total=0, fidelity_mismatch=0."
+    },
+    "rounds-1-3/longmemeval-full-20261106/work/full/results.json": {
+      "bytes": 9051604,
+      "sha256": "b08ae6365c2e6d92e8041c2ef58a9a90e6c5568eaf727b3f1928e642fd24055b",
+      "note": "Round 1 (repo 4243a37a, judge main 0.222). Merge-level replay byte-identical, 2026-11-09, zero model calls. Disk root: ~/workspace/longmemeval-full-20261106/."
+    },
+    "rounds-1-3/longmemeval-rerun-20261106/work/full/results.json": {
+      "bytes": 9074061,
+      "sha256": "f0f9e2e800c10af7e285103d810626098c983d1b1a02f544e0f48619c15c706a",
+      "note": "Round 2 (repo 365e83af, judge main 0.236). Merge-level replay byte-identical, 2026-11-09, zero model calls. Disk root: ~/workspace/longmemeval-rerun-20261106/."
+    },
+    "rounds-1-3/longmemeval-rerun2-20261106/work/full/results.json": {
+      "bytes": 9135999,
+      "sha256": "8fc01a53346ce5692bf0674e3760030052ad4a5c7debf69fb19e0e732d05e3ba",
+      "note": "Round 3 (repo c46a6fa7, judge main 0.350). Merge-level replay byte-identical, 2026-11-09, zero model calls. Disk root: ~/workspace/longmemeval-rerun2-20261106/."
     },
     "work/abstain-validation/validation_results.json": {
       "bytes": 16441,
@@ -115,6 +141,23 @@
       "n_files": 469,
       "bytes": 3006801,
       "sha256_of_sorted_file_hash_list": "bb4047275240f38daa291d6b9393038113dc73b1bd93923052666967bc9a6861"
+    },
+    "work/claim-replay-smoke/diagnostics": {
+      "n_files": 2,
+      "bytes": 9812,
+      "sha256_of_sorted_file_hash_list": "06da00d4da4ad5eca40ecd0b75d46e8b9fe3bc903a28483a4f06d687c74e2a23",
+      "note": "Added 2026-11-09 (third wave): clean 2-question smoke replay."
+    },
+    "work/claim-replay-smoke/cache (copy of the 2 smoke questions' shard caches)": {
+      "n_files": 23,
+      "bytes": 18485,
+      "sha256_of_sorted_file_hash_list": "9197e594f7e923f640da6a83f46f8d68edb8a2d8b97e70a16a85517c0fee574b",
+      "note": "Added 2026-11-09 (third wave)."
+    },
+    "repo:benchmark/longmemeval/merge.py": {
+      "bytes": 8594,
+      "sha256": "25b9c1f2084ec74d51d86bb0ba563bb71977c665fb2b5f198d7f130712c6ffe2",
+      "note": "Repo copy of the four rounds' merge script (v2, 2026-11-09): only path handling changed (relative --run-dir/--repo); reproduces all four rounds' results.json byte-for-byte."
     },
     "work/full/shard{0..3}/raw": {
       "n_files": 2000,

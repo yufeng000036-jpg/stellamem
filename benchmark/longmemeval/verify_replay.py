@@ -21,6 +21,21 @@ What it checks:
      false positives {gpt4_a1b77f9c, 6456829e_abs, gpt4_372c3eed_abs}.
      Skipped (not failed) when the auditor module is absent.
   7. Optional: cache-manifest check against results-20261108-hashes.json.
+  8. Raw worker outputs (derived from --usage-dir when shard raw/ dirs exist):
+     all 2000 per-question-per-arm raw files present and agreeing with
+     results.json on error / extracted / retrieved / cited (session ids
+     hashed as in merge.py) / citation_valid / logical / physical /
+     cache_hits; every stored judge_label re-derived from its stored
+     judge_response with the runner's rule ("yes" in response.lower());
+     candidate == main on every verdict field (answer, error, extracted,
+     retrieved/cited sets, exact_match, abstention, judge label +
+     hypothesis) -- only operational metadata may differ (cache hits,
+     physical calls, timing/RSS, usage seq, extracted_turns order).
+  9. Claim replay (derived from --usage-dir when the sibling
+     claim-replay-full/ dir exists): replay_results.json entries agree
+     with the main arm on error / extracted / retrieved / cited with
+     zero physical calls; every question missing from replay_results
+     still has its diagnostics sidecar (the 5 skipped by the logged run).
 
 Exit codes: 0 = all performed checks pass; 1 = a check failed;
 2 = usage/input error.
@@ -97,6 +112,185 @@ def cost_of(call):
     if miss == 0 and hit == 0 and call.get("prompt_tokens"):
         miss = call["prompt_tokens"]
     return miss * MISS + hit * HIT + out * OUT
+
+
+def hash_id(readable):
+    """results.json hashes session/turn ids as sha256(id)[:16]; raw output keeps them readable."""
+    return hashlib.sha256(readable.encode()).hexdigest()[:16]
+
+
+def check_raw_consistency(cases, raw_root):
+    """Cross-check every raw worker output against results.json.
+
+    Returns (problems, notes). `notes` carries counts that are informative
+    but not failures: operational-only candidate/main differences and
+    judge-response case-only variation.
+    """
+    by_qid = {c.get("question_id"): c for c in cases}
+    found = {}
+    for shard in range(4):
+        raw_dir = Path(raw_root) / f"shard{shard}" / "raw"
+        if not raw_dir.is_dir():
+            continue
+        for path in sorted(raw_dir.glob("*_*.json")):
+            stem = path.name[:-5]
+            if "_" not in stem:
+                continue
+            qid, arm = stem.rsplit("_", 1)
+            if arm in ARMS:
+                found[(qid, arm)] = path
+    problems = []
+    notes = {}
+    missing = [(qid, arm) for qid in by_qid for arm in ARMS if (qid, arm) not in found]
+    if missing:
+        problems.append(f"raw files missing for {len(missing)} question-arms, e.g. {missing[:3]}")
+    for (qid, arm), path in sorted(found.items()):
+        case = by_qid.get(qid)
+        if case is None:
+            problems.append(f"raw {path.name}: question {qid} not in results.json")
+            continue
+        try:
+            raw = json.loads(path.read_text())
+        except ValueError as exc:
+            problems.append(f"raw {path.name}: invalid JSON: {exc}")
+            continue
+        rec = (case.get("arms") or {}).get(arm) or {}
+        for key in (
+            "error",
+            "extracted",
+            "citation_valid",
+            "logical_calls",
+            "physical_calls",
+            "cache_hits",
+        ):
+            if raw.get(key) != rec.get(key):
+                problems.append(
+                    f"raw {qid}/{arm}.{key}: {raw.get(key)!r} != results {rec.get(key)!r}"
+                )
+        for key in ("retrieved_sessions", "cited_sessions"):
+            if sorted(hash_id(s) for s in (raw.get(key) or [])) != sorted(rec.get(key) or []):
+                problems.append(f"raw {qid}/{arm}.{key} mismatch")
+        judge = rec.get("judge") or {}
+        resp = judge.get("judge_response") or ""
+        # Runner rule (full.py judge()): label = "yes" in content.lower().
+        if ("yes" in resp.lower()) != bool(judge.get("judge_label")):
+            problems.append(
+                f"judge {qid}/{arm}: label {judge.get('judge_label')!r} "
+                f"!= derived from response {resp!r}"
+            )
+    # Candidate must equal main on every verdict field: the two arms ran the
+    # same repo, so candidate reuses main's cache and must answer identically.
+    verdict_keys = (
+        "answer_sha256",
+        "answer_text",
+        "error",
+        "extracted",
+        "citation_valid",
+        "exact_match",
+        "abstain",
+    )
+    resp_case_only = 0
+    turns_order_only = 0
+    for qid, case in sorted(by_qid.items()):
+        arms = case.get("arms") or {}
+        main, cand = arms.get("main") or {}, arms.get("candidate") or {}
+        for key in verdict_keys:
+            if main.get(key) != cand.get(key):
+                problems.append(
+                    f"candidate!=main {qid}.{key}: {main.get(key)!r} != {cand.get(key)!r}"
+                )
+        for key in ("retrieved_sessions", "cited_sessions"):
+            if sorted(main.get(key) or []) != sorted(cand.get(key) or []):
+                problems.append(f"candidate!=main {qid}.{key} set mismatch")
+        jm, jc = main.get("judge") or {}, cand.get("judge") or {}
+        if jm.get("judge_label") != jc.get("judge_label"):
+            problems.append(f"candidate!=main {qid}.judge_label")
+        if jm.get("hypothesis") != jc.get("hypothesis"):
+            problems.append(f"candidate!=main {qid}.judge hypothesis mismatch")
+        if jm.get("judge_response") != jc.get("judge_response"):
+            if (jm.get("judge_response") or "").lower() == (jc.get("judge_response") or "").lower():
+                resp_case_only += 1
+            else:
+                problems.append(
+                    f"candidate!=main {qid}.judge_response: {jm.get('judge_response')!r}"
+                )
+        if sorted(main.get("extracted_turns") or []) != sorted(cand.get("extracted_turns") or []):
+            problems.append(f"candidate!=main {qid}.extracted_turns set mismatch")
+        elif (main.get("extracted_turns") or []) != (cand.get("extracted_turns") or []):
+            turns_order_only += 1
+    notes["raw_files"] = len(found)
+    notes["judge_response_case_only"] = resp_case_only
+    notes["extracted_turns_order_only"] = turns_order_only
+    notes["candidate_physical_zero"] = sum(
+        1
+        for c in cases
+        if ((c.get("arms") or {}).get("candidate") or {}).get("physical_calls") == 0
+    )
+    notes["none_physical"] = sum(
+        (c.get("arms") or {}).get("none", {}).get("physical_calls") or 0 for c in cases
+    )
+    notes["direct_physical"] = sum(
+        (c.get("arms") or {}).get("direct", {}).get("physical_calls") or 0 for c in cases
+    )
+    return problems, notes
+
+
+def check_replay_consistency(cases, replay_root):
+    """Cross-check the claim replay against the main arm.
+
+    Returns (problems, notes). Questions absent from replay_results.json
+    (skipped because their sidecar already existed) must still have a
+    sidecar; every replayed entry must match the main arm with zero
+    physical calls.
+    """
+    by_qid = {c.get("question_id"): c for c in cases}
+    problems = []
+    notes = {}
+    try:
+        manifest = json.loads((Path(replay_root) / "manifest.json").read_text())
+        replayed = json.loads((Path(replay_root) / "replay_results.json").read_text())
+    except (OSError, ValueError) as exc:
+        return [f"replay files unreadable: {exc}"], notes
+    manifest_qids = {entry.get("question_id") for entry in manifest.values()}
+    if manifest_qids != set(by_qid):
+        problems.append(
+            f"replay manifest covers {len(manifest_qids)} questions, results has {len(by_qid)}"
+        )
+    diag_dir = Path(replay_root) / "diagnostics"
+    for qid, entry in sorted(replayed.items()):
+        case = by_qid.get(qid)
+        if case is None:
+            problems.append(f"replay entry {qid} not in results.json")
+            continue
+        main = (case.get("arms") or {}).get("main") or {}
+        if entry.get("physical_calls") != 0:
+            problems.append(f"replay {qid}: physical_calls {entry.get('physical_calls')} != 0")
+        if entry.get("error") != main.get("error"):
+            problems.append(f"replay {qid}.error: {entry.get('error')!r} != {main.get('error')!r}")
+        if entry.get("extracted") != main.get("extracted"):
+            problems.append(f"replay {qid}.extracted mismatch")
+        for key in ("retrieved_sessions", "cited_sessions"):
+            if sorted(hash_id(s) for s in (entry.get(key) or [])) != sorted(main.get(key) or []):
+                problems.append(f"replay {qid}.{key} mismatch")
+    skipped = sorted(manifest_qids - set(replayed))
+    notes["replayed"] = len(replayed)
+    notes["skipped"] = skipped
+    # A sidecar exists exactly when the main arm got past extraction: every
+    # error-free question and the single ModelError one have one; the 31
+    # ChunkFailure questions have none (extraction failed before projection).
+    for qid in sorted(manifest_qids):
+        sha = next((k for k, v in manifest.items() if v.get("question_id") == qid), None)
+        if sha is None:
+            problems.append(f"replay manifest has no entry for {qid}")
+            continue
+        main = (by_qid.get(qid, {}).get("arms") or {}).get("main") or {}
+        want_sidecar = main.get("error") != "ChunkFailure"
+        has_sidecar = (diag_dir / (sha + ".json")).is_file()
+        if want_sidecar and not has_sidecar:
+            problems.append(f"replay {qid}: no diagnostics sidecar")
+        if not want_sidecar and has_sidecar:
+            problems.append(f"replay {qid}: unexpected diagnostics sidecar for ChunkFailure")
+    return problems, notes
 
 
 def check_cost(usage_dir, stored):
@@ -341,6 +535,51 @@ def main():
         skips.append("cache manifest check: --cache-root not given")
     else:
         skips.append("cache manifest check: --hashes not given")
+
+    # 8. Raw worker outputs (derived from --usage-dir).
+    raw_root = Path(args.usage_dir) if args.usage_dir is not None else None
+    if raw_root is not None and any((raw_root / f"shard{i}" / "raw").is_dir() for i in range(4)):
+        try:
+            raw_problems, raw_notes = check_raw_consistency(cases, raw_root)
+        except (OSError, ValueError, KeyError) as exc:
+            failures.append(f"raw: unreadable raw outputs: {exc}")
+        else:
+            if raw_problems:
+                failures.append("raw: " + "; ".join(raw_problems[:10]))
+            else:
+                passes.append(
+                    f"raw: {raw_notes['raw_files']} raw files agree with results.json; "
+                    f"candidate==main on all verdict fields "
+                    f"(physical 0 on {raw_notes['candidate_physical_zero']}/500, "
+                    f"none physical {raw_notes['none_physical']}, "
+                    f"direct physical {raw_notes['direct_physical']}); "
+                    f"judge labels re-derived from stored responses; "
+                    f"{raw_notes['judge_response_case_only']} judge responses differ "
+                    f"main-vs-candidate by case only, "
+                    f"{raw_notes['extracted_turns_order_only']} extracted_turns order-only"
+                )
+    else:
+        skips.append("raw: no shard raw/ dirs under --usage-dir")
+
+    # 9. Claim replay (derived from --usage-dir: sibling claim-replay-full/).
+    replay_root = raw_root.parent / "claim-replay-full" if raw_root is not None else None
+    if replay_root is not None and replay_root.is_dir():
+        try:
+            replay_problems, replay_notes = check_replay_consistency(cases, replay_root)
+        except (OSError, ValueError, KeyError) as exc:
+            failures.append(f"replay: unreadable replay outputs: {exc}")
+        else:
+            if replay_problems:
+                failures.append("replay: " + "; ".join(replay_problems[:10]))
+            else:
+                skipped = replay_notes["skipped"]
+                passes.append(
+                    f"replay: {replay_notes['replayed']} entries match the main arm "
+                    f"with 0 physical calls; {len(skipped)} skipped "
+                    f"({', '.join(skipped)}) all have sidecars"
+                )
+    else:
+        skips.append("replay: no claim-replay-full/ dir beside --usage-dir")
 
     for line in passes:
         print("PASS: " + line)
