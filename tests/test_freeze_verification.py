@@ -89,10 +89,14 @@ class FreezeVerificationTests(unittest.TestCase):
         self.assertEqual(lock, EXPECTED_LOCK)
 
     def test_verify_cli_passes_and_fails(self):
+        # 子进程按 UTF-8 解码输出：freeze.py 入口已把 stdout/stderr
+        # 重配成 UTF-8（Windows 控制台默认编码下中文报错会被转义成
+        # \\uXXXX，断言不到原文）；这边按 UTF-8 接才对得上。
         ok = subprocess.run(
             [sys.executable, str(BENCH / "freeze.py"), "--verify"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
         )
         self.assertEqual(ok.returncode, 0)
         self.assertIn("frozen files verified", ok.stdout)
@@ -102,6 +106,7 @@ class FreezeVerificationTests(unittest.TestCase):
             [sys.executable, str(BENCH / "freeze.py"), "--verify", "--directory", str(self.dir)],
             capture_output=True,
             text=True,
+            encoding="utf-8",
         )
         self.assertNotEqual(bad.returncode, 0)
         self.assertIn("字节数不符", bad.stderr)
