@@ -97,22 +97,23 @@ Version history —— old versions are kept, rollback is possible
 
 The conclusion first: **on the line "remembers, remembers correctly, doesn't mix things up, doesn't leak, can be checked, changed, and taken back," Stellamem is already something worth showing.** Every claim below is backed by a number or a production record, not a slogan.
 
-### Tests and review: 771 tests, 8.8/10
+### Tests and review: 798 tests, 8.8/10
 
-- Full regression **771 Python + 13 Node** passing (587 at v0.3.0 → 747 at v0.4.0 → 771 now, zero regressions).
+- Full regression **798 Python + 18 Node** passing (587 at v0.3.0 → 749 at v0.4.0 → 798 now, zero regressions).
 - CI has 7 jobs: Linux / Windows / macOS × Python 3.10 / 3.12 + code quality. Note: on 2026-11-06, main had one failure on `windows-latest, 3.10`; it was located (a concurrent-rewrite race in `test_concurrent_rewrites_leave_complete_file`) and fixed by PR #74, and that job has been green since; see the v0.4.0 section of CHANGELOG.md.
 - Third-party review score **8.8/10** (final acceptance, 2026-11-05; earlier 7.2 → 8.3 → 8.4 → 8.6 → 8.7 → 8.8). Review conclusion: fit for formal use in a single-user trusted environment; whether multi-client isolation is fully complete is waiting for the reviewer to re-check against the latest main — until that re-check passes, we do not claim "fully complete" to the outside.
 
-### Independent measurement: LongMemEval, 500 questions, with memory 0.222 / without 0.060
+### Independent measurement: LongMemEval, 500 questions, with memory 0.350 / without 0.060
 
-LongMemEval full run, completed 2026-11-06 (500 questions, only the cheapest deepseek-flash for answering + judging, total $1.8282, $0.00366 per question):
+LongMemEval full third round, completed 2026-11-06 (500 questions, main c46a6fa, PR #78 recall fix merged; only the cheapest deepseek-flash for answering + judging, total $1.2783, $0.00256 per question):
 
-- **With memory 0.222 vs without memory 0.060, delta +0.162** — memory is genuinely doing something.
-- **Recall@5 is 0.637**: about 27% of the key sessions never made the top 5; stuffing the raw text directly scores 0.602, far ahead — claim-level projection inherently loses information. That is the known weakness, and the v0.4.0 recall fallback targets it.
-- Weakest three categories: multi-session 0.083, temporal reasoning 0.102, single-session-assistant 0.054; strongest: single-session-user 0.500, knowledge update 0.319.
-- On abstention questions, the memory arm regressed instead (0.800 vs 1.000) — with memory, the model answers questions it should have refused; the v0.4.0 injection gate targets that.
-- The 32-call cap was pierced by 25 questions (5%); the acceptance gates (semantic support ≥95%, recall ≥80%, correct abstention ≥90%) are still CLOSED; semantic support and factual precision were not measured this time.
-- This is not a full-distractor official score — only comparable between arms on the same track, never to be pasted onto the official leaderboard. A re-run needs a DeepSeek top-up first (balance about ¥12.10, a re-run costs about ¥11–13).
+- **With memory 0.350 vs without memory 0.060, delta +0.290** — memory is genuinely doing something, up 0.128 from the first round (0.222).
+- **Recall@5 is 0.870, passing the 80% gate for the first time**; stuffing the raw text directly scores 0.582, so the recall gap shrank from 27 points to 3.9 points — claim-level projection inherently loses information, but recall is no longer the biggest weakness.
+- Weakest two categories: single-session-assistant 0.071 (flat, evidence coverage only 0.089) and multi-session 0.132; strongest: single-session-user 0.688, knowledge update 0.569.
+- On abstention questions, the memory arm still regressed (0.800 vs 1.000, exact; 0.867 by judge) — with memory, the model answers questions it should have refused, and the correct-abstention gate (≥90%) is still CLOSED; PR #79's narrow entity-match guard is merged, its effect waits for the next re-run.
+- The 32-call cap was pierced by 25 questions (5.0%); 29 extraction failures; semantic support and factual precision were not measured this time.
+- Per-question tracking table: `benchmark/longmemeval/tracking_table_20261106.csv` — of 325 wrong questions, 65% break at projection/citation (found but not cited), only 14 at retrieval. See `tracking_table.md` in the same directory.
+- This is not a full-distractor official score — only comparable between arms on the same track, never to be pasted onto the official leaderboard. A re-run costs about ¥9.
 
 Full report: `benchmark/longmemeval/` and the workspace report (see CHANGELOG).
 
@@ -127,7 +128,7 @@ Full report: `benchmark/longmemeval/` and the workspace report (see CHANGELOG).
 
 - **MCP subject binding (PR #64)**: bind the allowed set at launch with `--allowed-subjects` or `STELLAMEM_ALLOWED_SUBJECTS`; switching to a subject outside the set is rejected outright, recall outside the set always returns empty, writes outside the set are rejected; an invalid value fails at startup; with no binding configured, single-user trusted behavior is kept plus a startup warning. **Multi-client deployments must configure the binding.**
 - **Injection gate (PR #65)**: a caller-side entity/keyword gate — unrelated questions get budget=0 and zero injection (the MCP entry returns `status: "gated"`); memory questions recall normally; if the gate itself fails, it fails open so recall is not broken.
-- **Recall fallback (PR #66)**: CJK bigram signals + fact name/title intent on the JS side; intent/time fallback when the Python candidate pool is empty (marked `fallback` + weak score). The problem where natural questions with no shared bigram returned an empty candidate set is fixed; the effect is to be quantified by a LongMemEval re-run.
+- **Recall fallback (PR #66)**: CJK bigram signals + fact name/title intent on the JS side; intent/time fallback when the Python candidate pool is empty (marked `fallback` + weak score). The problem where natural questions with no shared bigram returned an empty candidate set is fixed; the 2026-11-06 third re-run: recall@5 rose from 0.637 to 0.870, passing the 80% gate for the first time.
 - **Hit voting (PR #67)**: a hit is counted automatically only when recall is genuinely injected; manual votes are only a supplement (upvotes, half weight, no downvotes, no sinking); votes are counted per subject; voting only re-ranks records inside already-authorized recall and never bypasses isolation or confirmation gates; settlement runs through the nightly settlement.
 - **4K desktop page (PRs #68 / #69)**: one page per subject, each ≤4096 bytes (over the limit is rejected, never silently truncated); rewrites leave a diff, deleting a person or covenant line needs approval; tmp + rename + lock + 14 backups. #69 fixed a Windows console Chinese-output encoding issue.
 - **Daily diary, five segments + long-term (PR #70)**: one diary per subject (touchpoint / what I thought / what changed / my reply / echo), long-term only records "what changed about me"; synthesis is always local and rule-based, never calls a model, never leaves the machine; the step is skipped outright on days with no diary.
@@ -389,7 +390,7 @@ Short version below; full version in [`SECURITY.md`](SECURITY.md).
 - Weakest: multi-session 0.083, temporal reasoning 0.102, single-session-assistant 0.054; strongest: single-session-user 0.500, knowledge update 0.319.
 - On abstention questions, the memory arm regressed (0.800 vs 1.000); the 32-call cap was pierced by 25 questions (5%).
 - The acceptance gates are still CLOSED (semantic support ≥95%, recall ≥80%, correct abstention ≥90% — none met; semantic support and factual precision were not measured this time).
-- This is not a full-distractor official score — only comparable between arms on the same track, never to be pasted onto the official leaderboard. After the v0.4.0 recall fallback and injection gate, a re-run is waiting on a DeepSeek top-up (balance about ¥12.10, a re-run costs about ¥11–13).
+- This is not a full-distractor official score — only comparable between arms on the same track, never to be pasted onto the official leaderboard. The third re-run (2026-11-06, main c46a6fa) is recorded above in "Independent measurement": with memory 0.350, recall@5 0.870 (gate passed), correct abstention 0.800 (gate still closed).
 
 ### Earlier internal experiment (30 diaries, single user)
 
@@ -418,7 +419,7 @@ These transparent items are part of the design, not hidden defects.
 
 ### v0.4.0 (2026-11-06) — Universal-client release
 
-Directional decision: not serving any single host, but a memory governance layer any AI client can connect to. PRs #52–#70: nightly settlement report, MCP subject binding, injection gate, recall fallback, Hit voting, 4K desktop page, daily diary five segments + long-term, background-thread rebuild, concurrent-read lock, CI hardening. Full regression **771 Python + 13 Node**, zero regressions; LongMemEval 500 questions completed (with memory 0.222 vs without 0.060). See `CHANGELOG.md`.
+Directional decision: not serving any single host, but a memory governance layer any AI client can connect to. PRs #52–#70: nightly settlement report, MCP subject binding, injection gate, recall fallback, Hit voting, 4K desktop page, daily diary five segments + long-term, background-thread rebuild, concurrent-read lock, CI hardening. Full regression **749 Python + 13 Node**, zero regressions; LongMemEval 500 questions completed (with memory 0.222 vs without 0.060). See `CHANGELOG.md`.
 
 ### v0.3.0 (2026-11-04) — Production release
 
