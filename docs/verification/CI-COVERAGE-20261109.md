@@ -57,11 +57,22 @@ failed all 71 service tests at Store initialization's FTS5 `secure-delete`
 command (`store.py:159`, SQLite SQL logic error). SQLite introduced that
 command in [3.42.0](https://www.sqlite.org/releaselog/3_42_0.html).
 The service therefore requires Python linked to SQLite >=3.42 with FTS5;
-older runtime bundles cannot provide its deletion guarantee. CI now prints
-the original runtime version, selects Homebrew SQLite for macOS/Python 3.10,
-and verifies the actual FTS5 capability on every platform before running
-tests. It does not catch/ignore the security-setting error or skip tests.
-This adjusts isolated CI dependencies, not production installations.
+older runtime bundles cannot provide its deletion guarantee. CI prints
+the original runtime version and verifies the actual FTS5 capability on
+every platform before running tests. It does not catch/ignore the
+security-setting error or skip tests.
+
+**Final task status: BLOCKED, draft, not accepted for merge.** Follow-up
+[run 42494947972](https://github.com/yufeng000036-jpg/stellamem/actions/runs/42494947972)
+confirmed both Windows and macOS Python 3.10.11 load SQLite 3.40.1.
+An attempted Homebrew library-path override did not change the macOS
+runtime, even when invoking Python directly; that ineffective setup was
+removed. The direct Python CI shell is retained to avoid PowerShell quoting
+errors. No third runtime workaround, unsupported security fallback, removed
+matrix job or hidden skip is introduced. The next separate engineering task
+is to supply and verify a supported Python/SQLite runtime on these two
+platforms. Until then, this PR deliberately exposes the unmet dependency.
+The earlier local green result does not establish cross-platform acceptance.
 
 Reproduce using the three commands in README plus:
 

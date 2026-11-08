@@ -21,12 +21,6 @@ jobs:
           node-version: "22"
       - name: SQLite runtime version before dependency setup
         run: python -c "import sqlite3; print(sqlite3.sqlite_version)"
-      - name: Supported SQLite for macOS Python 3.10
-        if: runner.os == 'macOS' && matrix.python == '3.10'
-        shell: bash
-        run: |
-          brew list --versions sqlite || brew install sqlite
-          echo "DYLD_LIBRARY_PATH=$(brew --prefix sqlite)/lib" >> "$GITHUB_ENV"
       - name: Require FTS5 secure-delete (no security downgrade)
         shell: python
         run: |
