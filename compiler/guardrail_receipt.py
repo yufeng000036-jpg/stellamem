@@ -27,6 +27,15 @@ it, so a receipt from an old rule cannot pass as a new-rule decision.
 
 A receipt is a record of a decision, not a permission: producing one
 never authorizes anything, and verifying one never replays the action.
+
+Optional run binding (negative-control wave 2): a receipt may also
+carry ``criteria_digest`` (a digest of the criteria the decision was
+measured against) and ``run_id`` (the evaluation run the decision
+belongs to). When present, both are folded into the rule digest, so a
+receipt cannot be re-attached to different criteria or a different run
+without breaking verification; ``verify_receipt`` recomputes the digest
+with the same fields. A receipt without them still verifies exactly as
+before — the binding is additive, not a breaking change.
 """
 
 from __future__ import annotations
@@ -53,12 +62,18 @@ def make_receipt(
     rule_inputs: dict,
     detail: dict | None = None,
     at: str | None = None,
+    criteria_digest: str | None = None,
+    run_id: str | None = None,
 ) -> dict:
     """Build a receipt for one guardrail decision.
 
     ``rule_inputs`` are the rule's identifying parameters (thresholds,
     rule version, flags) — recorded transparently in the receipt.
     ``detail`` is free-form per-guardrail evidence (counts, ids).
+    ``criteria_digest`` and ``run_id`` are optional run bindings: when
+    given they are recorded in the receipt AND folded into the digest,
+    so the receipt is bound to the criteria and the run it was measured
+    in. Both must be non-empty strings when given.
     """
     if not guardrail_id or not str(guardrail_id).strip():
         raise ValueError("guardrail_id is required")
@@ -68,6 +83,9 @@ def make_receipt(
         )
     if not rule_summary or not str(rule_summary).strip():
         raise ValueError("rule_summary is required")
+    for name, value in (("criteria_digest", criteria_digest), ("run_id", run_id)):
+        if value is not None and (not isinstance(value, str) or not value.strip()):
+            raise ValueError(f"{name} must be a non-empty string when given")
     rule_version = rule_inputs.get("rule_version", 1)
     inputs = dict(rule_inputs)
     inputs["rule_version"] = rule_version
@@ -79,6 +97,10 @@ def make_receipt(
         "rule_inputs": inputs,
         "decision": decision,
     }
+    if criteria_digest is not None:
+        digest_payload["criteria_digest"] = criteria_digest
+    if run_id is not None:
+        digest_payload["run_id"] = run_id
     rule_digest = _digest(digest_payload)
     receipt = {
         "receipt_id": "gr-" + _digest({**digest_payload, "at": stamp, "decision": decision})[:16],
@@ -91,6 +113,10 @@ def make_receipt(
         "rule_digest": rule_digest,
         "detail": dict(detail or {}),
     }
+    if criteria_digest is not None:
+        receipt["criteria_digest"] = criteria_digest
+    if run_id is not None:
+        receipt["run_id"] = run_id
     return receipt
 
 
@@ -113,6 +139,9 @@ def verify_receipt(receipt: dict) -> bool:
         for key in ("guardrail_id", "rule_summary", "rule_inputs", "rule_digest", "receipt_id"):
             if not receipt.get(key):
                 return False
+        for key in ("criteria_digest", "run_id"):
+            if key in receipt and (not isinstance(receipt[key], str) or not receipt[key].strip()):
+                return False
         if receipt.get("rule_version") != receipt["rule_inputs"].get("rule_version"):
             return False
         digest_payload = {
@@ -122,6 +151,9 @@ def verify_receipt(receipt: dict) -> bool:
             "rule_inputs": receipt["rule_inputs"],
             "decision": receipt["decision"],
         }
+        for key in ("criteria_digest", "run_id"):
+            if receipt.get(key):
+                digest_payload[key] = receipt[key]
         return _digest(digest_payload) == receipt["rule_digest"]
     except (TypeError, AttributeError, KeyError):
         return False
