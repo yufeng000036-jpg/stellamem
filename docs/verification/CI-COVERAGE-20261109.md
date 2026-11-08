@@ -51,6 +51,18 @@ Engineering net improvement: a previously omitted safety/persistence suite
 can now run in a clean checkout and gates future changes. Tests added to CI
 are not evidence of improved answer accuracy. No runtime code changes.
 
+The initial candidate CI exposed a second pre-existing dependency gap:
+[macOS/Python 3.10 run](https://github.com/yufeng000036-jpg/stellamem/actions/runs/42494375649)
+failed all 71 service tests at Store initialization's FTS5 `secure-delete`
+command (`store.py:159`, SQLite SQL logic error). SQLite introduced that
+command in [3.42.0](https://www.sqlite.org/releaselog/3_42_0.html).
+The service therefore requires Python linked to SQLite >=3.42 with FTS5;
+older runtime bundles cannot provide its deletion guarantee. CI now prints
+the original runtime version, selects Homebrew SQLite for macOS/Python 3.10,
+and verifies the actual FTS5 capability on every platform before running
+tests. It does not catch/ignore the security-setting error or skip tests.
+This adjusts isolated CI dependencies, not production installations.
+
 Reproduce using the three commands in README plus:
 
 ```sh

@@ -19,6 +19,21 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
+      - name: SQLite runtime version before dependency setup
+        run: python -c "import sqlite3; print(sqlite3.sqlite_version)"
+      - name: Supported SQLite for macOS Python 3.10
+        if: runner.os == 'macOS' && matrix.python == '3.10'
+        shell: bash
+        run: |
+          brew list --versions sqlite || brew install sqlite
+          echo "DYLD_LIBRARY_PATH=$(brew --prefix sqlite)/lib" >> "$GITHUB_ENV"
+      - name: Require FTS5 secure-delete (no security downgrade)
+        run: >-
+          python -c "import sqlite3; print('SQLite', sqlite3.sqlite_version);
+          assert sqlite3.sqlite_version_info >= (3, 42, 0), 'memory_service requires SQLite >= 3.42';
+          con = sqlite3.connect(':memory:');
+          con.execute('CREATE VIRTUAL TABLE probe USING fts5(body)');
+          con.execute(\"INSERT INTO probe(probe,rank) VALUES('secure-delete',1)\"); con.close()"
       - run: python -m unittest discover -s tests -v
       - name: Memory service regression (separate import namespace)
         run: python -m unittest discover -s memory_service/tests -v

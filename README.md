@@ -101,6 +101,7 @@ Version history —— 旧版本保留，可回滚
 ### 测试与审查：按提交核对证据
 
 - Python 核心与 memory service 两组分别运行，避免同名模块相互污染：`python -m unittest discover -s tests -v`、`python -m unittest discover -s memory_service/tests -v`；Node：`npm test`。实际数量与通过/失败/跳过情况由 CI 每次运行自动输出，不再手工维护“当前测试数”。
+- memory service 需要 Python 链接的 SQLite ≥3.42 且启用 FTS5，以执行全文索引安全删除；旧版 macOS Python 的捆绑 SQLite 可能不满足此条件。CI 会显式验证该能力，不通过关闭安全删除来兼容旧库。
 - CI 7 个 job：Linux / Windows / macOS × Python 3.10 / 3.12 + 代码质量。注：2026-11-06 的 main 曾在 `windows-latest, 3.10` 挂过一次，已定位（`test_concurrent_rewrites_leave_complete_file` 并发改写竞态）并由 PR #74 修掉，之后该档已绿；详见 CHANGELOG v0.4.0 一节。
 - 第三方审查评分 **8.8/10**（2026-11-05 最终验收；早期 7.2 → 8.3 → 8.4 → 8.6 → 8.7 → 8.8）。评审结论：适合单人可信环境正式使用；多客户端隔离的彻底完成，正在等评审按最新 main 复核——复核通过之前，不对外宣称“已彻底完成”。
 
