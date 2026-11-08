@@ -167,12 +167,12 @@ def run_call(
     key = call_key(system, question, question_date, memory, user_override)
     hit_path = cache_index.get(key + ".json")
     if hit_path is not None:
-        hit = json.loads(hit_path.read_text())
+        hit = json.loads(hit_path.read_text(encoding="utf-8"))
         if "error" not in hit:
             return hit.get("output"), True, key
     path = work_cache / (key + ".json")
     if path.exists():
-        saved = json.loads(path.read_text())
+        saved = json.loads(path.read_text(encoding="utf-8"))
         if "error" not in saved:
             return saved.get("output"), True, key
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "compiler"))
@@ -208,7 +208,7 @@ def run_call(
             "detail": str(exc),
             "seconds": time.monotonic() - started,
         }
-    path.write_text(json.dumps(saved))
+    path.write_text(json.dumps(saved), encoding="utf-8")
     if "error" in saved:
         raise RuntimeError(f"model call failed: {saved}")
     return saved["output"], False, key
@@ -263,7 +263,7 @@ def build_negative_cases(negative_path: Path, header: str):
     in the context (as if projection leaked it). The reader cannot see
     valid_to / outdated / status — projection lines carry no validity
     metadata — so these cases bound what a reader-side fix can do."""
-    cases = json.loads(negative_path.read_text())
+    cases = json.loads(negative_path.read_text(encoding="utf-8"))
     out = []
     for case in cases:
         lines = [header.strip()]
@@ -317,7 +317,7 @@ def usage_cost(usage_log: Path, start_seq: int):
         return None
     calls = prompt = completion = 0
     total = 0.0
-    for line in usage_log.read_text().splitlines():
+    for line in usage_log.read_text(encoding="utf-8").splitlines():
         try:
             entry = json.loads(line)
         except json.JSONDecodeError:
@@ -350,8 +350,8 @@ def main():
     p.add_argument("--only", default="", help="comma-separated question ids")
     args = p.parse_args()
 
-    oracle = {q["question_id"]: q for q in json.loads(args.oracle.read_text())}
-    results = json.loads(args.results.read_text())
+    oracle = {q["question_id"]: q for q in json.loads(args.oracle.read_text(encoding="utf-8"))}
+    results = json.loads(args.results.read_text(encoding="utf-8"))
     round4_answer = {
         c["question_id"]: c.get("arms", {}).get("main", {}).get("answer_text", "")
         for c in results["cases"]
@@ -361,7 +361,7 @@ def main():
     for qid in list(oracle):
         sidecar = args.diagnostics / (sha(oracle[qid]["question"])[:16] + ".json")
         if sidecar.exists():
-            contexts[qid] = json.loads(sidecar.read_text()).get("context", "")
+            contexts[qid] = json.loads(sidecar.read_text(encoding="utf-8")).get("context", "")
 
     only = {q for q in args.only.split(",") if q} if args.only else None
 
@@ -388,13 +388,13 @@ def main():
     work_cache = args.work / "cache"
     work_cache.mkdir(parents=True, exist_ok=True)
     out_path = args.work / "validation_results.json"
-    out = json.loads(out_path.read_text()) if out_path.exists() else {}
+    out = json.loads(out_path.read_text(encoding="utf-8")) if out_path.exists() else {}
 
     # Usage-log seq numbers start at 0: an empty log must count the first
     # appended line, so the floor is -1, not 0.
     start_seq = -1
     if args.usage_log and args.usage_log.exists():
-        for line in args.usage_log.read_text().splitlines():
+        for line in args.usage_log.read_text(encoding="utf-8").splitlines():
             try:
                 start_seq = max(start_seq, json.loads(line).get("seq", -1))
             except json.JSONDecodeError:
@@ -404,7 +404,7 @@ def main():
 
     def record(set_name, qid, arm, payload):
         out.setdefault(set_name, {}).setdefault(qid, {})[arm] = payload
-        out_path.write_text(json.dumps(out, ensure_ascii=False, indent=2))
+        out_path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # Arms on the sidecar sets.
     for set_name, cases in sets.items():

@@ -5,11 +5,15 @@ and is documented in benchmark/longmemeval/abstain_validation.md.
 """
 
 import json
+import os
+import subprocess
 import sys
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "benchmark" / "longmemeval"))
+REPO = Path(__file__).resolve().parent.parent
+
+sys.path.insert(0, str(REPO / "benchmark" / "longmemeval"))
 from abstain_validation import (  # noqa: E402
     CORRECT_ABSTENTION_SAMPLE,
     FAILURES,
@@ -132,6 +136,41 @@ class TestValidationSets(unittest.TestCase):
         self.assertNotIn("valid_to", rec)
         self.assertNotIn("outdated", rec)
         self.assertNotIn("status", rec)
+
+
+class WindowsEncodingTests(unittest.TestCase):
+    def test_negative_cases_read_as_utf8_under_non_utf8_default(self):
+        # PR #94 在 Windows CI 两档红：build_negative_cases 用不带
+        # encoding 的 read_text() 读中文 JSON，Windows 默认 cp1252 下
+        # 直接 UnicodeDecodeError。回归测试用子进程模拟非 UTF-8 默认
+        # 编码（仓库既有模式：PYTHONIOENCODING=cp1252、PYTHONUTF8=0，
+        # 再加 LC_ALL=C / PYTHONCOERCECLOCALE=0 让 open() 的默认编码
+        # 不是 UTF-8）。修之前这个测试在子进程里以 UnicodeDecodeError
+        # 失败；修之后 7 条全读出来。
+        code = (
+            "import sys; sys.path.insert(0, 'benchmark/longmemeval');"
+            "from pathlib import Path;"
+            "from abstain_validation import build_negative_cases;"
+            "cases = build_negative_cases("
+            "Path('benchmark/longmemeval/negative_samples.json'), 'H\\n');"
+            "print(len(cases))"
+        )
+        proc = subprocess.run(
+            [sys.executable, "-c", code],
+            capture_output=True,
+            cwd=REPO,
+            env=dict(
+                os.environ,
+                PYTHONIOENCODING="cp1252",
+                PYTHONUTF8="0",
+                LC_ALL="C",
+                LANG="C",
+                PYTHONCOERCECLOCALE="0",
+            ),
+            timeout=60,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr.decode("utf-8", "replace"))
+        self.assertEqual(proc.stdout.decode("utf-8", "strict").strip(), "7")
 
 
 if __name__ == "__main__":
