@@ -140,6 +140,28 @@ def atomic_append_jsonl(path: Path | str, payload: dict[str, Any]) -> None:
         fsync_dir_safe(target.parent)
 
 
+# Windows 上 os.replace 不能替换正被另一进程打开着的目标文件（没有 delete
+# 共享），并发的读者/写者会瞬间触发 PermissionError（WinError 5）。跨进程锁
+# 锁的是 .lock 边车文件，挡不住别的进程直接打开目标文件读，所以替换这一步
+# 自己要有界重试：只重试 PermissionError、总时长封顶、超时把最后一个错误
+# 原样抛出。POSIX 上替换打开着的文件能成功，这个重试分支基本走不到。
+_REPLACE_TIMEOUT = 2.0
+_REPLACE_POLL_INTERVAL = 0.05
+
+
+def _replace_with_retry(staging: Path, target: Path) -> None:
+    """``os.replace`` with a bounded retry for Windows sharing violations."""
+    deadline = time.monotonic() + _REPLACE_TIMEOUT
+    while True:
+        try:
+            os.replace(str(staging), str(target))
+            return
+        except PermissionError:
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(_REPLACE_POLL_INTERVAL)
+
+
 def atomic_write_text_locked(path: Path | str, content: str) -> None:
     """Atomic UTF-8 write for callers that already hold ``cross_platform_lock``.
 
@@ -157,7 +179,7 @@ def atomic_write_text_locked(path: Path | str, content: str) -> None:
             fh.write(content)
             fh.flush()
             os.fsync(fh.fileno())
-        os.replace(str(staging), str(target))
+        _replace_with_retry(staging, target)
         fsync_dir_safe(target.parent)
     finally:
         if staging.exists():

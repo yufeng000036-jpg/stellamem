@@ -5,12 +5,33 @@ import hashlib
 import json
 import os
 import re
+import time
 import uuid
 from pathlib import Path
 
 PROTECTED = {"core/identity.md", "core/user-core.md"}
 MARK = "<!-- stellamem:v2 -->"
 BLOCK = re.compile(r"(?m)^\x60\x60\x60stellamem\n([^\n]+)\n\x60\x60\x60\s*$")
+
+
+# Windows 上 os.replace 不能替换正被另一进程打开着的目标文件（没有 delete
+# 共享），并发读者会瞬间触发 PermissionError（WinError 5）。替换要有界重试：
+# 只重试 PermissionError、总时长封顶、超时把最后一个错误原样抛出。POSIX 上
+# 替换打开着的文件能成功，重试分支基本走不到。与 compiler/file_lock.py 同策略。
+_REPLACE_TIMEOUT = 2.0
+_REPLACE_POLL_INTERVAL = 0.05
+
+
+def _replace_with_retry(tmp, path):
+    deadline = time.monotonic() + _REPLACE_TIMEOUT
+    while True:
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(_REPLACE_POLL_INTERVAL)
 
 
 def atomic_write(path, content):
@@ -23,7 +44,7 @@ def atomic_write(path, content):
             fh.write(data)
             fh.flush()
             os.fsync(fh.fileno())
-        os.replace(tmp, path)
+        _replace_with_retry(tmp, path)
     finally:
         if tmp.exists():
             tmp.unlink()
