@@ -151,8 +151,14 @@ function eligible(c, scopes, requester) {
       if (!Number.isFinite(when) || (field === "valid_from" ? when > now : when <= now)) return false;
     }
   }
+  // Source gate: user facts, plus assistant-authored history. An assistant
+  // record can only be active after human approval (ingest auto-write and
+  // the auto-approve sweep both require source "user"), and approval may
+  // deliberately keep source "assistant" to preserve attribution
+  // (inbox._approve_record --source). Before H1 those approved records
+  // could never project, so attributed history was a dead end.
   return namespaceOf(c) === requester && c.schema_version === 2 && c.status === "active" &&
-    c.source === "user" && c.evidence_verified === true &&
+    ["user", "assistant"].includes(c.source) && c.evidence_verified === true &&
     c.write_policy === "allow" && ["always", "recall"].includes(c.injection_policy) &&
     ["PUBLIC", "PRIVATE"].includes(c.sensitivity) && scopeAllowed &&
     !["identity", "user-core", "relationship"].includes(c.kind) &&
@@ -174,7 +180,7 @@ function eligibilityReason(c, scopes, requester) {
   if (namespaceOf(c) !== requester) return "ineligible:namespace";
   if (c.schema_version !== 2) return "ineligible:schema-version";
   if (c.status !== "active") return "ineligible:status";
-  if (c.source !== "user") return "ineligible:source";
+  if (!["user", "assistant"].includes(c.source)) return "ineligible:source";
   if (c.evidence_verified !== true) return "ineligible:evidence";
   if (c.write_policy !== "allow") return "ineligible:write-policy";
   if (!["always", "recall"].includes(c.injection_policy)) return "ineligible:injection-policy";

@@ -40,6 +40,16 @@ Quality bar:
 - Never emit operational telemetry: process IDs, durations, byte counts, commit hashes,
   test pass/fail lines, log excerpts, timestamps of a run, bare file paths, or counters.
 - If the chunk contains only operational logs, return [].
+Assistant-provided content:
+- Messages with speaker "assistant" are the assistant's own earlier replies.
+  When an assistant message itself provides substantive content the user may
+  ask about later — a recommendation, recipe, plan, list, explanation, study
+  summary, or a move it made in a game — extract that content as a claim:
+  the value states the content, the evidence quotes the assistant message
+  exactly, and the claim stays attributed to the assistant. Never phrase
+  assistant content as something the user said, decided, or prefers.
+- Skip assistant pleasantries, clarifying questions, and passages that only
+  restate the user's own words; those are not new content.
 
 Language (hard rule):
 - value and evidence MUST be written in the same language as the source message.

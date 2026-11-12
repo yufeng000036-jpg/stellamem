@@ -58,7 +58,9 @@ test("projected + ineligible + no-relevance reasons are recorded", async () => {
   const root = await fixture();
   await writeRecords(root, "semantic/facts.md", [
     record({ claim_id: "c-gold", revision_id: "r-gold", value: "虚构：星球邮差", evidence: "虚构：星球邮差" }),
-    record({ claim_id: "c-asst", revision_id: "r-asst", source: "assistant", value: "虚构：星球邮差", evidence: "虚构：星球邮差" }),
+    // H1 之后 source=assistant 的已批准记录可投影，ineligible:source 的
+    // 覆盖改由 quoted 承担（quoted/unknown 仍被 source 门拒绝）。
+    record({ claim_id: "c-asst", revision_id: "r-asst", source: "quoted", value: "虚构：星球邮差", evidence: "虚构：星球邮差" }),
     record({ claim_id: "c-far", revision_id: "r-far", value: "虚构：每天要记得喝水", evidence: "虚构：每天要记得喝水" }),
   ]);
   const prompt = "星球邮差是什么";
