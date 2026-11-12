@@ -97,6 +97,17 @@ errors. The fix that landed instead:
   no security setting disabled. The earlier local green result does not
   establish cross-platform acceptance; the PR CI run does.
 
+Addendum (2026-11-12, first PR CI run): the run came back 5/7. The two
+Python 3.10 jobs on windows-latest and macos-latest failed in the
+install step itself: `pysqlite3-binary` publishes Linux-only wheels,
+so pip found no matching distribution on those platforms and the test
+steps never ran. The local verification had only ever exercised the
+Linux wheel. CI now installs the `pysqlite3` distribution instead,
+which ships Windows and macOS wheels for these Pythons (locally
+verified: the installed module reports SQLite 3.54.1); the store's
+import name and >= 3.42 version check are unchanged, and the gate
+still asserts the version of the module the service actually uses.
+
 Reproduce using the three commands in README plus:
 
 ```sh

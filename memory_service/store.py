@@ -3,8 +3,9 @@
 The bundled SQLite of some CPython releases (notably 3.10 on Windows/macOS,
 SQLite 3.40.1) predates the FTS5 ``secure-delete`` command (3.42.0) this
 store relies on to wipe full-text entries on deletion. When the stdlib
-SQLite is too old, the store uses pysqlite3 (``pysqlite3-binary`` wheels
-bundle a current SQLite) if it is installed; otherwise initialisation
+SQLite is too old, the store uses pysqlite3 (the ``pysqlite3``
+distribution's wheels bundle a current SQLite on Linux, Windows and
+macOS) if it is installed; otherwise initialisation
 still fails loudly instead of silently running without secure deletion.
 """
 
