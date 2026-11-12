@@ -15,6 +15,15 @@ sys.path.insert(0, str(HERE / "compiler"))
 from model_client import endpoint
 from storage import atomic_write, sha
 
+
+class InstallError(ValueError):
+    """An install failure that carries its own actionable fix."""
+
+    def __init__(self, message, fix):
+        super().__init__(message)
+        self.fix = fix
+
+
 SUBDIRS = ("core", "long-term", "semantic", "episodic", "system", "working", "daily")
 
 
@@ -58,13 +67,31 @@ def planned_files(args):
     if config_path.exists():
         current = json.loads(config_path.read_text(encoding="utf-8-sig"))
         if Path(current.get("memories_root", "")).resolve() != root:
-            raise ValueError(
-                "Existing config points elsewhere; choose --config or matching --mem-root"
+            raise InstallError(
+                "Existing config points elsewhere; choose --config or matching --mem-root",
+                "For a first install, pass --config <new-path> together with your "
+                "--mem-root (the config file is created for you). The repository "
+                "ships a development-default config.json that points inside the "
+                "repo; do not reuse it as your own config. Or pass the --mem-root "
+                "the existing config already uses. The existing config was not "
+                "modified.",
             )
         if current.get("server_url") != args.model_url:
-            raise ValueError("Existing model URL differs; review a backed-up config change first")
+            raise InstallError(
+                "Existing model URL differs; review a backed-up config change first",
+                "The existing config uses a different model URL. If the change "
+                "is intended, back up the config, edit its server_url "
+                "deliberately, and re-run. The installer never rewrites an "
+                "existing config.",
+            )
         if host and current.get("sessions_dir") != cfg.get("sessions_dir"):
-            raise ValueError("Existing sessions_dir differs; review config before installing hook")
+            raise InstallError(
+                "Existing sessions_dir differs; review config before installing hook",
+                "The existing config records a different sessions_dir. Review "
+                "which host sessions directory is correct, update the config "
+                "deliberately (keep a backup), and re-run. The existing config "
+                "was not modified.",
+            )
     else:
         files[config_path] = (json.dumps(cfg, indent=2) + "\n").encode()
     if host:
@@ -366,7 +393,11 @@ def main(argv=None):
             else "CAUSE: file or configuration operation failed"
         )
         print(
-            "HOW TO FIX: verify paths/permissions/config and compare existing files; retry dry-run."
+            "HOW TO FIX: "
+            + (
+                getattr(exc, "fix", None)
+                or "verify paths/permissions/config and compare existing files; retry dry-run."
+            )
         )
         return 2
 

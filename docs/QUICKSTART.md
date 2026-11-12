@@ -21,17 +21,26 @@ python setup.py check --offline
 ```
 
 这一步**不改任何文件**，只报告 Python / OS / Node 等环境情况。
-此时提示 `Config: FAIL` 是正常的 —— 因为还没安装。
+还没安装时，`Memory root` / `Permissions` / 模板文件等会报 `FAIL`、
+命令以退出码 1 结束，这是正常的；安装完成后重跑应全部 `OK`
+（模型相关项在 `--offline` 下为 `SKIP`）。
 
 ---
 
 ## 3. 干跑（看清会创建什么）
 
 ```bash
-python setup.py install --mem-root <记忆根目录> --dry-run
+python setup.py install --mem-root <记忆根目录> --config <你的 config.json 路径> --dry-run
 ```
 
 列出计划创建的目录与文件，**不写盘**。确认无误后再继续。
+
+> ⚠️ 仓库根目录自带一份**开发用的默认 `config.json`**（指向仓库内的
+> `./stellamem-data`），那不是给你用的配置。首次安装请用 `--config`
+> 指定一个你自己的新路径（例如记忆根目录旁边的 `config.json`）；
+> 文件不存在时安装器会自动创建。若不带 `--config`、又给了自己的
+> `--mem-root`，安装器会报 `Existing config points elsewhere` 并停下
+> —— 这是防覆盖保护，不是装坏了。
 
 > 💡 安装器**不会**读写或合并宿主（如 OpenClaw）的配置；它只输出一份
 > `setup-out/openclaw.snippet.json` 供你自行审阅。
@@ -58,6 +67,13 @@ python setup.py install \
 | `--upgrade` | 仅当目标文件与安装清单一致时才备份并更新（保护你的自定义） |
 
 安装器是**幂等**的：重复运行安全，**不覆盖**已存在的自定义文件。
+
+> 📌 **后续命令要指向同一份配置**：第 6–8 步的 `doctor`、`inbox.py`、
+> `sleep_purify.py` 等命令默认读仓库自带的那份开发默认配置。运行它们
+> 之前，先把安装时用的配置文件路径设进环境变量，例如
+> `export STELLAMEM_CONFIG=<你的 config.json 路径>`（Windows PowerShell：
+> `$env:STELLAMEM_CONFIG="<路径>"`），否则它们检查/操作的会是另一套
+> 记忆根目录。
 
 ---
 
