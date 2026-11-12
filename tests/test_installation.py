@@ -69,6 +69,23 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(self.cfg.read_bytes(), before)
         self.assertFalse(self.mem.exists())
 
+    def test_conflicting_config_prints_actionable_fix(self):
+        self.cfg.write_text(
+            json.dumps(
+                {"memories_root": str(self.root / "different"), "server_url": "http://localhost"}
+            )
+        )
+        before = self.cfg.read_bytes()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = installer.main(self.args)
+        out = buf.getvalue()
+        self.assertNotEqual(rc, 0)
+        self.assertIn("HOW TO FIX:", out)
+        self.assertIn("--config <new-path>", out)
+        self.assertIn("was not", out)
+        self.assertEqual(self.cfg.read_bytes(), before)
+
     def test_installed_js_imports_and_custom_files_refused(self):
         host = self.root / "test-host"
         args = self.args + ["--oc-root", str(host)]
