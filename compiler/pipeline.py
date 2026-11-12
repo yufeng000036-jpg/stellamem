@@ -28,6 +28,11 @@ Do not infer sensitive traits or secrets.
 Quality bar:
 - Return at most 6 claims for this chunk. Fewer, durable claims beat many fragments.
 - Keep value under 60 characters and evidence under 120 characters; quote exactly.
+- When a claim's value only makes sense with its role, place, item, or time
+  window (e.g. leading a team in a specific role), put that qualifier in the
+  SAME claim's value (e.g. "Senior Software Engineer, leads 4 engineers"),
+  not only as a separate claim. A bare value ("4 engineers") looks like it
+  supports a different question, so the reader cannot tell the near-miss apart.
 - Prefer aggregate assertions: project status, stated preference, decision with reason,
   lesson learned, relationship pattern. A claim should still be useful in 3 months.
 - Choose the most specific kind. Do NOT default to "fact"; use "fact" only for a
@@ -165,7 +170,17 @@ def _extract_group(messages, chunk_id, config, llm, budget, system_prompt=None):
     try:
         for attempt in range(2):
             try:
-                raw = parse_json(llm(sys_prompt, encoded))
+                text = llm(sys_prompt, encoded)
+                if isinstance(text, str) and not text.strip():
+                    # Empty response with finish_reason "stop" (not truncation):
+                    # the model found nothing to extract in this chunk. Treat
+                    # it as an empty extraction, not an error. Retrying and
+                    # splitting a no-claims chunk only burns the call budget
+                    # until the whole question fails outright (ChunkFailure /
+                    # budget breach -- round 4: 25 questions, 688/2213 cached
+                    # responses empty in shard 1 alone).
+                    return [], blocked
+                raw = parse_json(text)
                 claims, extra = _parse_claims(raw, safe, chunk_id)
                 return claims, blocked + extra
             except InvalidModelOutput:
