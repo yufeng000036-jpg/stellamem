@@ -262,6 +262,46 @@ class TruncationRetryTests(unittest.TestCase):
         self.assertEqual(claim["provenance"]["message_count"], 1)
         self.assertFalse(claim["auto_write"])
 
+    def test_empty_model_output_is_no_claims_not_an_error(self):
+        # Round-4 root cause: the model returns an empty response (finish_reason
+        # "stop", not truncation) for some chunks, and parse_json("") is None,
+        # so the chunk was retried, split, and retried again until the 32-call
+        # budget was breached (25 questions failed as ChunkFailure/RuntimeError).
+        # An empty response is a deliberate "no claims", not an error.
+        calls = []
+
+        def llm(system, user):
+            calls.append(user)
+            return ""
+
+        chunks = list(compile_messages([msg("I like teal")], self.config, llm))
+        self.assertEqual(len(calls), 1, "empty output must not trigger a retry")
+        self.assertEqual(chunks[0]["claims"], [])
+
+    def test_whitespace_only_output_is_no_claims(self):
+        def llm(system, user):
+            return "   \n  "
+
+        chunks = list(compile_messages([msg("I like teal")], self.config, llm))
+        self.assertEqual(chunks[0]["claims"], [])
+
+    def test_empty_output_on_large_chunk_does_not_split_or_fail(self):
+        # The budget-breach guard: an empty response on a chunk that WOULD
+        # split must still cost exactly one call and yield no claims.
+        calls = []
+
+        def llm(system, user):
+            calls.append(user)
+            return ""
+
+        messages = [
+            msg("A" * 600 + " end A.", ts="2026-01-01T15:00:00"),
+            msg("B" * 600 + " end B.", ts="2026-01-01T15:00:01"),
+        ]
+        chunks = list(compile_messages(messages, self.config, llm))
+        self.assertEqual(len(calls), 1, "empty output must not split the chunk")
+        self.assertEqual(chunks[0]["claims"], [])
+
     def test_min_retry_floor_is_sane(self):
         self.assertGreaterEqual(MIN_RETRY_CHUNK_CHARS, 128)
         self.assertLessEqual(MIN_RETRY_CHUNK_CHARS, 2000)

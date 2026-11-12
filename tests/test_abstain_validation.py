@@ -19,6 +19,8 @@ from abstain_validation import (  # noqa: E402
     FAILURES,
     POSITIVE_CONTROLS,
     SYSTEM_1A,
+    SYSTEM_1C,
+    SYSTEM_1D,
     build_judge_user,
     build_negative_cases,
     call_key,
@@ -36,6 +38,19 @@ class TestPrompts(unittest.TestCase):
         self.assertTrue(SYSTEM_1A.startswith(SYSTEM))
         self.assertIn("fully and directly", SYSTEM_1A)
         self.assertIn("abstain", SYSTEM_1A)
+
+    def test_1c_keeps_baseline_prefix_byte_identical(self):
+        # Same proxy-classification contract as 1a: the 1c mismatch-check
+        # prompt must start with the baseline system prompt.
+        self.assertTrue(SYSTEM_1C.startswith(SYSTEM))
+        self.assertIn("mismatch", SYSTEM_1C)
+        self.assertIn("abstain", SYSTEM_1C)
+
+    def test_1d_keeps_baseline_prefix_byte_identical(self):
+        # Same contract for the 1d positive-match prompt.
+        self.assertTrue(SYSTEM_1D.startswith(SYSTEM))
+        self.assertIn("exact thing", SYSTEM_1D)
+        self.assertIn("abstain", SYSTEM_1D)
 
     def test_judge_user_starts_with_judge_prefix(self):
         # The proxy classifies a call as kind=judge from the user prefix;

@@ -122,3 +122,11 @@ exactly. CSV: `benchmark/longmemeval/claim_tracking_20261108.csv`
   extractor sees assistant speech but yields no evidence-verified claim
   from it. The H1 fix (speaker-tagged history evidence) has to span
   extraction, not only review/projection.
+- H1 scope note (2026-11-10, refusal-gate wave 2): speaker-tagged assistant
+  history does NOT fix the 5 refusal flips — the assistant turns in those
+  haystacks do not disambiguate them (they echo the same near-miss facts).
+  H1 targets score via the 51 assistant-turn gold cases, not refusal, and
+  carries governance surface (assistant speech entering projection), so it
+  is a separate PR, not part of the refusal fix. The refusal-relevant
+  extraction fix is the qualifier-in-value rule (Fix 3, pipeline SYSTEM),
+  which flipped 031748ae with the baseline reader.

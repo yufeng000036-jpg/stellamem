@@ -82,6 +82,43 @@ SYSTEM_1A = SYSTEM + (
     " evidence is insufficient — abstain. Do not pick the closest-looking number."
 )
 
+# 1c: calibrated mismatch check (refusal-gate wave 2). 1a's bar ("answer
+# only when the lines fully and directly support one specific answer: same
+# item, same person, same time window, same quantity") flipped all 5
+# failures but broke 5/10 positive controls — the terse projected lines
+# cannot prove all four dimensions at once, so the model refused sufficient
+# evidence too. 1c inverts the default: answer normally UNLESS a line
+# visibly mismatches the question on item, place, role, time window, or
+# number. A mismatch is positive evidence of "about something else";
+# silence on a dimension is not a mismatch. The first fragment is kept
+# byte-identical so the proxy still classifies the call as "answer".
+SYSTEM_1C = SYSTEM + (
+    " Before answering, check for a mismatch: name the item, place, role, or"
+    " time window the question asks about. If a memory line gives an answer"
+    " for a DIFFERENT item, place, role, or time window — or a different"
+    " number for the same thing — that line does not support an answer. If"
+    " every line that looks relevant is about something else, abstain instead"
+    " of answering with the closest-looking number. If the lines are about the"
+    " same item, place, role, and time window, answer normally."
+)
+
+# 1d: positive-match rule (refusal-gate wave 2b). 1c flipped 3/5 failures
+# but still broke 3/10 positive controls: any visible second value (a
+# different day, two numbers that add up to the answer, a related method)
+# triggered abstention even when a line DID give the asked value. 1d flips
+# the test from "any mismatch -> abstain" to "no matching line -> abstain":
+# answer from the line(s) about the exact thing asked (combine two lines
+# when the answer spans them); abstain only when no line is about it.
+SYSTEM_1D = SYSTEM + (
+    " Before answering, identify what the question asks about (item, place,"
+    " role, time window). Answer only from a memory line that is about that"
+    " exact thing. If one or more lines are about that exact thing, answer"
+    " from them (combine them if the answer spans two lines). If NO line is"
+    " about that exact thing — every relevant-looking line is about a"
+    " different item, place, role, or time window — abstain instead of"
+    " answering with the closest-looking number."
+)
+
 SYSTEM_JUDGE = (
     "You judge whether a generated answer is fully and directly supported by"
     ' the provided memory. Return JSON {"supported": true/false, "reason":'
@@ -439,6 +476,34 @@ def main():
                     {"abstain": abstain, "answer": answer, "from_cache": cached},
                 )
                 fresh += 0 if cached else 1
+            # 1c: calibrated mismatch check (fresh call). Inverts 1a's default:
+            # answer unless a line visibly mismatches on item/place/role/time/number.
+            if "1c" not in out.get(set_name, {}).get(qid, {}):
+                output, cached, _ = run_call(
+                    SYSTEM_1C, question, qdate, memory, args.endpoint, cache_index, work_cache
+                )
+                abstain, answer = parse_answer(output)
+                record(
+                    set_name,
+                    qid,
+                    "1c",
+                    {"abstain": abstain, "answer": answer, "from_cache": cached},
+                )
+                fresh += 0 if cached else 1
+            # 1d: positive-match rule (fresh call). Abstain only when NO line
+            # is about the exact thing asked; combine lines when needed.
+            if "1d" not in out.get(set_name, {}).get(qid, {}):
+                output, cached, _ = run_call(
+                    SYSTEM_1D, question, qdate, memory, args.endpoint, cache_index, work_cache
+                )
+                abstain, answer = parse_answer(output)
+                record(
+                    set_name,
+                    qid,
+                    "1d",
+                    {"abstain": abstain, "answer": answer, "from_cache": cached},
+                )
+                fresh += 0 if cached else 1
             # 1b: baseline answer + judge gate (judge only if it answered).
             if "1b" not in out.get(set_name, {}).get(qid, {}):
                 base = out[set_name][qid]["baseline"]
@@ -472,6 +537,8 @@ def main():
             print(
                 f"[{set_name}] {qid}: baseline={out[set_name][qid]['baseline']['abstain']} "
                 f"1a={out[set_name][qid]['1a']['abstain']} "
+                f"1c={out[set_name][qid]['1c']['abstain']} "
+                f"1d={out[set_name][qid]['1d']['abstain']} "
                 f"1b={out[set_name][qid]['1b']['abstain']}",
                 flush=True,
             )
@@ -506,6 +573,24 @@ def main():
                 "negative", qid, "1a", {"abstain": abstain, "answer": answer, "from_cache": cached}
             )
             fresh += 0 if cached else 1
+        if "1c" not in out.get("negative", {}).get(qid, {}):
+            output, cached, _ = run_call(
+                SYSTEM_1C, question, qdate, memory, args.endpoint, cache_index, work_cache
+            )
+            abstain, answer = parse_answer(output)
+            record(
+                "negative", qid, "1c", {"abstain": abstain, "answer": answer, "from_cache": cached}
+            )
+            fresh += 0 if cached else 1
+        if "1d" not in out.get("negative", {}).get(qid, {}):
+            output, cached, _ = run_call(
+                SYSTEM_1D, question, qdate, memory, args.endpoint, cache_index, work_cache
+            )
+            abstain, answer = parse_answer(output)
+            record(
+                "negative", qid, "1d", {"abstain": abstain, "answer": answer, "from_cache": cached}
+            )
+            fresh += 0 if cached else 1
         if "1b" not in out.get("negative", {}).get(qid, {}):
             base = out["negative"][qid]["baseline"]
             final_abstain, final_answer = base["abstain"], base["answer"]
@@ -538,6 +623,8 @@ def main():
         print(
             f"[negative] {qid}: baseline={out['negative'][qid]['baseline']['abstain']} "
             f"1a={out['negative'][qid]['1a']['abstain']} "
+            f"1c={out['negative'][qid]['1c']['abstain']} "
+            f"1d={out['negative'][qid]['1d']['abstain']} "
             f"1b={out['negative'][qid]['1b']['abstain']}",
             flush=True,
         )
@@ -552,7 +639,7 @@ def main():
         return n, abstained, answered, unknown
 
     print("\n== abstention set (want: failures flip to abstain, correct stay abstained) ==")
-    for arm in ("baseline", "1a", "1b"):
+    for arm in ("baseline", "1a", "1c", "1d", "1b"):
         n, ab, an, un = arm_stats("abstention", arm)
         fails = [
             q
@@ -565,7 +652,7 @@ def main():
         )
 
     print("\n== positive controls (want: still answer, answer still matches) ==")
-    for arm in ("baseline", "1a", "1b"):
+    for arm in ("baseline", "1a", "1c", "1d", "1b"):
         kept = 0
         rows = out.get("positive", {})
         for qid, r in rows.items():
@@ -582,7 +669,7 @@ def main():
         print(f"{arm}: n={n} abstained={ab} answered={an} unparseable={un} answer-kept={kept}/{n}")
 
     print("\n== negative-reader cases (per-case must/must-not, see results file) ==")
-    for arm in ("baseline", "1a", "1b"):
+    for arm in ("baseline", "1a", "1c", "1d", "1b"):
         safe = 0
         rows = out.get("negative", {})
         for case in negative_cases:
