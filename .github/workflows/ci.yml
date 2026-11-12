@@ -19,10 +19,60 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
-      - run: python -m unittest discover -s tests -v
+      - name: SQLite runtime version before dependency setup
+        run: python -c "import sqlite3; print(sqlite3.sqlite_version)"
+      - name: Provide SQLite >= 3.42 where the bundled runtime is older
+        shell: python
+        run: |
+          import sqlite3, subprocess, sys
+          if sqlite3.sqlite_version_info < (3, 42, 0):
+              print('Bundled SQLite', sqlite3.sqlite_version, 'is too old; installing pysqlite3')
+              subprocess.run([sys.executable, '-m', 'pip', 'install', 'pysqlite3'], check=True)
+              import pysqlite3
+              print('pysqlite3 SQLite', pysqlite3.sqlite_version)
+          else:
+              print('Bundled SQLite', sqlite3.sqlite_version, 'already meets the requirement')
+      - name: Require FTS5 secure-delete (no security downgrade)
+        shell: python
+        run: |
+          import sys
+          sys.path.insert(0, 'memory_service')
+          import store
+          sqlite3 = store.sqlite3
+          print('Service SQLite', sqlite3.sqlite_version)
+          assert sqlite3.sqlite_version_info >= (3, 42, 0), 'memory_service requires SQLite >= 3.42'
+          con = sqlite3.connect(':memory:')
+          con.execute('CREATE VIRTUAL TABLE probe USING fts5(body)')
+          con.execute("INSERT INTO probe(probe,rank) VALUES('secure-delete',1)")
+          con.close()
+      - name: Core Python regression
+        shell: python
+        run: |
+          import subprocess, sys
+          subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-v'], check=True)
+      - name: Memory service regression (separate import namespace)
+        shell: python
+        run: |
+          import subprocess, sys
+          subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', 'memory_service/tests', '-v'], check=True)
       - run: npm test
-      - run: python demo/run_demo.py --offline
-      - run: python tools/secret_scan.py
+      - name: Fixed negative-memory controls (offline)
+        run: node benchmark/longmemeval/negative_samples.mjs
+      - name: Frozen evaluation integrity (offline)
+        shell: python
+        run: |
+          import subprocess, sys
+          subprocess.run([sys.executable, 'benchmark/longmemeval/freeze.py', '--verify'], check=True)
+      - name: Offline demo
+        shell: python
+        run: |
+          import subprocess, sys
+          subprocess.run([sys.executable, 'demo/run_demo.py', '--offline'], check=True)
+      - name: Secret scan
+        shell: python
+        run: |
+          import subprocess, sys
+          subprocess.run([sys.executable, 'tools/secret_scan.py'], check=True)
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 10

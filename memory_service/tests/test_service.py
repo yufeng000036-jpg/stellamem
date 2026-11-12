@@ -15,9 +15,9 @@ from server import Service
 
 class MemoryTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory(
-            dir=pathlib.Path(__file__).resolve().parents[1] / "work"
-        )
+        # A fresh checkout has no ignored work/ directory. Let tempfile use
+        # the OS temp root so CI and read-only source checkouts work too.
+        self.tmp = tempfile.TemporaryDirectory()
         self.root = pathlib.Path(self.tmp.name)
         self.s = Store(self.root / "test.sqlite3")
         self.p = Principal()
@@ -265,9 +265,7 @@ class MemoryTests(unittest.TestCase):
 
 class HttpTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory(
-            dir=pathlib.Path(__file__).resolve().parents[1] / "work"
-        )
+        self.tmp = tempfile.TemporaryDirectory()
         self.s = Service(self.tmp.name, 0)
         self.thread = threading.Thread(target=self.s.serve_forever, daemon=True)
         self.thread.start()
@@ -333,6 +331,86 @@ class HttpTests(unittest.TestCase):
     def test_invalid_body_no_success(self):
         h = self.session()
         self.assertEqual(self.req("/v2/memories", {"title": "a"}, h)[0], 400)
+
+
+class SqliteRuntimeTests(unittest.TestCase):
+    """The store must run on SQLite >= 3.42 (FTS5 secure-delete) on every
+    platform, including CPython 3.10 bundles that ship SQLite 3.40.1."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = pathlib.Path(self.tmp.name)
+        self.s = Store(self.root / "test.sqlite3")
+        self.p = Principal()
+
+    def tearDown(self):
+        self.s.close()
+        self.tmp.cleanup()
+
+    def test_store_uses_sqlite_with_fts5_secure_delete(self):
+        import store
+
+        self.assertGreaterEqual(store.sqlite3.sqlite_version_info, (3, 42, 0))
+        r = self.s.create(
+            self.p,
+            {
+                "title": "Ocean project",
+                "content": "Durable ocean research memory",
+                "source": {"reference": "synthetic:test"},
+            },
+        )
+        r = self.s.review(self.p, r["id"], "active", r["version"])
+        self.assertEqual(len(self.s.search(self.p, "ocean")["items"]), 1)
+        self.s.delete(self.p, r["id"], r["version"])
+        self.assertEqual(self.s.search(self.p, "ocean")["items"], [])
+        self.assertEqual(self.s.db.execute("SELECT count(*) FROM memory_fts").fetchone()[0], 0)
+
+    def test_select_sqlite_prefers_new_stdlib(self):
+        import store
+
+        self.assertIs(store._select_sqlite(), store.sqlite3)
+
+    def test_select_sqlite_falls_back_to_pysqlite3(self):
+        import sqlite3
+        import types
+        from unittest import mock
+
+        import store
+
+        fake = types.ModuleType("pysqlite3")
+        fake.sqlite_version_info = (3, 45, 0)
+        with (
+            mock.patch.object(sqlite3, "sqlite_version_info", (3, 40, 1)),
+            mock.patch.dict(sys.modules, {"pysqlite3": fake}),
+        ):
+            self.assertIs(store._select_sqlite(), fake)
+
+    def test_select_sqlite_keeps_stdlib_without_newer_module(self):
+        import sqlite3
+        from unittest import mock
+
+        import store
+
+        with (
+            mock.patch.object(sqlite3, "sqlite_version_info", (3, 40, 1)),
+            mock.patch.dict(sys.modules, {"pysqlite3": None}),
+        ):
+            self.assertIs(store._select_sqlite(), sqlite3)
+
+    def test_select_sqlite_ignores_too_old_pysqlite3(self):
+        import sqlite3
+        import types
+        from unittest import mock
+
+        import store
+
+        fake = types.ModuleType("pysqlite3")
+        fake.sqlite_version_info = (3, 40, 1)
+        with (
+            mock.patch.object(sqlite3, "sqlite_version_info", (3, 40, 1)),
+            mock.patch.dict(sys.modules, {"pysqlite3": fake}),
+        ):
+            self.assertIs(store._select_sqlite(), sqlite3)
 
 
 if __name__ == "__main__":
