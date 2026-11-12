@@ -210,5 +210,102 @@ class ReplayCheckTests(unittest.TestCase):
             self.assertEqual(problems, [])
 
 
+class RunFreshnessTests(unittest.TestCase):
+    """Hermes H-1: an artifact is this run's output only when it was
+    generated strictly after the run started. Missing timestamps are
+    NOT_EXECUTED (third verdict), never a pass."""
+
+    def manifest(self, artifacts, **top):
+        base = {
+            "run_id": "run-20261112-a",
+            "run_started_at": "2026-11-12T02:00:00+00:00",
+            "artifacts": artifacts,
+        }
+        base.update(top)
+        return base
+
+    def test_fresh_artifact_passes(self):
+        manifest = self.manifest(
+            {
+                "results.json": {
+                    "generated_at": "2026-11-12T02:30:00Z",
+                    "run_id": "run-20261112-a",
+                }
+            }
+        )
+        problems, not_executed, notes = verify.check_run_freshness(manifest)
+        self.assertEqual(problems, [])
+        self.assertEqual(not_executed, [])
+        self.assertEqual(notes["fresh"], 1)
+        self.assertEqual(notes["artifacts"], 1)
+
+    def test_stale_artifact_reports_stale_run_id(self):
+        # The old artifact even carries this run's run_id (templated in):
+        # the generation time is what exposes it.
+        manifest = self.manifest(
+            {
+                "results.json": {
+                    "generated_at": "2026-11-11T23:59:00+00:00",
+                    "run_id": "run-20261112-a",
+                }
+            }
+        )
+        problems, not_executed, _notes = verify.check_run_freshness(manifest)
+        self.assertEqual(not_executed, [])
+        self.assertTrue(any("STALE_RUN_ID" in p for p in problems))
+
+    def test_generated_exactly_at_run_start_is_stale(self):
+        manifest = self.manifest({"results.json": {"generated_at": "2026-11-12T02:00:00+00:00"}})
+        problems, not_executed, _notes = verify.check_run_freshness(manifest)
+        self.assertEqual(not_executed, [])
+        self.assertTrue(any("STALE_RUN_ID" in p for p in problems))
+
+    def test_foreign_run_id_reports_stale_run_id(self):
+        manifest = self.manifest(
+            {
+                "results.json": {
+                    "generated_at": "2026-11-12T02:30:00+00:00",
+                    "run_id": "run-20261111-old",
+                }
+            }
+        )
+        problems, not_executed, _notes = verify.check_run_freshness(manifest)
+        self.assertEqual(not_executed, [])
+        self.assertTrue(any("STALE_RUN_ID" in p for p in problems))
+
+    def test_missing_generated_at_is_not_executed(self):
+        manifest = self.manifest({"results.json": {"run_id": "run-20261112-a"}})
+        problems, not_executed, notes = verify.check_run_freshness(manifest)
+        self.assertEqual(problems, [])
+        self.assertEqual(len(not_executed), 1)
+        self.assertIn("results.json", not_executed[0])
+        self.assertEqual(notes["fresh"], 0)
+
+    def test_missing_run_started_at_is_not_executed(self):
+        manifest = self.manifest(
+            {"results.json": {"generated_at": "2026-11-12T02:30:00+00:00"}},
+            run_started_at=None,
+        )
+        problems, not_executed, _notes = verify.check_run_freshness(manifest)
+        self.assertEqual(problems, [])
+        self.assertEqual(len(not_executed), 1)
+
+    def test_unparseable_generated_at_is_not_executed(self):
+        manifest = self.manifest({"results.json": {"generated_at": "yesterday-ish"}})
+        problems, not_executed, _notes = verify.check_run_freshness(manifest)
+        self.assertEqual(problems, [])
+        self.assertEqual(len(not_executed), 1)
+
+    def test_no_artifacts_is_not_executed(self):
+        problems, not_executed, _notes = verify.check_run_freshness(self.manifest({}))
+        self.assertEqual(problems, [])
+        self.assertEqual(len(not_executed), 1)
+
+    def test_manifest_not_an_object_is_a_problem(self):
+        problems, not_executed, _notes = verify.check_run_freshness(["not", "a", "dict"])
+        self.assertEqual(not_executed, [])
+        self.assertEqual(len(problems), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

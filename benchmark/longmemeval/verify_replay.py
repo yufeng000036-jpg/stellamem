@@ -36,15 +36,25 @@ What it checks:
      with the main arm on error / extracted / retrieved / cited with
      zero physical calls; every question missing from replay_results
      still has its diagnostics sidecar (the 5 skipped by the logged run).
+ 10. Run freshness (optional, needs an explicit run manifest): every
+     artifact in the manifest must have been generated strictly after
+     the run started. A run_id can be templated into an old artifact,
+     so an artifact generated at or before run_started_at -- or carrying
+     a different run_id -- fails with the reason code STALE_RUN_ID.
+     An artifact whose generated_at (or the manifest's run_started_at)
+     is missing or unparseable is NOT_EXECUTED -- the third verdict,
+     cf. negative_samples.mjs: it counts neither as a pass nor as a
+     failure, and is never silently folded into a pass.
 
 Exit codes: 0 = all performed checks pass; 1 = a check failed;
-2 = usage/input error.
+2 = usage/input error, or NOT_EXECUTED checks with no failures.
 
 Usage:
     python verify_replay.py --results <results.json> [--usage-dir <work/full>]
         [--tracking-csv <tracking_table_20261108.csv>]
         [--hashes <results-20261108-hashes.json>]
         [--cache-root <work/full>] [--diagnostics <work/claim-replay-full/diagnostics>]
+        [--run-manifest <run-manifest.json>]
 """
 
 import argparse
@@ -52,6 +62,7 @@ import hashlib
 import json
 import sys
 from collections import Counter
+from datetime import datetime, timezone
 from pathlib import Path
 
 ARMS = ("main", "candidate", "none", "direct")
@@ -340,6 +351,92 @@ def check_cost(usage_dir, stored):
     return problems
 
 
+def parse_timestamp(value):
+    """Parse an ISO-8601 timestamp; naive values are read as UTC.
+
+    Returns an aware datetime, or None when the value is not a parseable
+    timestamp string. The trailing "Z" is rewritten because
+    datetime.fromisoformat only accepts it from Python 3.11.
+    """
+    if not isinstance(value, str) or not value.strip():
+        return None
+    text = value.strip()
+    if text[-1] in ("Z", "z"):
+        text = text[:-1] + "+00:00"
+    try:
+        stamp = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if stamp.tzinfo is None:
+        stamp = stamp.replace(tzinfo=timezone.utc)
+    return stamp
+
+
+def check_run_freshness(manifest):
+    """Check artifact freshness against an explicit run manifest (Hermes H-1).
+
+    The manifest is a JSON object of the shape
+        {"run_id": ..., "run_started_at": <ISO-8601>,
+         "artifacts": {name: {"generated_at": <ISO-8601>, "run_id": ...}}}
+    An artifact counts as this run's output only when it was generated
+    strictly after the run started: a run_id can be templated into an old
+    artifact, so a matching id never proves freshness on its own. An
+    artifact generated at or before run_started_at, or carrying a
+    different run_id than the manifest's, is a problem and is reported
+    with the reason code STALE_RUN_ID. Where the manifest carries no
+    usable timestamp the check cannot be executed for that artifact: it
+    is returned as NOT_EXECUTED (the third verdict, cf.
+    negative_samples.mjs), never as a pass.
+
+    Returns (problems, not_executed, notes).
+    """
+    problems, not_executed = [], []
+    notes = {"fresh": 0, "artifacts": 0, "run_id": None}
+    if not isinstance(manifest, dict):
+        return ["run manifest is not a JSON object"], not_executed, notes
+    run_id = manifest.get("run_id")
+    notes["run_id"] = run_id
+    started_raw = manifest.get("run_started_at")
+    started = parse_timestamp(started_raw)
+    artifacts = manifest.get("artifacts")
+    if not isinstance(artifacts, dict) or not artifacts:
+        not_executed.append("run manifest lists no artifacts; freshness not executed")
+        return problems, not_executed, notes
+    notes["artifacts"] = len(artifacts)
+    for name in sorted(artifacts):
+        entry = artifacts[name]
+        if not isinstance(entry, dict):
+            not_executed.append(f"{name}: manifest entry is not an object")
+            continue
+        if started is None:
+            not_executed.append(
+                f"{name}: run manifest has no usable run_started_at "
+                f"({started_raw!r}); freshness not executed"
+            )
+            continue
+        generated = parse_timestamp(entry.get("generated_at"))
+        if generated is None:
+            not_executed.append(
+                f"{name}: no usable generated_at in run manifest "
+                f"({entry.get('generated_at')!r}); freshness not executed"
+            )
+            continue
+        entry_run = entry.get("run_id")
+        if entry_run is not None and run_id is not None and entry_run != run_id:
+            problems.append(
+                f"{name}: STALE_RUN_ID artifact run_id {entry_run!r} != run run_id {run_id!r}"
+            )
+            continue
+        if generated <= started:
+            problems.append(
+                f"{name}: STALE_RUN_ID generated_at {entry.get('generated_at')!r} "
+                f"is not after run_started_at {started_raw!r}"
+            )
+            continue
+        notes["fresh"] += 1
+    return problems, not_executed, notes
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results", type=Path, required=True)
@@ -348,9 +445,10 @@ def main():
     parser.add_argument("--hashes", type=Path, default=None)
     parser.add_argument("--cache-root", type=Path, default=None)
     parser.add_argument("--diagnostics", type=Path, default=None)
+    parser.add_argument("--run-manifest", type=Path, default=None)
     args = parser.parse_args()
 
-    failures, passes, skips = [], [], []
+    failures, passes, skips, not_executed = [], [], [], []
 
     try:
         data = json.loads(args.results.read_text())
@@ -581,14 +679,43 @@ def main():
     else:
         skips.append("replay: no claim-replay-full/ dir beside --usage-dir")
 
+    # 10. Run freshness (optional, needs an explicit run manifest).
+    if args.run_manifest is not None:
+        try:
+            run_manifest = json.loads(args.run_manifest.read_text())
+        except (OSError, ValueError) as exc:
+            failures.append(f"run-freshness: unreadable run manifest: {exc}")
+        else:
+            fresh_problems, fresh_not_executed, fresh_notes = check_run_freshness(run_manifest)
+            if fresh_problems:
+                failures.append("run-freshness: " + "; ".join(fresh_problems[:10]))
+            not_executed.extend("run-freshness: " + entry for entry in fresh_not_executed)
+            if not fresh_problems and not fresh_not_executed:
+                passes.append(
+                    f"run-freshness: {fresh_notes['fresh']} artifacts generated after "
+                    f"run start {run_manifest.get('run_started_at')!r} "
+                    f"(run_id {fresh_notes['run_id']!r})"
+                )
+    else:
+        skips.append("run-freshness: --run-manifest not given")
+
     for line in passes:
         print("PASS: " + line)
     for line in skips:
         print("SKIP: " + line)
+    for line in not_executed:
+        print("NOT_EXECUTED: " + line)
     for line in failures:
         print("FAIL: " + line)
-    print(f"result: {len(passes)} passed, {len(skips)} skipped, {len(failures)} failed")
-    return 1 if failures else 0
+    result_line = f"result: {len(passes)} passed, {len(skips)} skipped, {len(failures)} failed"
+    if args.run_manifest is not None:
+        result_line += f", {len(not_executed)} not executed"
+    print(result_line)
+    if failures:
+        return 1
+    if not_executed:
+        return 2
+    return 0
 
 
 if __name__ == "__main__":
