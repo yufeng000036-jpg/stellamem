@@ -229,14 +229,13 @@ test("guard does not change which claims are projected", async () => {
     "only the matching claim must project: " + out);
 });
 
-test("same fact in a user turn projects; the assistant-turn twin does not", async () => {
-  // 凯瑞's Agent 的固定回归：同一事实分别放在 user / assistant turn。
-  // 两条 claim 除了 source 完全相同（同一 predicate、同一 value、同一
-  // evidence），问同一个问题。user 那条必须投影，assistant 那条必须被
-  // 策略拒绝——不是被相关性门或 entity-match guard 误过滤：如果 user
-  // 双胞胎能投影，assistant 双胞胎的缺失就只能是 source 策略。
-  // 这是 H1（助手源证据被过滤）的看门测试：它现在按策略拒绝；哪天
-  // H1 改成带说话人标记的历史证据路径，这组测试必须跟着改，不许悄悄变绿。
+test("same fact in a user turn and an assistant turn: both project once approved (H1)", async () => {
+  // 凯瑞's Agent 的固定回归，H1 版本：同一事实分别放在 user / assistant
+  // turn，两条 claim 除了 source 完全相同。H1 之前 assistant 那条被 source
+  // 策略拒绝（本测试旧版断言的就是这个）；H1 把它改成带说话人标记的历史
+  // 证据路径：assistant 记录只有经人工批准（status=active）才可能出现在这里，
+  // 批准后与 user 记录同等投影，归因保留在记录的 source/provenance 上。
+  // 未批准的 assistant 记录仍不投影（见下一条测试），quoted/unknown 仍拒绝。
   const root = await fixture();
   const fact = { kind: "fact", predicate: "plans camping",
     value: "虚构：周末去海边露营", evidence: "虚构：周末去海边露营" };
@@ -246,19 +245,21 @@ test("same fact in a user turn projects; the assistant-turn twin does not", asyn
   ]);
   const out = await project(root, "周末去哪里露营？");
   const lines = out.split("\n").filter((l) => l.startsWith("{")).map((l) => JSON.parse(l));
-  assert.deepEqual(lines.map((l) => l.id), ["c-user"],
-    "only the user-turn twin must project: " + out);
+  assert.deepEqual(lines.map((l) => l.id).sort(), ["c-asst", "c-user"],
+    "both approved twins must project: " + out);
   assert.ok(out.includes("about the same place, person, role, activity, or item"),
     "guard header must still be present: " + out);
 });
 
-test("assistant-only evidence projects nothing: no fragment to guess from", async () => {
-  // 固定回归的另一半（需拒答的问题）：金证据只在 assistant 回合里，
-  // 投影必须是空的——reader 手里没有任何片段可猜，空投影就是拒答的前提。
-  // 投影丢了之后不能凭其余片段猜答：这里连其余片段都没有。
+test("unapproved assistant evidence projects nothing: approval is the gate (H1)", async () => {
+  // 固定回归的另一半（需拒答的问题）：金证据只在 assistant 回合里。
+  // H1 之前投影为空靠的是 adapter 的 source 硬门；H1 之后防线前移到
+  // 审批：assistant 记录未经人工批准（status=pending）永远进不了投影，
+  // 自动写与自动审批也都要求 source=user，所以没有任何无人值守路径
+  // 能把 assistant 发言变成可投影记忆。空投影仍是拒答的前提。
   const root = await fixture();
   await writeRecords(root, "semantic/facts.md", [
-    record({ claim_id: "c-asst", revision_id: "r-asst", source: "assistant",
+    record({ claim_id: "c-asst", revision_id: "r-asst", source: "assistant", status: "pending",
       kind: "fact", predicate: "plans camping",
       value: "虚构：周末去海边露营", evidence: "虚构：周末去海边露营" }),
   ]);

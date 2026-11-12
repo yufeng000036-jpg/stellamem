@@ -130,3 +130,55 @@ exactly. CSV: `benchmark/longmemeval/claim_tracking_20261108.csv`
   is a separate PR, not part of the refusal fix. The refusal-relevant
   extraction fix is the qualifier-in-value rule (Fix 3, pipeline SYSTEM),
   which flipped 031748ae with the baseline reader.
+
+## H1 implemented (2026-11-12, local branch fix/h1-assistant-history-evidence)
+
+Round-4-code autopsy of the 51 (cache replay, $0): in 18/51 the extractor
+DID yield an evidence-verified claim on the gold assistant turn and
+`enforce_attribution` stripped the verification (source != user); in 33/51
+the extractor yielded nothing on the gold turn under the durable-user-facts
+prompt frame. The fix spans all three layers the evidence points at:
+
+- `compiler/reliability.py`: evidence_verified is a property of the
+  verbatim quote match, not of the speaker (normalize forces it False;
+  only a real match sets it True). Assistant claims keep source=assistant,
+  provenance.speaker=assistant, auto_write=False, injection recall-only;
+  `is_user_fact` still requires source=user.
+- `compiler/security.py`: a verified non-user claim's policy reason is now
+  "non-user speaker requires review" (write_policy stays "confirm");
+  unverified sources keep "unverified user speaker".
+- `compiler/pipeline.py` SYSTEM: substantive assistant-provided content
+  (recommendations, recipes, plans, lists, explanations, its own game
+  moves) is in extraction scope, attributed to the assistant; pleasantries
+  and restatements of the user stay out.
+- `adapters/openclaw/index.js`: eligible() accepts source "assistant" on
+  the same terms as "user". An assistant record can only be active via
+  manual approval (ingest auto-write and the auto-approve sweep both
+  require source=user), and approval may keep source=assistant
+  (`inbox._approve_record --source`); before H1 such records could never
+  project. The two adapter regression tests that encoded the old blanket
+  ban were rewritten to the approval-gate semantics, as their own comments
+  instructed for the day H1 landed.
+
+Validation (fixed sets, production review semantics — cmd_approve with the
+claim's own source; the frozen worker.py reviewer only approves
+source=user, see below): target n=12 sampled from the 51 (6 per layer):
+gold-turn extraction yield 0/12 -> 12/12; judged correct 1/12 -> 2/12
+(6222b6eb flipped, verified load-bearing: the gold assistant claim was
+projected and cited). Positive controls n=4: 4/4 -> 4/4. Abstention
+subset n=7 (all 5 round-4 failures + 2 correct): abstentions 5/7 -> 5/7
+(failures 3/5 -> 3/5), with one explained flip each way (2133c1b5
+answer->abstain; 6456829e abstain->answer on a user-sourced near-miss line
+in a changed context). Spend $0.0930 / 362 calls.
+
+What H1 does NOT deliver: the +9.6pt ceiling assumed the evidence, once
+extracted, would be used. On the sample, 3 questions' gold claims are
+SENSITIVE-classified (health content) and refused at review — the separate
+SENSITIVE-overkill item; 7 questions project gold-session claims but the
+reader still abstains — the loss moves to the same reader/projection
+stage that already dominates round 4. And in the frozen worker.py
+simulation an official re-run would still score these 0: its reviewer
+approves only source=user pending claims, so H1's effect there is limited
+to the tracking stage label (not-extracted -> review-refused). Crediting
+H1 in official runs requires revisiting that simulation's review rule,
+which is a protocol decision, not part of this fix.

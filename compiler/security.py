@@ -79,7 +79,14 @@ def apply_policy(claim):
     if matches("quoted", text):
         reasons.append("quoted statement")
     if c.get("source") != "user":
-        reasons.append("unverified user speaker")
+        # 有逐字核验证据的非 user 来源（assistant 本人提供过的内容、
+        # 被引用的原话）不是「冒充用户发言」，而是待审的历史记录；
+        # 没有核验证据的来源才按未核验处理。两者都只能人工审批
+        # （write_policy=confirm 不变），区别只在理由要说真话。
+        if c.get("evidence_verified") is True:
+            reasons.append("non-user speaker requires review")
+        else:
+            reasons.append("unverified user speaker")
     if not c.get("evidence"):
         reasons.append("missing evidence")
     if c.get("evidence_verified") is not True:

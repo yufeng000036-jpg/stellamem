@@ -74,9 +74,16 @@ def enforce_attribution(claim: dict, speaker: str | None = None) -> dict:
             claim["kind"] = "fact"
         claim["injection_policy"] = "recall"
         claim["auto_write"] = False
-        claim["evidence_verified"] = (
-            bool(claim.get("evidence_verified")) and claim["source"] == "quoted"
-        )
+        # 证据核验是「引文与源消息逐字对上」的属性，与说话人无关：
+        # normalize 强制 evidence_verified=False，只有 pipeline 在引文
+        # 逐字命中某条消息后才会置 True，所以这里看到的 True 必然来自
+        # 真实核验。H1 修复前这里把非 quoted 的非 user 来源一律压成
+        # 未核验，assistant 自己提供的内容（菜谱、推荐、棋步）因此在
+        # 提取层就被当作不存在（LongMemEval 51 道 single-session-
+        # assistant 金标轮次全部死在这里或下游）。归因仍由 source /
+        # provenance.speaker 承载：assistant 仍不是 user、仍不自动写、
+        # 仍只可 recall，is_user_fact 也仍要求 source==user。
+        claim["evidence_verified"] = bool(claim.get("evidence_verified"))
     return claim
 
 
