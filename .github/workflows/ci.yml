@@ -26,8 +26,8 @@ jobs:
         run: |
           import sqlite3, subprocess, sys
           if sqlite3.sqlite_version_info < (3, 42, 0):
-              print('Bundled SQLite', sqlite3.sqlite_version, 'is too old; installing pysqlite3-binary')
-              subprocess.run([sys.executable, '-m', 'pip', 'install', 'pysqlite3-binary'], check=True)
+              print('Bundled SQLite', sqlite3.sqlite_version, 'is too old; installing pysqlite3')
+              subprocess.run([sys.executable, '-m', 'pip', 'install', 'pysqlite3'], check=True)
               import pysqlite3
               print('pysqlite3 SQLite', pysqlite3.sqlite_version)
           else:
