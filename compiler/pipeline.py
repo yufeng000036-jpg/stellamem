@@ -134,7 +134,10 @@ def _parse_claims(raw, safe, chunk_id):
                 "message_count": len(safe),
             }
         # 归因是证据约束，不是模型意见：非 user 说话人永远不能产出用户事实。
-        c = enforce_attribution(c, (c.get("provenance") or {}).get("speaker"))
+        speaker = (c.get("provenance") or {}).get("speaker")
+        if exact and matches("quoted", safe[candidates[0]]["text"]):
+            speaker = "quoted"
+        c = enforce_attribution(c, speaker)
         c["observed_at"] = datetime.now(timezone.utc).isoformat()
         # Evidence is a bounded excerpt; source pointer/hash retains traceability.
         c["evidence"] = c["evidence"][:240]
