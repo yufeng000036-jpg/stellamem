@@ -91,6 +91,25 @@ class SqliteSourceTests(unittest.TestCase):
         with self.assertRaises(SourceError):
             read_session(self.db, "s1")
 
+    def test_duplicate_or_invalid_sequence_fails(self):
+        for bad_seq in (-1, 0):
+            with self.subTest(seq=bad_seq):
+                self.con.execute("DELETE FROM transcript_events")
+                self.add(event())
+                self.add(event("m2"), seq=bad_seq)
+                with self.assertRaises(SourceError):
+                    read_session(self.db, "s1")
+
+    def test_limits_fail_without_partial_result(self):
+        self.add(event())
+        self.add(event("m2"), seq=1)
+        with patch("openclaw_sqlite_source.MAX_SESSION_EVENTS", 1):
+            with self.assertRaises(SourceError):
+                read_session(self.db, "s1")
+        with patch("openclaw_sqlite_source.MAX_SESSION_BYTES", 1):
+            with self.assertRaises(SourceError):
+                read_session(self.db, "s1")
+
     def test_invalid_or_missing_session_fails(self):
         self.add(event())
         for session in ("", "missing"):
