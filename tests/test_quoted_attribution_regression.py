@@ -2,12 +2,14 @@
 
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "compiler"))
 from pipeline import compile_messages
 from source_reader import parse_messages
+from store import MemoryStore
 
 
 class QuotedAttributionTest(unittest.TestCase):
@@ -44,6 +46,11 @@ class QuotedAttributionTest(unittest.TestCase):
         self.assertEqual(rows[0]["source"], "quoted")
         self.assertEqual(rows[0]["write_policy"], "confirm")
         self.assertFalse(rows[0]["auto_write"])
+        with tempfile.TemporaryDirectory() as tmp:
+            store = MemoryStore(Path(tmp))
+            store.ingest(rows[0])
+            self.assertEqual(store.counts["active"], 0)
+            self.assertEqual(store.counts["pending"], 1)
 
     def test_unquoted_user_and_assistant_keep_speaker(self):
         for role in ("user", "assistant"):
