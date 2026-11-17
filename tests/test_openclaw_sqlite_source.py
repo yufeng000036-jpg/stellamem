@@ -1,7 +1,10 @@
 """Offline synthetic tests for the non-integrated SQLite reader prototype."""
 
+import argparse
 import hashlib
 import json
+import shutil
+import subprocess
 import sqlite3
 import sys
 import tempfile
@@ -10,7 +13,11 @@ from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "compiler"))
+from inbox import cmd_approve
 from openclaw_sqlite_source import read_session, resolve_pointer
+from pipeline import compile_messages
+from storage import load_records, writer_lock
+from store import INBOX, MemoryStore
 from source_reader import SourceError
 
 
@@ -134,6 +141,66 @@ class SqliteSourceTests(unittest.TestCase):
             resolve_pointer(self.db, {**pointer, "session_id": "missing"})
         with self.assertRaises(SourceError):
             resolve_pointer(self.db, {"provider": "openclaw-sqlite"})
+
+    @unittest.skipUnless(shutil.which("node"), "Node is needed for the adapter")
+    def test_explicit_reviewed_prototype_path_projects_assistant_history(self):
+        self.add(event("m1", "assistant", "fictional nebula tea"), role="assistant")
+        source = read_session(self.db, "s1")[0]
+        verified = resolve_pointer(self.db, source["provenance"])
+
+        def model(system, payload):
+            return json.dumps(
+                [
+                    dict(
+                        kind="fact",
+                        subject="user",
+                        scope="global",
+                        predicate="fictional beverage",
+                        value="fictional nebula tea",
+                        evidence="fictional nebula tea",
+                        confidence=0.99,
+                        source="assistant",
+                        message_index=0,
+                    )
+                ]
+            )
+
+        claims = [
+            c
+            for batch in compile_messages([verified], {"chunk_chars": 512}, model)
+            for c in batch["claims"]
+        ]
+        memory = Path(self.tmp.name) / "memory"
+        memory.mkdir()
+        store = MemoryStore(memory)
+        store.ingest(claims[0])
+        store.commit()
+        pending = load_records(memory / INBOX)[1]
+        self.assertEqual(pending[0]["source"], "assistant")
+        args = argparse.Namespace(
+            id=pending[0]["claim_id"],
+            source="assistant",
+            kind=None,
+            subject=None,
+            scope=None,
+            predicate=None,
+            value=None,
+        )
+        with writer_lock(memory):
+            self.assertEqual(cmd_approve(memory, args), 0)
+        adapter = Path(__file__).resolve().parents[1] / "adapters/openclaw/index.js"
+        js = (
+            "const {project} = await import(process.argv[1]); "
+            "console.log(await project(process.argv[2], 'fictional beverage'));"
+        )
+        result = subprocess.run(
+            ["node", "--input-type=module", "-e", js, adapter.as_uri(), str(memory)],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        self.assertIn("fictional nebula tea", result.stdout)
+        self.assertNotIn("injected sentinel", result.stdout)
 
     def test_invalid_or_missing_session_fails(self):
         self.add(event())
