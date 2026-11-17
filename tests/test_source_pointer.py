@@ -7,6 +7,8 @@ no longer be resolved the reader must raise, not silently return invented text.
 """
 
 import json
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -103,6 +105,36 @@ class SourcePointerTests(unittest.TestCase):
         )
         daily = self.write_manifest([pointer("session.jsonl", "old source")])
         message = read_daily(daily, self.config)[0]
+        self.assertEqual(message["text"], "old source")
+        self.assertEqual(message["provenance"]["resolved_session_file"], "session.jsonl.reset.2026")
+
+    @unittest.skipUnless(shutil.which("node"), "Node is needed for the host source hook")
+    def test_real_hook_manifest_survives_rotation_and_filename_reuse(self):
+        session = self.sessions / "session.jsonl"
+        session.write_text(entry("old source"), encoding="utf-8")
+        hook = Path(__file__).resolve().parents[1] / "hooks/daily-autolog/handler.js"
+        js = (
+            "const {writeDaily} = await import(process.argv[1]); "
+            "await writeDaily('2026-01-01', {sessionsDir: process.argv[2], "
+            "dailyDir: process.argv[3], offset: 0});"
+        )
+        subprocess.run(
+            [
+                "node",
+                "--input-type=module",
+                "-e",
+                js,
+                hook.as_uri(),
+                str(self.sessions),
+                str(self.memory),
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        session.rename(self.sessions / "session.jsonl.reset.2026")
+        session.write_text(entry("new source", mid="new"), encoding="utf-8")
+        message = read_daily(self.memory / "2026-01-01.md", self.config)[0]
         self.assertEqual(message["text"], "old source")
         self.assertEqual(message["provenance"]["resolved_session_file"], "session.jsonl.reset.2026")
 
