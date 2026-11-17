@@ -72,12 +72,29 @@ class MemoryStore:
             self.counts["duplicate"] += 1
             return
         active = self.active_by_id.get(cid, [])
+        # A verified quote may contradict or omit the model-written value.
+        # Route non-exact values to explicit review before any active write.
+        exact_value = (
+            isinstance(c.get("value"), str)
+            and isinstance(c.get("evidence"), str)
+            and c["value"].strip() == c["evidence"].strip()
+        )
+        if c["auto_write"] and not exact_value:
+            c["auto_write"] = False
+            c["write_policy"] = "confirm"
+            c["injection_policy"] = "confirm"
+            c["requires_confirmation"] = True
+            c["policy_reasons"] = [
+                *c.get("policy_reasons", []),
+                "value differs from verified quote",
+            ]
         allowed = (
             c["auto_write"]
             and c["confidence"] >= THRESHOLDS.get(c["kind"], 1.01)
             and mode == "review"
             # 只有用户本人原话可以自动成为正式记忆；assistant / quoted / unknown 一律待审。
             and str(c.get("source") or "") == "user"
+            and exact_value
         )
         relation = "NEW"
         old = None
