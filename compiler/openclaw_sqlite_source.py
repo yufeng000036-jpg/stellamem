@@ -153,3 +153,35 @@ def read_session(database, session_id):
     finally:
         if connection is not None:
             connection.close()
+
+
+def resolve_pointer(database, pointer):
+    """Re-read a single previously observed message and reject any drift.
+
+    `database` and `pointer` must come from an explicitly authorized caller;
+    matching hashes and IDs do not prove subject ownership or authorization.
+    """
+    if not isinstance(pointer, dict) or pointer.get("provider") != "openclaw-sqlite":
+        raise SourceError("invalid SQLite source pointer")
+    if pointer.get("precision") != "message":
+        raise SourceError("invalid SQLite source precision")
+    required = (
+        "session_id",
+        "sequence",
+        "message_id",
+        "speaker",
+        "timestamp",
+        "content_hash",
+        "event_hash",
+    )
+    if any(key not in pointer for key in required):
+        raise SourceError("incomplete SQLite source pointer")
+    candidates = read_session(database, pointer["session_id"])
+    for message in candidates:
+        observed = message["provenance"]
+        if observed["sequence"] != pointer["sequence"]:
+            continue
+        if any(observed[key] != pointer[key] for key in required):
+            raise SourceError("SQLite source pointer changed")
+        return message
+    raise SourceError("SQLite source pointer missing")
