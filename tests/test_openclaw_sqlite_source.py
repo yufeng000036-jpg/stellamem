@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "compiler"))
-from openclaw_sqlite_source import read_session
+from openclaw_sqlite_source import read_session, resolve_pointer
 from source_reader import SourceError
 
 
@@ -109,6 +109,31 @@ class SqliteSourceTests(unittest.TestCase):
         with patch("openclaw_sqlite_source.MAX_SESSION_BYTES", 1):
             with self.assertRaises(SourceError):
                 read_session(self.db, "s1")
+
+    def test_pointer_revalidates_and_rejects_changed_or_deleted_event(self):
+        self.add(event())
+        message = read_session(self.db, "s1")[0]
+        pointer = message["provenance"]
+        self.assertEqual(resolve_pointer(self.db, pointer)["text"], "fictional message")
+        self.con.execute(
+            "UPDATE transcript_events SET event_json=? WHERE session_id=? AND seq=0",
+            (json.dumps(event(content="changed text")), "s1"),
+        )
+        self.con.commit()
+        with self.assertRaises(SourceError):
+            resolve_pointer(self.db, pointer)
+        self.con.execute("DELETE FROM transcript_events WHERE session_id=?", ("s1",))
+        self.con.commit()
+        with self.assertRaises(SourceError):
+            resolve_pointer(self.db, pointer)
+
+    def test_incomplete_or_cross_session_pointer_is_rejected(self):
+        self.add(event())
+        pointer = read_session(self.db, "s1")[0]["provenance"]
+        with self.assertRaises(SourceError):
+            resolve_pointer(self.db, {**pointer, "session_id": "missing"})
+        with self.assertRaises(SourceError):
+            resolve_pointer(self.db, {"provider": "openclaw-sqlite"})
 
     def test_invalid_or_missing_session_fails(self):
         self.add(event())
