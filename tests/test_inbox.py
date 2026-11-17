@@ -128,13 +128,17 @@ class InboxTests(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which("node"), "Node is needed for the adapter")
     def test_approved_assistant_history_survives_into_projection(self):
-        self.seed(
+        candidate = verified(
             kind="lesson",
             source="assistant",
             predicate="fictional beverage",
             value="fictional nebula tea",
             evidence="fictional nebula tea",
         )
+        candidate["provenance"]["speaker"] = "assistant"
+        store = MemoryStore(self.mem)
+        store.ingest(candidate)
+        store.commit()
         pending = [r for r in self.inbox_records() if r["status"] == "pending"]
         self.assertEqual(self.cli(["approve", pending[0]["claim_id"]]), 0)
         _, records = load_records(self.write_target("lesson"))
