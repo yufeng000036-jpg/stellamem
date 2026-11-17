@@ -35,6 +35,8 @@ test("approved assistant history projects with attribution preserved", async () 
   ]);
   const out = await project(root, "羊肉炖菜配什么啤酒");
   assert.ok(out.includes("清淡酒体"), "assistant history must be injected: " + out);
+  const row = JSON.parse(out.split("\n").find((line) => line.startsWith("{")));
+  assert.equal(row.source, "assistant", "reader must see who said it");
 });
 
 test("assistant record without verified evidence still does not project", async () => {

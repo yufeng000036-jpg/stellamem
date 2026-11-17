@@ -247,6 +247,8 @@ test("same fact in a user turn and an assistant turn: both project once approved
   const lines = out.split("\n").filter((l) => l.startsWith("{")).map((l) => JSON.parse(l));
   assert.deepEqual(lines.map((l) => l.id).sort(), ["c-asst", "c-user"],
     "both approved twins must project: " + out);
+  assert.equal(lines.find((l) => l.id === "c-asst").source, "assistant");
+  assert.equal(lines.find((l) => l.id === "c-user").source, "user");
   assert.ok(out.includes("about the same place, person, role, activity, or item"),
     "guard header must still be present: " + out);
 });
