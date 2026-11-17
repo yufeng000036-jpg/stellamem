@@ -14,6 +14,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "compiler"))
 from inbox import cmd_approve
+import openclaw_sqlite_source as sqlite_source
 from openclaw_sqlite_source import read_session, resolve_pointer
 from pipeline import compile_messages
 from storage import load_records, writer_lock
@@ -133,6 +134,31 @@ class SqliteSourceTests(unittest.TestCase):
         self.con.commit()
         with self.assertRaises(SourceError):
             resolve_pointer(self.db, pointer)
+
+    def test_wal_snapshot_is_consistent_and_later_change_is_detected(self):
+        self.con.execute("PRAGMA journal_mode=WAL")
+        self.add(event())
+        self.add(event("m2", content="second original"), seq=1)
+        real_decode = sqlite_source._decode_event
+        changed = False
+
+        def decode_then_change(*args):
+            nonlocal changed
+            decoded = real_decode(*args)
+            if not changed:
+                changed = True
+                self.con.execute(
+                    "UPDATE transcript_events SET event_json=? WHERE session_id=? AND seq=1",
+                    (json.dumps(event("m2", content="second modified")), "s1"),
+                )
+                self.con.commit()
+            return decoded
+
+        with patch("openclaw_sqlite_source._decode_event", side_effect=decode_then_change):
+            messages = read_session(self.db, "s1")
+        self.assertEqual(messages[1]["text"], "second original")
+        with self.assertRaises(SourceError):
+            resolve_pointer(self.db, messages[1]["provenance"])
 
     def test_incomplete_or_cross_session_pointer_is_rejected(self):
         self.add(event())
