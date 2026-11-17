@@ -117,6 +117,34 @@ class InboxTests(unittest.TestCase):
         _, lessons = load_records(self.write_target("lesson"))
         self.assertEqual(lessons[0]["source"], "assistant")
 
+    def test_approval_preserves_assistant_source_by_default(self):
+        self.seed(kind="lesson", source="assistant")
+        pending = [r for r in self.inbox_records() if r["status"] == "pending"]
+        self.assertEqual(self.cli(["approve", pending[0]["claim_id"]]), 0)
+        _, records = load_records(self.write_target("lesson"))
+        self.assertEqual(records[0]["source"], "assistant")
+
+    def test_unknown_source_requires_explicit_decision(self):
+        self.seed(kind="lesson", source="unknown")
+        pending = [r for r in self.inbox_records() if r["status"] == "pending"]
+        self.assertEqual(self.cli(["approve", pending[0]["claim_id"]]), 2)
+        self.assertEqual(self.inbox_records()[0]["status"], "pending")
+        self.assertFalse(self.write_target("lesson").exists())
+        self.assertEqual(self.cli(["approve", pending[0]["claim_id"], "--source", "user"]), 0)
+        _, records = load_records(self.write_target("lesson"))
+        self.assertEqual(records[0]["source"], "user")
+        chain = json.loads((self.mem / "system/version-chain.json").read_text(encoding="utf-8"))
+        event = next(e for e in chain if e.get("relation") == "APPROVED")
+        self.assertEqual(event["source_before_review"], "unknown")
+        self.assertEqual(event["source_after_review"], "user")
+
+    def test_approval_preserves_quoted_source_by_default(self):
+        self.seed(kind="lesson", source="quoted")
+        pending = [r for r in self.inbox_records() if r["status"] == "pending"]
+        self.assertEqual(self.cli(["approve", pending[0]["claim_id"]]), 0)
+        _, records = load_records(self.write_target("lesson"))
+        self.assertEqual(records[0]["source"], "quoted")
+
     def test_approve_refuses_protected_core_instead_of_silent_loss(self):
         # Identity targets core/user-core.md, which the transaction layer protects.
         # Approval must fail loudly rather than consume the candidate and write nothing.

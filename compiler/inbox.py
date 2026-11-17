@@ -335,11 +335,8 @@ def _approve_record(store, records, record, edited, *, source, approved_via, hou
     approved["write_policy"] = "allow"
     approved["injection_policy"] = "confirm" if protected else "recall"
     approved["status"] = "active"
-    # Attribution is a human decision, not a model guess. The extraction stage
-    # cannot see speaker tags in prose diaries, so it tags nearly everything
-    # "unknown"/"assistant"; without this line no approved claim can ever pass
-    # the projection gate (which requires source == "user"). Callers reviewing
-    # quoted or AI-authored content should pass --source to override.
+    # Preserve the reviewed source unless a human explicitly overrides it.
+    # An unknown source must never silently become a user statement.
     approved["source"] = source
     if approved_via is not None:
         approved["approved_via"] = approved_via
@@ -391,6 +388,8 @@ def _approve_record(store, records, record, edited, *, source, approved_via, hou
         "edited": False,
         "namespace": approved.get("namespace"),
         "namespace_before_review": record.get("namespace"),
+        "source_before_review": record.get("source"),
+        "source_after_review": approved.get("source"),
     }
     if approved_via == "auto":
         event["approved_via"] = "auto"
@@ -410,6 +409,13 @@ def cmd_approve(root, args):
     if record.get("status") != "pending":
         raise ValueError("candidate is not pending")
     edited, edit = _apply_edits(record, args, root)
+    source = getattr(args, "source", None)
+    if source is None:
+        source = record.get("source")
+        if source not in {"user", "assistant", "quoted"}:
+            raise ValueError(
+                "unknown source: explicitly choose --source user, assistant, or quoted"
+            )
     store = MemoryStore(root)
     now = datetime.now(timezone.utc)
     approved, decided_record, event = _approve_record(
@@ -417,7 +423,7 @@ def cmd_approve(root, args):
         records,
         record,
         edited,
-        source=args.source,
+        source=source,
         approved_via=None,
         hours=None,
         now=now,
@@ -662,10 +668,10 @@ def main(argv=None):
     approve.add_argument(
         "--source",
         choices=("user", "assistant", "quoted"),
-        default="user",
+        default=None,
         help=(
-            "who this memory is attributed to; human approval defaults to the "
-            "user, override for AI-authored or quoted content"
+            "explicit source override; defaults to the candidate's known source. "
+            "Unknown sources require an explicit choice"
         ),
     )
     add_edit_flags(approve)
