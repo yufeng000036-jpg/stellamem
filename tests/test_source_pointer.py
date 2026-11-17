@@ -94,6 +94,35 @@ class SourcePointerTests(unittest.TestCase):
         daily = self.write_manifest([pointer("session.jsonl", "survives reset")])
         self.assertEqual(read_daily(daily, self.config)[0]["text"], "survives reset")
 
+    def test_reset_resolves_when_original_filename_is_reused(self):
+        (self.sessions / "session.jsonl.reset.2026").write_text(
+            entry("old source"), encoding="utf-8"
+        )
+        (self.sessions / "session.jsonl").write_text(
+            entry("new source", mid="different"), encoding="utf-8"
+        )
+        daily = self.write_manifest([pointer("session.jsonl", "old source")])
+        message = read_daily(daily, self.config)[0]
+        self.assertEqual(message["text"], "old source")
+        self.assertEqual(message["provenance"]["resolved_session_file"], "session.jsonl.reset.2026")
+
+    def test_rotated_other_session_never_satisfies_pointer(self):
+        (self.sessions / "session1.jsonl.reset.2026").write_text(
+            entry("old source"), encoding="utf-8"
+        )
+        daily = self.write_manifest([pointer("session[1].jsonl", "old source")])
+        with self.assertRaises(SourceError):
+            read_daily(daily, self.config)
+
+    def test_reset_rejects_changed_speaker_even_when_content_matches(self):
+        (self.sessions / "session.jsonl").write_text(entry("new"), encoding="utf-8")
+        (self.sessions / "session.jsonl.reset.2026").write_text(
+            entry("old source", role="assistant"), encoding="utf-8"
+        )
+        daily = self.write_manifest([pointer("session.jsonl", "old source", role="user")])
+        with self.assertRaises(SourceError):
+            read_daily(daily, self.config)
+
     def test_multiple_session_files_resolve_by_name(self):
         (self.sessions / "alpha.jsonl").write_text(entry("from alpha", mid="a"), encoding="utf-8")
         (self.sessions / "beta.jsonl").write_text(entry("from beta", mid="b"), encoding="utf-8")

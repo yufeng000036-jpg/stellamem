@@ -1,5 +1,6 @@
 """Read complete sources and retain honest precision and offsets."""
 
+import glob
 import hashlib
 import json
 import re
@@ -38,18 +39,27 @@ def read_daily(path, config=None):
     if data.get("schema_version") != 2 or not isinstance(data.get("pointers"), list):
         raise SourceError("Invalid source manifest")
     cache = {}
+    rotated_cache = {}
     messages = []
     for pointer in data["pointers"]:
         name = pointer.get("session_file", "")
         if not name or Path(name).name != name or "/" in name or "\\" in name:
             raise SourceError("Invalid source filename")
-        candidates = [root / name]
-        # Host may rename canonical session after /new; bounded same-session search.
+        # The canonical filename can be reused after /new. Even if it exists,
+        # an old pointer may refer to a rotated sibling rather than the new file.
+        # Escape glob metacharacters so a session name cannot search other sessions.
         base = name.split(".jsonl")[0]
-        if not candidates[0].exists():
-            candidates = sorted(root.glob(base + ".jsonl*"))
+        preferred = root / name
+
+        def candidates():
+            if preferred.exists():
+                yield preferred
+            if base not in rotated_cache:
+                rotated_cache[base] = sorted(root.glob(glob.escape(base) + ".jsonl*"))
+            yield from (source for source in rotated_cache[base] if source != preferred)
+
         found = None
-        for source in candidates:
+        for source in candidates():
             if source.resolve().parent != root:
                 raise SourceError("Source path escaped configured root")
             if source not in cache:
