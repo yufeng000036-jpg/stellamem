@@ -1,15 +1,14 @@
-import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { realpath, mkdir, open, rename, unlink } from "node:fs/promises";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 
-// Loaded synchronously: a top-level `await` here breaks hosts that load this
-// module through a non-ESM bridge (OpenClaw's plugin loader reports
-// "await is not defined"). Reading a small local JSON file synchronously at
-// import time is safe and keeps the loader portable.
-export const RULES = JSON.parse(
-  readFileSync(new URL("./policy-rules.json", import.meta.url), "utf8")
-);
+// Load the single canonical rules file synchronously. A literal require lets
+// OpenClaw's plugin bundler include the JSON asset; a dynamic readFileSync URL
+// pointed at a file absent from its isolated package capture. createRequire
+// also works on Node 18 and avoids top-level await in older host loaders.
+const require = createRequire(import.meta.url);
+export const RULES = require("./policy-rules.json");
 export function matches(group, text) {
   return RULES[group].some((pattern) => new RegExp(pattern, "i").test(String(text)));
 }

@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { writeDaily } from "../hooks/daily-autolog/handler.js";
 import { project } from "../adapters/openclaw/index.js";
+import { RULES } from "../shared/runtime.mjs";
 
 const fixtureRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -112,7 +113,9 @@ test("runtime rules load without top-level await", async () => {
     "utf8"
   );
   assert.ok(!/^await\s/m.test(source), "runtime.mjs must not use top-level await");
-  assert.ok(source.includes("readFileSync"), "rules should load synchronously");
+  assert.ok(source.includes('require("./policy-rules.json")'), "bundler must see the rules asset");
+  const expected = JSON.parse(await readFile(path.join(fixtureRoot, "shared", "policy-rules.json"), "utf8"));
+  assert.deepEqual(RULES, expected, "runtime and canonical policy must match");
 });
 test("projection isolates authoritative subject namespaces and rejects malformed ones", async () => {
   const f = await fixture(); await mkdir(path.join(f.root, "core"));
