@@ -85,7 +85,11 @@ def read_session(database, session_id):
         seen_ids = set()
         total_bytes = 0
         count = 0
+        previous_seq = -1
         for seq, text, compressed, declared, indexed_role in rows:
+            if not isinstance(seq, int) or seq <= previous_seq:
+                raise SourceError("invalid transcript sequence")
+            previous_seq = seq
             count += 1
             if count > MAX_SESSION_EVENTS:
                 raise SourceError("session exceeds event limit; no partial read")
@@ -109,7 +113,7 @@ def read_session(database, session_id):
                 raise SourceError("transcript role index mismatch")
             event_id = event.get("id")
             timestamp = event.get("timestamp")
-            if not isinstance(event_id, str) or not event_id or event_id in seen_ids:
+            if not isinstance(event_id, str) or not event_id.strip() or event_id in seen_ids:
                 raise SourceError("missing or duplicate message id")
             try:
                 parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
