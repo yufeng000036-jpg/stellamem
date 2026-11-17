@@ -5,6 +5,8 @@ here touches real user memory; the config is redirected via STELLAMEM_CONFIG.
 """
 
 import json
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -123,6 +125,32 @@ class InboxTests(unittest.TestCase):
         self.assertEqual(self.cli(["approve", pending[0]["claim_id"]]), 0)
         _, records = load_records(self.write_target("lesson"))
         self.assertEqual(records[0]["source"], "assistant")
+
+    @unittest.skipUnless(shutil.which("node"), "Node is needed for the adapter")
+    def test_approved_assistant_history_survives_into_projection(self):
+        self.seed(
+            kind="lesson",
+            source="assistant",
+            predicate="fictional beverage",
+            value="fictional nebula tea",
+            evidence="fictional nebula tea",
+        )
+        pending = [r for r in self.inbox_records() if r["status"] == "pending"]
+        self.assertEqual(self.cli(["approve", pending[0]["claim_id"]]), 0)
+        _, records = load_records(self.write_target("lesson"))
+        self.assertEqual(records[0]["source"], "assistant")
+        adapter = Path(__file__).resolve().parents[1] / "adapters/openclaw/index.js"
+        js = (
+            "const {project} = await import(process.argv[1]); "
+            "console.log(await project(process.argv[2], 'fictional beverage'));"
+        )
+        result = subprocess.run(
+            ["node", "--input-type=module", "-e", js, adapter.as_uri(), str(self.mem)],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        self.assertIn("fictional nebula tea", result.stdout)
 
     def test_unknown_source_requires_explicit_decision(self):
         self.seed(kind="lesson", source="unknown")
