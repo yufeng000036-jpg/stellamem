@@ -54,7 +54,7 @@ class JsonlFixture(unittest.TestCase):
         text = "".join(
             (line if isinstance(line, str) else json.dumps(line)) + "\n" for line in lines
         )
-        path.write_text(text, encoding="utf-8")
+        path.write_bytes(text.encode("utf-8"))
         return path
 
     def basic(self):
