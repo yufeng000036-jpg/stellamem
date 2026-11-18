@@ -13,6 +13,7 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "compiler"))
 
+import file_lock
 import indexer
 import nightly_settlement
 from storage import render_records
@@ -486,6 +487,57 @@ class LedgerArmTests(unittest.TestCase):
         out_dir = self.root / "system" / "nightly-settlement"
         self.assertEqual(list(out_dir.glob("settlement-*.txt")), [])
         self.assertFalse((out_dir / "baseline.json").exists())
+
+
+REAL_REPLACE = os.replace
+
+
+def flaky_replace(failures, error):
+    """前 failures 次调用抛 error，之后委托给真正的 os.replace（同 #110 风格）。"""
+    calls = {"n": 0}
+
+    def _replace(src, dst):
+        calls["n"] += 1
+        if calls["n"] <= failures:
+            raise error
+        return REAL_REPLACE(src, dst)
+
+    return _replace, calls
+
+
+class AtomicWriteReplaceRetryTests(unittest.TestCase):
+    """_atomic_write_text 的改名走 file_lock 的有界重试（PR #110 遗留补齐）。
+
+    Windows 上目标文件正被别的进程打开时 os.replace 瞬间 PermissionError；
+    Linux 复现不了真实竞态，用 mock 让 os.replace 先抛错再成功，直接覆盖
+    重试逻辑本身。预算常量打在 helper 所在的 file_lock 模块上。
+    """
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.target = Path(self._tmp.name) / "baseline.json"
+        patcher = mock.patch.object(file_lock, "_REPLACE_POLL_INTERVAL", 0)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_retries_permission_error_then_succeeds(self):
+        flaky, calls = flaky_replace(3, PermissionError(5, "Access is denied"))
+        with mock.patch("os.replace", flaky):
+            nightly_settlement._atomic_write_text(self.target, '{"ok": true}')
+        self.assertEqual(calls["n"], 4)
+        self.assertEqual(self.target.read_text(encoding="utf-8"), '{"ok": true}')
+
+    def test_permission_error_propagates_after_budget_exhausted(self):
+        flaky, calls = flaky_replace(999, PermissionError(5, "Access is denied"))
+        with (
+            mock.patch.object(file_lock, "_REPLACE_TIMEOUT", 0),
+            mock.patch("os.replace", flaky),
+        ):
+            with self.assertRaises(PermissionError):
+                nightly_settlement._atomic_write_text(self.target, "x")
+        self.assertEqual(calls["n"], 1)
+        self.assertFalse(self.target.exists())
 
 
 if __name__ == "__main__":
