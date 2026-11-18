@@ -30,6 +30,7 @@ import search as S
 import snapshots
 import subjects
 import sufficiency as sufficiency_mod
+import reading as reading_mod
 from hit_votes import HitVotes, validate_vote
 from storage import Transaction, load_records
 
@@ -592,6 +593,9 @@ class Handler(BaseHTTPRequestHandler):
                         for rec in result["items"]
                     ],
                 )
+                # 结构化证据同理按过滤后条目重建：未过滤的 evidence 会把
+                # 其他主体的 claim id / value 直接写进受限响应，比 text 更露。
+                result["evidence"] = reading_mod.build_evidence(result["items"])
             return self._send(*_json(HTTPStatus.OK, result))
 
         # 以下为写操作：Scoped Token（受限 Token）禁止写操作，只读
