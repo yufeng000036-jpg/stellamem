@@ -20,3 +20,16 @@ Input system commit 9034cde. The corrected verdict is inherited from score_integ
 The 87 and 110 are experiment populations, not predicted recoveries. Fixing 25 previously wrong cases with zero regressions would add five percentage points on 500. No causal estimate or semantic-entailment rate is available from the CSV. Turning off review or widening injection would increase risk and needs a paired trial. Comparing two reader prompts at the same evidence budget is cheaper and reversible.
 
 The public benchmark defines unanswerability. Raw source absence, source text conflicts, plan versus completion, semantic correctness despite a bad citation, and semantic judge mistakes cannot be distinguished reliably using anonymous replay ids alone. They need source and response review. The audit identifies three historical positive verdicts it overrules. A right-turn citation measures an ID match, not whether it supports the answer. Citation and abstention tags may overlap the primary cause and must never be added to the total failed count.
+
+## Source-grounded spot check of wrong answers
+
+Within the all-gold-turns-represented bucket, sort by SHA-256 of `qualitative-v1:` plus case id, then take the first three per category for assistant history, multi-session, knowledge update and temporal reasoning. This is an AI-assisted source review, not a new semantic judge or an accuracy estimate. The inspected inputs are the public question and reference, the tracked judge hypothesis, and the annotated source turns. The prompt actually seen by the historical reader is unavailable.
+
+| Category | Case ids | Observable outcome |
+|---|---|---|
+| Assistant history | 4388e9dd, 5809eb10, f523d9fe | Three explicit abstentions. A represented turn does not show whether the particular clothing description, year or title survived claim compression. |
+| Multi-session | 60bf93ed, edced276, a96c20ee | Three explicit abstentions. For 60bf93ed the source contains purchase and arrival dates in separate turns. The reference allows either elapsed or inclusive day counting. |
+| Knowledge update | e493bb7c, 6a1eabeb, a2f3aa27 | The first is a candidate historical judge mistake: the latest source locates the painting above the bed in the bedroom, the tracked Chinese answer names the bedhead, and the reference names the room. The second returned the older 5K record; both records and their order are explicit in the source. The third abstained. |
+| Temporal reasoning | b9cfe692, gpt4_fe651585, e4e14d04 | Two abstentions. For e4e14d04 the hypothesis gives three weeks since joining; the question asks membership duration at an earlier meetup and the reference gives two weeks. |
+
+Nine of these twelve were abstentions, two answered using a wrong time or state, and one needs bilingual adjudication. The CSV and 174/500 historical verdict remain unchanged. A future matched reader review should show the exact scored projection to decide whether to fix evidence selection, date reasoning or the grading model.
