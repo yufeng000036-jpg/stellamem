@@ -10,3 +10,7 @@ These experiments isolate reading or selection of raw source turns. Neither impl
 
     python reader_pair.py longmemeval_oracle.json prompt-trial.jsonl --port 18677
     python session_balance_pair.py longmemeval_oracle.json retrieval-trial.jsonl local-review.jsonl --port 18678
+
+## Order-only follow-up
+
+After observing two knowledge-update misses, test ordering on the same 14 knowledge-update and 14 temporal-reasoning development cases. Keep the lexical control's selected lines, bytes per line, total characters, question, inference settings and reader instruction. Present the candidate lines by descending session timestamp, session index and turn index. Inspect both improvement and regression directions on all 28. This follow-up reuses the measured baseline only after checking both request digests. It is exploratory and cannot establish generalization. The remaining public cases are untouched by these reader controls. Run temporal_order_pair.py with the dataset, completed retrieval audit, new output path and local port.
