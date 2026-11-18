@@ -30,13 +30,34 @@ re-running this file on the archived round-4 shards reproduces
 work/full/results.json byte-for-byte, as do rounds 1-3 (verified
 2026-11-09, zero model calls).
 
+Run manifest (PR #108 follow-up): after writing results.json, this script
+also writes work/full/run-manifest.json in the shape verify_replay.py's
+check #10 consumes (``--run-manifest``, ``check_run_freshness``)::
+
+    {"run_id": ..., "run_started_at": <ISO-8601>,
+     "artifacts": {"results.json": {"generated_at": <ISO-8601>,
+                                    "run_id": ...}}}
+
+Until now no step produced that manifest, so the freshness check could
+never execute. The shard results carry no run_id or start timestamp of
+their own, so both are derived here from what the shards do record:
+run_started_at is the earliest timestamp found in the shards' usage
+logs / preflight calls (falling back to the earliest shard results
+mtime when a run logged no timestamps), generated_at is the moment this
+merge writes results.json (strictly after run start, as the check
+requires), and run_id is a deterministic digest of repo_sha +
+dataset_sha256 + run_started_at. The manifest is a sidecar: results.json
+bytes are exactly what the pre-manifest script wrote.
+
 Usage:
     python merge.py --run-dir <run root> [--repo <dir holding evaluate.py>]
 """
 
 import argparse
+import hashlib
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -55,6 +76,52 @@ def cost_of(call):
     if miss == 0 and hit == 0 and call.get("prompt_tokens"):
         miss = call["prompt_tokens"]
     return miss * MISS + hit * HIT + out * OUT
+
+
+def parse_stamp(value):
+    """Parse an ISO-8601 timestamp to an aware datetime (naive = UTC).
+
+    Same reading as verify_replay.py's parse_timestamp; returns None for
+    anything unparseable so callers can skip it instead of failing.
+    """
+    if not isinstance(value, str) or not value.strip():
+        return None
+    text = value.strip()
+    if text[-1] in ("Z", "z"):
+        text = text[:-1] + "+00:00"
+    try:
+        stamp = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if stamp.tzinfo is None:
+        stamp = stamp.replace(tzinfo=timezone.utc)
+    return stamp
+
+
+def fmt_stamp(stamp):
+    return stamp.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def build_run_manifest(result, started, generated):
+    """Assemble the run manifest verify_replay.py check #10 consumes.
+
+    ``started`` may be None (a run that left no usable timestamp anywhere):
+    run_started_at is then null and the freshness check reports
+    NOT_EXECUTED for the artifact -- fail-closed, never a fabricated pass.
+    """
+    seed = "|".join(
+        [
+            str(result["repo_sha"]),
+            str(result["dataset_sha256"]),
+            fmt_stamp(started) if started is not None else "unknown-start",
+        ]
+    )
+    run_id = "lme-" + hashlib.sha256(seed.encode("utf-8")).hexdigest()[:16]
+    return {
+        "run_id": run_id,
+        "run_started_at": fmt_stamp(started) if started is not None else None,
+        "artifacts": {"results.json": {"generated_at": fmt_stamp(generated), "run_id": run_id}},
+    }
 
 
 def resolve_paths(argv=None):
@@ -85,16 +152,28 @@ def main(argv=None):
     rows = []
     usage_all = []
     preflights = []
+    run_stamps = []
+    shard_mtimes = []
     for i in range(4):
         shard = full / f"shard{i}"
         result = json.loads((shard / "results.json").read_text())
         rows.extend(result["cases"])
         preflights.append(result["preflight_usage"])
+        shard_mtimes.append(
+            datetime.fromtimestamp((shard / "results.json").stat().st_mtime, tz=timezone.utc)
+        )
+        for call in result.get("preflight_usage_calls") or []:
+            stamp = parse_stamp(call.get("ts"))
+            if stamp is not None:
+                run_stamps.append(stamp)
         for line in (shard / "usage.jsonl").read_text().splitlines():
             if line.strip():
                 entry = json.loads(line)
                 entry["shard"] = i
                 usage_all.append(entry)
+                stamp = parse_stamp(entry.get("ts"))
+                if stamp is not None:
+                    run_stamps.append(stamp)
     qids = [r["question_id"] for r in rows]
     assert len(rows) == 500, f"expected 500 rows, got {len(rows)}"
     assert len(set(qids)) == 500, "duplicate question_ids"
@@ -194,6 +273,19 @@ def main(argv=None):
         "cases": sorted(rows, key=lambda r: r["case_id_sha256"]),
     }
     (full / "results.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
+    # Run manifest sidecar (see module docstring): results.json above is
+    # byte-identical to the pre-manifest script; this extra file is what
+    # lets verify_replay.py check #10 execute at all.
+    generated = datetime.now(timezone.utc)
+    started = min(run_stamps) if run_stamps else min(shard_mtimes)
+    if generated <= started:
+        # Clock skew or future-dated log stamps: no honest start time is
+        # available, so emit none and let the check say NOT_EXECUTED.
+        started = None
+    manifest = build_run_manifest(result, started, generated)
+    (full / "run-manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
+    )
     print(
         json.dumps(
             {

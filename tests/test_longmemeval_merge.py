@@ -20,6 +20,11 @@ sys.path.insert(0, str(BENCH))  # evaluate.py does `from freeze import ...`
 SPEC = importlib.util.spec_from_file_location("longmemeval_evaluate", BENCH / "evaluate.py")
 evaluation = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(evaluation)
+VERIFY_SPEC = importlib.util.spec_from_file_location(
+    "longmemeval_verify_replay", BENCH / "verify_replay.py"
+)
+verify_replay = importlib.util.module_from_spec(VERIFY_SPEC)
+VERIFY_SPEC.loader.exec_module(verify_replay)
 
 ARMS = ("main", "candidate", "none", "direct")
 
@@ -84,6 +89,7 @@ def write_run(root, cases_per_shard=125):
                     "repo_sha": "synthetic",
                     "dataset_sha256": "synthetic",
                     "elapsed_seconds": 1.0,
+                    "preflight_usage_calls": [{"ts": "2026-11-12T01:59:00Z"}],
                 }
             )
         )
@@ -91,6 +97,7 @@ def write_run(root, cases_per_shard=125):
             json.dumps(
                 {
                     "kind": "answer",
+                    "ts": "2026-11-12T02:00:00Z",
                     "prompt_tokens": 100,
                     "completion_tokens": 10,
                     "prompt_cache_hit_tokens": 0,
@@ -103,7 +110,8 @@ def write_run(root, cases_per_shard=125):
 
 
 class MergeTests(unittest.TestCase):
-    def run_merge(self, run_dir):
+    @staticmethod
+    def run_merge(run_dir):
         return subprocess.run(
             [
                 sys.executable,
@@ -160,6 +168,70 @@ class MergeTests(unittest.TestCase):
             proc = self.run_merge(run_dir)
             self.assertNotEqual(proc.returncode, 0)
 
+
+class RunManifestTests(unittest.TestCase):
+    """merge.py must emit the run manifest verify_replay check #10 needs.
+
+    Before this wiring no step produced a manifest, so the freshness
+    check (PR #108) could never execute. The manifest's run_started_at
+    comes from the earliest stamp the shards recorded (here the
+    preflight call at 01:59, before the 02:00 usage entries).
+    """
+
+    def run_merge(self, run_dir):
+        return MergeTests.run_merge(run_dir)
+
+    def merged_manifest(self, tmp):
+        run_dir, _rows = write_run(tmp)
+        proc = self.run_merge(run_dir)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        manifest_path = run_dir / "work" / "full" / "run-manifest.json"
+        self.assertTrue(manifest_path.exists())
+        return run_dir, json.loads(manifest_path.read_text())
+
+    def test_merge_writes_fresh_run_manifest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _run_dir, manifest = self.merged_manifest(tmp)
+            self.assertTrue(manifest["run_id"].startswith("lme-"))
+            self.assertEqual(manifest["run_started_at"], "2026-11-12T01:59:00Z")
+            entry = manifest["artifacts"]["results.json"]
+            self.assertEqual(entry["run_id"], manifest["run_id"])
+            problems, not_executed, notes = verify_replay.check_run_freshness(manifest)
+            self.assertEqual(problems, [])
+            self.assertEqual(not_executed, [])
+            self.assertEqual(notes["fresh"], 1)
+
+    def test_verify_replay_cli_executes_freshness(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir, _manifest = self.merged_manifest(tmp)
+            full = run_dir / "work" / "full"
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    str(BENCH / "verify_replay.py"),
+                    "--results",
+                    str(full / "results.json"),
+                    "--run-manifest",
+                    str(full / "run-manifest.json"),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            self.assertIn("PASS: run-freshness:", proc.stdout)
+            self.assertNotIn("NOT_EXECUTED: run-freshness", proc.stdout)
+
+    def test_artifact_time_moved_back_reports_stale_run_id(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _run_dir, manifest = self.merged_manifest(tmp)
+            manifest["artifacts"]["results.json"]["generated_at"] = "2026-11-12T01:00:00Z"
+            problems, not_executed, notes = verify_replay.check_run_freshness(manifest)
+            self.assertEqual(not_executed, [])
+            self.assertEqual(notes["fresh"], 0)
+            self.assertTrue(any("STALE_RUN_ID" in p for p in problems))
+
+
+class MergeDefaultDirTests(unittest.TestCase):
     def test_default_run_dir_is_script_dir(self):
         # No flags: --run-dir defaults to the script's own directory, which
         # holds no work/full -- so it must fail loudly, not silently succeed.
