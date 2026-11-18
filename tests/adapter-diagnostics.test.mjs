@@ -80,11 +80,14 @@ test("projected + ineligible + no-relevance reasons are recorded", async () => {
   });
 });
 
-test("kind-cap: fourth same-kind claim is cut with a reason", async () => {
+test("kind-cap: fourth type-only same-kind claim is cut with a reason", async () => {
   const root = await fixture();
-  const lessons = [1, 2, 3, 4].map((i) => record({
-    claim_id: `c-l${i}`, revision_id: `r-l${i}`, kind: "lesson",
-    value: `虚构教训${i}：星球邮差要记得喝水`, evidence: `虚构教训${i}：星球邮差要记得喝水`,
+  // All four lessons pass the gate on lesson intent alone (their content
+  // words share nothing with the prompt). The per-kind cap guards only
+  // type-only claims, so the fourth is still cut.
+  const lessons = ["出门要记得带伞", "浇花之前先看天气", "锁门之后再走远路", "买票要提前三天"].map((text, i) => record({
+    claim_id: `c-l${i + 1}`, revision_id: `r-l${i + 1}`, kind: "lesson",
+    value: `虚构教训${i + 1}：${text}`, evidence: `虚构教训${i + 1}：${text}`,
   }));
   await writeRecords(root, "long-term/lessons.md", lessons);
   const prompt = "星球邮差有什么经验教训";
@@ -98,12 +101,93 @@ test("kind-cap: fourth same-kind claim is cut with a reason", async () => {
   });
 });
 
-test("total-cap: claims past the twelfth are cut with a reason", async () => {
+test("topical claims are bounded by the total budget, not the per-kind cap", async () => {
+  const root = await fixture();
+  const lessons = [1, 2, 3, 4, 5, 6, 7].map((i) => record({
+    claim_id: `c-x${i}`, revision_id: `r-x${i}`, kind: "lesson",
+    value: `虚构教训${i}：星球邮差要记得喝水`, evidence: `虚构教训${i}：星球邮差要记得喝水`,
+  }));
+  await writeRecords(root, "long-term/lessons.md", lessons);
+  const prompt = "星球邮差有什么经验教训";
+  await withDiagDir(async (dir) => {
+    const out = await project(root, prompt);
+    const diag = await readSidecar(dir, prompt);
+    // All seven share wording with the prompt (topical), so none is cut
+    // by the per-kind cap that guards type-only claims.
+    assert.equal(diag.projected_n, 7);
+    assert.equal(diag.records.filter((r) => r.reason === "kind-cap").length, 0);
+  });
+});
+
+test("scope match: the scope label alone can make a claim topical", async () => {
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [
+    record({ claim_id: "c-gym", revision_id: "r-gym", scope: "gym membership",
+      value: "user paid the annual fee in March", evidence: "user paid the annual fee in March" }),
+    record({ claim_id: "c-other", revision_id: "r-other", scope: "car repair",
+      value: "user paid the annual fee in March", evidence: "user paid the annual fee in March" }),
+  ]);
+  const prompt = "How much is my gym membership?";
+  await withDiagDir(async (dir) => {
+    const out = await project(root, prompt, { activeScopes: ["gym membership", "car repair"] });
+    const diag = await readSidecar(dir, prompt);
+    const byId = Object.fromEntries(diag.records.map((r) => [r.claim_id, r]));
+    assert.equal(byId["c-gym"].stage, "projected");
+    assert.equal(byId["c-other"].stage, "dropped");
+    assert.equal(byId["c-other"].reason, "no-relevance");
+  });
+});
+
+test("fill pass: a dated claim enters a temporal question, not a plain one", async () => {
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [
+    record({ claim_id: "c-cat", revision_id: "r-cat",
+      value: "user adopted a cat last spring", evidence: "user adopted a cat last spring",
+      provenance: { session_id: "s1", message_id: "m1", timestamp: "2023-03-15" } }),
+  ]);
+  const temporal = "How many days passed between the concert and the recital?";
+  await withDiagDir(async (dir) => {
+    const out = await project(root, temporal);
+    const diag = await readSidecar(dir, temporal);
+    const byId = Object.fromEntries(diag.records.map((r) => [r.claim_id, r]));
+    assert.equal(byId["c-cat"].stage, "projected");
+    assert.equal(byId["c-cat"].score, 0.04);
+  });
+  const plain = "What is the favorite color?";
+  await withDiagDir(async (dir) => {
+    const out = await project(root, plain);
+    const diag = await readSidecar(dir, plain);
+    const byId = Object.fromEntries(diag.records.map((r) => [r.claim_id, r]));
+    assert.equal(byId["c-cat"].stage, "dropped");
+    assert.equal(byId["c-cat"].reason, "no-relevance");
+  });
+});
+
+test("stem-lite: an inflected claim word still matches the question", async () => {
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [
+    record({ claim_id: "c-tickets", revision_id: "r-tickets",
+      value: "user bought tickets for the concert", evidence: "user bought tickets for the concert" }),
+    record({ claim_id: "c-far", revision_id: "r-far",
+      value: "user adopted a cat last spring", evidence: "user adopted a cat last spring" }),
+  ]);
+  const prompt = "How much did the ticket cost?";
+  await withDiagDir(async (dir) => {
+    const out = await project(root, prompt);
+    const diag = await readSidecar(dir, prompt);
+    const byId = Object.fromEntries(diag.records.map((r) => [r.claim_id, r]));
+    assert.equal(byId["c-tickets"].stage, "projected");
+    assert.equal(byId["c-far"].stage, "dropped");
+    assert.equal(byId["c-far"].reason, "no-relevance");
+  });
+});
+
+test("total-cap: claims past the twentieth are cut with a reason", async () => {
   const root = await fixture();
   const kinds = ["project", "preference", "lesson", "decision", "fact"];
   const claims = [];
   for (const kind of kinds) {
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 5; i++) {
       claims.push(record({
         claim_id: `c-${kind}${i}`, revision_id: `r-${kind}${i}`, kind,
         value: `虚构：星球邮差${kind}${i}`, evidence: `虚构：星球邮差${kind}${i}`,
@@ -115,9 +199,9 @@ test("total-cap: claims past the twelfth are cut with a reason", async () => {
   await withDiagDir(async (dir) => {
     const out = await project(root, prompt);
     const diag = await readSidecar(dir, prompt);
-    assert.equal(diag.projected_n, 12);
+    assert.equal(diag.projected_n, 20);
     const cut = diag.records.filter((r) => r.reason === "total-cap");
-    assert.equal(cut.length, 3, "three claims past the cap: " + JSON.stringify(diag.records.map((r) => [r.claim_id, r.stage, r.reason])));
+    assert.equal(cut.length, 5, "five claims past the cap: " + JSON.stringify(diag.records.map((r) => [r.claim_id, r.stage, r.reason])));
   });
 });
 

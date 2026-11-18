@@ -91,11 +91,39 @@ function sharedBigrams(claimText, query) {
   return shared;
 }
 
+// English stem-lite: the claim value is a model paraphrase, so the same
+// concept routinely appears in a different inflection than the question
+// ("tickets" in the claim, "ticket" in the question). Exact substring
+// matching misses those; a light suffix strip on both sides recovers them
+// without a stemmer's false friends. Deliberately narrow: plural -s/-es,
+// -ies -> -y, -ing, -ed, each guarded by a minimum length so short words
+// ("gas", "has") are never mangled. CJK runs are unaffected (the suffixes
+// are ASCII and the query stem set only holds [a-z0-9] tokens).
+function stemWord(token) {
+  if (token.length > 4 && token.endsWith("ies")) return token.slice(0, -3) + "y";
+  if (token.length > 4 && token.endsWith("ing")) return token.slice(0, -3);
+  if (token.length > 3 && token.endsWith("ed")) return token.slice(0, -2);
+  if (token.length > 3 && token.endsWith("es")) return token.slice(0, -2);
+  if (token.length > 3 && token.endsWith("s")) return token.slice(0, -1);
+  return token;
+}
+const queryStemCache = new Map();
+function queryStems(query) {
+  let stems = queryStemCache.get(query);
+  if (!stems) {
+    stems = new Set((query.match(/[a-z0-9]+/g) || []).map(stemWord));
+    if (queryStemCache.size > 64) queryStemCache.clear();
+    queryStemCache.set(query, stems);
+  }
+  return stems;
+}
+
 // Overlap of one text against the query: shared content words and CJK bigrams.
 function overlap(text, query) {
   const words = contentWords(text);
+  const stems = queryStems(query);
   let hit = 0;
-  for (const word of words) if (query.includes(word)) hit += 1;
+  for (const word of words) if (query.includes(word) || stems.has(stemWord(word))) hit += 1;
   const shared = sharedBigrams(text, query);
   return {
     lexical: hit > 0,
@@ -120,7 +148,12 @@ function relevance(claim, prompt) {
   // just because its evidence also matched lexically with a tiny base.
   const valueText = [claim.subject, claim.predicate, claim.value].join(" ");
   const value = overlap(valueText, query);
-  const full = overlap(valueText + " " + (claim.evidence || ""), query);
+  // The scope is a short topical label ("grocery shopping", 健身打卡): a
+  // question may name the topic only through the scope even when neither
+  // the paraphrased value nor the quoted evidence repeats its words, so
+  // the scope joins the full text. max() with the value-only base below
+  // keeps a value match's score exact, as before.
+  const full = overlap(valueText + " " + (claim.evidence || "") + " " + (claim.scope || ""), query);
   const lexical = value.lexical || full.lexical;
   const bigram = value.bigram || full.bigram;
   const shared = Math.max(value.sharedBigrams, full.sharedBigrams);
@@ -364,6 +397,20 @@ export async function project(root, prompt, config = {}) {
   // or a Chinese technical word. Sensitive/secret eligibility checks
   // are unchanged; only this preference-relevance gate is narrowed.
   const technical = /(?:\b\d{3,5}\b|:\d+|\b[\w-]+\.(?:js|json|md|py|txt|yml|yaml|toml)\b|端口|版本|文件|路径)/i.test(prompt);
+  // Question shapes that can only be answered from dated or quantified
+  // records even when no wording overlaps: "how many days between A and
+  // B" needs the dated claims about A and B, whose paraphrased values may
+  // share no content word with the question. Such gate-failed claims get
+  // a second chance in the fill pass below (lowest priority, only into
+  // slots the topical selection left unused).
+  const temporalQuestion = /\b(?:how many days|how many weeks|how many months|how long|when did|what date|which day|which date|before|after|between|ago|earlier|later|previous)\b/i.test(prompt);
+  const quantityQuestion = /\b(?:how many|how much|how long|total|number of)\b/i.test(prompt);
+  function fallbackPass(c) {
+    if (temporalQuestion && c.provenance && c.provenance.timestamp) return true;
+    if (quantityQuestion && /\d/.test([c.subject, c.predicate, c.value, c.evidence].join(" "))) return true;
+    return false;
+  }
+  const fillPool = [];
 
   for (const rel of FILES) {
     if (FORBIDDEN.test(rel)) continue;
@@ -393,23 +440,25 @@ export async function project(root, prompt, config = {}) {
       const always = c.injection_policy === "always";
       const r = relevance(c, prompt);
       if (!always) {
+        let gateFailed = false;
         if (c.kind === "preference") {
           // Topical overlap required. A generic "我有哪些偏好" may fall back to
           // the top few, but a technical prompt ("偏好 8081 端口") may not.
           // Bigram overlap is topical like lexical, so it passes even when
           // technical; only intent alone is blocked by the carve-out.
-          if (!r.lexical && !r.bigram && !(r.intent && !technical)) {
-            const entry = diagEntry(c, r.score);
-            entry.stage = "dropped"; entry.reason = "no-relevance";
-            diagRecords.push(entry);
-            continue;
-          }
-        } else if (!r.lexical && !r.bigram && !r.intent) {
+          gateFailed = !r.lexical && !r.bigram && !(r.intent && !technical);
+        } else {
           // Project/lesson/decision allow type-only recall, so "我有哪些项目"
           // works even when no claim text contains the word "项目".
+          gateFailed = !r.lexical && !r.bigram && !r.intent;
+        }
+        if (gateFailed) {
           const entry = diagEntry(c, r.score);
           entry.stage = "dropped"; entry.reason = "no-relevance";
           diagRecords.push(entry);
+          // Not final: the fill pass may still project this claim when
+          // the question is temporal/quantitative and slots remain.
+          fillPool.push({ c, entry });
           continue;
         }
       }
@@ -418,26 +467,56 @@ export async function project(root, prompt, config = {}) {
       // below a real lexical hit.
       const score = always ? 2 : (r.lexical || r.bigram ? r.score : 0.05);
       const entry = diagEntry(c, score);
-      candidates.push({ c, score, entry });
+      candidates.push({ c, score, entry, topical: r.lexical || r.bigram, always });
       diagRecords.push(entry);
     }
   }
 
-  // An ambiguous slot is never resolved by relevance score.
+  // An ambiguous slot is never resolved by relevance score. Ambiguity is
+  // judged among gate-passing candidates only: a gate-failed sibling
+  // revision never made the slot ambiguous (the fill pass below applies
+  // its own, stricter check before touching such a slot).
   const revisions = new Map();
   for (const { c } of candidates) {
     if (!revisions.has(c.claim_id)) revisions.set(c.claim_id, new Set());
     revisions.get(c.claim_id).add(c.revision_id);
   }
+  const fillRevisions = new Map();
+  for (const { c } of fillPool) {
+    if (!fillRevisions.has(c.claim_id)) fillRevisions.set(c.claim_id, new Set());
+    fillRevisions.get(c.claim_id).add(c.revision_id);
+  }
   candidates.sort((a, b) => b.score - a.score);
   const perKind = {};
   const maxPerKind = 3;
-  const maxClaims = 12;
   const projectedList = [];
+  // The flat 3-per-kind cap was the single largest projection-stage loss
+  // in the round-4 claim-level tracking
+  // (benchmark/longmemeval/claim_tracking_20261108.csv: 1,831 of 7,639
+  // gold claims cut by kind-cap, with 94.7% of the post-gate candidate
+  // pool being gold, so the cap mostly cut evidence against evidence).
+  // The per-kind cap now guards only type-only (intent) claims — cited
+  // 0/71 in round 4, so widening their share would only dilute the
+  // context — while topical claims (a shared content word, stemmed
+  // match, CJK bigram overlap, or a scope match) and always-injected
+  // claims are bounded by the total budget alone. The total budget rose
+  // from 12 to 20 lines: at the measured ~180 chars per line that is
+  // ~3,600 chars, still far below the default char cap, which keeps
+  // protecting smaller caller budgets exactly as before.
+  const maxClaims = 20;
+  function lineFor(c) {
+    return JSON.stringify({ id: c.claim_id, scope: c.scope, source: c.source, predicate: c.predicate,
+      value: c.value,
+      // The claim's own date: without it the reader cannot order events at
+      // all (temporal questions), and the direct arm's raw context does carry
+      // a date per message. Provenance timestamp is the source message's
+      // timestamp; omit the field when a record has no provenance.
+      date: (c.provenance && c.provenance.timestamp) || undefined }) + "\n";
+  }
   let output = "";
   let count = 0;
   for (let i = 0; i < candidates.length; i++) {
-    const { c, entry } = candidates[i];
+    const { c, entry, topical, always } = candidates[i];
     if (!c.claim_id || !c.revision_id || revisions.get(c.claim_id).size !== 1) {
       if (entry) { entry.stage = "dropped"; entry.reason = "ambiguous-revision"; }
       continue;
@@ -451,27 +530,55 @@ export async function project(root, prompt, config = {}) {
       }
       break;
     }
-    if (perKind[c.kind] >= maxPerKind) {
+    if (!topical && !always && (perKind[c.kind] || 0) >= maxPerKind) {
       if (entry) { entry.stage = "dropped"; entry.reason = "kind-cap"; }
       continue;
     }
-    const line = JSON.stringify({ id: c.claim_id, scope: c.scope, source: c.source, predicate: c.predicate,
-      value: c.value,
-      // The claim's own date: without it the reader cannot order events at
-      // all (temporal questions), and the direct arm's raw context does carry
-      // a date per message. Provenance timestamp is the source message's
-      // timestamp; omit the field when a record has no provenance.
-      date: (c.provenance && c.provenance.timestamp) || undefined }) + "\n";
+    const line = lineFor(c);
     if (prefix.length + output.length + line.length > max) {
       if (entry) { entry.stage = "dropped"; entry.reason = "char-cap"; }
       continue;
     }
     output += line;
-    perKind[c.kind] = (perKind[c.kind] || 0) + 1;
+    if (!topical && !always) perKind[c.kind] = (perKind[c.kind] || 0) + 1;
     count += 1;
     seen.add(c.revision_id);
     projectedList.push({ c, entry });
     if (entry) { entry.stage = "projected"; entry.reason = null; }
+  }
+  // Fill pass: temporal/quantitative questions may still be answerable
+  // from dated or quantified records whose wording shares nothing with
+  // the question (round 4: 1,055 of the 2,608 no-relevance gold claims
+  // sat behind such question shapes). Admit those, and only those, into
+  // slots the topical selection left unused — after every topical line,
+  // so position-sensitive readers meet the strong evidence first. The
+  // sufficiency guard in the prefix still tells the reader to abstain
+  // when no line is about the asked item, and eligibility, ambiguity
+  // and the char cap apply unchanged.
+  if (count < maxClaims && (temporalQuestion || quantityQuestion)) {
+    for (const { c, entry } of fillPool) {
+      if (count >= maxClaims) break;
+      // A fill claim may only take a slot no candidate touched: if any
+      // revision of this claim passed the gate, that path already
+      // decided the slot, and two fill revisions of one claim are just
+      // as ambiguous as two candidate revisions.
+      if (!c.claim_id || !c.revision_id || fillRevisions.get(c.claim_id).size !== 1 ||
+          revisions.has(c.claim_id)) {
+        if (entry) entry.reason = "ambiguous-revision";
+        continue;
+      }
+      if (!fallbackPass(c)) continue;
+      const line = lineFor(c);
+      if (prefix.length + output.length + line.length > max) {
+        if (entry) entry.reason = "char-cap";
+        continue;
+      }
+      output += line;
+      count += 1;
+      seen.add(c.revision_id);
+      projectedList.push({ c, entry });
+      if (entry) { entry.stage = "projected"; entry.reason = null; entry.score = 0.04; }
+    }
   }
   if (await pending(root)) { diagEmpty = "pending"; await emitDiag(""); return ""; }
   if (await generation(root) !== beforeGeneration) { diagEmpty = "generation-changed"; await emitDiag(""); return ""; }
