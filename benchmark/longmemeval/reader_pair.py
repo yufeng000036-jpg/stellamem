@@ -137,12 +137,12 @@ def main(args):
                     input_sha256=sha(payload),
                     chars=len(memory),
                 )
+                choice, record["usage"] = infer(args.port, prompt, payload)
                 try:
-                    choice, record["usage"] = infer(args.port, prompt, payload)
                     if choice["finish_reason"] != "stop":
                         raise ValueError("incomplete generation")
                     record.update(evaluate_output(choice["message"]["content"].strip(), refs, row))
-                except (OSError, ValueError, KeyError, TypeError, IndexError) as exc:
+                except (ValueError, KeyError, TypeError, IndexError) as exc:
                     record.update(error=type(exc).__name__, exact=False)
                 record["seconds"] = round(time.monotonic() - start, 3)
                 print(json.dumps(record), file=out, flush=True)
