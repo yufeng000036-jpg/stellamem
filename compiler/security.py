@@ -125,6 +125,9 @@ _CN_DIGITS = {
 def _cn_number(text):
     if text.isdigit():
         return int(text)
+    if "十" in text:
+        tens, ones = text.split("十")
+        return (10 * _CN_DIGITS.get(tens, 1)) + _CN_DIGITS.get(ones, 0)
     return _CN_DIGITS.get(text)
 
 
@@ -165,7 +168,11 @@ def _relative_date_keys(text, base):
 
     def add(pattern, handler, flags=0):
         for m in re.finditer(pattern, low, flags):
-            keys = handler(m)
+            try:
+                keys = handler(m)
+            except (OverflowError, ValueError):
+                # The derived date may fall outside datetime.date's range.
+                continue
             if keys:
                 found.append((m.start(), m.group(0), keys))
 
@@ -218,7 +225,10 @@ def _relative_date_keys(text, base):
         ],
     )
     # Chinese (matched against the lowered text; digits may be hanzi).
-    num = r"(\d{1,3}|[一两二三四五六七八九十])"
+    num = (
+        r"(?<![0-9零〇一两二三四五六七八九十百千万几数点.])"
+        r"(\d{1,3}|[二三四五六七八九]?十[一二三四五六七八九]?|[一两二三四五六七八九])"
+    )
     add("前天", days(-2))
     add("昨天|昨日", days(-1))
     add("今天|今日", days(0))
@@ -257,7 +267,11 @@ def _relative_date_keys(text, base):
 
     keys = []
     expressions = []
-    for _start, expr, ks in sorted(found):
+    end = 0
+    for start, expr, ks in sorted(found, key=lambda hit: (hit[0], -len(hit[1]))):
+        if start < end:
+            continue
+        end = start + len(expr)
         expressions.append(expr)
         for k in ks:
             if k not in keys:
