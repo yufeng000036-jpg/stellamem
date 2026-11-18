@@ -133,6 +133,67 @@ function relevance(claim, prompt) {
   return { score, lexical, bigram, intent, sharedBigrams: shared };
 }
 
+// --- Evidence-sufficiency anchor gate (deterministic, no model call) ---
+// The reader's abstention failures concentrate on near-miss evidence:
+// projected lines about a cousin fact that never mention the entity the
+// question is anchored on. Measured case (fixed validation set, main
+// be949cdd): "How long have I been working before I started my current
+// job at Google?" was answered "9 years" from a NovaTech-era claim — no
+// projected line mentions Google anywhere, not even in its verbatim
+// evidence. Prompt-side guards (the header above, reader-prompt variants
+// 1a/1c/1d) and an LLM judge were all tried and either broke positive
+// controls or netted ~zero, so the check lives here instead: when the
+// prompt carries named anchors (capitalized phrases that are not
+// sentence-initial) and NO projected claim's own text (subject /
+// predicate / value / evidence) covers ANY anchor, the near-miss lines
+// are withheld and replaced by one explicit insufficiency line. The
+// reader then sees "no memory mentions X" instead of cousin facts.
+// Conservative by construction: no anchors -> inert; a single covered
+// anchor -> inert; empty projection -> unchanged. Calibration on the
+// fixed set (15 abstention + 25 answerable questions): fires on the one
+// failing abstention question and on zero answered-correct questions.
+// Anchors are Latin-script only; a CJK prompt without Latin names simply
+// never triggers the gate.
+const ANCHOR_STOP = new Set([
+  "january", "february", "march", "april", "may", "june", "july",
+  "august", "september", "october", "november", "december",
+  "monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
+  "sunday", "i",
+]);
+export function questionAnchors(prompt) {
+  const tokens = [...String(prompt).matchAll(/[A-Za-z0-9][A-Za-z0-9&'+.\-]*/g)];
+  const anchors = [];
+  let current = [];
+  const flush = () => {
+    if (current.length) anchors.push(current.join(" ").toLowerCase());
+    current = [];
+  };
+  tokens.forEach((m, i) => {
+    const tok = m[0];
+    const sentenceInitial = i === 0 || /[.!?]["']?\s*$/.test(String(prompt).slice(0, m.index));
+    const capitalized = (/^[A-Z]/.test(tok) && /[a-z]/.test(tok)) ||
+      (tok.length >= 2 && tok === tok.toUpperCase() && /[A-Z]/.test(tok));
+    if (capitalized && !sentenceInitial && !ANCHOR_STOP.has(tok.toLowerCase())) {
+      current.push(tok);
+    } else flush();
+  });
+  flush();
+  return anchors;
+}
+function anchorCovered(text, anchor) {
+  if (anchor.includes(" ")) return text.includes(anchor);
+  const esc = anchor.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?<![a-z0-9])${esc}(?![a-z0-9])`).test(text);
+}
+// Returns the anchor list when the gate fires (anchors exist and every
+// one is uncovered by every claim text); otherwise an empty array.
+export function uncoveredAnchors(prompt, claimTexts) {
+  const anchors = questionAnchors(prompt);
+  if (!anchors.length) return [];
+  const missing = anchors.filter((a) => !claimTexts.some((t) => anchorCovered(t, a)));
+  return missing.length === anchors.length ? anchors : [];
+}
+
 function namespaceOf(c) {
   const value = Object.hasOwn(c, "namespace") ? c.namespace : c.subject;
   const aliases = { "用户": "user", "人格": "persona", "观众": "viewer" };
@@ -372,6 +433,7 @@ export async function project(root, prompt, config = {}) {
   const perKind = {};
   const maxPerKind = 3;
   const maxClaims = 12;
+  const projectedList = [];
   let output = "";
   let count = 0;
   for (let i = 0; i < candidates.length; i++) {
@@ -408,11 +470,33 @@ export async function project(root, prompt, config = {}) {
     perKind[c.kind] = (perKind[c.kind] || 0) + 1;
     count += 1;
     seen.add(c.revision_id);
+    projectedList.push({ c, entry });
     if (entry) { entry.stage = "projected"; entry.reason = null; }
   }
   if (await pending(root)) { diagEmpty = "pending"; await emitDiag(""); return ""; }
   if (await generation(root) !== beforeGeneration) { diagEmpty = "generation-changed"; await emitDiag(""); return ""; }
-  const result = output ? prefix + output : "";
+  let result = output ? prefix + output : "";
+  if (output) {
+    // Evidence-sufficiency anchor gate: see uncoveredAnchors above. The
+    // withheld lines stay visible in diagnostics with their drop reason;
+    // the returned context is the header plus one insufficiency line, so
+    // the worker's line parser (context.splitlines()[1:], one JSON per
+    // line) keeps working unchanged.
+    const claimTexts = projectedList.map(({ c }) =>
+      [c.subject, c.predicate, c.value, c.evidence].map((x) => String(x ?? "")).join(" ").toLowerCase());
+    const missing = uncoveredAnchors(prompt, claimTexts);
+    if (missing.length) {
+      for (const { entry } of projectedList) {
+        if (entry) { entry.stage = "dropped"; entry.reason = "insufficient-anchor-coverage"; }
+      }
+      result = prefix + JSON.stringify({
+        id: "stellamem:insufficient-evidence", scope: "system", source: "system",
+        predicate: "evidence_sufficiency",
+        value: "No stored memory mentions " + missing.join(", ") +
+          ". The named anchor of this question is absent from memory, so near-miss lines were withheld as insufficient evidence.",
+      }) + "\n";
+    }
+  }
   if (!result) diagEmpty = diagRecords.length ? "all-dropped" : "no-candidates";
   await emitDiag(result);
   return result;
