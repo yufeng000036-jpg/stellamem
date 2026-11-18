@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { project } from "../adapters/openclaw/index.js";
+import adapter, { project } from "../adapters/openclaw/index.js";
 
 async function fixture() {
   return mkdtemp(path.join(os.tmpdir(), "stellamem-adapter-h1-"));
@@ -35,6 +35,8 @@ test("approved assistant history projects with attribution preserved", async () 
   ]);
   const out = await project(root, "羊肉炖菜配什么啤酒");
   assert.ok(out.includes("清淡酒体"), "assistant history must be injected: " + out);
+  const row = JSON.parse(out.split("\n").find((line) => line.startsWith("{")));
+  assert.equal(row.source, "assistant", "reader must see who said it");
 });
 
 test("assistant record without verified evidence still does not project", async () => {
@@ -63,4 +65,32 @@ test("pending assistant record does not project (approval is the gate)", async (
   ]);
   const out = await project(root, "羊肉炖菜配什么啤酒");
   assert.equal(out, "");
+});
+
+
+test("host hook carries source and preserves the projection contract", async () => {
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [record({ ...BEER, source: "assistant" })]);
+  let handler;
+  adapter.register({ pluginConfig: { coreDir: root }, on(name, fn) {
+    assert.equal(name, "before_prompt_build"); handler = fn;
+  } });
+  const response = await handler({ prompt: "羊肉炖菜配什么啤酒" });
+  const lines = response.prependContext.trimEnd().split("\n");
+  assert.equal(JSON.parse(lines[1]).source, "assistant");
+  assert.deepEqual(await handler({ prompt: "今天天气怎么样" }), {});
+});
+
+test("source field counts toward character limit, including exact boundary", async () => {
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [record({ ...BEER, source: "assistant" })]);
+  const prompt = "羊肉炖菜配什么啤酒";
+  const full = await project(root, prompt);
+  assert.ok(full);
+  const oldRow = JSON.parse(full.split("\n")[1]);
+  delete oldRow.source;
+  const oldLength = full.split("\n")[0].length + 1 + JSON.stringify(oldRow).length + 1;
+  assert.equal(full.length - oldLength, ',"source":"assistant"'.length);
+  assert.equal(await project(root, prompt, { maxInjectChars: full.length }), full);
+  assert.equal(await project(root, prompt, { maxInjectChars: full.length - 1 }), "");
 });

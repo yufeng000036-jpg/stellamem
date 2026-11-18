@@ -393,7 +393,7 @@ export async function project(root, prompt, config = {}) {
       if (entry) { entry.stage = "dropped"; entry.reason = "kind-cap"; }
       continue;
     }
-    const line = JSON.stringify({ id: c.claim_id, scope: c.scope, predicate: c.predicate,
+    const line = JSON.stringify({ id: c.claim_id, scope: c.scope, source: c.source, predicate: c.predicate,
       value: c.value,
       // The claim's own date: without it the reader cannot order events at
       // all (temporal questions), and the direct arm's raw context does carry
