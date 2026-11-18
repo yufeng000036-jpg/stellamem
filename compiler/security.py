@@ -39,6 +39,62 @@ def detect_temporary(text):
     return matches("temporary", text)
 
 
+def detect_temporary_intent(text):
+    return matches("temporary_intent", text)
+
+
+def detect_past_anchor(text):
+    return matches("past_anchor", text)
+
+
+def correct_temporary_flag(claim, message_text=""):
+    """Deterministically correct a model-supplied ``temporary`` flag.
+
+    The extraction prompt lists ``temporary`` as an output field but defines
+    it nowhere, so the model applies it to any time-bound content at all.
+    Round-4 LongMemEval attribution (2026-11-18) decomposed the 1,115 gold
+    claims dropped as ``ineligible:temporary-flag``: 1,112 carried the flag
+    from the model itself, 2 from the source-message rule match, 0 from the
+    claim-text rules — and 92% of all temporary-flagged active claims were
+    gold. The system's own definition of temporary is the ``temporary``
+    rule group (transient states of mind); a plan stated in the past and an
+    event that already happened are not it, yet the model flags both.
+
+    The correction is one-directional and fail-closed. It runs only in the
+    extraction pipeline, where the claim's evidence has been located in a
+    specific source message, and it clears the flag only when ALL hold:
+
+    - neither the claim text nor that source message matches the system's
+      own ``temporary`` rules;
+    - the claim carries no plan / hypothesis / unsettled marker
+      (``temporary_intent``) — plans and not-yet-happened content keep the
+      flag even when a date is mentioned;
+    - the claim carries a positive past anchor (``past_anchor``): a
+      completed first-person report, an explicit past date, or a
+      started-in-the-past perfect form.
+
+    Anything ambiguous keeps the flag. A correction is recorded on the
+    claim as ``temporary_correction`` and policy is recomputed, so the
+    "temporary" review reason disappears with the flag. Returns
+    ``(claim, corrected)``.
+    """
+    c = dict(claim)
+    if not c.get("temporary"):
+        return c, False
+    text = " ".join(
+        str(c.get(k, "")) for k in ("kind", "subject", "predicate", "value", "evidence")
+    )
+    if detect_temporary(text) or (message_text and detect_temporary(message_text)):
+        return c, False
+    if detect_temporary_intent(text):
+        return c, False
+    if not detect_past_anchor(text):
+        return c, False
+    c["temporary"] = False
+    c["temporary_correction"] = "past-anchor-v1"
+    return apply_policy(c), True
+
+
 def detect_sarcasm(text):
     return matches("sarcasm", text)
 

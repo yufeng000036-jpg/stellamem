@@ -5,7 +5,13 @@ from datetime import datetime, timezone
 from reliability import enforce_attribution
 from claim_normalizer import normalize_claim, digest, is_noise_claim
 from model_client import ModelOutputTruncated, call_llm, parse_json
-from security import apply_policy, contains_secret, detect_injection, matches
+from security import (
+    apply_policy,
+    contains_secret,
+    correct_temporary_flag,
+    detect_injection,
+    matches,
+)
 from source_reader import chunk_messages
 
 try:
@@ -157,8 +163,10 @@ def _parse_claims(raw, safe, chunk_id):
             requested is None or (type(requested) is int and requested == candidates[0])
         )
         quoted_hit = False
+        message_text = ""
         if exact:
             m = safe[candidates[0]]
+            message_text = m["text"]
             quoted_hit = _segment_is_quoted(m["text"], evidence)
             c["evidence_verified"] = True
             # Speaker is evidence, not a model opinion. When the source really
@@ -198,6 +206,13 @@ def _parse_claims(raw, safe, chunk_id):
         # Evidence is a bounded excerpt; source pointer/hash retains traceability.
         c["evidence"] = c["evidence"][:240]
         c = apply_policy(c)
+        if message_text:
+            # The model-supplied temporary flag has no prompt definition and
+            # in practice marks any time-bound content, not just transient
+            # states; correct it deterministically against the source
+            # message the evidence was located in (security.py has the
+            # criteria and the round-4 attribution numbers).
+            c, _corrected = correct_temporary_flag(c, message_text)
         if is_noise_claim(c):
             blocked += 1
             continue
