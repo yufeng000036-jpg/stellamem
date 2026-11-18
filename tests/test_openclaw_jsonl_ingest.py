@@ -236,6 +236,51 @@ class PropagationTests(JsonlIngestFixture):
         self.assertEqual({item["reason"] for item in report["marked"]}, {"authorization_revoked"})
 
 
+class DegradedIngestTests(JsonlIngestFixture):
+    """Pointers and run stats under the 2026-11-18 content policy."""
+
+    def mixed_session(self, tool_name="fictional"):
+        return self.write(
+            [
+                header(),
+                message("m1", "user", "fictional question"),
+                message(
+                    "m2",
+                    "assistant",
+                    [
+                        {"type": "text", "text": "fictional answer"},
+                        {"type": "toolCall", "name": tool_name},
+                        {"type": "image", "data": "fictional"},
+                    ],
+                ),
+                message("t1", "toolResult", "tool output"),
+                message("m3", "assistant", [{"type": "toolCall", "name": "fictional"}]),
+            ]
+        )
+
+    def test_degraded_pointer_carries_annotation_and_stats(self):
+        self.mixed_session()
+        self.grant()
+        result = self.ingest()
+        self.assertEqual(len(result["registered"]), 2)
+        self.assertEqual(result["source_stats"], {"skipped_no_text": 1, "skipped_tool_result": 1})
+        by_message = {item["pointer"]["message_id"]: item for item in self.entries()}
+        degraded = by_message["m2"]["pointer"]
+        self.assertIs(degraded["degraded_extraction"], True)
+        self.assertEqual(degraded["skipped_part_types"], ["image", "toolCall"])
+        self.assertNotIn("degraded_extraction", by_message["m1"]["pointer"])
+        self.assertNotIn("skipped_part_types", by_message["m1"]["pointer"])
+
+    def test_editing_only_a_skipped_part_flags_changed(self):
+        self.mixed_session()
+        self.grant()
+        result = self.ingest()
+        target = next(item for item in result["registered"] if item.endswith(":m2"))
+        self.mixed_session(tool_name="renamed")
+        report = check_pointers(self.allowlist, self.store)
+        self.assertEqual(report["marked"], [{"record_id": target, "reason": "source_changed"}])
+
+
 class LegacyAllowlistTests(JsonlIngestFixture):
     def test_sqlite_entry_without_provider_still_works(self):
         db = Path(self.tmp.name) / "host.sqlite"
