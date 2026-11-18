@@ -253,6 +253,63 @@ class PointerStoreTests(IngestFixture):
         self.assertEqual(report["marked"], [])
 
 
+class IncrementalDeliveryTests(IngestFixture):
+    def setUp(self):
+        super().setUp()
+        self.grant(sessions=["s1", "s2"])
+        self.add(event())
+        self.first = self.poll(None)
+
+    def poll(self, cursor):
+        return self.ingest_s1(ledger_path=self.ledger, cursor=cursor)
+
+    def test_resume_retry_and_empty_ack(self):
+        ack = json.loads(json.dumps(self.first["next_cursor"]))
+        self.add(event("m2", content="new"), seq=1)
+        batch = self.poll(ack)
+        self.assertEqual([m["text"] for m in batch["messages"]], ["new"])
+        self.assertEqual(self.poll(ack)["messages"], batch["messages"])
+        self.assertEqual(self.poll(batch["next_cursor"])["messages"], [])
+        self.assertEqual(len(self.entries()), 2)
+
+    def test_prefix_edit_aborts_before_registering_suffix(self):
+        self.con.execute(
+            "UPDATE transcript_events SET event_json=?", (json.dumps(event(content="edit")),)
+        )
+        self.con.commit()
+        self.add(event("m2"), seq=1)
+        before = self.store.read_bytes()
+        with self.assertRaises(SourceError):
+            self.poll(self.first["next_cursor"])
+        self.assertEqual(self.store.read_bytes(), before)
+
+    def test_cursor_store_rollback_and_cross_session_refused(self):
+        cursor = self.first["next_cursor"]
+        self.add(event(), session="s2")
+        with self.assertRaises(SourceError):
+            ingest_session(
+                self.allowlist,
+                self.store,
+                db_id="main",
+                session_id="s2",
+                ledger_path=self.ledger,
+                cursor=cursor,
+            )
+        self.store.unlink()
+        with self.assertRaises(SourceError):
+            self.poll(cursor)
+        self.assertFalse(self.store.exists())
+
+    def test_cursor_cannot_override_revocation_or_tombstone(self):
+        cursor = self.first["next_cursor"]
+        record_source_deletion(self.ledger, self.entries()[0]["pointer"], reason="deleted")
+        with self.assertRaises(SourceError):
+            self.poll(cursor)
+        revoke_database(self.allowlist, db_id="main", actor="operator")
+        with self.assertRaises(SourceError):
+            self.poll(cursor)
+
+
 class DeletionPropagationTests(IngestFixture):
     def setUp(self):
         super().setUp()
