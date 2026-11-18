@@ -55,6 +55,16 @@ loop with four pieces the prototype deliberately lacked:
    unchanged, so a compressed session fails whole instead of silently
    skipping rows.
 
+The loop is provider-generic. ``openclaw-sqlite`` containers are single
+database files; ``openclaw-jsonl`` containers are sessions directories
+read through ``openclaw_jsonl_source`` (for hosts whose OpenClaw version
+still stores JSONL session files). Allowlist entries record their
+provider at grant time (entries written before providers existed are
+SQLite), pointers carry the provider, and the #122 ledger identity of a
+JSONL pointer is its bare session file name. The JSONL reader refuses
+``.deleted``-marked session files unconditionally, so a granted sessions
+directory can never resurrect a session the user deleted.
+
 What is still missing before this may be enabled for real data:
 
 - The user's explicit authorization of real databases and sessions. The
@@ -83,6 +93,7 @@ from pathlib import Path
 
 import source_ledger
 from file_lock import atomic_write_text_locked, cross_platform_lock
+from openclaw_jsonl_source import read_session as _read_jsonl_session
 from openclaw_sqlite_source import read_session
 from source_reader import SourceError
 
@@ -104,6 +115,15 @@ REVIEW_REASONS = (
     "source_tombstoned",
     "authorization_revoked",
 )
+PROVIDERS = ("openclaw-sqlite", "openclaw-jsonl")
+
+
+def _entry_provider(entry):
+    """Provider of an allowlist entry; pre-provider entries are SQLite."""
+    provider = entry.get("provider", "openclaw-sqlite")
+    if provider not in PROVIDERS:
+        raise SourceError("OpenClaw ingest allowlist entry has an unknown provider")
+    return provider
 
 
 def _now():
@@ -183,6 +203,9 @@ def _read_allowlist_doc(path):
             not isinstance(sessions, list)
             or not all(isinstance(item, str) and item for item in sessions)
         ):
+            raise SourceError("OpenClaw ingest allowlist entry is malformed")
+        provider = entry.get("provider", "openclaw-sqlite")
+        if provider not in PROVIDERS:
             raise SourceError("OpenClaw ingest allowlist entry is malformed")
     return data
 
@@ -300,19 +323,48 @@ def _mutate_allowlist(
 
 
 def grant_database(
-    allowlist_path, *, db_id, database, sessions="*", actor, audit_path=None, recorded_at=None
+    allowlist_path,
+    *,
+    db_id,
+    database,
+    sessions="*",
+    actor,
+    audit_path=None,
+    recorded_at=None,
+    provider=None,
 ):
-    """Allowlist one database file and the given sessions; audited."""
+    """Allowlist one source container and the given sessions; audited.
+
+    For ``openclaw-sqlite`` the container is one database file; for
+    ``openclaw-jsonl`` it is the sessions directory holding the session
+    files. ``provider`` defaults to whichever the path shape implies.
+    A directory named ``deleted`` can never be granted for JSONL: it
+    holds sessions the user deleted, and deletion wins.
+    """
     try:
         resolved = Path(database).resolve(strict=True)
     except (OSError, TypeError, ValueError):
         raise SourceError("allowlisted database file does not exist") from None
-    if not resolved.is_file():
-        raise SourceError("allowlisted database path is not a file")
+    if provider is None:
+        provider = "openclaw-jsonl" if resolved.is_dir() else "openclaw-sqlite"
+    if provider not in PROVIDERS:
+        raise SourceError("unknown OpenClaw source provider")
+    if provider == "openclaw-sqlite":
+        if not resolved.is_file():
+            raise SourceError("allowlisted database path is not a file")
+    else:
+        if not resolved.is_dir():
+            raise SourceError("allowlisted JSONL path is not a sessions directory")
+        if resolved.name.casefold() == "deleted":
+            raise SourceError("a deleted-sessions directory cannot be allowlisted")
     sessions = _validate_sessions(sessions)
 
     def mutate(databases):
-        databases[db_id] = {"path": str(resolved), "sessions": sessions}
+        databases[db_id] = {
+            "path": str(resolved),
+            "sessions": sessions,
+            "provider": provider,
+        }
 
     return _mutate_allowlist(
         allowlist_path,
@@ -320,7 +372,7 @@ def grant_database(
         actor=actor,
         action="grant_database",
         db_id=db_id,
-        detail={"path": str(resolved), "sessions": sessions},
+        detail={"path": str(resolved), "sessions": sessions, "provider": provider},
         mutate=mutate,
         recorded_at=recorded_at,
     )
@@ -411,13 +463,17 @@ def revoke_session(allowlist_path, *, db_id, session_id, actor, audit_path=None,
 def build_pointer(db_id, provenance):
     """Bind a reader provenance dict to an allowlisted database id."""
     _validate_db_id(db_id)
-    if not isinstance(provenance, dict) or provenance.get("provider") != "openclaw-sqlite":
-        raise SourceError("invalid SQLite source provenance")
+    if not isinstance(provenance, dict) or provenance.get("provider") not in PROVIDERS:
+        raise SourceError("invalid OpenClaw source provenance")
     if provenance.get("precision") != "message":
-        raise SourceError("invalid SQLite source precision")
+        raise SourceError("invalid OpenClaw source precision")
     if any(key not in provenance for key in _POINTER_FIELDS):
-        raise SourceError("incomplete SQLite source provenance")
-    pointer = {"provider": "openclaw-sqlite", "precision": "message", "db_id": db_id}
+        raise SourceError("incomplete OpenClaw source provenance")
+    pointer = {
+        "provider": provenance["provider"],
+        "precision": "message",
+        "db_id": db_id,
+    }
     for key in _POINTER_FIELDS:
         pointer[key] = provenance[key]
     return pointer
@@ -426,16 +482,31 @@ def build_pointer(db_id, provenance):
 def ledger_identity(pointer):
     """Project a pointer onto the #122 ledger identity triple.
 
-    The db_id takes the ``session_file`` (source-container) slot, rendered
-    as ``<db_id>.openclaw-sqlite`` so it stays a bare name for the ledger.
+    For ``openclaw-sqlite`` the db_id takes the ``session_file``
+    (source-container) slot, rendered as ``<db_id>.openclaw-sqlite`` so
+    it stays a bare name for the ledger. For ``openclaw-jsonl`` the
+    session file itself is the natural container identity, so the
+    pointer's ``session_id`` (a bare ``<uuid>.jsonl`` file name) takes
+    the slot.
     """
     if not isinstance(pointer, dict):
-        raise SourceError("invalid SQLite source pointer")
+        raise SourceError("invalid OpenClaw source pointer")
     _validate_db_id(pointer.get("db_id"))
     if "message_id" not in pointer or "content_hash" not in pointer:
-        raise SourceError("incomplete SQLite source pointer")
+        raise SourceError("incomplete OpenClaw source pointer")
+    if pointer.get("provider") == "openclaw-jsonl":
+        session_file = pointer.get("session_id")
+        if (
+            not isinstance(session_file, str)
+            or Path(session_file).name != session_file
+            or "/" in session_file
+            or "\\" in session_file
+        ):
+            raise SourceError("JSONL ledger identity needs a bare session file name")
+    else:
+        session_file = f"{pointer['db_id']}.openclaw-sqlite"
     return {
-        "session_file": f"{pointer['db_id']}.openclaw-sqlite",
+        "session_file": session_file,
         "message_id": str(pointer["message_id"]),
         "content_hash": pointer["content_hash"],
     }
@@ -509,7 +580,9 @@ def _save_pointer_store(path, entries):
 
 
 def _default_record_id(pointer):
-    return f"openclaw-sqlite:{pointer['db_id']}:{pointer['session_id']}:{pointer['message_id']}"
+    return (
+        f"{pointer['provider']}:{pointer['db_id']}:{pointer['session_id']}:{pointer['message_id']}"
+    )
 
 
 def ingest_session(
@@ -533,7 +606,10 @@ def ingest_session(
     """
     allowlist = load_allowlist(allowlist_path)
     entry = require_authorized(allowlist, db_id, session_id)
-    messages = read_session(entry["path"], session_id)
+    if _entry_provider(entry) == "openclaw-jsonl":
+        messages = _read_jsonl_session(entry["path"], session_id)
+    else:
+        messages = read_session(entry["path"], session_id)
     tombstones = _load_tombstones(ledger_path)
     stamp = now or _now()
     candidates = []
@@ -591,7 +667,7 @@ def ingest_session(
 # --------------------------------------------------------------------------
 
 
-def _session_message_index(db_path, session_id):
+def _session_message_index(db_path, session_id, provider="openclaw-sqlite"):
     """Map (sequence, message_id) -> provenance for one session.
 
     Returns None when the database file or the session is gone. Environment
@@ -599,6 +675,16 @@ def _session_message_index(db_path, session_id):
     schema) raise SourceError instead of being mistaken for deletions.
     """
     path = Path(db_path)
+    if provider == "openclaw-jsonl":
+        if not path.is_dir() or not (path / session_id).is_file():
+            return None
+        messages = _read_jsonl_session(path, session_id)
+        return {
+            (message["provenance"]["sequence"], message["provenance"]["message_id"]): message[
+                "provenance"
+            ]
+            for message in messages
+        }
     if not path.exists():
         return None
     try:
@@ -668,7 +754,9 @@ def check_pointers(allowlist_path, store_path, *, ledger_path=None, now=None):
                 else:
                     group_key = (db_id, session_id)
                     if group_key not in indexes:
-                        indexes[group_key] = _session_message_index(authorized["path"], session_id)
+                        indexes[group_key] = _session_message_index(
+                            authorized["path"], session_id, _entry_provider(authorized)
+                        )
                     index = indexes[group_key]
                     observed = (
                         None
@@ -720,7 +808,9 @@ def reinstate_pointer(allowlist_path, store_path, *, record_id, ledger_path=None
         if entry.get("tombstoned") or _is_tombstoned(tombstones, pointer):
             raise SourceError("a tombstoned source pointer cannot be reinstated; deletion wins")
         authorized = require_authorized(allowlist, pointer["db_id"], pointer["session_id"])
-        index = _session_message_index(authorized["path"], pointer["session_id"])
+        index = _session_message_index(
+            authorized["path"], pointer["session_id"], _entry_provider(authorized)
+        )
         observed = (
             None if index is None else index.get((pointer["sequence"], pointer["message_id"]))
         )
