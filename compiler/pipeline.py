@@ -77,6 +77,60 @@ class InvalidModelOutput(ValueError):
     """A complete model response that does not satisfy the claim JSON contract."""
 
 
+def _segment_is_quoted(text, evidence):
+    """Whether the evidence's own line segment carries a reported-speech marker.
+
+    #113 originally downgraded a claim to source="quoted" when the marker
+    appeared ANYWHERE in the source message: one "according to" in a long
+    assistant reply flipped every claim extracted from it (2026-11-18
+    fixed-set measurement: 28 assistant claims flipped, 23 of them lost at
+    review, while user claims were never hit). Attribution is now scoped
+    to the segment that carries the claim's verbatim evidence:
+
+    - Only the line the evidence sits on is checked, plus a directly
+      preceding lead-in line: a short line ending in ':' / '：' ("He said:"
+      on its own line above a quote). A preceding line that is itself a
+      complete statement never extends the segment, so a reported line
+      followed by the speaker's own statement only downgrades its own.
+    - Lines elsewhere in the same message do not downgrade the claim; the
+      claim keeps the message's speaker.
+    - Fail-closed: evidence spanning lines, or evidence that cannot be
+      located in the message at all, keeps the original whole-message
+      strictness. When the evidence occurs at several disjoint places,
+      every occurrence's segment is checked and any marked segment
+      downgrades the claim.
+    """
+    if not evidence or "\n" in evidence:
+        return matches("quoted", text)
+    spans = []
+    start = 0
+    while True:
+        i = text.find(evidence, start)
+        if i < 0:
+            break
+        spans.append(i)
+        start = i + 1
+    if not spans:
+        return matches("quoted", text)
+    lines = text.split("\n")
+    starts = []
+    pos = 0
+    for line in lines:
+        starts.append(pos)
+        pos += len(line) + 1
+    for s in spans:
+        # The evidence contains no newline, so it sits inside one line.
+        idx = max(i for i, ls in enumerate(starts) if ls <= s)
+        segment = [lines[idx]]
+        if idx > 0:
+            prev = lines[idx - 1].strip()
+            if prev and len(prev) <= 80 and prev.endswith((":", "：")):
+                segment.insert(0, prev)
+        if matches("quoted", "\n".join(segment)):
+            return True
+    return False
+
+
 def _parse_claims(raw, safe, chunk_id):
     """Turn a complete model response into normalised claims.
 
@@ -102,8 +156,10 @@ def _parse_claims(raw, safe, chunk_id):
         exact = len(candidates) == 1 and (
             requested is None or (type(requested) is int and requested == candidates[0])
         )
+        quoted_hit = False
         if exact:
             m = safe[candidates[0]]
+            quoted_hit = _segment_is_quoted(m["text"], evidence)
             c["evidence_verified"] = True
             # Speaker is evidence, not a model opinion. When the source really
             # carries a role (raw archive / manifest-backed sessions), it wins.
@@ -123,7 +179,7 @@ def _parse_claims(raw, safe, chunk_id):
             c["heavy_emotion"] |= matches("heavy", m["text"])
             c["temporary"] |= matches("temporary", m["text"])
             c["sarcasm"] |= matches("sarcasm", m["text"])
-            if matches("quoted", m["text"]):
+            if quoted_hit:
                 c["source"] = "quoted"
         else:
             c["source"] = "unknown"
@@ -135,7 +191,7 @@ def _parse_claims(raw, safe, chunk_id):
             }
         # 归因是证据约束，不是模型意见：非 user 说话人永远不能产出用户事实。
         speaker = (c.get("provenance") or {}).get("speaker")
-        if exact and matches("quoted", safe[candidates[0]]["text"]):
+        if exact and quoted_hit:
             speaker = "quoted"
         c = enforce_attribution(c, speaker)
         c["observed_at"] = datetime.now(timezone.utc).isoformat()
