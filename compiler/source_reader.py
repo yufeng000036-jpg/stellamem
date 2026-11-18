@@ -1,9 +1,19 @@
 """Read complete sources and retain honest precision and offsets."""
 
+import glob
 import hashlib
 import json
 import re
 from pathlib import Path
+
+from source_ledger import (
+    LEDGER_FILENAME,
+    LedgerError,
+    authorized_rotations,
+    file_sha256,
+    is_tombstoned,
+    load_ledger,
+)
 
 
 class SourceError(RuntimeError):
@@ -37,47 +47,82 @@ def read_daily(path, config=None):
     data = json.loads(manifest.read_text(encoding="utf-8"))
     if data.get("schema_version") != 2 or not isinstance(data.get("pointers"), list):
         raise SourceError("Invalid source manifest")
+    ledger_path = Path(config.get("source_ledger_path") or root / LEDGER_FILENAME)
+    try:
+        ledger = load_ledger(ledger_path)
+    except LedgerError as exc:
+        raise SourceError("Source ledger is invalid; not consumed") from exc
+    pinned_head = config.get("source_ledger_head")
+    if pinned_head and all(record.get("hash") != pinned_head for record in ledger):
+        raise SourceError("Source ledger does not contain the pinned head; not consumed")
     cache = {}
     messages = []
+
+    def match_in(source, pointer, via=None):
+        if source.resolve().parent != root:
+            raise SourceError("Source path escaped configured root")
+        if source not in cache:
+            cache[source] = source.read_text(encoding="utf-8").splitlines()
+        idx = pointer.get("entry_index")
+        if not isinstance(idx, int) or idx < 0 or idx >= len(cache[source]):
+            return None
+        try:
+            entry = json.loads(cache[source][idx])
+        except ValueError:
+            return None
+        text = session_text(entry)
+        if (
+            content_hash(text) != pointer.get("content_hash")
+            or entry.get("timestamp") != pointer.get("timestamp")
+            or entry.get("message", {}).get("role") != pointer.get("speaker")
+            or str(entry.get("id") or entry.get("message", {}).get("id") or idx)
+            != str(pointer.get("message_id"))
+        ):
+            return None
+        provenance = dict(pointer, precision="message", resolved_session_file=source.name)
+        if via:
+            provenance["resolved_via"] = via
+        return {
+            "text": text,
+            "speaker": pointer["speaker"],
+            "timestamp": pointer["timestamp"],
+            "provenance": provenance,
+            "offset": 0,
+        }
+
     for pointer in data["pointers"]:
         name = pointer.get("session_file", "")
         if not name or Path(name).name != name or "/" in name or "\\" in name:
             raise SourceError("Invalid source filename")
-        candidates = [root / name]
-        # Host may rename canonical session after /new; bounded same-session search.
-        base = name.split(".jsonl")[0]
-        if not candidates[0].exists():
-            candidates = sorted(root.glob(base + ".jsonl*"))
+        if is_tombstoned(ledger, pointer):
+            raise SourceError("Source pointer tombstoned; not consumed")
+        named = root / name
         found = None
-        for source in candidates:
-            if source.resolve().parent != root:
-                raise SourceError("Source path escaped configured root")
-            if source not in cache:
-                cache[source] = source.read_text(encoding="utf-8").splitlines()
-            idx = pointer.get("entry_index")
-            if not isinstance(idx, int) or idx < 0 or idx >= len(cache[source]):
-                continue
-            try:
-                entry = json.loads(cache[source][idx])
-            except ValueError:
-                continue
-            text = session_text(entry)
-            if (
-                content_hash(text) != pointer.get("content_hash")
-                or entry.get("timestamp") != pointer.get("timestamp")
-                or entry.get("message", {}).get("role") != pointer.get("speaker")
-                or str(entry.get("id") or entry.get("message", {}).get("id") or idx)
-                != str(pointer.get("message_id"))
-            ):
-                continue
-            found = {
-                "text": text,
-                "speaker": pointer["speaker"],
-                "timestamp": pointer["timestamp"],
-                "provenance": dict(pointer, precision="message", resolved_session_file=source.name),
-                "offset": 0,
-            }
-            break
+        if named.exists():
+            found = match_in(named, pointer)
+            if found is None:
+                # The canonical filename was reused after rotation. The same
+                # state could be a user deletion, so an archive may only be
+                # consulted when a ledger rotation record authorizes this
+                # exact archive and its bytes are unchanged since recording.
+                for record in authorized_rotations(ledger, name):
+                    source = root / record["to_file"]
+                    if source == named or not source.exists():
+                        continue
+                    if source.resolve().parent != root:
+                        raise SourceError("Source path escaped configured root")
+                    if file_sha256(source) != record["file_sha256"]:
+                        continue
+                    found = match_in(source, pointer, via="rotation-ledger")
+                    if found is not None:
+                        break
+        else:
+            # Host may rename canonical session after /new; bounded same-session search.
+            base = name.split(".jsonl")[0]
+            for source in sorted(root.glob(glob.escape(base) + ".jsonl*")):
+                found = match_in(source, pointer)
+                if found is not None:
+                    break
         if found is None:
             raise SourceError("Source pointer missing or changed; not consumed")
         messages.append(found)
