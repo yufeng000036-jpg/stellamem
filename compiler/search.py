@@ -20,10 +20,12 @@ try:  # 包内导入（compiler.search）与扁平导入（sys.path 加 compiler
     from . import semantic
     from . import rank as rank_mod
     from . import subjects as subjects_mod
+    from . import sufficiency as sufficiency_mod
 except ImportError:  # pragma: no cover
     import semantic  # type: ignore
     import rank as rank_mod  # type: ignore
     import subjects as subjects_mod  # type: ignore
+    import sufficiency as sufficiency_mod  # type: ignore
 
 # 字面/语义权重。语义通道默认开启后字面噪声会压住正确项，故可调。
 W_LEX = float(os.environ.get("STELLAMEM_W_LEX", "0.20"))
@@ -1007,12 +1009,23 @@ def recall(
             except Exception:  # noqa: BLE001 - 记票失败绝不能影响召回返回
                 pass
 
+    final_items = picked[: len(lines)]
     return {
         "prompt": prompt,
         "intent": intent,
-        "items": picked[: len(lines)],
+        "items": final_items,
         "chars": used,
         "budget": budget_chars,
         "dropped": max(0, len(picked) - len(lines)),
         "text": "\n".join(lines),
+        # 证据充分性（确定性，见 sufficiency.py）：按最终注入条目的
+        # 本体文本（value + evidence）对 prompt 的命名锚点做覆盖分级。
+        # 只描述覆盖，不删条目、不改分数；api 层按主体过滤后会重算。
+        "evidence_sufficiency": sufficiency_mod.evidence_sufficiency(
+            prompt,
+            [
+                " ".join(str(rec.get(k) or "") for k in ("value", "evidence"))
+                for rec in final_items
+            ],
+        ),
     }

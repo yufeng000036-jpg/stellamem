@@ -316,6 +316,46 @@ export function uncoveredAnchors(prompt, claimTexts) {
   return missing.length === anchors.length ? anchors : [];
 }
 
+// --- Evidence-sufficiency signal (deterministic, no model call) ---
+// The graded form of the anchor gate above, for the projections the
+// gate does NOT withhold. Stage-2 measurement (482 cached projections,
+// 2026-11-19) attributed the remaining exact-abstention failures: two
+// were execution failures with no projection at all, two turned on
+// common-noun near misses (a coverage signal over common nouns was
+// measured on the same cache and false-fires on 57-147 of 186
+// correctly answered questions, so it is deliberately NOT used), and
+// one — "Which project did I start first, the Ferrari model or the
+// Porsche 991 Turbo S model?", answered from Ferrari-only lines — is
+// the partial-coverage shape: some named anchors covered, some absent
+// from every projected line. That shape is what this signal reports:
+//   "insufficient" — anchors exist, none covered (the gate's case;
+//                    project() still withholds, unchanged);
+//   "partial"      — anchors exist, a proper subset uncovered;
+//   "sufficient"   — every anchor covered;
+//   "unknown"      — the prompt carries no named anchors (inert).
+// claimTexts follow the gate's convention: lowercased concatenations of
+// a claim's own text fields. The signal only ever ADDS an advisory
+// line / structured field; it never removes evidence and never loosens
+// the gate. Replay on the stage-2 cache: fires "partial" on the one
+// reachable failure above, on 3 of 25 correctly abstained questions
+// (agreeing with abstention), and on 5 of 186 loss-stage "pass"
+// questions (2.7%, each a multi-word phrase absent from the
+// reader-visible line text while present in the source conversation —
+// the production check runs over subject+predicate+value+evidence, a
+// superset of the replay's line text, so production fires no more
+// often than the replay bound).
+export function evidenceSufficiency(prompt, claimTexts) {
+  const anchors = questionAnchors(prompt);
+  if (!anchors.length) return { status: "unknown", anchors: [], covered: [], uncovered: [] };
+  const uncovered = anchors.filter((a) => !claimTexts.some((t) => anchorCovered(t, a)));
+  const covered = anchors.filter((a) => !uncovered.includes(a));
+  if (uncovered.length === anchors.length) {
+    return { status: "insufficient", anchors, covered: [], uncovered };
+  }
+  if (uncovered.length) return { status: "partial", anchors, covered, uncovered };
+  return { status: "sufficient", anchors, covered, uncovered: [] };
+}
+
 function namespaceOf(c) {
   const value = Object.hasOwn(c, "namespace") ? c.namespace : c.subject;
   const aliases = { "用户": "user", "人格": "persona", "观众": "viewer" };
@@ -407,6 +447,7 @@ export async function project(root, prompt, config = {}) {
   const diagDir = process.env.STELLAMEM_PROJECT_DIAGNOSTICS_DIR || "";
   const diagRecords = [];
   let diagEmpty = null;
+  let diagSufficiency = null;
   async function emitDiag(context) {
     if (!diagDir) return;
     try {
@@ -420,6 +461,7 @@ export async function project(root, prompt, config = {}) {
           projected_n: diagRecords.filter((r) => r.stage === "projected").length,
           candidates_n: diagRecords.length,
           empty_reason: diagEmpty,
+          evidence_sufficiency: diagSufficiency,
           records: diagRecords,
         }, null, 2),
       );
@@ -759,12 +801,33 @@ export async function project(root, prompt, config = {}) {
       for (const { entry } of projectedList) {
         if (entry) { entry.stage = "dropped"; entry.reason = "insufficient-anchor-coverage"; }
       }
+      diagSufficiency = { status: "insufficient", uncovered: missing };
       result = prefix + JSON.stringify({
         id: "stellamem:insufficient-evidence", scope: "system", source: "system",
         predicate: "evidence_sufficiency",
         value: "No stored memory mentions " + missing.join(", ") +
           ". The named anchor of this question is absent from memory, so near-miss lines were withheld as insufficient evidence.",
       }) + "\n";
+    } else {
+      // Partial-coverage advisory (see evidenceSufficiency): the gate
+      // did not fire, but a proper subset of the named anchors is
+      // absent from every projected line — the one-sided-evidence
+      // shape behind the stage-2 Ferrari/Porsche abstention failure.
+      // One extra JSON line, appended after the evidence lines, so the
+      // worker's line parser keeps working unchanged. Advisory only:
+      // no line is withheld or altered.
+      const suff = evidenceSufficiency(prompt, claimTexts);
+      diagSufficiency = suff;
+      if (suff.status === "partial") {
+        result += JSON.stringify({
+          id: "stellamem:evidence-sufficiency", scope: "system", source: "system",
+          predicate: "evidence_sufficiency",
+          value: "Partial evidence coverage: no projected memory line mentions " +
+            suff.uncovered.join(", ") +
+            ". The lines above cover only part of what this question asks about; " +
+            "do not answer the uncovered part from near-miss lines — abstain on that part instead.",
+        }) + "\n";
+      }
     }
   }
   if (!result) diagEmpty = diagRecords.length ? "all-dropped" : "no-candidates";
