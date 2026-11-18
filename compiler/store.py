@@ -3,6 +3,7 @@
 import json
 from datetime import datetime, timezone
 from claim_normalizer import ROUTE, THRESHOLDS, claim_id, claim_revision_id, digest
+from grounding import support_flags
 from judge import judge_relation
 from security import apply_policy, contains_secret
 from storage import Transaction, load_records, render_records, safe_path
@@ -72,6 +73,22 @@ class MemoryStore:
             self.counts["duplicate"] += 1
             return
         active = self.active_by_id.get(cid, [])
+        # Grounding gate for the unattended channel: a verbatim quote
+        # only proves the evidence exists, not that the model-written
+        # value is supported by it. Deterministic non-support signals
+        # (see grounding.py) demote the claim to the ordinary confirm
+        # path; this gate can only remove permission, never grant it.
+        if c["auto_write"] and c.get("evidence_verified") is True:
+            flags = support_flags(c.get("value"), c.get("evidence"))
+            if flags:
+                c["auto_write"] = False
+                c["write_policy"] = "confirm"
+                c["injection_policy"] = "confirm"
+                c["requires_confirmation"] = True
+                c["policy_reasons"] = [
+                    *c.get("policy_reasons", []),
+                    "value not supported by verified evidence: " + ", ".join(flags),
+                ]
         allowed = (
             c["auto_write"]
             and c["confidence"] >= THRESHOLDS.get(c["kind"], 1.01)

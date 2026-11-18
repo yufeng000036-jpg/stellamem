@@ -133,6 +133,10 @@ class AutoApproveTests(unittest.TestCase):
         c = verified(
             kind="decision",
             value="决定改用本地模型，因为云端太慢",
+            # Self-quoted like seed(): the grounding gate would (correctly)
+            # refuse an unattended write whose value shares nothing with an
+            # unrelated default evidence string.
+            evidence="决定改用本地模型，因为云端太慢",
             confidence=0.99,
         )
         store.ingest(c)
