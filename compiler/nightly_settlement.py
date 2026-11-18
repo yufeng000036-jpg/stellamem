@@ -58,6 +58,7 @@ try:  # 包内与扁平导入都要能用（测试只把 compiler/ 加进 sys.pa
     from . import indexer
     from . import subjects
     from .cli_output import ensure_utf8_stderr, ensure_utf8_stdout
+    from .file_lock import _replace_with_retry
     from .storage import BLOCK, MARK, load_records
 except ImportError:  # pragma: no cover - flat layout
     import desktop_page
@@ -65,6 +66,7 @@ except ImportError:  # pragma: no cover - flat layout
     import indexer
     import subjects
     from cli_output import ensure_utf8_stderr, ensure_utf8_stdout  # type: ignore
+    from file_lock import _replace_with_retry  # type: ignore
     from storage import BLOCK, MARK, load_records
 
 KINDS_REPORTED = ("preference", "lesson", "decision", "project", "fact")
@@ -92,11 +94,15 @@ def _parse_time(value):
 
 
 def _atomic_write_text(path: Path, text: str) -> None:
-    """先写同目录 tmp 再改名：写一半断电也不会留半个文件。"""
+    """先写同目录 tmp 再改名：写一半断电也不会留半个文件。
+
+    改名走 file_lock 的有界重试（PR #110 同一 helper）：Windows 上目标
+    文件正被别的进程打开时 os.replace 会瞬间 PermissionError。
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(f"{path.name}.tmp-{os.getpid()}")
     tmp.write_text(text, encoding="utf-8")
-    os.replace(tmp, path)
+    _replace_with_retry(tmp, path)
 
 
 # ---------------- 计数 ----------------

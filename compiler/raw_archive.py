@@ -38,6 +38,11 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from cli_output import ensure_utf8_stdout
 
+try:  # 包内导入（compiler.raw_archive）与扁平导入（compiler/ 在 sys.path）都要能用
+    from .file_lock import _replace_with_retry
+except ImportError:  # pragma: no cover - flat layout
+    from file_lock import _replace_with_retry  # type: ignore
+
 SCHEMA = 1
 STREAM_DIR = "sessions"
 DEFAULT_ROLES = ("user", "assistant")
@@ -136,7 +141,7 @@ def write_json(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
     tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
-    os.replace(tmp, path)
+    _replace_with_retry(tmp, path)
 
 
 def gz_write(path, records):
@@ -146,7 +151,7 @@ def gz_write(path, records):
         for record in records:
             fh.write(json.dumps(record, ensure_ascii=False, sort_keys=True))
             fh.write("\n")
-    os.replace(tmp, path)
+    _replace_with_retry(tmp, path)
 
 
 def gz_read(path):
@@ -175,7 +180,7 @@ def rebuild_manifest(root):
                     json.dumps(manifest_entry(record), ensure_ascii=False, sort_keys=True) + "\n"
                 )
                 count += 1
-    os.replace(tmp, path)
+    _replace_with_retry(tmp, path)
     return count
 
 
@@ -479,7 +484,7 @@ def forget(root, session):
                 kept.append(line if line.endswith("\n") else line + "\n")
         tmp = manifest_path.with_name("MANIFEST.jsonl.tmp")
         tmp.write_text("".join(kept), encoding="utf-8")
-        os.replace(tmp, manifest_path)
+        _replace_with_retry(tmp, manifest_path)
     ledger = read_ledger(root)
     ledger["sources"].pop(name, None)
     ledger.setdefault("deletions", []).append(
