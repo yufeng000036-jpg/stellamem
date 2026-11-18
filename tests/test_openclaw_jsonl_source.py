@@ -16,7 +16,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "compiler"))
 import openclaw_jsonl_source as jsonl_source
-from openclaw_jsonl_source import read_session, resolve_pointer
+from openclaw_jsonl_source import read_session, read_session_with_stats, resolve_pointer
 from source_reader import SourceError
 
 SESSION = "11111111-2222-3333-4444-555555555555.jsonl"
@@ -118,15 +118,30 @@ class ReadTests(JsonlFixture):
         with self.assertRaises(SourceError):
             read_session(self.dir, SESSION)
 
-    def test_non_text_content_fails_closed(self):
+    def test_non_text_content_no_longer_fails_closed(self):
+        # This test asserted the pre-2026-11-18 all-text-or-abort rule.
+        # The user's content-policy ruling replaced that rule; the same
+        # fixture shapes now assert the new outcomes (full coverage in
+        # DegradedExtractionTests below).
         for content in (
             [{"type": "image", "data": "fictional"}],
             [{"type": "toolCall", "name": "fictional"}],
-            [{"type": "text", "text": "ok"}, {"type": "toolCall", "name": "fictional"}],
         ):
             self.write([header(), message("m1", "assistant", content)])
-            with self.assertRaises(SourceError, msg=repr(content)):
-                read_session(self.dir, SESSION)
+            self.assertEqual(read_session(self.dir, SESSION), [], msg=repr(content))
+        self.write(
+            [
+                header(),
+                message(
+                    "m1",
+                    "assistant",
+                    [{"type": "text", "text": "ok"}, {"type": "toolCall", "name": "fictional"}],
+                ),
+            ]
+        )
+        (found,) = read_session(self.dir, SESSION)
+        self.assertEqual(found["text"], "ok")
+        self.assertEqual(found["provenance"]["skipped_part_types"], ["toolCall"])
 
     def test_invalid_lines_fail_closed(self):
         self.write([header(), "{not json"])
@@ -172,6 +187,105 @@ class ReadTests(JsonlFixture):
         self.assertEqual(
             messages[0]["provenance"]["event_hash"], hashlib.sha256(raw_line).hexdigest()
         )
+
+
+class DegradedExtractionTests(JsonlFixture):
+    """The 2026-11-18 content policy: extract text, mark the degradation."""
+
+    def test_mixed_content_extracts_text_and_marks_degradation(self):
+        self.write(
+            [
+                header(),
+                message(
+                    "m1",
+                    "assistant",
+                    [
+                        {"type": "text", "text": "before"},
+                        {"type": "toolCall", "name": "fictional"},
+                        {"type": "text", "text": "after"},
+                        {"type": "image", "data": "fictional"},
+                    ],
+                ),
+            ]
+        )
+        (found,) = read_session(self.dir, SESSION)
+        self.assertEqual(found["text"], "before after")
+        provenance = found["provenance"]
+        self.assertIs(provenance["degraded_extraction"], True)
+        self.assertEqual(provenance["skipped_part_types"], ["image", "toolCall"])
+
+    def test_plain_content_has_no_degradation_marks(self):
+        self.basic()
+        for item in read_session(self.dir, SESSION):
+            self.assertNotIn("degraded_extraction", item["provenance"])
+            self.assertNotIn("skipped_part_types", item["provenance"])
+
+    def test_no_text_list_is_skipped_and_counted(self):
+        for content in (
+            [{"type": "image", "data": "fictional"}],
+            [{"type": "toolCall", "name": "fictional"}],
+            [{"type": "text", "text": ""}, {"type": "toolCall", "name": "fictional"}],
+        ):
+            self.write([header(), message("m1", "assistant", content)])
+            messages, stats = read_session_with_stats(self.dir, SESSION)
+            self.assertEqual(messages, [], msg=repr(content))
+            self.assertEqual(stats["skipped_no_text"], 1, msg=repr(content))
+            self.assertEqual(stats["skipped_tool_result"], 0, msg=repr(content))
+
+    def test_tool_result_is_skipped_and_counted(self):
+        self.write(
+            [
+                header(),
+                message("t1", "toolResult", "tool output"),
+                message("t2", "toolResult", [{"type": "text", "text": "tool output"}]),
+                message(),
+            ]
+        )
+        messages, stats = read_session_with_stats(self.dir, SESSION)
+        self.assertEqual([m["provenance"]["message_id"] for m in messages], ["m1"])
+        self.assertEqual(stats, {"skipped_no_text": 0, "skipped_tool_result": 2})
+
+    def test_malformed_content_still_fails_closed(self):
+        for content in (
+            {"type": "text", "text": "a dict is not a list"},
+            ["a bare string part"],
+            [{"type": "text", "text": 42}],
+            [{"text": "no type at all"}],
+            None,
+        ):
+            self.write([header(), message("m1", "assistant", content)])
+            with self.assertRaises(SourceError, msg=repr(content)):
+                read_session(self.dir, SESSION)
+
+    def test_degraded_identity_hashes_cover_text_and_raw_line(self):
+        content = [
+            {"type": "text", "text": "kept words"},
+            {"type": "toolCall", "name": "fictional"},
+        ]
+        self.write([header(), message("m1", "assistant", content)])
+        (found,) = read_session(self.dir, SESSION)
+        provenance = found["provenance"]
+        self.assertEqual(
+            provenance["content_hash"],
+            hashlib.sha256("kept words".encode("utf-8")).hexdigest(),
+        )
+        raw_line = (self.dir / SESSION).read_bytes().split(b"\n")[1]
+        self.assertEqual(provenance["event_hash"], hashlib.sha256(raw_line).hexdigest())
+
+    def test_editing_a_skipped_part_breaks_pointer_resolution(self):
+        content = [
+            {"type": "text", "text": "kept words"},
+            {"type": "toolCall", "name": "fictional"},
+        ]
+        self.write([header(), message("m1", "assistant", content)])
+        pointer = read_session(self.dir, SESSION)[0]["provenance"]
+        edited = [
+            {"type": "text", "text": "kept words"},
+            {"type": "toolCall", "name": "renamed"},
+        ]
+        self.write([header(), message("m1", "assistant", edited)])
+        with self.assertRaises(SourceError):
+            resolve_pointer(self.dir, pointer)
 
 
 class SessionNameTests(JsonlFixture):

@@ -63,7 +63,16 @@ provider at grant time (entries written before providers existed are
 SQLite), pointers carry the provider, and the #122 ledger identity of a
 JSONL pointer is its bare session file name. The JSONL reader refuses
 ``.deleted``-marked session files unconditionally, so a granted sessions
-directory can never resurrect a session the user deleted.
+directory can never resurrect a session the user deleted. Under the
+user's 2026-11-18 content-policy ruling the JSONL reader extracts the
+text parts of mixed-content messages instead of failing the whole
+session; the resulting pointers carry the reader's
+``degraded_extraction``/``skipped_part_types`` annotation when present,
+and :func:`ingest_session` reports the reader's skip counts
+(``skipped_no_text``/``skipped_tool_result``) as ``source_stats`` for
+JSONL sessions. Identity, hashing and drift comparison are unchanged:
+the event hash still covers the raw source line, so editing a skipped
+part flags ``source_changed`` exactly like editing extracted text.
 
 What is still missing before this may be enabled for real data:
 
@@ -94,6 +103,7 @@ from pathlib import Path
 import source_ledger
 from file_lock import atomic_write_text_locked, cross_platform_lock
 from openclaw_jsonl_source import read_session as _read_jsonl_session
+from openclaw_jsonl_source import read_session_with_stats as _read_jsonl_session_with_stats
 from openclaw_sqlite_source import read_session
 from source_reader import SourceError
 
@@ -109,6 +119,12 @@ _POINTER_FIELDS = (
     "content_hash",
     "event_hash",
 )
+# Optional provenance annotations copied into the pointer when the reader
+# produced them. They never take part in identity or drift comparison;
+# ``degraded_extraction``/``skipped_part_types`` record that a JSONL
+# message's text was extracted from mixed content under the 2026-11-18
+# content policy, so the stored record itself shows the read was partial.
+_POINTER_OPTIONAL_FIELDS = ("degraded_extraction", "skipped_part_types")
 REVIEW_REASONS = (
     "source_missing",
     "source_changed",
@@ -476,6 +492,9 @@ def build_pointer(db_id, provenance):
     }
     for key in _POINTER_FIELDS:
         pointer[key] = provenance[key]
+    for key in _POINTER_OPTIONAL_FIELDS:
+        if key in provenance:
+            pointer[key] = provenance[key]
     return pointer
 
 
@@ -606,8 +625,9 @@ def ingest_session(
     """
     allowlist = load_allowlist(allowlist_path)
     entry = require_authorized(allowlist, db_id, session_id)
+    source_stats = None
     if _entry_provider(entry) == "openclaw-jsonl":
-        messages = _read_jsonl_session(entry["path"], session_id)
+        messages, source_stats = _read_jsonl_session_with_stats(entry["path"], session_id)
     else:
         messages = read_session(entry["path"], session_id)
     tombstones = _load_tombstones(ledger_path)
@@ -653,13 +673,16 @@ def ingest_session(
             registered.append(record_id)
         if registered:
             _save_pointer_store(store_path, entries)
-    return {
+    result = {
         "db_id": db_id,
         "session_id": session_id,
         "registered": registered,
         "existing": existing,
         "messages": messages,
     }
+    if source_stats is not None:
+        result["source_stats"] = source_stats
+    return result
 
 
 # --------------------------------------------------------------------------

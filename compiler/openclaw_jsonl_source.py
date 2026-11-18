@@ -7,8 +7,9 @@ table. Not wired to ingestion or a host hook by itself; the opt-in loop in
 ``openclaw_sqlite_ingest`` drives it through the same allowlist, pointer
 store, tombstone and deletion-propagation machinery as the SQLite source.
 Callers must explicitly select a sessions directory and one session file;
-output is in-memory only. Unsupported or incomplete events abort the entire
-read, exactly as in the SQLite prototype.
+output is in-memory only. Malformed or incomplete events abort the entire
+read, exactly as in the SQLite prototype; mixed text/non-text message
+content is degraded instead, under the content policy below.
 
 Format (verified by read-only inspection of an OpenClaw 2026.10.10 host;
 see the pull request for the full recon notes):
@@ -22,12 +23,22 @@ see the pull request for the full recon notes):
   table). Other event types (``session``, ``model_change``,
   ``thinking_level_change``, ``custom``, ``custom_message``,
   ``compaction``) are skipped.
-- ``content`` is a string or a list of parts. A message is readable only
-  when every part is a text part (the shared ``_message_text`` rule of the
-  SQLite reader): ``toolCall`` parts, ``image`` parts and any other
-  non-text shape abort the whole read. Real agent sessions use tool calls
-  heavily, so many real files fail closed here; widening that policy is a
-  separate decision, not something this reader smuggles in.
+- ``content`` is a string or a list of parts. Content policy (the user's
+  ruling of 2026-11-18, replacing the original all-text-or-abort rule of
+  the first version of this reader; the SQLite reader keeps its stricter
+  shared ``_message_text`` rule): string content is used verbatim; list
+  content contributes its ``text`` parts only, and the types of the
+  skipped parts (``toolCall``, ``image``, anything else) are recorded in
+  the message provenance as ``degraded_extraction`` /
+  ``skipped_part_types`` so a degraded read is never mistaken for a
+  complete one. A list with no extractable text yields no message at all
+  (counted as ``skipped_no_text`` by :func:`read_session_with_stats`).
+  ``toolResult`` messages are tool output, not conversation, and are
+  skipped whole (counted as ``skipped_tool_result``). Malformed shapes --
+  a content value that is neither string nor list, a part that is not an
+  object, a part without a string ``type``, a text part without string
+  text -- still abort the whole read: degradation covers known non-text
+  part types, never unparseable structure.
 
 Message identity:
 
@@ -69,11 +80,37 @@ from openclaw_sqlite_source import (
     MAX_EVENT_BYTES,
     MAX_SESSION_BYTES,
     MAX_SESSION_EVENTS,
-    _message_text,
 )
 from source_reader import SourceError
 
 PROVIDER = "openclaw-jsonl"
+
+
+def _extract_text(content):
+    """Return ``(text, skipped_part_types)`` for one message content value.
+
+    String content is used verbatim and skips nothing. List content
+    contributes its ``text`` parts (joined exactly as the SQLite reader's
+    ``_message_text`` joins them); the sorted types of the remaining parts
+    are returned so the caller can mark the message as a degraded
+    extraction. Malformed shapes fail closed, as before.
+    """
+    if isinstance(content, str):
+        return content, []
+    if not isinstance(content, list):
+        raise SourceError("unsupported message content; no partial read")
+    texts = []
+    skipped = set()
+    for part in content:
+        if not isinstance(part, dict) or not isinstance(part.get("type"), str):
+            raise SourceError("unsupported message content; no partial read")
+        if part["type"] == "text":
+            if not isinstance(part.get("text"), str):
+                raise SourceError("unsupported message content; no partial read")
+            texts.append(part["text"])
+        else:
+            skipped.add(part["type"])
+    return " ".join(texts), sorted(skipped)
 
 
 def _validate_session_name(session_id):
@@ -114,6 +151,20 @@ def _resolve_session_file(directory, session_id):
 
 def read_session(directory, session_id):
     """Read one explicit JSONL session consistently; never writes anything."""
+    messages, _stats = read_session_with_stats(directory, session_id)
+    return messages
+
+
+def read_session_with_stats(directory, session_id):
+    """Read one session and also report what the content policy skipped.
+
+    Returns ``(messages, stats)``. ``stats`` counts the message events
+    that produced no message here: ``skipped_tool_result`` for
+    ``toolResult`` events (tool output, not conversation) and
+    ``skipped_no_text`` for user/assistant events whose part list carried
+    no extractable text. Empty *string* content keeps the historical
+    silent skip and is not counted.
+    """
     path = _resolve_session_file(directory, session_id)
     try:
         data = path.read_bytes()
@@ -126,6 +177,7 @@ def read_session(directory, session_id):
         raw_lines.pop()  # a single trailing newline is not an event
     messages = []
     seen_ids = set()
+    stats = {"skipped_no_text": 0, "skipped_tool_result": 0}
     count = 0
     for seq, raw in enumerate(raw_lines):
         if raw.endswith(b"\r"):
@@ -150,6 +202,9 @@ def read_session(directory, session_id):
         if not isinstance(message, dict):
             raise SourceError("invalid transcript message")
         role = message.get("role")
+        if role == "toolResult":
+            stats["skipped_tool_result"] += 1
+            continue
         if role not in {"user", "assistant"}:
             continue
         event_id = event.get("id")
@@ -166,32 +221,39 @@ def read_session(directory, session_id):
                 raise ValueError("timezone required")
         except (AttributeError, TypeError, ValueError):
             raise SourceError("invalid message timestamp") from None
-        content = _message_text(message.get("content"))
+        raw_content = message.get("content")
+        content, skipped_types = _extract_text(raw_content)
         if not content:
+            if isinstance(raw_content, list):
+                stats["skipped_no_text"] += 1
             continue
         content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+        provenance = {
+            "provider": PROVIDER,
+            "precision": "message",
+            "session_id": session_id,
+            "message_id": event_id if event_id is not None else f"line-{seq}",
+            "sequence": seq,
+            "speaker": role,
+            "timestamp": timestamp,
+            "content_hash": content_hash,
+            "event_hash": event_hash,
+        }
+        if skipped_types:
+            provenance["degraded_extraction"] = True
+            provenance["skipped_part_types"] = skipped_types
         messages.append(
             {
                 "text": content,
                 "speaker": role,
                 "timestamp": timestamp,
                 "offset": 0,
-                "provenance": {
-                    "provider": PROVIDER,
-                    "precision": "message",
-                    "session_id": session_id,
-                    "message_id": event_id if event_id is not None else f"line-{seq}",
-                    "sequence": seq,
-                    "speaker": role,
-                    "timestamp": timestamp,
-                    "content_hash": content_hash,
-                    "event_hash": event_hash,
-                },
+                "provenance": provenance,
             }
         )
     if count == 0:
         raise SourceError("session has no transcript events")
-    return messages
+    return messages, stats
 
 
 def resolve_pointer(directory, pointer):
