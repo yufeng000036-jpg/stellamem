@@ -95,6 +95,215 @@ def correct_temporary_flag(claim, message_text=""):
     return apply_policy(c), True
 
 
+import calendar
+from datetime import date, timedelta
+
+_WEEKDAY_INDEX = {
+    "monday": 0,
+    "tuesday": 1,
+    "wednesday": 2,
+    "thursday": 3,
+    "friday": 4,
+    "saturday": 5,
+    "sunday": 6,
+}
+_CN_DIGITS = {
+    "一": 1,
+    "两": 2,
+    "二": 2,
+    "三": 3,
+    "四": 4,
+    "五": 5,
+    "六": 6,
+    "七": 7,
+    "八": 8,
+    "九": 9,
+    "十": 10,
+}
+
+
+def _cn_number(text):
+    if text.isdigit():
+        return int(text)
+    return _CN_DIGITS.get(text)
+
+
+def _shift_months(day, months):
+    total = day.year * 12 + (day.month - 1) + months
+    year, month = divmod(total, 12)
+    month += 1
+    last = calendar.monthrange(year, month)[1]
+    return date(year, month, min(day.day, last))
+
+
+def _shift_years(day, years):
+    try:
+        return day.replace(year=day.year + years)
+    except ValueError:  # Feb 29 -> Feb 28 in a non-leap target year
+        return day.replace(year=day.year + years, day=28)
+
+
+def _iso_week(day):
+    monday = day - timedelta(days=day.weekday())
+    return [(monday + timedelta(days=i)).isoformat() for i in range(7)]
+
+
+def _month_key(day):
+    return day.isoformat()[:7]
+
+
+def _relative_date_keys(text, base):
+    """Resolve relative time expressions in ``text`` against ``base``.
+
+    Returns ``(keys, expressions)``: day keys as ISO dates, month-level
+    references as ``YYYY-MM``. Only calendar-precise expressions resolve;
+    vague ones ("a few days ago", "recently", 去年) yield nothing —
+    fail-closed, never a guessed date.
+    """
+    low = text.lower()
+    found = []  # (start, matched_text, [keys])
+
+    def add(pattern, handler, flags=0):
+        for m in re.finditer(pattern, low, flags):
+            keys = handler(m)
+            if keys:
+                found.append((m.start(), m.group(0), keys))
+
+    def days(n):
+        return lambda m: [(base + timedelta(days=n)).isoformat()]
+
+    def days_num(offset_of):
+        return lambda m: [(base + timedelta(days=offset_of(int(m.group(1))))).isoformat()]
+
+    # English, most specific first.
+    add(r"the day before yesterday", days(-2))
+    add(r"day after tomorrow", days(2))
+    add(r"\b(\d{1,3})\s+days?\s+ago\b", days_num(lambda n: -n))
+    add(r"\b(\d{1,3})\s+weeks?\s+ago\b", days_num(lambda n: -7 * n))
+    add(
+        r"\b(\d{1,3})\s+months?\s+ago\b",
+        lambda m: [_shift_months(base, -int(m.group(1))).isoformat()],
+    )
+    add(
+        r"\b(\d{1,3})\s+years?\s+ago\b",
+        lambda m: [_shift_years(base, -int(m.group(1))).isoformat()],
+    )
+    add(r"\ba\s+day\s+ago\b", days(-1))
+    add(r"\ba\s+week\s+ago\b", days(-7))
+    add(r"\ba\s+month\s+ago\b", lambda m: [_shift_months(base, -1).isoformat()])
+    add(r"\byesterday\b", days(-1))
+    add(r"\btomorrow\b", days(1))
+    add(r"\btoday\b", days(0))
+    add(r"\bearlier\s+today\b", days(0))
+    add(r"\bthis\s+(?:morning|afternoon|evening)\b", days(0))
+    add(r"\blast\s+week\b", lambda m: _iso_week(base - timedelta(days=7)))
+    add(r"\bnext\s+week\b", lambda m: _iso_week(base + timedelta(days=7)))
+    add(r"\bthis\s+week\b", lambda m: _iso_week(base))
+    add(r"\blast\s+month\b", lambda m: [_month_key(_shift_months(base, -1))])
+    add(r"\bnext\s+month\b", lambda m: [_month_key(_shift_months(base, 1))])
+    add(r"\bthis\s+month\b", lambda m: [_month_key(base)])
+    add(
+        r"\blast\s+weekend\b",
+        lambda m: [
+            (base - timedelta(days=base.weekday() + 2)).isoformat(),
+            (base - timedelta(days=base.weekday() + 1)).isoformat(),
+        ],
+    )
+    add(
+        r"\blast\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b",
+        lambda m: [
+            (
+                base - timedelta(days=((base.weekday() - _WEEKDAY_INDEX[m.group(1)]) % 7) or 7)
+            ).isoformat()
+        ],
+    )
+    # Chinese (matched against the lowered text; digits may be hanzi).
+    num = r"(\d{1,3}|[一两二三四五六七八九十])"
+    add("前天", days(-2))
+    add("昨天|昨日", days(-1))
+    add("今天|今日", days(0))
+    add("明天|明日", days(1))
+    add("后天", days(2))
+    add(
+        num + r"\s*天前",
+        lambda m: [(base - timedelta(days=_cn_number(m.group(1)))).isoformat()]
+        if _cn_number(m.group(1))
+        else [],
+    )
+    add(
+        num + r"\s*(?:周|星期|礼拜)前",
+        lambda m: [(base - timedelta(days=7 * _cn_number(m.group(1)))).isoformat()]
+        if _cn_number(m.group(1))
+        else [],
+    )
+    add(
+        num + r"\s*个月前",
+        lambda m: [_shift_months(base, -_cn_number(m.group(1))).isoformat()]
+        if _cn_number(m.group(1))
+        else [],
+    )
+    add(
+        num + r"\s*年前",
+        lambda m: [_shift_years(base, -_cn_number(m.group(1))).isoformat()]
+        if _cn_number(m.group(1))
+        else [],
+    )
+    add("上周|上星期|上礼拜", lambda m: _iso_week(base - timedelta(days=7)))
+    add("下周|下星期|下礼拜", lambda m: _iso_week(base + timedelta(days=7)))
+    add("这周|本周|这星期|本星期", lambda m: _iso_week(base))
+    add("上个月|上月", lambda m: [_month_key(_shift_months(base, -1))])
+    add("下个月|下月", lambda m: [_month_key(_shift_months(base, 1))])
+    add("本月|这个月", lambda m: [_month_key(base)])
+
+    keys = []
+    expressions = []
+    for _start, expr, ks in sorted(found):
+        expressions.append(expr)
+        for k in ks:
+            if k not in keys:
+                keys.append(k)
+    return sorted(keys)[:16], expressions[:8]
+
+
+def derive_date_keys(claim, message_timestamp=""):
+    """Derive absolute date keys from a claim's relative time expressions.
+
+    Same post-extraction deterministic-correction pattern as
+    ``correct_temporary_flag``: the extraction model paraphrases relative
+    times ("last week", 上周) into claim values, and the projection's
+    lexical matching then cannot connect a question that names the
+    absolute date ("on March 13", 3月13日) — the claim is stored yet
+    reads as irrelevant. This pass resolves each relative expression
+    against the source message's own timestamp and stores the results as
+    ``date_keys`` (ISO day keys and ``YYYY-MM`` month keys), leaving
+    value/evidence byte-identical. The derivation is recorded as
+    ``date_keys_derivation`` plus the matched expressions, so any key can
+    be traced back to the phrase that produced it.
+
+    Fail-closed throughout: no source timestamp, an unparseable one, or
+    no calendar-precise expression means the claim is returned unchanged.
+    Returns ``(claim, changed)``.
+    """
+    c = dict(claim)
+    ts = message_timestamp or str((c.get("provenance") or {}).get("timestamp") or "")
+    if not ts:
+        return c, False
+    try:
+        base = date.fromisoformat(ts.strip().replace("Z", "+00:00")[:10])
+    except ValueError:
+        return c, False
+    text = " ".join(str(c.get(k, "")) for k in ("value", "evidence"))
+    if not text.strip():
+        return c, False
+    keys, expressions = _relative_date_keys(text, base)
+    if not keys:
+        return c, False
+    c["date_keys"] = keys
+    c["date_keys_derivation"] = "relative-time-v1"
+    c["date_keys_expressions"] = expressions
+    return c, True
+
+
 def detect_sarcasm(text):
     return matches("sarcasm", text)
 

@@ -9,6 +9,7 @@ from security import (
     apply_policy,
     contains_secret,
     correct_temporary_flag,
+    derive_date_keys,
     detect_injection,
     matches,
 )
@@ -213,6 +214,12 @@ def _parse_claims(raw, safe, chunk_id):
             # message the evidence was located in (security.py has the
             # criteria and the round-4 attribution numbers).
             c, _corrected = correct_temporary_flag(c, message_text)
+            # Resolve the claim's relative time expressions ("last week",
+            # 上周) against this source message's timestamp into absolute
+            # date keys, so projection matching can connect a question
+            # that names the date. Deterministic and fail-closed; the
+            # claim text itself is never rewritten (security.py).
+            c, _keys = derive_date_keys(c)
         if is_noise_claim(c):
             blocked += 1
             continue
