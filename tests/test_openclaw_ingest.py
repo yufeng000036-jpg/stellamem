@@ -313,7 +313,16 @@ class DeletionPropagationTests(IngestFixture):
         self.assertEqual(report["marked"], [])
         self.assertEqual(report["resolves_again"], [self.id2])
         self.assertEqual(self.entry(self.id2)["status"], "needs_review")
+        before = self.store.read_bytes()
+        assigned = []
+        with self.assertRaises(SourceError):
+            self.ingest_s1(record_id_for=lambda m: assigned.append(m["text"]) or m["provenance"]["message_id"])
+        self.assertEqual(assigned, [])
+        self.assertEqual(self.store.read_bytes(), before)
+        with self.assertRaises(SourceError):
+            self.ingest_s1()
         reinstate_pointer(self.allowlist, self.store, record_id=self.id2)
+        self.assertEqual(self.ingest_s1()["existing"], [self.id1, self.id2])
         self.assertEqual(self.entry(self.id2)["status"], "active")
         self.assertIsNone(self.entry(self.id2)["review_reason"])
 

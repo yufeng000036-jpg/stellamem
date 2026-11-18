@@ -639,16 +639,27 @@ def ingest_session(
             raise SourceError(
                 "source message is tombstoned; a deleted identity cannot be re-ingested"
             )
-        record_id = record_id_for(message) if record_id_for else _default_record_id(pointer)
-        if not isinstance(record_id, str) or not record_id.strip():
-            raise SourceError("record_id_for must return a non-empty record id")
-        candidates.append((record_id, pointer))
+        candidates.append((message, pointer))
     store_path = Path(store_path)
     with cross_platform_lock(store_path):
         entries = load_pointer_store(store_path)
         by_id = {item["record_id"]: item for item in entries}
         registered, existing = [], []
-        for record_id, pointer in candidates:
+        # A record id is a caller-selected label. A restored source under
+        # review must stay held even when a retry selects a different label.
+        held_ids = {
+            item["pointer"]["message_id"]
+            for item in entries
+            if item["pointer"]["db_id"] == db_id
+            and item["pointer"]["session_id"] == session_id
+            and (item["status"] == "needs_review" or item.get("tombstoned"))
+        }
+        if any(pointer["message_id"] in held_ids for _, pointer in candidates):
+            raise SourceError("source message is held for review; cannot re-ingest")
+        for message, pointer in candidates:
+            record_id = record_id_for(message) if record_id_for else _default_record_id(pointer)
+            if not isinstance(record_id, str) or not record_id.strip():
+                raise SourceError("record_id_for must return a non-empty record id")
             prior = by_id.get(record_id)
             if prior is not None:
                 if prior["pointer"] != pointer:
