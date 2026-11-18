@@ -21,11 +21,13 @@ try:  # 包内导入（compiler.search）与扁平导入（sys.path 加 compiler
     from . import rank as rank_mod
     from . import subjects as subjects_mod
     from . import sufficiency as sufficiency_mod
+    from . import reading as reading_mod
 except ImportError:  # pragma: no cover
     import semantic  # type: ignore
     import rank as rank_mod  # type: ignore
     import subjects as subjects_mod  # type: ignore
     import sufficiency as sufficiency_mod  # type: ignore
+    import reading as reading_mod  # type: ignore
 
 # 字面/语义权重。语义通道默认开启后字面噪声会压住正确项，故可调。
 W_LEX = float(os.environ.get("STELLAMEM_W_LEX", "0.20"))
@@ -1028,4 +1030,9 @@ def recall(
                 for rec in final_items
             ],
         ),
+        # 阅读侧结构化证据（稳定 claim id + 逐条笔记位）与阅读脚手架，
+        # 见 reading.py；引用回来后由 citation_check.py 确定性校验。
+        # api 层按主体过滤后会连同充分性一起重建。
+        "evidence": reading_mod.build_evidence(final_items),
+        "reading_scaffold": reading_mod.READING_SCAFFOLD,
     }

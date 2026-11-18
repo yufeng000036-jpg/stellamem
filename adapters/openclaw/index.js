@@ -356,6 +356,29 @@ export function evidenceSufficiency(prompt, claimTexts) {
   return { status: "sufficient", anchors, covered, uncovered: [] };
 }
 
+// --- Reading scaffold (Chain-of-Note) ---
+// Stage-2's citation bottleneck is reader-side volume: the share of
+// projected claims the reader actually cites fell to 10.0% even as the
+// absolute count rose (286 -> 414), because nothing in the projected
+// format asks the reader to work claim by claim. The scaffold asks for
+// exactly that: a one-line note per line relied on, line-id citations
+// for every fact used, abstention when no line supports an answer.
+// It is delivered on the surfaces that face a live reader — the
+// OpenClaw host hook appends it as one system line after project()'s
+// output, and the /v1/recall response carries it as a field
+// (compiler/reading.py, identical text) next to the structured
+// evidence entries ({claim_id, ..., note: ""}) that the diagnostics
+// sidecar also exposes. project()'s own string is deliberately NOT
+// extended with it: that string has a strict per-line contract
+// (benchmark worker, char-cap accounting, claim-set tests), and the
+// host hook is the layer that owns reader-facing additions. Not
+// appended when the anchor gate withholds: the insufficiency line
+// already is the whole instruction there.
+export const READING_SCAFFOLD =
+  "For each memory line you rely on, first write a one-line note tying it to the question, " +
+  "then answer and cite the line id like [c-...] for every fact you use. " +
+  "If no line supports an answer, say you do not know instead of guessing.";
+
 function namespaceOf(c) {
   const value = Object.hasOwn(c, "namespace") ? c.namespace : c.subject;
   const aliases = { "用户": "user", "人格": "persona", "观众": "viewer" };
@@ -448,6 +471,7 @@ export async function project(root, prompt, config = {}) {
   const diagRecords = [];
   let diagEmpty = null;
   let diagSufficiency = null;
+  let diagEvidence = [];
   async function emitDiag(context) {
     if (!diagDir) return;
     try {
@@ -462,6 +486,8 @@ export async function project(root, prompt, config = {}) {
           candidates_n: diagRecords.length,
           empty_reason: diagEmpty,
           evidence_sufficiency: diagSufficiency,
+          evidence: diagEvidence,
+          reading_scaffold: READING_SCAFFOLD,
           records: diagRecords,
         }, null, 2),
       );
@@ -787,6 +813,17 @@ export async function project(root, prompt, config = {}) {
     const sup = supersedeBy.get(c.claim_id);
     if (entry && sup && sup !== c.claim_id && projectedIds.has(sup)) entry.superseded_by = sup;
   }
+  // Structured evidence view for the sidecar: stable claim ids plus a
+  // per-claim note slot (the Chain-of-Note half of the reading
+  // scaffold). The projected string itself is unchanged by this.
+  diagEvidence = projectedList.map(({ c }) => ({
+    claim_id: c.claim_id ?? null,
+    kind: c.kind ?? null,
+    scope: c.scope ?? null,
+    value: c.value ?? null,
+    date: (c.provenance && c.provenance.timestamp) || null,
+    note: "",
+  }));
   let result = output ? prefix + output : "";
   if (output) {
     // Evidence-sufficiency anchor gate: see uncoveredAnchors above. The
@@ -843,7 +880,17 @@ export default {
         const config = api.pluginConfig || event?.context?.pluginConfig || {};
         if (config.enabled === false) return {};
         const root = (config.coreDir || ROOT).replace(/[\\/]core[\\/]?$/, "");
-        const output = await project(root, String(event?.prompt || ""), config);
+        let output = await project(root, String(event?.prompt || ""), config);
+        if (output && !output.includes('"stellamem:insufficient-evidence"')) {
+          // Reading scaffold for the live reader (see READING_SCAFFOLD
+          // above): appended here, at the host layer, so project()'s
+          // contracted string stays byte-stable for its other callers.
+          output += JSON.stringify({
+            id: "stellamem:reading-scaffold", scope: "system", source: "system",
+            predicate: "reading_scaffold",
+            value: READING_SCAFFOLD,
+          }) + "\n";
+        }
         return output ? { prependContext: output } : {};
       } catch (error) {
         (api.log?.warn || console.error)("[stellamem-adapter] skipped: " + (error.code || error.name));
