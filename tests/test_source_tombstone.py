@@ -176,6 +176,23 @@ class TombstoneResolutionTests(unittest.TestCase):
         with self.assertRaises(SourceError):
             read_daily(daily, self.config)
 
+    def test_manifest_naming_reset_archive_honors_original_tombstone(self):
+        self.reuse_fixture()
+        daily = self.write_manifest([pointer(self.archive.name, "old source")])
+        with self.assertRaises(SourceError):
+            read_daily(daily, self.config)
+        record_rotation(self.ledger, from_file="session.jsonl", to_file=self.archive)
+        self.assertEqual(read_daily(daily, self.config)[0]["text"], "old source")
+        record_tombstone(
+            self.ledger,
+            session_file="session.jsonl",
+            message_id="m1",
+            content_hash=content_hash("old source"),
+            reason="deleted",
+        )
+        with self.assertRaises(SourceError):
+            read_daily(daily, self.config)
+
     # Scenario: active edit — old identity dies, edited identity resolves.
     def test_edit_tombstones_old_pointer_and_new_pointer_resolves(self):
         (self.sessions / "session.jsonl").write_text(entry("edited text"), encoding="utf-8")

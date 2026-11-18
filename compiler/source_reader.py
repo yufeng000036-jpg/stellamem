@@ -9,7 +9,6 @@ from source_ledger import (
     LEDGER_FILENAME,
     LedgerError,
     authorized_rotations,
-    is_tombstoned,
     load_ledger,
 )
 
@@ -53,6 +52,17 @@ def read_daily(path, config=None):
     pinned_head = config.get("source_ledger_head")
     if pinned_head and all(record.get("hash") != pinned_head for record in ledger):
         raise SourceError("Source ledger does not contain the pinned head; not consumed")
+
+    # daily-autolog emits both original names and .reset archive names.
+    # A tombstone recorded under either spelling covers that message identity.
+    def canonical_name(name):
+        return name.partition(".jsonl.reset.")[0] + ".jsonl" if ".jsonl.reset." in name else name
+
+    deleted = {
+        (canonical_name(r["session_file"]), str(r["message_id"]), r["content_hash"])
+        for r in ledger
+        if r["kind"] == "tombstone"
+    }
     cache = {}
     messages = []
 
@@ -96,15 +106,21 @@ def read_daily(path, config=None):
         name = pointer.get("session_file", "")
         if not name or Path(name).name != name or "/" in name or "\\" in name:
             raise SourceError("Invalid source filename")
-        if is_tombstoned(ledger, pointer):
+        canonical = canonical_name(name)
+        if (
+            ".deleted" in name
+            or (canonical, str(pointer.get("message_id")), pointer.get("content_hash")) in deleted
+        ):
             raise SourceError("Source pointer tombstoned; not consumed")
         named = root / name
-        found = match_in(named, pointer) if named.exists() else None
+        found = match_in(named, pointer) if name == canonical and named.exists() else None
         if found is None:
             # A missing canonical file can mean deletion just like a reused name.
-            for record in authorized_rotations(ledger, name):
+            for record in authorized_rotations(ledger, canonical):
                 source = root / record["to_file"]
-                if source == named or not source.exists():
+                if name != canonical and source != named:
+                    continue
+                if source.name == canonical or ".deleted" in source.name or not source.exists():
                     continue
                 found = match_in(source, pointer, "rotation-ledger", record["file_sha256"])
                 if found is not None:
