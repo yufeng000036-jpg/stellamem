@@ -31,6 +31,23 @@
     "(?:today|right now).*(?:fed up|never.*cod|tired|angry)",
     "(?:\\u4eca\\u5929|\\u73b0\\u5728|\\u6b64\\u523b).*(?:\\u4e0d\\u60f3|\\u518d\\u4e5f|\\u7d2f|\\u70e6|\\u751f\\u6c14|\\u53d7\\u591f)"
   ],
+  "past_anchor": [
+    "\\b(?:yesterday|last\\s+(?:week|month|year|night|monday|tuesday|wednesday|thursday|friday|saturday|sunday))\\b",
+    "\\b\\d+\\s+(?:days?|weeks?|months?|years?)\\s+ago\\b",
+    "\\b(?:january|february|march|april|may|june|july|august|september|october|november|december)\\s+\\d{1,2}(?:st|nd|rd|th)?\\b",
+    "\\b\\d{1,2}(?:st|nd|rd|th)?\\s+(?:of\\s+)?(?:january|february|march|april|may|june|july|august|september|october|november|december)\\b",
+    "\\bjust\\s+(?:got back|finished|completed|ordered|bought|received|returned|came back|started|booked|picked up|signed up)\\b",
+    "\\bi\\s+(?:just\\s+)?(?:ordered|bought|visited|attended|went|got|received|tried|watched|met|started|finished|completed|took|spent|missed|lent|booked|purchased|picked|chose|gave|sold|moved|arrived|returned|made|saw|ate|stayed|walked|ran|hiked|drove|flew|played|read|cooked|planted|adopted|joined|decided)\\b",
+    "\\bi(?:'ve|\\s+have)\\s+(?:been|already|just)\\b",
+    "\\bearlier\\s+(?:today|this week|this month)\\b",
+    "\\u5df2\\u7ecf|\\u6628\\u5929|\\u524d\\u5929|\\u4e0a\\u5468|\\u4e0a\\u4e2a\\u6708|\\u53bb\\u5e74|\\u5f53\\u65f6|\\u66fe\\u7ecf|\\u521a\\u521a|\\d{1,2}\\u6708\\d{1,2}\\u65e5|\\u5b8c\\u6210\\u4e86|\\u7ed3\\u675f\\u4e86|\\u5df2\\u542c|\\u5df2\\u770b|\\u5df2\\u8bfb|\\u5df2\\u8bd5|\\u5df2\\u4e70|\\u5df2\\u4e0b\\u5355|\\u5df2\\u53c2\\u52a0|\\u5df2\\u5b8c\\u6210"
+  ],
+  "temporary_intent": [
+    "\\bi'll\\b|\\bwill\\s+(?:buy|get|go|try|start|take|visit|attend|order|book|make|do)\\b",
+    "\\bgoing to\\b|\\bplan(?:s|ning)?\\s+to\\b|\\bplanned to\\b|\\bthinking\\s+(?:of|about)\\b|\\bconsidering\\b|\\bhoping to\\b|\\bhope to\\b|\\bwant(?:s)? to\\b|\\bintend(?:s)? to\\b|\\blooking\\s+(?:to|forward to)\\b|\\babout to\\b|\\byet to\\b",
+    "\\bhaven't\\s+\\w+\\s+yet\\b|\\bhasn't\\s+\\w+\\s+yet\\b|\\bnot sure\\b|\\bundecided\\b|\\bmight\\s+(?:buy|get|go|try|start|take|visit|switch)\\b|\\bmay\\s+(?:buy|get|go|try|start|take|visit|switch)\\b|\\bsoon\\b|\\btomorrow\\b|\\bnext\\s+(?:week|month|year)\\b|\\bso far\\b|\\bcurrently\\b|\\bat the moment\\b|\\bin the middle of\\b",
+    "\\u6253\\u7b97|\\u51c6\\u5907|\\u8ba1\\u5212|\\u60f3\\u8981|\\u8003\\u8651|\\u5e0c\\u671b|\\u5c1a\\u672a|\\u8fd8\\u6ca1|\\u672a\\u51b3\\u5b9a|\\u72b9\\u8c6b|\\u5c06\\u8981|\\u5373\\u5c06|\\u60f3\\u4e70|\\u60f3\\u53bb|\\u60f3\\u5b66|\\u76ee\\u524d|\\u81f3\\u4eca"
+  ],
   "sarcasm": [
     "(?:great|wonderful).*(?:overtime|midnight meeting)",
     "(?:\\u52a0\\u73ed|\\u51cc\\u6668.{0,4}\\u5f00\\u4f1a|\\u65e9\\u4f1a|\\u5835\\u8f66).*(?:\\u771f\\u662f|\\u592a\\u68d2|\\u771f\\u597d)",
