@@ -36,9 +36,7 @@ Behavior by scenario (enforced in ``source_reader.read_daily``):
   refused; the edited text is a new pointer identity and resolves normally.
 - Normal rotation: rotation record + archive bytes unchanged -> the old
   pointer resolves from the archive, provenance marks the ledger path taken.
-  Without a rotation record the reused-filename case stays refused, exactly
-  as before this module (the pre-existing missing-file sibling search is
-  unchanged and needs no record).
+  Both missing and reused filenames require a rotation record for fallback.
 - Archive retention: if the archive file is later replaced, truncated or
   deleted, its hash no longer matches the rotation record (or it is gone),
   so authorization lapses and resolution fails closed.

@@ -17,6 +17,7 @@ sys.path.insert(0, str(REPO / "compiler"))
 sys.path.insert(0, str(REPO / "demo"))
 from fixture_model import FixtureServer
 from model_client import call_llm
+from source_ledger import LEDGER_FILENAME, record_rotation
 from source_reader import content_hash, read_daily, SourceError
 from migrate import plan
 
@@ -204,6 +205,7 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(read_daily(daily, config)[0]["text"], "complete original")
         rotated = source.with_name(source.name + ".reset.test")
         source.rename(rotated)
+        record_rotation(sessions / LEDGER_FILENAME, from_file=source.name, to_file=rotated)
         self.assertEqual(read_daily(daily, config)[0]["text"], "complete original")
         rotated.write_text(
             json.dumps(

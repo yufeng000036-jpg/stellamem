@@ -13,6 +13,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "compiler"))
+from source_ledger import LEDGER_FILENAME, record_rotation
 from source_reader import SourceError, content_hash, read_daily
 
 
@@ -92,6 +93,13 @@ class SourcePointerTests(unittest.TestCase):
             entry("survives reset"), encoding="utf-8"
         )
         daily = self.write_manifest([pointer("session.jsonl", "survives reset")])
+        with self.assertRaises(SourceError):
+            read_daily(daily, self.config)
+        record_rotation(
+            self.sessions / LEDGER_FILENAME,
+            from_file="session.jsonl",
+            to_file=self.sessions / "session.jsonl.reset.2026",
+        )
         self.assertEqual(read_daily(daily, self.config)[0]["text"], "survives reset")
 
     def test_multiple_session_files_resolve_by_name(self):
