@@ -643,7 +643,8 @@ export async function project(root, prompt, config = {}) {
   // ~3,600 chars, still far below the default char cap, which keeps
   // protecting smaller caller budgets exactly as before.
   const maxClaims = 20;
-  function lineFor(c, projectedIds = null) {
+  const projectedIds = new Set();
+  function lineFor(c) {
     const line = { id: c.claim_id, scope: c.scope, source: c.source, predicate: c.predicate,
       value: c.value,
       // The claim's own date: without it the reader cannot order events at
@@ -651,22 +652,35 @@ export async function project(root, prompt, config = {}) {
       // a date per message. Provenance timestamp is the source message's
       // timestamp; omit the field when a record has no provenance.
       date: (c.provenance && c.provenance.timestamp) || undefined };
-    // Version marks (see the superseding block above). During selection
-    // (projectedIds null) marks are included optimistically, so the char
-    // cap accounts for the longest possible line; the final render keeps
-    // a mark only when both claims actually project.
     const sup = supersedeBy.get(c.claim_id);
-    if (sup && sup !== c.claim_id && (!projectedIds || projectedIds.has(sup))) {
+    if (sup && sup !== c.claim_id && projectedIds.has(sup)) {
       line.superseded_by = sup;
     }
     const olds = supersededByMe.get(c.claim_id);
     if (olds) {
-      const live = projectedIds ? olds.filter((id) => projectedIds.has(id)) : olds;
+      const live = olds.filter((id) => projectedIds.has(id));
       if (live.length) line.supersedes = live;
     }
     return JSON.stringify(line) + "\n";
   }
   let outputLen = 0;
+  function reserveLine(c) {
+    const alreadyProjected = projectedIds.has(c.claim_id);
+    projectedIds.add(c.claim_id);
+    const lineLength = lineFor(c).length;
+    let nextLength = outputLen + lineLength;
+    if (supersedeBy.has(c.claim_id) || supersededByMe.has(c.claim_id)) {
+      // Adding the other side of a link can also lengthen earlier lines.
+      nextLength = projectedList.reduce((sum, item) => sum + lineFor(item.c).length,
+        lineLength);
+    }
+    if (prefix.length + nextLength > max) {
+      if (!alreadyProjected) projectedIds.delete(c.claim_id);
+      return false;
+    }
+    outputLen = nextLength;
+    return true;
+  }
   let count = 0;
   for (let i = 0; i < candidates.length; i++) {
     const { c, entry, topical, always } = candidates[i];
@@ -687,12 +701,10 @@ export async function project(root, prompt, config = {}) {
       if (entry) { entry.stage = "dropped"; entry.reason = "kind-cap"; }
       continue;
     }
-    const line = lineFor(c);
-    if (prefix.length + outputLen + line.length > max) {
+    if (!reserveLine(c)) {
       if (entry) { entry.stage = "dropped"; entry.reason = "char-cap"; }
       continue;
     }
-    outputLen += line.length;
     if (!topical && !always) perKind[c.kind] = (perKind[c.kind] || 0) + 1;
     count += 1;
     seen.add(c.revision_id);
@@ -721,12 +733,10 @@ export async function project(root, prompt, config = {}) {
         continue;
       }
       if (!fallbackPass(c)) continue;
-      const line = lineFor(c);
-      if (prefix.length + outputLen + line.length > max) {
+      if (!reserveLine(c)) {
         if (entry) entry.reason = "char-cap";
         continue;
       }
-      outputLen += line.length;
       count += 1;
       seen.add(c.revision_id);
       projectedList.push({ c, entry });
@@ -738,10 +748,9 @@ export async function project(root, prompt, config = {}) {
   // Final render: marks survive only when both sides of the relation
   // actually project (a superseding claim cut by a cap must not leave a
   // dangling "superseded_by" pointing outside the context).
-  const projectedIds = new Set(projectedList.map(({ c }) => c.claim_id));
   let output = "";
   for (const { c, entry } of projectedList) {
-    output += lineFor(c, projectedIds);
+    output += lineFor(c);
     const sup = supersedeBy.get(c.claim_id);
     if (entry && sup && sup !== c.claim_id && projectedIds.has(sup)) entry.superseded_by = sup;
   }

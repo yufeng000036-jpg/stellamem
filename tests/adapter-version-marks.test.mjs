@@ -120,3 +120,15 @@ test("marks: revision ambiguity inside the older claim is unchanged", async () =
   assert.deepEqual(ls.map((l) => l.id), ["c-new"]);
   assert.equal(ls[0].supersedes, undefined);
 });
+
+test("an unselected successor cannot displace an exact-fit source line", async () => {
+  const root = await fixture();
+  const prompt = "Where do I work at NovaTech?";
+  await writeRecords(root, "semantic/facts.md", [OLD]);
+  const exact = await project(root, prompt);
+  assert.deepEqual(lines(exact).map(l => l.id), ["c-old"]);
+  const large = { ...NEW, value: "fictional very long workplace ".repeat(90) };
+  await writeRecords(root, "semantic/facts.md", [OLD, large]);
+  const out = await project(root, prompt, { maxInjectChars: exact.length });
+  assert.equal(out, exact);
+});
