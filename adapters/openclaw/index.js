@@ -187,12 +187,37 @@ function relevance(claim, prompt) {
 // failing abstention question and on zero answered-correct questions.
 // Anchors are Latin-script only; a CJK prompt without Latin names simply
 // never triggers the gate.
+// Anchor spelling is normalized before any check: the tokenizer's
+// character class also admits sentence punctuation, so a sentence-final
+// name arrives as "Tokyo." and can never match the claim text's
+// "tokyo" — the gate then withholds a fully covered projection
+// (fixed-set positive control 0a34ad58, measured with the gate stacked
+// on the projection-relevance branch: merged projection 58.8% and
+// positive controls 9/10, the one loss being this false fire). Edge
+// punctuation (sentence marks, quotes, brackets, CJK punctuation) is
+// stripped from each token, and the capitalization / stopword checks
+// see the stripped form ("May." is the month, not a name). Internal
+// characters are untouched ("U.S" keeps its inner dot, "AT&T" its
+// ampersand). Only the anchor's spelling changes; the decision rule —
+// fire only when every anchor is uncovered — does not.
 const ANCHOR_STOP = new Set([
   "january", "february", "march", "april", "may", "june", "july",
   "august", "september", "october", "november", "december",
   "monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
   "sunday", "i",
 ]);
+const ANCHOR_EDGE_PUNCT = new Set([
+  ".", ",", ";", ":", "!", "?", "'", "\"", "(", ")", "[", "]", "{", "}", "<", ">",
+  "。", "、", "，", "；", "：", "！", "？", "·", "…", "—",
+  "「", "」", "『", "』", "〈", "〉", "《", "》", "【", "】", "（", "）", "“", "”", "‘", "’",
+]);
+function normalizeAnchorToken(tok) {
+  let start = 0;
+  let end = tok.length;
+  while (start < end && ANCHOR_EDGE_PUNCT.has(tok[start])) start += 1;
+  while (end > start && ANCHOR_EDGE_PUNCT.has(tok[end - 1])) end -= 1;
+  return tok.slice(start, end);
+}
 export function questionAnchors(prompt) {
   const tokens = [...String(prompt).matchAll(/[A-Za-z0-9][A-Za-z0-9&'+.\-]*/g)];
   const anchors = [];
@@ -202,7 +227,7 @@ export function questionAnchors(prompt) {
     current = [];
   };
   tokens.forEach((m, i) => {
-    const tok = m[0];
+    const tok = normalizeAnchorToken(m[0]);
     const sentenceInitial = i === 0 || /[.!?]["']?\s*$/.test(String(prompt).slice(0, m.index));
     const capitalized = (/^[A-Z]/.test(tok) && /[a-z]/.test(tok)) ||
       (tok.length >= 2 && tok === tok.toUpperCase() && /[A-Z]/.test(tok));

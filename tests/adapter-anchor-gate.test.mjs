@@ -38,6 +38,66 @@ test("anchors: capitalized non-sentence-initial phrases, stopwords excluded", ()
     uncoveredAnchors("job at Google?", ["worked at google for years"]), []);
 });
 
+test("anchors: edge punctuation is stripped before checks and matching", () => {
+  // Measured false fire (fixed-set positive control 0a34ad58): the
+  // sentence-final name arrives as "Tokyo." and never matched the claim
+  // text's "tokyo", so a fully covered projection was withheld.
+  assert.deepEqual(
+    questionAnchors("I’m a bit anxious about getting around Tokyo. Do you have any helpful tips?"),
+    ["tokyo"]);
+  // Multi-word anchor whose last word carries the sentence period.
+  assert.deepEqual(
+    questionAnchors("Tell me about my stay at the Park Hyatt Tokyo."),
+    ["park hyatt tokyo"]);
+  // The stopword check sees the stripped form: "May." is the month.
+  assert.deepEqual(questionAnchors("The concert was in May."), []);
+  // A closing quote rides along in the token and is stripped.
+  assert.deepEqual(
+    questionAnchors("I visited the 'Google' campus last year"), ["google"]);
+  // Internal punctuation is not touched.
+  assert.deepEqual(
+    questionAnchors("I flew to the U.S. last spring"), ["u.s"]);
+  // A punctuation-carrying anchor covered by claim text: no gate.
+  assert.deepEqual(
+    uncoveredAnchors("getting around Tokyo.", ["will stay at park hyatt tokyo"]), []);
+  // True zero coverage still fires, with the normalized anchor reported.
+  assert.deepEqual(
+    uncoveredAnchors("getting around Tokyo.", ["i stayed in osaka last year"]),
+    ["tokyo"]);
+});
+
+test("punctuation-carrying anchor covered end to end: projection passes", async () => {
+  // The 0a34ad58 shape through project(): the answering claim names
+  // Tokyo without a trailing period; the question carries "Tokyo.".
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [
+    record({ claim_id: "c-hotel", revision_id: "r-hotel", scope: "travel",
+      predicate: "will stay at", value: "Park Hyatt Tokyo",
+      evidence: "the Park Hyatt Tokyo, where I'll be staying" }),
+  ]);
+  const out = await project(root,
+    "I’m a bit anxious about getting around Tokyo. Do you have any helpful tips?",
+    { requesterSubject: "user", activeScopes: ["travel"], maxInjectChars: 16000 });
+  assert.ok(out.includes("c-hotel"), "covered claim must project: " + out);
+  assert.ok(!out.includes("insufficient-evidence"), "gate must stay inert: " + out);
+});
+
+test("punctuation-carrying anchor with zero coverage: gate still fires", async () => {
+  // Normalization must not loosen the gate: a near-miss line about
+  // getting around (no Tokyo anywhere) is still withheld.
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [
+    record({ claim_id: "c-card", revision_id: "r-card", scope: "travel",
+      predicate: "holds transit card", value: "a Suica card for getting around",
+      evidence: "I just got a Suica card for getting around the city" }),
+  ]);
+  const out = await project(root,
+    "I’m a bit anxious about getting around Tokyo. Do you have any helpful tips?",
+    { requesterSubject: "user", activeScopes: ["travel"], maxInjectChars: 16000 });
+  assert.ok(out.includes("stellamem:insufficient-evidence"), "gate must fire: " + out);
+  assert.ok(!out.includes("c-card"), "near-miss line must be withheld: " + out);
+});
+
 test("near-miss projection is replaced by the insufficiency line", async () => {
   // The measured failure shape: a duration claim about a different
   // employer is projected for a question anchored on an absent entity.
