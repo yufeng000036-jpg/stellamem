@@ -133,6 +133,69 @@ function overlap(text, query) {
   };
 }
 
+// --- Date keys (deterministic, derived at extraction time) ---
+// The compiler resolves a claim's relative time expressions ("last
+// week", 上周) against its source message's timestamp and stores the
+// absolute results on the claim as date_keys: ISO day keys and YYYY-MM
+// month keys (security.derive_date_keys). Lexical overlap cannot make
+// that connection on its own — the claim text says "last week", the
+// question says "March 13" — so a question-side date reference that
+// equals a stored key counts as a topical hit here. Day keys match an
+// exact ISO date in the question, or a month+day mention (which carries
+// no year; within one memory set the same month-day in another year is
+// rare, and the sufficiency guard plus the reader still arbitrate).
+// Month keys match only a month+year mention, never a bare month name.
+// A date hit floors the base score at 0.30: a real date coincidence is
+// a stronger signal than a bigram overlap (0.05-0.25) but must not
+// outrank a full lexical match on the claim's own words.
+const MONTH_NUMBER = {
+  january: "01", february: "02", march: "03", april: "04", may: "05",
+  june: "06", july: "07", august: "08", september: "09", october: "10",
+  november: "11", december: "12",
+};
+const MONTH_RE = Object.keys(MONTH_NUMBER).join("|");
+const dateRefCache = new Map();
+function questionDateRefs(query) {
+  let refs = dateRefCache.get(query);
+  if (refs) return refs;
+  refs = { days: new Set(), months: new Set(), monthDays: new Set() };
+  const pad = (s) => s.padStart(2, "0");
+  for (const m of query.matchAll(/\b(\d{4})-(\d{2})-(\d{2})\b/g)) {
+    refs.days.add(`${m[1]}-${m[2]}-${m[3]}`);
+    refs.months.add(`${m[1]}-${m[2]}`);
+  }
+  for (const m of query.matchAll(/\b(\d{4})-(\d{2})\b/g)) refs.months.add(`${m[1]}-${m[2]}`);
+  for (const m of query.matchAll(new RegExp(`\\b(${MONTH_RE})\\s+(\\d{4})\\b`, "g")))
+    refs.months.add(`${m[2]}-${MONTH_NUMBER[m[1]]}`);
+  for (const m of query.matchAll(new RegExp(`\\b(${MONTH_RE})\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b`, "g")))
+    refs.monthDays.add(`${MONTH_NUMBER[m[1]]}-${pad(m[2])}`);
+  for (const m of query.matchAll(new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(?:of\\s+)?(${MONTH_RE})\\b`, "g")))
+    refs.monthDays.add(`${MONTH_NUMBER[m[2]]}-${pad(m[1])}`);
+  for (const m of query.matchAll(/(\d{4})年(\d{1,2})月(\d{1,2})日/g)) {
+    refs.days.add(`${m[1]}-${pad(m[2])}-${pad(m[3])}`);
+    refs.months.add(`${m[1]}-${pad(m[2])}`);
+  }
+  for (const m of query.matchAll(/(\d{1,2})月(\d{1,2})日/g))
+    refs.monthDays.add(`${pad(m[1])}-${pad(m[2])}`);
+  for (const m of query.matchAll(/(\d{4})年(\d{1,2})月/g)) refs.months.add(`${m[1]}-${pad(m[2])}`);
+  if (dateRefCache.size > 64) dateRefCache.clear();
+  dateRefCache.set(query, refs);
+  return refs;
+}
+function dateKeyHit(keys, query) {
+  if (!Array.isArray(keys) || !keys.length) return false;
+  const refs = questionDateRefs(query);
+  if (!refs.days.size && !refs.months.size && !refs.monthDays.size) return false;
+  for (const k of keys) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(k)) {
+      if (refs.days.has(k) || refs.monthDays.has(k.slice(5))) return true;
+    } else if (/^\d{4}-\d{2}$/.test(k)) {
+      if (refs.months.has(k)) return true;
+    }
+  }
+  return false;
+}
+
 function relevance(claim, prompt) {
   const query = prompt.toLowerCase();
   const intent = (KIND_INTENT[claim.kind] || NEVER).test(query);
@@ -154,16 +217,17 @@ function relevance(claim, prompt) {
   // the scope joins the full text. max() with the value-only base below
   // keeps a value match's score exact, as before.
   const full = overlap(valueText + " " + (claim.evidence || "") + " " + (claim.scope || ""), query);
-  const lexical = value.lexical || full.lexical;
+  const dateHit = dateKeyHit(claim.date_keys, query);
+  const lexical = value.lexical || full.lexical || dateHit;
   const bigram = value.bigram || full.bigram;
   const shared = Math.max(value.sharedBigrams, full.sharedBigrams);
   // Bigram-only matches score below lexical: 0.05 base + 0.05 per shared
   // bigram, capped at 0.25 total. At least 2 shared bigrams are required,
   // so a single stray character pair cannot drag a claim in.
   const bigramScore = bigram ? 0.05 + Math.min(0.20, 0.05 * shared) : 0;
-  const base = Math.max(value.base, full.base);
+  const base = dateHit ? Math.max(value.base, full.base, 0.30) : Math.max(value.base, full.base);
   const score = (lexical ? Math.max(base, bigramScore) : bigramScore) + (intent ? 0.35 : 0);
-  return { score, lexical, bigram, intent, sharedBigrams: shared };
+  return { score, lexical, bigram, intent, sharedBigrams: shared, dateKey: dateHit };
 }
 
 // --- Evidence-sufficiency anchor gate (deterministic, no model call) ---
