@@ -86,6 +86,42 @@ class SqliteSourceTests(unittest.TestCase):
                 with self.assertRaises(SourceError):
                     read_session(self.db, "s1")
 
+    def test_schema25_requires_a_complete_active_window(self):
+        self.con.executescript("""
+            PRAGMA user_version=25;
+            ALTER TABLE transcript_events DROP COLUMN message_role;
+            CREATE TABLE session_transcript_active_events
+                (session_id, active_position, event_seq, context_eligible, message_position);
+            CREATE TABLE session_transcript_index_state
+                (session_id, indexed_seq, active_event_count, needs_rebuild);
+            INSERT INTO session_transcript_index_state VALUES ('s1', 1, 1, 0);
+            INSERT INTO session_transcript_active_events VALUES ('s1', 0, 1, 1, 0);
+        """)
+        for sid in ("s1", "s2"):
+            for seq, item in enumerate(({"type": "session", "id": sid}, event(content=sid))):
+                self.con.execute(
+                    "INSERT INTO transcript_events VALUES (?, ?, ?, NULL, NULL)",
+                    (sid, seq, json.dumps(item)),
+                )
+        self.con.commit()
+        self.assertEqual([m["text"] for m in read_session(self.db, "s1")], ["s1"])
+        snapshot = sqlite3.connect(":memory:")
+        self.addCleanup(snapshot.close)
+        self.con.backup(snapshot)
+        for sql in (
+            "UPDATE session_transcript_index_state SET needs_rebuild=1",
+            "UPDATE session_transcript_index_state SET indexed_seq=0",
+            "UPDATE session_transcript_active_events SET context_eligible=0",
+            "DELETE FROM session_transcript_active_events",
+            """UPDATE transcript_events SET event_json='{"type":"reset"}' WHERE seq=1""",
+        ):
+            with self.subTest(sql=sql):
+                self.con.execute(sql)
+                self.con.commit()
+                with self.assertRaises(SourceError):
+                    read_session(self.db, "s1")
+                snapshot.backup(self.con)
+
     def test_compressed_missing_decoder_and_corruption_fail_closed(self):
         self.add(event())
         self.con.execute(
