@@ -759,15 +759,24 @@ export async function project(root, prompt, config = {}) {
       for (const { entry } of projectedList) {
         if (entry) { entry.stage = "dropped"; entry.reason = "insufficient-anchor-coverage"; }
       }
-      result = prefix + JSON.stringify({
+      const notice = {
         id: "stellamem:insufficient-evidence", scope: "system", source: "system",
         predicate: "evidence_sufficiency",
         value: "No stored memory mentions " + missing.join(", ") +
           ". The named anchor of this question is absent from memory, so near-miss lines were withheld as insufficient evidence.",
-      }) + "\n";
+      };
+      result = prefix + JSON.stringify(notice) + "\n";
+      if (result.length > max) {
+        notice.value = "Insufficient evidence for the named item.";
+        result = prefix + JSON.stringify(notice) + "\n";
+        if (result.length > max) {
+          diagEmpty = "char-cap";
+          result = "";
+        }
+      }
     }
   }
-  if (!result) diagEmpty = diagRecords.length ? "all-dropped" : "no-candidates";
+  if (!result && !diagEmpty) diagEmpty = diagRecords.length ? "all-dropped" : "no-candidates";
   await emitDiag(result);
   return result;
 }

@@ -152,3 +152,20 @@ test("no Latin anchors in the prompt: gate is inert", async () => {
   assert.ok(out.includes("《星球邮差》"), "claim must project unchanged: " + out);
   assert.ok(!out.includes("insufficient-evidence"), "gate must stay inert: " + out);
 });
+
+test("insufficiency response respects the same total character budget", async () => {
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [
+    record({ predicate: "transit card", value: "blue card", evidence: "blue card" }),
+  ]);
+  const prompt = "Which transit card should I use in Tokyo?";
+  const full = await project(root, prompt);
+  assert.ok(full.includes("stellamem:insufficient-evidence"));
+  const limit = full.length - 1;
+  const bounded = await project(root, prompt, { maxInjectChars: limit });
+  assert.ok(bounded.length <= limit, `returned ${bounded.length} chars for a ${limit}-char budget`);
+  assert.ok(bounded.includes("stellamem:insufficient-evidence"));
+  assert.ok(!bounded.includes("blue card"));
+  assert.equal(await project(root, prompt, { maxInjectChars: bounded.length - 1 }), "");
+  assert.equal(await project(root, prompt, { maxInjectChars: full.length }), full);
+});
