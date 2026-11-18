@@ -497,6 +497,56 @@ export async function project(root, prompt, config = {}) {
     }
   }
 
+  // --- Version superseding marks (deterministic, projection-only) ---
+  // Two *different* claims can state successive values of one attribute
+  // (same normalized subject + predicate, different values, orderable
+  // source timestamps): the older value was later replaced. Round-4
+  // claim-level attribution decided how to surface that: among the
+  // projected claims of the final stacked arm, 127 older instances sat
+  // in such groups and 121 of them were gold — the questions (mostly
+  // knowledge-update and temporal) ask about the change itself or the
+  // previous value, so dropping the older line would cut gold evidence
+  // and lower the projection rate. The older line therefore stays, and
+  // is *marked*: it gains "superseded_by" naming the newest claim, and
+  // the newest gains "supersedes" listing the marked ones — an explicit
+  // ordering signal on top of the per-line dates. This is not the
+  // revision-ambiguity rule below: that rule is about several revisions
+  // of ONE claim_id and is untouched; superseding only ever relates
+  // distinct claim_ids, never resolves anything by score, and a group
+  // whose newest value is itself ambiguous (two different values tied
+  // at the latest timestamp) is left unmarked, fail-closed.
+  const normKeyPart = (s) => String(s ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+  const supersedeBy = new Map();
+  const supersededByMe = new Map();
+  {
+    const groups = new Map();
+    for (const { c } of candidates) {
+      const key = normKeyPart(c.subject) + "\n" + normKeyPart(c.predicate);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(c);
+    }
+    for (const cs of groups.values()) {
+      if (new Set(cs.map((c) => normKeyPart(c.value))).size < 2) continue;
+      const timed = cs
+        .map((c) => ({ c, t: Date.parse((c.provenance || {}).timestamp || "") }))
+        .filter((x) => Number.isFinite(x.t));
+      if (new Set(timed.map((x) => x.t)).size < 2) continue;
+      const maxT = Math.max(...timed.map((x) => x.t));
+      const newest = timed.filter((x) => x.t === maxT);
+      if (new Set(newest.map((x) => normKeyPart(x.c.value))).size !== 1) continue;
+      const newestClaim = newest[0].c;
+      for (const { c, t } of timed) {
+        if (t >= maxT || c.claim_id === newestClaim.claim_id) continue;
+        if (normKeyPart(c.value) === normKeyPart(newestClaim.value)) continue;
+        if (!supersedeBy.has(c.claim_id)) {
+          supersedeBy.set(c.claim_id, newestClaim.claim_id);
+          if (!supersededByMe.has(newestClaim.claim_id)) supersededByMe.set(newestClaim.claim_id, []);
+          supersededByMe.get(newestClaim.claim_id).push(c.claim_id);
+        }
+      }
+    }
+  }
+
   // An ambiguous slot is never resolved by relevance score. Ambiguity is
   // judged among gate-passing candidates only: a gate-failed sibling
   // revision never made the slot ambiguous (the fill pass below applies
@@ -529,16 +579,30 @@ export async function project(root, prompt, config = {}) {
   // ~3,600 chars, still far below the default char cap, which keeps
   // protecting smaller caller budgets exactly as before.
   const maxClaims = 20;
-  function lineFor(c) {
-    return JSON.stringify({ id: c.claim_id, scope: c.scope, source: c.source, predicate: c.predicate,
+  function lineFor(c, projectedIds = null) {
+    const line = { id: c.claim_id, scope: c.scope, source: c.source, predicate: c.predicate,
       value: c.value,
       // The claim's own date: without it the reader cannot order events at
       // all (temporal questions), and the direct arm's raw context does carry
       // a date per message. Provenance timestamp is the source message's
       // timestamp; omit the field when a record has no provenance.
-      date: (c.provenance && c.provenance.timestamp) || undefined }) + "\n";
+      date: (c.provenance && c.provenance.timestamp) || undefined };
+    // Version marks (see the superseding block above). During selection
+    // (projectedIds null) marks are included optimistically, so the char
+    // cap accounts for the longest possible line; the final render keeps
+    // a mark only when both claims actually project.
+    const sup = supersedeBy.get(c.claim_id);
+    if (sup && sup !== c.claim_id && (!projectedIds || projectedIds.has(sup))) {
+      line.superseded_by = sup;
+    }
+    const olds = supersededByMe.get(c.claim_id);
+    if (olds) {
+      const live = projectedIds ? olds.filter((id) => projectedIds.has(id)) : olds;
+      if (live.length) line.supersedes = live;
+    }
+    return JSON.stringify(line) + "\n";
   }
-  let output = "";
+  let outputLen = 0;
   let count = 0;
   for (let i = 0; i < candidates.length; i++) {
     const { c, entry, topical, always } = candidates[i];
@@ -560,11 +624,11 @@ export async function project(root, prompt, config = {}) {
       continue;
     }
     const line = lineFor(c);
-    if (prefix.length + output.length + line.length > max) {
+    if (prefix.length + outputLen + line.length > max) {
       if (entry) { entry.stage = "dropped"; entry.reason = "char-cap"; }
       continue;
     }
-    output += line;
+    outputLen += line.length;
     if (!topical && !always) perKind[c.kind] = (perKind[c.kind] || 0) + 1;
     count += 1;
     seen.add(c.revision_id);
@@ -594,11 +658,11 @@ export async function project(root, prompt, config = {}) {
       }
       if (!fallbackPass(c)) continue;
       const line = lineFor(c);
-      if (prefix.length + output.length + line.length > max) {
+      if (prefix.length + outputLen + line.length > max) {
         if (entry) entry.reason = "char-cap";
         continue;
       }
-      output += line;
+      outputLen += line.length;
       count += 1;
       seen.add(c.revision_id);
       projectedList.push({ c, entry });
@@ -607,6 +671,16 @@ export async function project(root, prompt, config = {}) {
   }
   if (await pending(root)) { diagEmpty = "pending"; await emitDiag(""); return ""; }
   if (await generation(root) !== beforeGeneration) { diagEmpty = "generation-changed"; await emitDiag(""); return ""; }
+  // Final render: marks survive only when both sides of the relation
+  // actually project (a superseding claim cut by a cap must not leave a
+  // dangling "superseded_by" pointing outside the context).
+  const projectedIds = new Set(projectedList.map(({ c }) => c.claim_id));
+  let output = "";
+  for (const { c, entry } of projectedList) {
+    output += lineFor(c, projectedIds);
+    const sup = supersedeBy.get(c.claim_id);
+    if (entry && sup && sup !== c.claim_id && projectedIds.has(sup)) entry.superseded_by = sup;
+  }
   let result = output ? prefix + output : "";
   if (output) {
     // Evidence-sufficiency anchor gate: see uncoveredAnchors above. The
