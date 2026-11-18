@@ -29,6 +29,7 @@ import reliability as rel
 import search as S
 import snapshots
 import subjects
+import sufficiency as sufficiency_mod
 from hit_votes import HitVotes, validate_vote
 from storage import Transaction, load_records
 
@@ -582,6 +583,15 @@ class Handler(BaseHTTPRequestHandler):
                 result["text"] = "\n".join(lines)
                 result["chars"] = sum(len(line) + 1 for line in lines)
                 result["dropped"] = max(0, result.get("dropped", 0))
+                # 充分性必须与过滤后的条目一致：未过滤后算出的覆盖状态
+                # 会把其他主体的记忆是否提到某锚点泄露给受限 Token。
+                result["evidence_sufficiency"] = sufficiency_mod.evidence_sufficiency(
+                    payload.get("prompt") or "",
+                    [
+                        " ".join(str(rec.get(k) or "") for k in ("value", "evidence"))
+                        for rec in result["items"]
+                    ],
+                )
             return self._send(*_json(HTTPStatus.OK, result))
 
         # 以下为写操作：Scoped Token（受限 Token）禁止写操作，只读
