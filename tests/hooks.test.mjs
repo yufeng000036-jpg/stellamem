@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, readFile, rename, readdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { spawnSync } from "node:child_process";
 import { writeDaily } from "../hooks/daily-autolog/handler.js";
 import { project } from "../adapters/openclaw/index.js";
+import { RULES } from "../shared/runtime.mjs";
 
 const fixtureRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -112,7 +114,19 @@ test("runtime rules load without top-level await", async () => {
     "utf8"
   );
   assert.ok(!/^await\s/m.test(source), "runtime.mjs must not use top-level await");
-  assert.ok(source.includes("readFileSync"), "rules should load synchronously");
+  assert.ok(source.includes('require("./policy-rules.json")'), "bundler must see the rules asset");
+  const expected = JSON.parse(await readFile(path.join(fixtureRoot, "shared", "policy-rules.json"), "utf8"));
+  assert.deepEqual(RULES, expected, "runtime and canonical policy must match");
+});
+test("missing or invalid policy file fails module import closed", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "stellamem-policy-"));
+  const runtime = path.join(root, "runtime.mjs");
+  await writeFile(runtime, await readFile(path.join(fixtureRoot, "shared", "runtime.mjs")));
+  const check = () => spawnSync(process.execPath, ["--input-type=module", "-e",
+    `await import(${JSON.stringify(pathToFileURL(runtime).href)})`], { encoding: "utf8" });
+  assert.notEqual(check().status, 0, "missing policy must fail closed");
+  await writeFile(path.join(root, "policy-rules.json"), "{broken");
+  assert.notEqual(check().status, 0, "invalid policy must fail closed");
 });
 test("projection isolates authoritative subject namespaces and rejects malformed ones", async () => {
   const f = await fixture(); await mkdir(path.join(f.root, "core"));
