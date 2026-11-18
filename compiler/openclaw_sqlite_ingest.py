@@ -604,6 +604,41 @@ def _default_record_id(pointer):
     )
 
 
+_FULL_SESSION = object()
+
+
+def _resume_cursor(cursor, scope, candidates, ledger):
+    """Verify a previously acknowledged prefix against this read snapshot."""
+    start = 0
+    if cursor is not None:
+        if (
+            not isinstance(cursor, dict)
+            or cursor.get("scope") != scope
+            or cursor.get("version") != 1
+        ):
+            raise SourceError("ingest cursor does not belong to this source")
+        start = cursor.get("count")
+        if type(start) is not int or not 0 <= start <= len(candidates):
+            raise SourceError("invalid or truncated ingest cursor prefix")
+        pin = cursor.get("ledger_head")
+        if pin and not any(record["hash"] == pin for record in ledger):
+            raise SourceError("ingest cursor deletion ledger was rolled back")
+    digest = hashlib.sha256()
+    for _, pointer in candidates[:start]:
+        digest.update(bytes.fromhex(source_ledger.record_hash(pointer)))
+    if cursor is not None and digest.hexdigest() != cursor.get("digest"):
+        raise SourceError("ingest cursor prefix changed; review source edits or deletions")
+    for _, pointer in candidates[start:]:
+        digest.update(bytes.fromhex(source_ledger.record_hash(pointer)))
+    return start, {
+        "version": 1,
+        "scope": scope,
+        "count": len(candidates),
+        "digest": digest.hexdigest(),
+        "ledger_head": source_ledger.ledger_head(ledger),
+    }
+
+
 def ingest_session(
     allowlist_path,
     store_path,
@@ -612,6 +647,7 @@ def ingest_session(
     session_id,
     record_id_for=None,
     ledger_path=None,
+    cursor=_FULL_SESSION,
     now=None,
 ):
     """Read one authorized session and register a pointer per message.
@@ -622,9 +658,19 @@ def ingest_session(
     reported, not duplicated); a record id that now points at different
     bytes is a collision and fails closed so the drift is reviewed, not
     silently overwritten.
+
+    For incremental delivery pass cursor=None on the first call, then pass
+    the last next_cursor acknowledged by the downstream consumer. Persist it
+    only after committing the batch. Retries with the same input cursor
+    deliver the same suffix on an unchanged snapshot. This is a logical
+    cursor: reads still validate the whole session to detect edits. Omitting
+    cursor retains the full-session interface.
     """
     allowlist = load_allowlist(allowlist_path)
     entry = require_authorized(allowlist, db_id, session_id)
+    incremental = cursor is not _FULL_SESSION
+    if incremental and (ledger_path is None or _entry_provider(entry) != "openclaw-sqlite"):
+        raise SourceError("incremental delivery requires a SQLite source and explicit ledger")
     source_stats = None
     if _entry_provider(entry) == "openclaw-jsonl":
         messages, source_stats = _read_jsonl_session_with_stats(entry["path"], session_id)
@@ -641,6 +687,18 @@ def ingest_session(
             )
         candidates.append((message, pointer))
     store_path = Path(store_path)
+    start = 0
+    if incremental:
+        scope = source_ledger.record_hash(
+            [
+                db_id,
+                session_id,
+                entry["path"],
+                str(store_path.resolve()),
+                str(Path(ledger_path).resolve()),
+            ]
+        )
+        start, next_cursor = _resume_cursor(cursor, scope, candidates, tombstones)
     with cross_platform_lock(store_path):
         entries = load_pointer_store(store_path)
         by_id = {item["record_id"]: item for item in entries}
@@ -656,7 +714,17 @@ def ingest_session(
         }
         if any(pointer["message_id"] in held_ids for _, pointer in candidates):
             raise SourceError("source message is held for review; cannot re-ingest")
-        for message, pointer in candidates:
+        registered_pointers = (
+            {source_ledger.record_hash(item["pointer"]) for item in entries} if start else set()
+        )
+        if any(
+            source_ledger.record_hash(pointer) not in registered_pointers
+            for _, pointer in candidates[:start]
+        ):
+            raise SourceError(
+                "ingest cursor pointer store does not contain the acknowledged prefix"
+            )
+        for message, pointer in candidates[start:]:
             record_id = record_id_for(message) if record_id_for else _default_record_id(pointer)
             if not isinstance(record_id, str) or not record_id.strip():
                 raise SourceError("record_id_for must return a non-empty record id")
@@ -689,8 +757,10 @@ def ingest_session(
         "session_id": session_id,
         "registered": registered,
         "existing": existing,
-        "messages": messages,
+        "messages": messages[start:],
     }
+    if incremental:
+        result["next_cursor"] = next_cursor
     if source_stats is not None:
         result["source_stats"] = source_stats
     return result
