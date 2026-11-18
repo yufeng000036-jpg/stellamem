@@ -316,7 +316,9 @@ class DeletionPropagationTests(IngestFixture):
         before = self.store.read_bytes()
         assigned = []
         with self.assertRaises(SourceError):
-            self.ingest_s1(record_id_for=lambda m: assigned.append(m["text"]) or m["provenance"]["message_id"])
+            self.ingest_s1(
+                record_id_for=lambda m: assigned.append(m["text"]) or m["provenance"]["message_id"]
+            )
         self.assertEqual(assigned, [])
         self.assertEqual(self.store.read_bytes(), before)
         with self.assertRaises(SourceError):
