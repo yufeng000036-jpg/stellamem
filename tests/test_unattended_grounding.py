@@ -212,6 +212,11 @@ class UnattendedGroundingIngestTests(unittest.TestCase):
         self.assertEqual(counts["active"], 1)
         self.assertEqual(counts["pending"], 0)
 
+    def test_duration_cannot_anchor_an_unrelated_price(self):
+        self.assertIn("numeric_mismatch", support_flags("5年后付100元", "五年后付60元"))
+        self.assertIn("numeric_unanchored", support_flags("5年后付100元", "五年后付款"))
+        self.assertEqual(support_flags("5年后付60元", "五年后付60元"), [])
+
     def test_chinese_duration_review_load(self):
         for value, evidence in (
             ("经验5年", "我有五年经验"),

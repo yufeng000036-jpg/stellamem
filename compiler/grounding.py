@@ -416,13 +416,17 @@ def support_flags(value, evidence):
     flags = []
     if _polarity_flip(value, evidence):
         flags.append("polarity_flip")
-    v_nums, e_nums = _numbers(value), _numbers(evidence)
     v_durations, e_durations = _duration_values(value), _duration_values(evidence)
-    for unit in v_durations.keys() & e_durations.keys():
-        if v_durations[unit].isdisjoint(e_durations[unit]):
-            flags.append("numeric_mismatch")
-            break
-        e_nums |= e_durations[unit]
+    comparable = v_durations.keys() & e_durations.keys()
+    if any(v_durations[unit].isdisjoint(e_durations[unit]) for unit in comparable):
+        flags.append("numeric_mismatch")
+
+    def remaining_numbers(text):
+        # Matching durations cannot serve as evidence for separate quantities
+        # (e.g. a price). Leave every unpaired unit in the normal number check.
+        return _numbers(_DURATION.sub(lambda m: " " if m[2] in comparable else m[0], _norm(text)))
+
+    v_nums, e_nums = remaining_numbers(value), remaining_numbers(evidence)
     if 1.0 in v_nums and 1.0 not in e_nums:
         # "(1 month)" over "it's been a month": the indefinite article
         # carries the quantity. Narrow rule: value-side 1 with a time
