@@ -1,0 +1,193 @@
+{
+  "notes": [
+    {
+      "id": "s01",
+      "text": "棉桥馆的橱窗展品是石榴。",
+      "status": "active",
+      "entity": "棉桥馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s02",
+      "text": "花塘馆的橱窗展品是戏服。",
+      "status": "active",
+      "entity": "花塘馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s03",
+      "text": "云渡馆的橱窗展品是铜锣。",
+      "status": "active",
+      "entity": "云渡馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s04",
+      "text": "柳台馆的橱窗展品是台历。",
+      "status": "active",
+      "entity": "柳台馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s05",
+      "text": "东湾馆的橱窗展品是纸鸢。",
+      "status": "active",
+      "entity": "东湾馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s06",
+      "text": "蓝溪馆的橱窗展品是旗子。",
+      "status": "active",
+      "entity": "蓝溪馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s07",
+      "text": "月泉馆的橱窗展品是木椅。",
+      "status": "active",
+      "entity": "月泉馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s08",
+      "text": "新岚馆的橱窗展品是水杯。",
+      "status": "active",
+      "entity": "新岚馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s09",
+      "text": "高川馆的橱窗展品是书签。",
+      "status": "active",
+      "entity": "高川馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s10",
+      "text": "禾沙馆的橱窗展品是花环。",
+      "status": "active",
+      "entity": "禾沙馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s11",
+      "text": "吉园馆的橱窗展品是挂画。",
+      "status": "active",
+      "entity": "吉园馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s12",
+      "text": "翠坪馆的橱窗展品是折扇。",
+      "status": "active",
+      "entity": "翠坪馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s13",
+      "text": "银谷馆的橱窗展品是玩偶。",
+      "status": "active",
+      "entity": "银谷馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s14",
+      "text": "白浦馆的橱窗展品是纸灯。",
+      "status": "active",
+      "entity": "白浦馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s15",
+      "text": "琴屿馆的橱窗展品是贴纸。",
+      "status": "active",
+      "entity": "琴屿馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s16",
+      "text": "双峰馆的橱窗展品是图册。",
+      "status": "active",
+      "entity": "双峰馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s17",
+      "text": "竹田馆的橱窗展品是相片。",
+      "status": "active",
+      "entity": "竹田馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s18",
+      "text": "溪林馆的橱窗展品是风铃。",
+      "status": "active",
+      "entity": "溪林馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s19",
+      "text": "沙江馆的橱窗展品是卡片。",
+      "status": "active",
+      "entity": "沙江馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "s20",
+      "text": "暖港馆的橱窗展品是雨伞。",
+      "status": "active",
+      "entity": "暖港馆",
+      "attribute": "橱窗展品",
+      "alt_attribute": "门票图案"
+    },
+    {
+      "id": "o0",
+      "text": "棉桥馆的橱窗展品是海报。",
+      "status": "superseded",
+      "entity": "棉桥馆"
+    },
+    {
+      "id": "o1",
+      "text": "花塘馆的橱窗展品是铃鼓。",
+      "status": "superseded",
+      "entity": "花塘馆"
+    }
+  ],
+  "questions": [
+    {
+      "id": "D01",
+      "text": "到棉桥隔着玻璃能瞧见什么？",
+      "gold": "s01"
+    },
+    {
+      "id": "E01",
+      "text": "柳台馆的橱窗展品是什么？",
+      "gold": "s04"
+    },
+    {
+      "id": "N01",
+      "text": "花塘馆的开放时间是几点？",
+      "gold": null
+    }
+  ]
+}
