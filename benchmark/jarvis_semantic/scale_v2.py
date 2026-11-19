@@ -2,6 +2,7 @@
 
 import argparse
 from collections import Counter
+from contextlib import closing
 import hashlib
 import http.client
 import json
@@ -123,7 +124,19 @@ def build_index(home, visible, foreign, old, args):
 
 
 def measure(
-    home, question, arm, ranks, active, foreign, old, lookup, args, query_time, search_time
+    home,
+    question,
+    arm,
+    ranks,
+    active,
+    foreign,
+    old,
+    lookup,
+    args,
+    query_time,
+    search_time,
+    *,
+    send=None,
 ):
     start = perf_counter()
     items, trace = project(home, question["text"], ranks if arm == "B" else None)
@@ -148,7 +161,7 @@ def measure(
         materials = json.loads(messages[-1]["content"])["材料"]
         by_line = {lines[k]: k for k in top5}
         delivered.extend(by_line[line] for line in materials)
-        reply = frozen.post(
+        reply = (send or frozen.post)(
             args.reader_port,
             "/v1/chat/completions",
             dict(
@@ -273,13 +286,11 @@ def summarize(pairs):
     return dict(arms=arms, delta=delta, gates=gates)
 
 
-def study(data, args, emit):
+def corpora(data, args, emit):
     check_base(data, args.blind)
     notes = data["notes"]
     adds = distractors(notes)
     n = sum(r["status"] == "active" for r in notes)
-    stages = []
-    safe = {"cross_subject": 0, "revoked": 0, "invalid_citation": 0}
     with tempfile.TemporaryDirectory(prefix="Jarvis scale ") as d:
         base = Path(d).resolve()
 
@@ -305,6 +316,14 @@ def study(data, args, emit):
             )
             lookup, foreign = fixture_rows(home / "memory", extra, core)
             old = {core[r["id"]] for r in notes if r["status"] == "superseded"}
+            yield tier, home, lookup, foreign, old, extra
+
+
+def study(data, args, emit):
+    stages = []
+    safe = {"cross_subject": 0, "revoked": 0, "invalid_citation": 0}
+    with closing(corpora(data, args, emit)) as tiers:
+        for tier, home, lookup, foreign, old, extra in tiers:
             try:
                 active, index, build = build_index(
                     home, set(lookup.values()) - foreign - old, foreign, old, args
@@ -380,7 +399,7 @@ def study(data, args, emit):
     return passed
 
 
-def main():
+def run_cli(experiment, prefix, suffix, protocol=None):
     cli = argparse.ArgumentParser()
     cli.add_argument("--manifest", required=True, type=Path)
     cli.add_argument("--out", required=True, type=Path)
@@ -401,8 +420,8 @@ def main():
         cli.error("private files must be outside checkout")
     if args.blind and (
         not args.sealed_hash
-        or not args.sealed_hash.startswith("002a5180")
-        or not args.sealed_hash.endswith("397d")
+        or not args.sealed_hash.startswith(prefix)
+        or not args.sealed_hash.endswith(suffix)
         or args.sealed_hash != frozen.sha(args.sealed_original)
     ):
         cli.error("original sealed hash mismatch")
@@ -434,6 +453,7 @@ def main():
         emit(
             dict(
                 type="protocol",
+                **(protocol or {}),
                 blind=args.blind,
                 sealed=args.sealed_hash,
                 mapping=frozen.sha(args.manifest),
@@ -443,8 +463,12 @@ def main():
                 reader_port=args.reader_port,
             )
         )
-        if study(data, args, emit) is False:
+        if experiment(data, args, emit) is False:
             sys.exit(1)
+
+
+def main():
+    run_cli(study, "002a5180", "397d")
 
 
 if __name__ == "__main__":
