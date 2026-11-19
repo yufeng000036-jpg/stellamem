@@ -1,0 +1,1 @@
+{"notes":[{"id":"n1","text":"银色票根收在南侧矮柜。","status":"active"},{"id":"n2","text":"银色票根原先放在橙色书架。","status":"superseded"},{"id":"n3","text":"红色桌布交给了小陆。","status":"active"}],"questions":[{"id":"p1","category":"改述","text":"入场的凭据收哪儿了","gold":"n1"},{"id":"p2","category":"短语","text":"红色桌布","gold":"n3"},{"id":"p3","category":"无答案","text":"银色票根价格是多少","gold":null}]}
