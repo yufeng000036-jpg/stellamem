@@ -1025,10 +1025,7 @@ def recall(
         # 只描述覆盖，不删条目、不改分数；api 层按主体过滤后会重算。
         "evidence_sufficiency": sufficiency_mod.evidence_sufficiency(
             prompt,
-            [
-                " ".join(str(rec.get(k) or "") for k in ("value", "evidence"))
-                for rec in final_items
-            ],
+            [" ".join(str(rec.get(k) or "") for k in ("value", "evidence")) for rec in final_items],
         ),
         # 阅读侧结构化证据（稳定 claim id + 逐条笔记位）与阅读脚手架，
         # 见 reading.py；引用回来后由 citation_check.py 确定性校验。

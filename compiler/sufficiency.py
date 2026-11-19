@@ -33,17 +33,29 @@ from __future__ import annotations
 import re
 
 ANCHOR_STOP = {
-    "january", "february", "march", "april", "may", "june", "july",
-    "august", "september", "october", "november", "december",
-    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
-    "sunday", "i",
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+    "i",
 }
 
-ANCHOR_EDGE_PUNCT = set(
-    ".,;:!?'\"()[]{}<>"
-    "。、，；：！？·…—"
-    "「」『』〈〉《》【】（）“”‘’"
-)
+ANCHOR_EDGE_PUNCT = set(".,;:!?'\"()[]{}<>。、，；：！？·…—「」『』〈〉《》【】（）“”‘’")
 
 _TOKEN_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9&'+\-.]*")
 _SENTENCE_END_RE = re.compile(r"""[.!?]["']?\s*$""")
@@ -68,9 +80,9 @@ def question_anchors(prompt: str) -> list[str]:
     for i, m in enumerate(_TOKEN_RE.finditer(prompt)):
         tok = _normalize_anchor_token(m.group(0))
         sentence_initial = i == 0 or bool(_SENTENCE_END_RE.search(prompt[: m.start()]))
-        capitalized = (
-            bool(re.match(r"[A-Z]", tok)) and bool(re.search(r"[a-z]", tok))
-        ) or (len(tok) >= 2 and tok == tok.upper() and bool(re.search(r"[A-Z]", tok)))
+        capitalized = (bool(re.match(r"[A-Z]", tok)) and bool(re.search(r"[a-z]", tok))) or (
+            len(tok) >= 2 and tok == tok.upper() and bool(re.search(r"[A-Z]", tok))
+        )
         if capitalized and not sentence_initial and tok.lower() not in ANCHOR_STOP:
             current.append(tok)
         elif current:
