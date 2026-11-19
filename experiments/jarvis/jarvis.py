@@ -47,6 +47,10 @@ def initialize(home):
     with cross_platform_lock(home / "control", timeout=4):
         check_state(home)
         marker = home / "workspace.id"
+        if marker.exists() and (
+            not (home / "tasks.db").is_file() or (home / "tasks.db").stat().st_size == 0
+        ):
+            raise sqlite3.DatabaseError("missing existing store")
         if not marker.exists():
             with marker.open("x", encoding="utf-8") as f:
                 f.write(MARK)
@@ -406,7 +410,7 @@ def main():
     ap.add_argument(
         "--home",
         type=Path,
-        default=Path(os.getenv("LOCALAPPDATA") or Path.home()) / "Jarvis-Lab-V01",
+        default=Path(os.getenv("LOCALAPPDATA") or Path.home()) / "Jarvis-Trial-V01",
     )
     args = ap.parse_args()
     home = Path(os.path.abspath(args.home))

@@ -125,11 +125,19 @@ def read_doc(home, name):
 def list_docs(home):
     with directory(home, []) as parent:
         with os.scandir(parent) as entries:
-            return sorted(
-                e.name
-                for e in entries
-                if Path(e.name).suffix.lower() in SUFFIXES
-                and e.is_file(follow_symlinks=False)
-                and e.stat(follow_symlinks=False).st_nlink == 1
-                and not getattr(e.stat(follow_symlinks=False), "st_file_attributes", 0) & 0x400
-            )
+            names = []
+            for item in entries:
+                if Path(item.name).suffix.lower() not in SUFFIXES or not item.is_file(
+                    follow_symlinks=False
+                ):
+                    continue
+                try:
+                    if os.name == "nt":
+                        # DirEntry.stat has zero st_nlink on Windows. Query the opened file itself.
+                        with windows_handle(parent / item.name, False):
+                            names.append(item.name)
+                    elif item.stat(follow_symlinks=False).st_nlink == 1:
+                        names.append(item.name)
+                except (OSError, ValueError):
+                    continue
+            return sorted(names)
