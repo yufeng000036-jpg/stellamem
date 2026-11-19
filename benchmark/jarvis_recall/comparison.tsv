@@ -1,0 +1,95 @@
+set	question	expected	metric	21A	21B	500A	500B	2000A	2000B
+regression	星桥会议改到几点	星桥会议改到周六下午三点。	gold rank or drop reason	1	1	1	1	1	1
+regression	星桥	星桥会议改到周六下午三点。	gold rank or drop reason	1	1	1	1	1	1
+regression	改期后的聚会时间	星桥会议改到周六下午三点。	gold rank or drop reason	1	1	1	1	1	1
+regression	星桥会议现在是哪天下午	星桥会议改到周六下午三点。	gold rank or drop reason	1	1	1	1	1	1
+regression	青禾会议在几点	青禾会议在周五上午九点。	gold rank or drop reason	1	1	1	1	1	1
+regression	青禾	青禾会议在周五上午九点。	gold rank or drop reason	1	1	1	1	1	1
+regression	青禾碰头是什么时候	青禾会议在周五上午九点。	gold rank or drop reason	2	1	15	1	char-cap	1
+regression	周五上午是哪场会议	青禾会议在周五上午九点。	gold rank or drop reason	1	1	1	1	1	1
+regression	书房备用钥匙放在哪	书房备用钥匙放在蓝色抽屉。	gold rank or drop reason	1	1	1	1	1	1
+regression	钥匙	书房备用钥匙放在蓝色抽屉。	gold rank or drop reason	1	1	1	1	1	1
+regression	开书房门的备用那把在哪儿	书房备用钥匙放在蓝色抽屉。	gold rank or drop reason	1	1	1	1	1	1
+regression	蓝色抽屉里放的是什么	书房备用钥匙放在蓝色抽屉。	gold rank or drop reason	1	1	1	1	1	1
+regression	相机电池收在哪	相机电池收在书桌第二层。	gold rank or drop reason	1	1	1	1	1	1
+regression	电池	相机电池收在书桌第二层。	gold rank or drop reason	1	1	1	1	1	1
+regression	摄影设备的备用电源在哪	相机电池收在书桌第二层。	gold rank or drop reason	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance
+regression	书桌第二层放了什么	相机电池收在书桌第二层。	gold rank or drop reason	1	1	1	1	1	1
+regression	南桥读书会集合地点	南桥读书会集合地点是东门。	gold rank or drop reason	2	1	2	2	2	2
+regression	南桥	南桥读书会集合地点是东门。	gold rank or drop reason	1	1	1	1	1	1
+regression	南桥阅读小组在哪儿碰面	南桥读书会集合地点是东门。	gold rank or drop reason	no-relevance	1	no-relevance	1	no-relevance	1
+regression	东门集合的是哪一个读书会	南桥读书会集合地点是东门。	gold rank or drop reason	1	1	1	1	1	1
+regression	北桥读书会集合地点	北桥读书会集合地点是西门。	gold rank or drop reason	1	1	1	1	1	1
+regression	北桥	北桥读书会集合地点是西门。	gold rank or drop reason	1	1	1	1	1	1
+regression	北桥阅读小组在哪儿碰面	北桥读书会集合地点是西门。	gold rank or drop reason	no-relevance	1	no-relevance	1	no-relevance	1
+regression	西门集合的是哪一个读书会	北桥读书会集合地点是西门。	gold rank or drop reason	1	1	1	1	1	1
+regression	海报初稿交付日期	海报初稿交付日期是六月十二日。	gold rank or drop reason	1	1	1	1	1	1
+regression	海报	海报初稿交付日期是六月十二日。	gold rank or drop reason	1	1	1	1	3	3
+regression	宣传画第一版什么时候交	海报初稿交付日期是六月十二日。	gold rank or drop reason	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance
+regression	六月十二日要交什么	海报初稿交付日期是六月十二日。	gold rank or drop reason	1	1	1	1	1	1
+regression	摄影课报名截止日期	摄影课报名截止日期是五月八日。	gold rank or drop reason	1	1	1	1	1	1
+regression	报名	摄影课报名截止日期是五月八日。	gold rank or drop reason	1	1	1	1	1	1
+regression	拍照课程最晚哪天登记	摄影课报名截止日期是五月八日。	gold rank or drop reason	1	1	1	1	1	1
+regression	五月八日是哪项报名截止	摄影课报名截止日期是五月八日。	gold rank or drop reason	1	1	1	1	1	1
+regression	录音练习每次多久	录音练习每次十五分钟。	gold rank or drop reason	1	1	1	1	1	1
+regression	录音	录音练习每次十五分钟。	gold rank or drop reason	1	1	char-cap	char-cap	char-cap	char-cap
+regression	声音训练一次要花多长时间	录音练习每次十五分钟。	gold rank or drop reason	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance
+regression	十五分钟是哪个练习的时长	录音练习每次十五分钟。	gold rank or drop reason	1	1	1	1	1	1
+regression	绿色笔记本记录什么	绿色笔记本专门记录采访提纲。	gold rank or drop reason	1	1	1	1	1	1
+regression	提纲	绿色笔记本专门记录采访提纲。	gold rank or drop reason	1	1	char-cap	char-cap	char-cap	char-cap
+regression	访谈的问题大纲写在哪本本子	绿色笔记本专门记录采访提纲。	gold rank or drop reason	1	1	char-cap	char-cap	char-cap	char-cap
+regression	采访提纲记在什么颜色的本子	绿色笔记本专门记录采访提纲。	gold rank or drop reason	1	1	char-cap	char-cap	char-cap	char-cap
+regression	星桥会议的门票价格是多少	?	candidate count	2	2	16	16	16	16
+regression	青禾会议有哪些人参加	?	candidate count	2	2	16	16	16	16
+regression	书房钥匙是谁买的	?	candidate count	1	1	1	1	1	1
+regression	相机电池的品牌是什么	?	candidate count	1	1	1	1	1	1
+regression	南桥读书会有几个人	?	candidate count	2	2	16	16	16	16
+regression	北桥读书会的报名费	?	candidate count	3	3	16	16	16	16
+regression	海报设计师叫什么名字	?	candidate count	4	4	16	16	16	16
+regression	摄影课在哪里上课	?	candidate count	1	1	16	16	16	16
+regression	我昨晚晚饭吃了什么	?	candidate count	0	0	0	0	0	0
+regression	助手推荐的耳机是我买的吗	?	candidate count	0	0	0	0	0	0
+holdout	溪石	溪石剧院的轮椅通道位于西侧玻璃门。	gold rank or drop reason	1	1	1	1	1	1
+holdout	溪石剧院从哪个门进去	溪石剧院的轮椅通道位于西侧玻璃门。	gold rank or drop reason	1	1	1	1	1	1
+holdout	去看戏时怎样绕开台阶进场	溪石剧院的轮椅通道位于西侧玻璃门。	gold rank or drop reason	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance
+holdout	榕叶	榕叶影院允许提前半小时领取字幕眼镜。	gold rank or drop reason	1	1	1	1	1	1
+holdout	榕叶的字幕眼镜要提前多久拿	榕叶影院允许提前半小时领取字幕眼镜。	gold rank or drop reason	1	1	1	1	1	1
+holdout	去看电影时那个能显示台词的设备何时可取	榕叶影院允许提前半小时领取字幕眼镜。	gold rank or drop reason	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance
+holdout	云纹	云纹借书证的续期地点是二楼服务台。	gold rank or drop reason	1	1	1	1	1	1
+holdout	云纹借书证去哪里续期	云纹借书证的续期地点是二楼服务台。	gold rank or drop reason	1	1	1	1	1	1
+holdout	读者卡快过期了该去哪个柜台	云纹借书证的续期地点是二楼服务台。	gold rank or drop reason	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance
+holdout	白露	白露维修铺取件时要带黄色回执。	gold rank or drop reason	1	1	1	1	1	1
+holdout	白露取件需要带什么	白露维修铺取件时要带黄色回执。	gold rank or drop reason	1	1	1	1	1	1
+holdout	修好的东西凭哪张单子领	白露维修铺取件时要带黄色回执。	gold rank or drop reason	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance
+holdout	松果	松果播客的片尾音乐由小岑录制。	gold rank or drop reason	1	1	1	1	1	1
+holdout	松果节目的片尾是谁录的	松果播客的片尾音乐由小岑录制。	gold rank or drop reason	1	1	1	1	1	1
+holdout	那档音频栏目结束前的曲子是谁做的	松果播客的片尾音乐由小岑录制。	gold rank or drop reason	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance
+holdout	潮汐	潮汐相册的打印尺寸是七寸。	gold rank or drop reason	1	1	1	1	1	1
+holdout	潮汐相册要印多大的	潮汐相册的打印尺寸是七寸。	gold rank or drop reason	1	1	1	1	1	1
+holdout	那本照片集冲洗按什么规格	潮汐相册的打印尺寸是七寸。	gold rank or drop reason	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance
+holdout	竹影	竹影展柜的玻璃用灰色软布清洁。	gold rank or drop reason	1	1	1	1	1	1
+holdout	竹影展柜用什么布擦	竹影展柜的玻璃用灰色软布清洁。	gold rank or drop reason	1	1	1	1	1	1
+holdout	陈列柜透明面板该拿哪块抹布	竹影展柜的玻璃用灰色软布清洁。	gold rank or drop reason	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance
+holdout	银杏	银杏夜校的手语课改在周二晚上。	gold rank or drop reason	1	1	1	1	1	1
+holdout	银杏手语课换到了哪天	银杏夜校的手语课改在周二晚上。	gold rank or drop reason	1	1	1	1	1	1
+holdout	学着用手势交流的那堂夜课现在什么时候上	银杏夜校的手语课改在周二晚上。	gold rank or drop reason	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance
+holdout	山茶	山茶画室把水彩纸放在窗边矮柜。	gold rank or drop reason	1	1	1	1	1	1
+holdout	山茶的水彩纸在哪里	山茶画室把水彩纸放在窗边矮柜。	gold rank or drop reason	1	1	1	1	1	1
+holdout	画画用的吸水纸收在哪件家具里	山茶画室把水彩纸放在窗边矮柜。	gold rank or drop reason	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance
+holdout	琥珀	琥珀排练厅的节拍器借给了阿梨。	gold rank or drop reason	1	1	1	1	1	1
+holdout	琥珀的节拍器谁借走了	琥珀排练厅的节拍器借给了阿梨。	gold rank or drop reason	1	1	1	1	1	1
+holdout	练琴用来打拍子的小机器现在在谁手上	琥珀排练厅的节拍器借给了阿梨。	gold rank or drop reason	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance
+holdout	芦苇	芦苇长廊的无障碍洗手间在北端。	gold rank or drop reason	1	1	1	1	1	1
+holdout	芦苇长廊哪里有无障碍洗手间	芦苇长廊的无障碍洗手间在北端。	gold rank or drop reason	1	1	1	1	1	1
+holdout	沿着廊道去方便推轮椅进去的厕所应该往哪头走	芦苇长廊的无障碍洗手间在北端。	gold rank or drop reason	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance	no-relevance
+holdout	溪石剧院一张票多少钱	?	candidate count	1	1	16	16	16	16
+holdout	榕叶影院的字幕眼镜有多重	?	candidate count	1	2	16	16	16	16
+holdout	云纹借书证是谁办的	?	candidate count	1	1	16	16	16	16
+holdout	白露维修铺几点关门	?	candidate count	1	1	16	16	16	16
+holdout	松果播客的收听人数	?	candidate count	1	1	16	16	16	16
+holdout	潮汐相册一共有多少张照片	?	candidate count	1	1	1	16	1	16
+holdout	竹影展柜是哪一年买的	?	candidate count	1	1	1	16	1	16
+holdout	银杏夜校手语课的老师叫什么	?	candidate count	4	4	16	16	16	16
+holdout	山茶画室的水彩纸是什么牌子	?	candidate count	1	1	16	16	16	16
+holdout	琥珀排练厅周末的租金	?	candidate count	1	1	16	16	16	16
+holdout	芦苇长廊的停车场有几个车位	?	candidate count	1	1	1	1	1	1
