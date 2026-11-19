@@ -1,0 +1,29 @@
+--- a/adapters/openclaw/index.js
++++ b/adapters/openclaw/index.js
+@@ -614,6 +614,7 @@
+       }
+       const always = c.injection_policy === "always";
+       const r = relevance(c, prompt, terms);
++      if (r.sharedBigrams === 1) { r.bigram = true; r.score = Math.max(r.score, 0.01); }
+       if (!always) {
+         let gateFailed = false;
+         if (c.kind === "preference") {
+@@ -710,6 +711,18 @@
+   for (const { c } of fillPool) {
+     if (!fillRevisions.has(c.claim_id)) fillRevisions.set(c.claim_id, new Set());
+     fillRevisions.get(c.claim_id).add(c.revision_id);
++  }
++  const queryGrams = cjkBigrams(prompt);
++  const frequency = new Map();
++  for (const candidate of candidates) {
++    candidate.queryMatches = [...cjkBigrams(candidate.c.value)].filter(g => queryGrams.has(g));
++    for (const g of candidate.queryMatches) frequency.set(g, (frequency.get(g) || 0) + 1);
++  }
++  for (const candidate of candidates) {
++    if (candidate.always) continue;
++    const weight = candidate.queryMatches.reduce((sum, g) =>
++      sum + Math.log((1 + candidates.length) / (1 + frequency.get(g))), 0);
++    candidate.score += Math.min(0.8, 0.12 * weight);
+   }
+   candidates.sort((a, b) => b.score - a.score);
+   const perKind = {};
