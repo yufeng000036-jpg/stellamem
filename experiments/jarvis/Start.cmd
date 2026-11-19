@@ -4,17 +4,18 @@ setlocal
 cd /d "%~dp0"
 set "PYTHONUTF8=1"
 set "PYTHONDONTWRITEBYTECODE=1"
-where py >nul 2>nul
-if errorlevel 1 goto python
-set "runner=py -3"
-goto check
-:python
 where python >nul 2>nul
-if errorlevel 1 goto missing
+if errorlevel 1 goto pylauncher
 set "runner=python"
-:check
-%runner% -c "import sqlite3,sys; sys.exit(0 if sys.version_info >= (3,10) else 1)" 2>nul
+python -c "import sqlite3,sys; sys.exit(int(sys.version_info < (3,10)))" >nul 2>nul
+if not errorlevel 1 goto nodecheck
+:pylauncher
+where py >nul 2>nul
 if errorlevel 1 goto missing
+set "runner=py -3"
+%runner% -c "import sqlite3,sys; sys.exit(int(sys.version_info < (3,10)))" >nul 2>nul
+if errorlevel 1 goto missing
+:nodecheck
 node -e "process.exit(Number(process.versions.node.split('.')[0]) >= 22 ? 0 : 1)" >nul 2>nul
 if errorlevel 1 goto node_missing
 if /i "%~1"=="--verify" goto verify

@@ -2,12 +2,20 @@
 
 import ctypes
 import os
+import ntpath
 import stat
 from contextlib import ExitStack, contextmanager
 from pathlib import Path, PureWindowsPath
 
 SUFFIXES = {".md", ".txt", ".csv", ".json"}
 DENIED = "路径未获授权"
+
+
+def reserved_name(name):
+    # ntpath.isreserved replaced PurePath.is_reserved in newer Python.
+    if hasattr(ntpath, "isreserved"):
+        return ntpath.isreserved(name)
+    return PureWindowsPath(name).is_reserved()
 
 
 def parts_for(name):
@@ -17,7 +25,7 @@ def parts_for(name):
         or any(
             p in {"", ".", ".."}
             or p.endswith((" ", "."))
-            or PureWindowsPath(p).is_reserved()
+            or reserved_name(p)
             or any(c in '<>:"|?*' or ord(c) < 32 for c in p)
             for p in parts
         )
