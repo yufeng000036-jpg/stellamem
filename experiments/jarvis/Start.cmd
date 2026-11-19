@@ -12,19 +12,14 @@ if defined JARVIS_PYTHON (
     if errorlevel 1 goto missing
     goto nodecheck
 )
-for %%P in (python.exe) do set "candidate=%%~$PATH:P"
-if defined candidate if /i "%candidate:\Microsoft\WindowsApps\=%"=="%candidate%" call :probe
-if defined runner goto nodecheck
 set "candidate=E:\Python\python.exe"
+call :probe
+if defined runner goto nodecheck
+for %%P in (python.exe) do set "candidate=%%~$PATH:P"
 call :probe
 if defined runner goto nodecheck
 for %%P in (py.exe) do set "candidate=%%~$PATH:P"
 set "pyflag=-3"
-call :probe
-if defined runner goto nodecheck
-rem Keep compatibility with a working Store-managed python when no local install was found.
-for %%P in (python.exe) do set "candidate=%%~$PATH:P"
-set "pyflag="
 call :probe
 if not defined runner goto missing
 goto nodecheck
