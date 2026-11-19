@@ -196,7 +196,23 @@ function dateKeyHit(keys, query) {
   return false;
 }
 
-function relevance(claim, prompt) {
+// Opt-in console search: use locally segmented Chinese content terms and a small
+// vocabulary for common schedule/meeting expressions. All projection gates still apply.
+function chineseQueryTerms(prompt) {
+  if (!/\p{Script=Han}/u.test(prompt)) return [];
+  const stop = new Set(["什么", "时候", "时间", "哪里", "哪个", "多少", "怎么", "多久", "现在", "一个", "是否", "哪天", "在哪", "可以", "哪儿"]);
+  const terms = new Set();
+  if (/^\p{Script=Han}{2}$/u.test(prompt) && !stop.has(prompt)) terms.add(prompt);
+  for (const {segment} of new Intl.Segmenter("zh", {granularity:"word"}).segment(prompt)) {
+    if (/^\p{Script=Han}{2,}$/u.test(segment) && !stop.has(segment)) terms.add(segment);
+  }
+  for (const group of [["会议","开会","碰头","聚会"],["改期","改到","延期"],["报名","登记"],["采访","访谈"],["摄影","拍照"]]) {
+    if (group.some(term => prompt.includes(term))) for (const term of group) terms.add(term);
+  }
+  return [...terms];
+}
+
+function relevance(claim, prompt, terms) {
   const query = prompt.toLowerCase();
   const intent = (KIND_INTENT[claim.kind] || NEVER).test(query);
   // The value is a model paraphrase and may be translated into another
@@ -218,7 +234,8 @@ function relevance(claim, prompt) {
   // keeps a value match's score exact, as before.
   const full = overlap(valueText + " " + (claim.evidence || "") + " " + (claim.scope || ""), query);
   const dateHit = dateKeyHit(claim.date_keys, query);
-  const lexical = value.lexical || full.lexical || dateHit;
+  const termHits = terms.filter(term => String(claim.value || "").includes(term)).length;
+  const lexical = value.lexical || full.lexical || dateHit || termHits > 0;
   const bigram = value.bigram || full.bigram;
   const shared = Math.max(value.sharedBigrams, full.sharedBigrams);
   // Bigram-only matches score below lexical: 0.05 base + 0.05 per shared
@@ -226,7 +243,7 @@ function relevance(claim, prompt) {
   // so a single stray character pair cannot drag a claim in.
   const bigramScore = bigram ? 0.05 + Math.min(0.20, 0.05 * shared) : 0;
   const base = dateHit ? Math.max(value.base, full.base, 0.30) : Math.max(value.base, full.base);
-  const score = (lexical ? Math.max(base, bigramScore) : bigramScore) + (intent ? 0.35 : 0);
+  const score = Math.min(0.45, termHits * 0.15) + (lexical ? Math.max(base, bigramScore) : bigramScore) + (intent ? 0.35 : 0);
   return { score, lexical, bigram, intent, sharedBigrams: shared, dateKey: dateHit };
 }
 
@@ -568,6 +585,7 @@ export async function project(root, prompt, config = {}) {
     return false;
   }
   const fillPool = [];
+  const terms = config.chineseTermSearch === true ? chineseQueryTerms(prompt) : [];
 
   for (const rel of FILES) {
     if (FORBIDDEN.test(rel)) continue;
@@ -595,7 +613,7 @@ export async function project(root, prompt, config = {}) {
         continue;
       }
       const always = c.injection_policy === "always";
-      const r = relevance(c, prompt);
+      const r = relevance(c, prompt, terms);
       if (!always) {
         let gateFailed = false;
         if (c.kind === "preference") {

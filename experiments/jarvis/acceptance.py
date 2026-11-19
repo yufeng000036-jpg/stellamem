@@ -165,6 +165,11 @@ def run():
         fixture_answer = "添加 自动创建"
 
         class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200 if self.path == "/v1/models" else 404)
+                self.end_headers()
+                self.wfile.write(b'{"data":[{"id":"fixture"}]}')
+
             def do_POST(self):
                 received.append(
                     (self.path, json.loads(self.rfile.read(int(self.headers["Content-Length"]))))

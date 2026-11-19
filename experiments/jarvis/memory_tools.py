@@ -28,6 +28,8 @@ from subjects import subject_of
 def verified(root, rec):
     p = rec.get("provenance", {})
     ref = p.get("source_ref", "")
+    if rec.get("source") != "user":
+        return False
     if p.get("provider") != "jarvis-console" or p.get("speaker") != "user":
         return False
     if not re.fullmatch(r"notes/[a-f0-9]{32}\.txt", ref):

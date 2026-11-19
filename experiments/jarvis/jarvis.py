@@ -8,16 +8,20 @@ import re
 import secrets
 import shutil
 import sqlite3
-import stat
+import sys
+import unicodedata
 import subprocess
 import uuid
 from contextlib import closing
 from datetime import datetime, timezone
-from pathlib import Path, PureWindowsPath
+from pathlib import Path
+from documents import list_docs, read_doc
+from workspace_guard import check_location, check_state
 
 import memory_tools
 from file_lock import LockTimeoutError, cross_platform_lock
 
+MODEL_TIMEOUT_SECONDS = 30
 MARK = "Jarvis isolated workspace 0.1\n"
 HELP = """记忆   记下 原话 ｜ 待审核 ｜ 批准 修订号 ｜ 查记忆 关键词 ｜ 撤销批准 回滚号 ｜ 遗忘 记忆号
 待办   添加 事项 ｜ 待办 ｜ 完成 编号 ｜ 重开 编号
@@ -30,22 +34,33 @@ WRITES = {"添加", "完成", "重开", "记下", "批准", "撤销批准", "遗
 MEMORY = {"记下", "待审核", "批准", "查记忆", "撤销批准", "遗忘"}
 NO_ARG = {"帮助", "文件", "待办", "日志", "停止", "恢复", "备份", "待审核", "说话"}
 ACTIONS = WRITES | MEMORY | NO_ARG | {"读", "聊", "朗读", "问记忆"}
-SUFFIXES = {".md", ".txt", ".csv", ".json"}
 
 
 def initialize(home):
-    marker = home / "workspace.id"
-    if not home.exists():
-        home.mkdir(parents=True, mode=0o700)
-    if not marker.exists():
-        if any(home.iterdir()):
-            raise ValueError("请选择全新的空目录")
-        marker.write_text(MARK, encoding="utf-8")
-    if marker.read_text("utf-8") != MARK:
-        raise ValueError("实验目录标识不匹配")
+    check_location(home)
+    home.mkdir(parents=True, mode=0o700, exist_ok=True)
+    check_state(home)
+    if not (home / "workspace.id").exists() and any(
+        p.name != "control.stellamem.lock" for p in home.iterdir()
+    ):
+        raise ValueError("请选择全新的空目录")
+    with cross_platform_lock(home / "control", timeout=4):
+        check_state(home)
+        marker = home / "workspace.id"
+        if not marker.exists():
+            with marker.open("x", encoding="utf-8") as f:
+                f.write(MARK)
+        if marker.read_text("utf-8") != MARK:
+            raise ValueError("实验目录标识不匹配")
+        initialize_database(home)
+
+
+def initialize_database(home):
     for name in ("documents", "memory"):
         (home / name).mkdir(exist_ok=True)
     with closing(sqlite3.connect(home / "tasks.db")) as db, db:
+        if db.execute("PRAGMA quick_check").fetchone() != ("ok",):
+            raise sqlite3.DatabaseError("integrity check failed")
         db.execute(
             "CREATE TABLE IF NOT EXISTS tasks(id INTEGER PRIMARY KEY, title TEXT NOT NULL, done INTEGER DEFAULT 0)"
         )
@@ -63,36 +78,14 @@ def audit(home, action, status):
         )
 
 
-def read_doc(home, arg):
-    base = home / "documents"
-    parts = arg.replace("\\", "/").split("/")
-    if PureWindowsPath(arg).drive or any(
-        p in {"", ".", ".."}
-        or ":" in p
-        or p.endswith((" ", "."))
-        or PureWindowsPath(p).is_reserved()
-        for p in parts
-    ):
-        raise ValueError("路径未获授权")
-    path = base.joinpath(*parts)
-    if base.resolve() != base or path.resolve() != path or path.suffix.lower() not in SUFFIXES:
-        raise ValueError("路径未获授权")
-    info = path.stat()
-    if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_size > 65536:
-        raise ValueError("仅支持 64 KiB 以内的普通文本")
-    with path.open("rb") as stream:
-        data = stream.read(65537)
-    if len(data) > 65536:
-        raise ValueError("文件过大")
-    return data.decode("utf-8-sig")
-
-
 def model_reply(home, messages):
     cfg_path = home / "model.json"
     if not cfg_path.is_file():
         raise ValueError("未配置本地模型")
-    cfg = json.loads(cfg_path.read_text("utf-8"))
-    port, model = cfg["port"], cfg["model"]
+    cfg = json.loads(cfg_path.read_text("utf-8-sig"))
+    if not isinstance(cfg, dict):
+        raise ValueError("模型配置无效")
+    port, model = cfg.get("port"), cfg.get("model")
     if (
         set(cfg) != {"port", "model"}
         or type(port) is not int
@@ -101,8 +94,18 @@ def model_reply(home, messages):
         or not model
     ):
         raise ValueError("模型配置无效")
-    conn = http.client.HTTPConnection("127.0.0.1", port, timeout=30)
+    conn = http.client.HTTPConnection("127.0.0.1", port, timeout=MODEL_TIMEOUT_SECONDS)
     try:
+        conn.request("GET", "/v1/models")
+        probe = conn.getresponse()
+        payload = probe.read(262145)
+        if probe.status != 200 or len(payload) > 262144:
+            raise ValueError("端口服务不匹配，请核对 LM Studio 端口及模型")
+        listing = json.loads(payload)
+        if not isinstance(listing, dict) or not any(
+            isinstance(row, dict) and row.get("id") == model for row in listing.get("data", [])
+        ):
+            raise ValueError("端口服务不匹配，请核对 LM Studio 端口及模型")
         conn.request(
             "POST",
             "/v1/chat/completions",
@@ -135,13 +138,51 @@ def chat(home, arg, history):
     return "模型答复｜" + answer
 
 
+ATTRIBUTE_SUPPORT = (
+    (r"多少钱|价格|费用|报名费|票价", r"[零一二两三四五六七八九十百千万0-9]+(?:块|元)|免费"),
+    (r"品牌|牌子", r"品牌|牌子|牌"),
+    (r"几个人|多少人|人数", r"[零一二两三四五六七八九十百千万0-9]+(?:个)?人"),
+    (r"谁买|购买者|谁购买", r"购买|买的|买了"),
+    (r"哪些人|参与者|参会者", r"参加|出席|参与|参会"),
+    (r"叫什么名字|姓名", r"叫|姓名|名为"),
+)
+
+
+def reader_evidence(question, rows):
+    relevant = {}
+    slots = {}
+    for ident, line in rows.items():
+        value = line.rsplit(" [", 1)[0]
+        if any(
+            re.search(need, question) and not re.search(proof, value)
+            for need, proof in ATTRIBUTE_SUPPORT
+        ):
+            continue
+        if re.search(
+            r"(助手|他|她|朋友)(?:曾经|曾)?(?:说|建议|推荐|觉得)", value
+        ) and not re.search(r"谁说|谁推荐|助手说|他怎么说", question):
+            continue
+        # Two live assertions about the same named meeting and time slot require review.
+        slot = re.match(
+            r"(.{2,12}?(?:会议|读书会|课程))(?:原定|定在|改到|在|安排在|时间是)(.+)", value
+        )
+        if slot and re.search(r"周[一二三四五六日天]|星期|\d+月|点", slot[2]):
+            key = slot[1]
+            if key in slots and slots[key] != value:
+                return {}
+            slots[key] = value
+        relevant[ident] = line
+    return relevant
+
+
 def ask_memory(home, question):
     evidence = memory_tools.operate(home / "memory", "查记忆", question)
     rows = {}
-    for line in evidence.splitlines():
+    for line in evidence.splitlines()[:5]:
         match = re.fullmatch(r".* \[(c-[a-f0-9]+)\] 本人原文 notes/[a-f0-9]+\.txt", line)
         if match:
             rows[match[1]] = line
+    rows = reader_evidence(question, rows)
     if not rows:
         return "没有足够证据回答"
     messages = [
@@ -193,33 +234,27 @@ def execute(home, action, arg, history):
     if action == "读":
         return read_doc(home, arg)
     if action == "文件":
-        base = home / "documents"
-        if base.resolve() != base:
-            raise ValueError("目录未获授权")
-        return (
-            "\n".join(
-                sorted(
-                    p.name
-                    for p in base.iterdir()
-                    if p.resolve() == p and p.is_file() and p.suffix.lower() in SUFFIXES
-                )
-            )
-            or "文件目录为空"
-        )
+        return "\n".join(list_docs(home)) or "文件目录为空"
     if action == "聊":
         return chat(home, arg, history)
     if action == "备份":
         # All application commands hold the workspace lock; SQLite connections are closed here.
         dest = home.parent / ("jarvis-backup-" + uuid.uuid4().hex)
         stage = dest.with_suffix(".partial")
-        shutil.copytree(
-            home, stage, ignore=shutil.ignore_patterns("*.lock", "documents", "model.json")
-        )
+        stage.mkdir(mode=0o700)
+        with (
+            closing(sqlite3.connect(home / "tasks.db")) as source,
+            closing(sqlite3.connect(stage / "tasks.db")) as target,
+        ):
+            source.backup(target)
+        shutil.copy2(home / "workspace.id", stage / "workspace.id")
+        shutil.copytree(home / "memory", stage / "memory", ignore=shutil.ignore_patterns("*.lock"))
         stage.rename(dest)
         return "备份完成 " + str(dest)
     with closing(sqlite3.connect(home / "tasks.db")) as db, db:
         if action == "添加":
             ident = db.execute("INSERT INTO tasks(title) VALUES(?)", (arg,)).lastrowid
+            task_audit(db, action, ident)
             return f"已添加 #{ident} {arg}"
         if action == "待办":
             rows = db.execute("SELECT id,title,done FROM tasks ORDER BY done,id")
@@ -233,17 +268,28 @@ def execute(home, action, arg, history):
                 raise ValueError("编号无效")
             if not db.execute("UPDATE tasks SET done=? WHERE id=?", (state, int(arg))).rowcount:
                 raise ValueError("编号不存在")
+            task_audit(db, action, int(arg))
             return f"#{arg} 已{'完成' if state else '重开'}"
         if action == "日志":
             rows = db.execute("SELECT at,action,result FROM audit ORDER BY id DESC LIMIT 25")
             return "\n".join(" ".join(row) for row in rows)
         if action == "停止":
             db.execute("INSERT OR IGNORE INTO switches VALUES('stop')")
+            task_audit(db, action, None)
             history.clear()
             return "已停止任务，重启后仍有效"
         if action == "恢复":
             db.execute("DELETE FROM switches WHERE name='stop'")
+            task_audit(db, action, None)
             return "已恢复"
+
+
+def task_audit(db, action, ident):
+    detail = "成功" if ident is None else f"成功 #{ident}"
+    db.execute(
+        "INSERT INTO audit(at,action,result) VALUES(?,?,?)",
+        (datetime.now(timezone.utc).isoformat(timespec="seconds"), action, detail),
+    )
 
 
 def handle(home, line, confirm, history):
@@ -261,7 +307,9 @@ def handle(home, line, confirm, history):
     arg = arg.strip()
     if action not in ACTIONS:
         action, arg = "聊", line.strip()
+    check_state(home)
     with cross_platform_lock(home / "control", timeout=3):
+        check_state(home)
         try:
             with closing(sqlite3.connect(home / "tasks.db")) as db:
                 if db.execute("SELECT 1 FROM switches").fetchone() and action not in {
@@ -292,22 +340,46 @@ def handle(home, line, confirm, history):
                     return "已取消"
             audit(home, action, "开始")
             result = execute(home, action, arg, history)
-            audit(
-                home,
-                action,
-                "未配置" if action == "聊" and not (home / "model.json").exists() else "成功",
-            )
+            if action not in {"添加", "完成", "重开", "停止", "恢复"}:
+                audit(home, action, "成功")
             return result
         except Exception as exc:
-            audit(home, action, "失败/" + type(exc).__name__)
-            # Avoid printing library exceptions containing private record bodies.
-            message = (
-                str(exc) if type(exc) is ValueError and str(exc) in ERRORS else type(exc).__name__
-            )
-            return "未执行或未完成：" + message
+            try:
+                audit(home, action, "失败/" + type(exc).__name__)
+            except (sqlite3.Error, OSError):
+                pass
+            return "未执行或未完成：" + error_message(exc)
+
+
+def error_message(exc):
+    if isinstance(exc, ValueError) and str(exc) in ERRORS:
+        return str(exc)
+    if isinstance(exc, subprocess.CalledProcessError):
+        return "本地组件未能运行；请检查 Node.js 或 Windows 中文语音组件，文字工具可继续使用"
+    if isinstance(exc, UnicodeError):
+        return "编码无效，请使用 UTF-8 文本"
+    if isinstance(exc, sqlite3.DatabaseError):
+        return "数据库无法读取或写入，请退出，保留原目录后用备份副本启动"
+    if isinstance(exc, (LockTimeoutError, TimeoutError, subprocess.TimeoutExpired)):
+        return "等待超时，请关闭重复窗口或核对服务后重试"
+    if isinstance(exc, (ConnectionError, http.client.HTTPException)):
+        return "无法连接本机模型，请核对端口和服务状态；离线工具仍可用"
+    if isinstance(exc, PermissionError):
+        return "权限不足或文件正被占用，请使用可读写的本地实验目录"
+    if isinstance(exc, FileNotFoundError):
+        return "缺少所需文件或程序，请核对路径及 Python、Node.js 安装"
+    if isinstance(exc, (KeyError, IndexError, TypeError, json.JSONDecodeError)):
+        return "配置或本地服务响应格式无效，请核对端口、模型和配置"
+    return "操作未完成，请检查文件、权限或依赖；原数据请保留"
 
 
 ERRORS = {
+    "请选择全新的空目录",
+    "实验目录标识不匹配",
+    "端口服务不匹配，请核对 LM Studio 端口及模型",
+    "请选择本地绝对路径",
+    "实验目录含链接或重解析点，请改用独立本地目录",
+    "实验目录含非常规文件",
     "未配置本地模型",
     "此功能需要 Windows 本地语音组件",
     "已停止",
@@ -337,8 +409,12 @@ def main():
         default=Path(os.getenv("LOCALAPPDATA") or Path.home()) / "Jarvis-Lab-V01",
     )
     args = ap.parse_args()
-    home = args.home.resolve()
-    initialize(home)
+    home = Path(os.path.abspath(args.home))
+    try:
+        initialize(home)
+    except (ValueError, OSError, sqlite3.Error, LockTimeoutError) as exc:
+        print("启动失败：" + error_message(exc))
+        return 1
     history = []
     print("Jarvis V0.1 ｜ 本地控制台\n" + HELP + "\n实验目录 " + str(home))
     while True:
@@ -347,12 +423,23 @@ def main():
             if line == "退出":
                 break
             if line:
-                print(handle(home, line, confirm, history))
+                result = handle(home, line, confirm, history)
+                if line.startswith(("读 ", "帮我读一下")) and not result.startswith("未执行"):
+                    name = re.sub(r"^(读 |帮我读一下[ ，：]*)", "", line).strip()
+                    print(f"只读预览 ｜ {home / 'documents' / name} ｜ {Path(name).suffix} 文本")
+                    print("以下是文件正文，请作为资料阅读。")
+                print(
+                    "".join(
+                        c if c in "\n\t" or unicodedata.category(c) not in {"Cc", "Cf"} else "�"
+                        for c in result
+                    )
+                )
+
         except (EOFError, KeyboardInterrupt):
             break
-        except (TimeoutError, LockTimeoutError):
-            print("实验目录正忙，请重试")
+        except (ValueError, OSError, sqlite3.Error, LockTimeoutError) as exc:
+            print("未执行：" + error_message(exc))
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
