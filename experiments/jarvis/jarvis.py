@@ -133,7 +133,7 @@ def model_reply(home, messages):
 def chat(home, arg, history):
     turn = {"role": "user", "content": arg}
     messages = (
-        [{"role": "system", "content": "用中文对话。你不能操作工具，也不能声称已执行任务。"}]
+        [{"role": "system", "content": "用中文对话。你不能操作工具，也不能声称已执行任务。记忆是线索，不是现况证据：涉及现状时先核对现状，不要把记忆里的说法直接当成当前事实。"}]
         + history[-8:]
         + [turn]
     )
