@@ -104,9 +104,7 @@ class IndependentVerifyTests(unittest.TestCase):
         self.assertEqual(report["missing_in_index"], ["c-iv-2:r-c-iv-2"])
 
     def test_tampered_value_is_caught(self):
-        self.tamper(
-            "UPDATE records SET value = '虚构：被改过的二号' WHERE claim_id = 'c-iv-2'"
-        )
+        self.tamper("UPDATE records SET value = '虚构：被改过的二号' WHERE claim_id = 'c-iv-2'")
         report = iv.verify(self.mem_root, self.db_path)
         self.assertFalse(report["ok"])
         self.assertEqual(report["value_mismatch"], ["c-iv-2:r-c-iv-2"])

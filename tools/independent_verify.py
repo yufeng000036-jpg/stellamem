@@ -123,8 +123,7 @@ def verify(root: Path, db_path: Path) -> dict:
         warnings.append(f"duplicate record ids in source files: {duplicates}")
     if source and vectors == 0:
         warnings.append(
-            "vectors table is empty while records exist "
-            "(derived semantic layer silently down?)"
+            "vectors table is empty while records exist (derived semantic layer silently down?)"
         )
 
     ok = not (missing or phantom or hash_mismatch or status_mismatch or value_mismatch)
