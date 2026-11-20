@@ -580,6 +580,10 @@ class Handler(BaseHTTPRequestHandler):
                     line = f"- [{S.KIND_LABEL.get(rec.get('kind'), rec.get('kind'))}] {S._trim(rec.get('value'), 90)}"
                     if rec.get("occurred_at"):
                         line += f"（{rec['occurred_at'][:10]}）"
+                    # 与 search.recall 的行格式保持一致：有效期后缀不能
+                    # 在主体过滤重建时丢掉。
+                    if rec.get("valid_to"):
+                        line += f"（有效至 {rec['valid_to'][:10]}）"
                     lines.append(line)
                 result["text"] = "\n".join(lines)
                 result["chars"] = sum(len(line) + 1 for line in lines)

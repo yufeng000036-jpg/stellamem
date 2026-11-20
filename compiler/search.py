@@ -982,6 +982,10 @@ def recall(
         )
         if rec.get("occurred_at"):
             line += f"（{rec['occurred_at'][:10]}）"
+        # 有效期必须进读者眼睛：一條 status=active 但 valid_to 已过的记录
+        # 若不带后缀，会被当成现行事实读走（拒答夹具 R2 的形状）。
+        if rec.get("valid_to"):
+            line += f"（有效至 {rec['valid_to'][:10]}）"
         if len(line) + used + 1 > budget_chars:
             break
         lines.append(line)
