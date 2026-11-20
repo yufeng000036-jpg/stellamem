@@ -1,6 +1,6 @@
 # All default rules remain enabled. No marker / directory / standalone path bypass.
 # Negative tests: python tools/verify_gitleaks.py --gitleaks /path/to/gitleaks
-# Default v8.30.1 history scan: 9 findings, all audited synthetic fixtures.
+# Default v8.30.1 history scan: 10 findings, all audited synthetic fixtures.
 # The old sequential a-x fixture does NOT trigger defaults; no exemption for it.
 # PEM findings are oversized false matches spanning escaped test source: these
 # regexes match the WHOLE observed finding, including its exact source suffix.
@@ -52,3 +52,10 @@ condition = "AND"
 regexTarget = "secret"
 paths = ['''^tests/test_secret_gate\.py$''']
 regexes = ['''(?s)^synthetic-123$''']
+
+[[rules.allowlists]]
+description = "Audited abstention-fixture injection-point label; exact full finding and exact path"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^benchmark/longmemeval/abstention_fixture\.py$''']
+regexes = ['''(?s)^0ddfec37\.grounded\.gt\.v1$''']
