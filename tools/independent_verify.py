@@ -12,10 +12,10 @@ the Stellamem index. It does NOT use the Index, search, or API code:
 - Index side: it opens the SQLite index with plain sqlite3, read-only.
 - It then compares the two sides: records missing from the index,
   phantom rows with no source record, content-hash mismatches (silent
-  divergence), and per-status counts. It also reports the vectors
-  coverage as a warning -- the 2026-11-21 production incident was a
-  derived layer silently sitting at 0 while records said 707, and no
-  self-check noticed.
+  divergence), and per-status counts. A records-bearing store whose
+  vectors table is empty is a hard failure, not a warning -- the
+  2026-11-21 production incident was exactly that shape (records 707,
+  vectors 0) and every check on duty still reported ok.
 
 Assumes the index was built with default options (pending included).
 
@@ -121,12 +121,25 @@ def verify(root: Path, db_path: Path) -> dict:
     warnings = []
     if duplicates:
         warnings.append(f"duplicate record ids in source files: {duplicates}")
-    if source and vectors == 0:
-        warnings.append(
-            "vectors table is empty while records exist (derived semantic layer silently down?)"
-        )
 
-    ok = not (missing or phantom or hash_mismatch or status_mismatch or value_mismatch)
+    # Semantic-index liveness is a hard failure, not a warning.
+    # Criterion: source records exist but the vectors table is empty.
+    # There is no per-store "semantic disabled" declaration to gate
+    # on: the only off-switch (STELLAMEM_SEMANTIC) is a search-time
+    # runtime env var, not a property of the store being verified,
+    # and the index builder always attempts a vector sync -- so a
+    # records-bearing store with zero vectors is the incident shape
+    # itself, not a legitimate configuration. An empty store (no
+    # source records) is exempt: nothing was ever meant to be embedded.
+    semantic_index_empty = bool(source) and vectors == 0
+    failures = []
+    if semantic_index_empty:
+        failures.append(f"记录 {len(source)} 条、向量 0 条：语义索引未建或已失效")
+
+    ok = (
+        not (missing or phantom or hash_mismatch or status_mismatch or value_mismatch)
+        and not semantic_index_empty
+    )
     return {
         "ok": ok,
         "source_total": len(source),
@@ -134,6 +147,8 @@ def verify(root: Path, db_path: Path) -> dict:
         "source_status_counts": counts(source),
         "index_status_counts": counts(index),
         "vectors": vectors,
+        "semantic_index_empty": semantic_index_empty,
+        "failures": failures,
         "missing_in_index": missing,
         "phantom_in_index": phantom,
         "content_hash_mismatch": hash_mismatch,
