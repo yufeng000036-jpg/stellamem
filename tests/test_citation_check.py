@@ -3,6 +3,7 @@ contract it verifies (compiler/reading.py): forged ids, empty
 citations, misattributed citations, polarity flips, and the scaffold
 text parity between the Python and JS copies.
 """
+
 import re
 import sys
 import unittest
@@ -87,7 +88,12 @@ class VerifyAnswerTests(unittest.TestCase):
 
     def test_build_evidence_skips_id_less_extras(self):
         items = [
-            {"id": "c-cccccccccccccccccccccccc", "kind": "fact", "value": "v", "occurred_at": "2024-01-01"},
+            {
+                "id": "c-cccccccccccccccccccccccc",
+                "kind": "fact",
+                "value": "v",
+                "occurred_at": "2024-01-01",
+            },
             {"kind": "preference_summary", "value": "summary", "_usage_id": "pref:user"},
         ]
         ev = reading.build_evidence(items)
@@ -123,8 +129,9 @@ class RecallReadingContractTests(unittest.TestCase):
         from search import recall  # noqa: E402
         from storage import render_records  # noqa: E402
 
-        with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(
-            os.environ, {"STELLAMEM_SEMANTIC": "0"}
+        with (
+            tempfile.TemporaryDirectory() as tmp,
+            mock.patch.dict(os.environ, {"STELLAMEM_SEMANTIC": "0"}),
         ):
             base = Path(tmp)
             mem_root = base / "memories"

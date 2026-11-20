@@ -50,9 +50,7 @@ class AnchorParityTest(unittest.TestCase):
             ["park hyatt tokyo"],
         )
         self.assertEqual(question_anchors("The concert was in May."), [])
-        self.assertEqual(
-            question_anchors("I visited the 'Google' campus last year"), ["google"]
-        )
+        self.assertEqual(question_anchors("I visited the 'Google' campus last year"), ["google"])
         self.assertEqual(question_anchors("I flew to the U.S. last spring"), ["u.s"])
 
 

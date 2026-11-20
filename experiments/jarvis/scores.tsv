@@ -1,0 +1,51 @@
+编号	问题	标准原文或无答案	旧版前五编号	新版前五编号	旧版命中	新版命中	真实模型选证	真实最终答案	真实拒答	真实引用
+1	星桥会议改到几点	星桥会议改到周六下午三点。	c-f83572af8395225c6f7617c3	c-f83572af8395225c6f7617c3,c-9f20cead64eef5de022bc81a	True	True	未测	未测	未测	未测
+2	星桥	星桥会议改到周六下午三点。		c-f83572af8395225c6f7617c3	False	True	未测	未测	未测	未测
+3	改期后的聚会时间	星桥会议改到周六下午三点。		c-f83572af8395225c6f7617c3,c-9f20cead64eef5de022bc81a	False	True	未测	未测	未测	未测
+4	星桥会议现在是哪天下午	星桥会议改到周六下午三点。	c-f83572af8395225c6f7617c3	c-f83572af8395225c6f7617c3,c-9f20cead64eef5de022bc81a	True	True	未测	未测	未测	未测
+5	青禾会议在几点	青禾会议在周五上午九点。	c-9f20cead64eef5de022bc81a	c-9f20cead64eef5de022bc81a,c-f83572af8395225c6f7617c3	True	True	未测	未测	未测	未测
+6	青禾	青禾会议在周五上午九点。		c-9f20cead64eef5de022bc81a	False	True	未测	未测	未测	未测
+7	青禾碰头是什么时候	青禾会议在周五上午九点。		c-f83572af8395225c6f7617c3,c-9f20cead64eef5de022bc81a	False	True	未测	未测	未测	未测
+8	周五上午是哪场会议	青禾会议在周五上午九点。	c-9f20cead64eef5de022bc81a	c-9f20cead64eef5de022bc81a,c-f83572af8395225c6f7617c3	True	True	未测	未测	未测	未测
+9	书房备用钥匙放在哪	书房备用钥匙放在蓝色抽屉。	c-29b5914693ac5ddbf520d3be	c-29b5914693ac5ddbf520d3be	True	True	未测	未测	未测	未测
+10	钥匙	书房备用钥匙放在蓝色抽屉。		c-29b5914693ac5ddbf520d3be	False	True	未测	未测	未测	未测
+11	开书房门的备用那把在哪儿	书房备用钥匙放在蓝色抽屉。	c-29b5914693ac5ddbf520d3be	c-29b5914693ac5ddbf520d3be	True	True	未测	未测	未测	未测
+12	蓝色抽屉里放的是什么	书房备用钥匙放在蓝色抽屉。	c-29b5914693ac5ddbf520d3be	c-29b5914693ac5ddbf520d3be	True	True	未测	未测	未测	未测
+13	相机电池收在哪	相机电池收在书桌第二层。	c-807af7b9dd882ca74afa0a36	c-807af7b9dd882ca74afa0a36	True	True	未测	未测	未测	未测
+14	电池	相机电池收在书桌第二层。		c-807af7b9dd882ca74afa0a36	False	True	未测	未测	未测	未测
+15	摄影设备的备用电源在哪	相机电池收在书桌第二层。		c-29b5914693ac5ddbf520d3be,c-465dfb03ed6b539320a0538f	False	False	未测	未测	未测	未测
+16	书桌第二层放了什么	相机电池收在书桌第二层。	c-807af7b9dd882ca74afa0a36	c-807af7b9dd882ca74afa0a36	True	True	未测	未测	未测	未测
+17	南桥读书会集合地点	南桥读书会集合地点是东门。	c-7bdeae0428b44214428bd58a,c-e5b91ae4b173a5c5993baaf7	c-7bdeae0428b44214428bd58a,c-e5b91ae4b173a5c5993baaf7	True	True	未测	未测	未测	未测
+18	南桥	南桥读书会集合地点是东门。		c-7bdeae0428b44214428bd58a	False	True	未测	未测	未测	未测
+19	南桥阅读小组在哪儿碰面	南桥读书会集合地点是东门。			False	False	未测	未测	未测	未测
+20	东门集合的是哪一个读书会	南桥读书会集合地点是东门。	c-7bdeae0428b44214428bd58a,c-e5b91ae4b173a5c5993baaf7	c-7bdeae0428b44214428bd58a,c-e5b91ae4b173a5c5993baaf7	True	True	未测	未测	未测	未测
+21	北桥读书会集合地点	北桥读书会集合地点是西门。	c-7bdeae0428b44214428bd58a,c-e5b91ae4b173a5c5993baaf7	c-7bdeae0428b44214428bd58a,c-e5b91ae4b173a5c5993baaf7	True	True	未测	未测	未测	未测
+22	北桥	北桥读书会集合地点是西门。		c-e5b91ae4b173a5c5993baaf7	False	True	未测	未测	未测	未测
+23	北桥阅读小组在哪儿碰面	北桥读书会集合地点是西门。			False	False	未测	未测	未测	未测
+24	西门集合的是哪一个读书会	北桥读书会集合地点是西门。	c-e5b91ae4b173a5c5993baaf7,c-7bdeae0428b44214428bd58a	c-e5b91ae4b173a5c5993baaf7,c-7bdeae0428b44214428bd58a	True	True	未测	未测	未测	未测
+25	海报初稿交付日期	海报初稿交付日期是六月十二日。	c-5008f2bca50a53479404f365	c-5008f2bca50a53479404f365,c-465dfb03ed6b539320a0538f	True	True	未测	未测	未测	未测
+26	海报	海报初稿交付日期是六月十二日。		c-5008f2bca50a53479404f365	False	True	未测	未测	未测	未测
+27	宣传画第一版什么时候交	海报初稿交付日期是六月十二日。			False	False	未测	未测	未测	未测
+28	六月十二日要交什么	海报初稿交付日期是六月十二日。	c-5008f2bca50a53479404f365	c-5008f2bca50a53479404f365	True	True	未测	未测	未测	未测
+29	摄影课报名截止日期	摄影课报名截止日期是五月八日。	c-465dfb03ed6b539320a0538f	c-465dfb03ed6b539320a0538f,c-5008f2bca50a53479404f365	True	True	未测	未测	未测	未测
+30	报名	摄影课报名截止日期是五月八日。		c-465dfb03ed6b539320a0538f	False	True	未测	未测	未测	未测
+31	拍照课程最晚哪天登记	摄影课报名截止日期是五月八日。		c-465dfb03ed6b539320a0538f	False	True	未测	未测	未测	未测
+32	五月八日是哪项报名截止	摄影课报名截止日期是五月八日。	c-465dfb03ed6b539320a0538f	c-465dfb03ed6b539320a0538f	True	True	未测	未测	未测	未测
+33	录音练习每次多久	录音练习每次十五分钟。	c-90991f1dc259627c6d6a3866	c-90991f1dc259627c6d6a3866	True	True	未测	未测	未测	未测
+34	录音	录音练习每次十五分钟。		c-90991f1dc259627c6d6a3866	False	True	未测	未测	未测	未测
+35	声音训练一次要花多长时间	录音练习每次十五分钟。			False	False	未测	未测	未测	未测
+36	十五分钟是哪个练习的时长	录音练习每次十五分钟。	c-90991f1dc259627c6d6a3866	c-90991f1dc259627c6d6a3866	True	True	未测	未测	未测	未测
+37	绿色笔记本记录什么	绿色笔记本专门记录采访提纲。	c-91db0306fb669336ddf21173	c-91db0306fb669336ddf21173	True	True	未测	未测	未测	未测
+38	提纲	绿色笔记本专门记录采访提纲。		c-91db0306fb669336ddf21173	False	True	未测	未测	未测	未测
+39	访谈的问题大纲写在哪本本子	绿色笔记本专门记录采访提纲。		c-91db0306fb669336ddf21173	False	True	未测	未测	未测	未测
+40	采访提纲记在什么颜色的本子	绿色笔记本专门记录采访提纲。	c-91db0306fb669336ddf21173	c-91db0306fb669336ddf21173	True	True	未测	未测	未测	未测
+41	星桥会议的门票价格是多少	?	c-f83572af8395225c6f7617c3	c-f83572af8395225c6f7617c3,c-9f20cead64eef5de022bc81a	None	None	未测	未测	未测	未测
+42	青禾会议有哪些人参加	?	c-9f20cead64eef5de022bc81a	c-9f20cead64eef5de022bc81a,c-f83572af8395225c6f7617c3	None	None	未测	未测	未测	未测
+43	书房钥匙是谁买的	?	c-29b5914693ac5ddbf520d3be	c-29b5914693ac5ddbf520d3be	None	None	未测	未测	未测	未测
+44	相机电池的品牌是什么	?	c-807af7b9dd882ca74afa0a36	c-807af7b9dd882ca74afa0a36	None	None	未测	未测	未测	未测
+45	南桥读书会有几个人	?	c-7bdeae0428b44214428bd58a,c-e5b91ae4b173a5c5993baaf7	c-7bdeae0428b44214428bd58a,c-e5b91ae4b173a5c5993baaf7	None	None	未测	未测	未测	未测
+46	北桥读书会的报名费	?	c-e5b91ae4b173a5c5993baaf7,c-7bdeae0428b44214428bd58a	c-e5b91ae4b173a5c5993baaf7,c-7bdeae0428b44214428bd58a,c-465dfb03ed6b539320a0538f	None	None	未测	未测	未测	未测
+47	海报设计师叫什么名字	?	c-f83572af8395225c6f7617c3,c-9f20cead64eef5de022bc81a,c-29b5914693ac5ddbf520d3be	c-5008f2bca50a53479404f365,c-f83572af8395225c6f7617c3,c-9f20cead64eef5de022bc81a,c-29b5914693ac5ddbf520d3be	None	None	未测	未测	未测	未测
+48	摄影课在哪里上课	?	c-465dfb03ed6b539320a0538f	c-465dfb03ed6b539320a0538f	None	None	未测	未测	未测	未测
+49	我昨晚晚饭吃了什么	?			None	None	未测	未测	未测	未测
+50	助手推荐的耳机是我买的吗	?			None	None	未测	未测	未测	未测
