@@ -55,6 +55,10 @@ def build_evidence(items) -> list[dict]:
                 "kind": rec.get("kind"),
                 "value": rec.get("value"),
                 "occurred_at": rec.get("occurred_at"),
+                # 读者判读有效性的依据：没有这两个字段时，一条已过
+                # valid_to 的 active 记录与现行事实无从区分。
+                "valid_to": rec.get("valid_to"),
+                "status": rec.get("status"),
                 "note": "",
             }
         )
