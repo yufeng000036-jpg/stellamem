@@ -152,3 +152,48 @@ test("no Latin anchors in the prompt: gate is inert", async () => {
   assert.ok(out.includes("《星球邮差》"), "claim must project unchanged: " + out);
   assert.ok(!out.includes("insufficient-evidence"), "gate must stay inert: " + out);
 });
+
+test("anchors: pronoun contractions are never anchors", () => {
+  assert.deepEqual(
+    questionAnchors("I've been thinking about a get-together for my friends. I'm not sure what to serve. Any suggestions for a signature cocktail?"),
+    []);
+  assert.deepEqual(
+    questionAnchors("I'm planning a trip to Tokyo next spring."),
+    ["tokyo"]);
+});
+
+test("coverage: possessive anchor covered by the bare name", () => {
+  assert.deepEqual(
+    uncoveredAnchors("What is the total cost of Lola's vet visit?",
+      ["user paid for lola's flea medication at the vet"]),
+    []);
+  assert.deepEqual(
+    uncoveredAnchors("What is the total cost of Lola's vet visit?",
+      ["user paid for the flea medication at the vet"]),
+    ["lola's"]);
+});
+
+test("coverage: multi-word anchor covered by its words in any order in one text", () => {
+  assert.deepEqual(
+    uncoveredAnchors("What size is the Samsung TV I bought?",
+      ["user bought a samsung 55-inch 4k smart tv last year"]),
+    []);
+  // A genuinely absent anchor still fires: "yorker" appears in no text.
+  assert.deepEqual(
+    uncoveredAnchors("What did The New Yorker say about it?",
+      ["user read the new york times every morning"]),
+    ["the new yorker"]);
+});
+
+test("possessive anchor: claims naming the bare entity project end to end", async () => {
+  const root = await fixture();
+  await writeRecords(root, "semantic/facts.md", [
+    record({ claim_id: "c-vet", revision_id: "r-vet", scope: "pets",
+      predicate: "paid for vet visit", value: "$120 for Lola's checkup",
+      evidence: "The vet visit for Lola cost $120 in total" }),
+  ]);
+  const out = await project(root, "What is the total cost of Lola's vet visit?",
+    { requesterSubject: "user", activeScopes: ["pets"], maxInjectChars: 16000 });
+  assert.ok(out.includes("c-vet"), "bare-name claim must project: " + out);
+  assert.ok(!out.includes("insufficient-evidence"), "gate must stay inert: " + out);
+});

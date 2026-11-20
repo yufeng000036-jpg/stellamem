@@ -52,6 +52,41 @@ class AnchorParityTest(unittest.TestCase):
         self.assertEqual(question_anchors("The concert was in May."), [])
         self.assertEqual(question_anchors("I visited the 'Google' campus last year"), ["google"])
         self.assertEqual(question_anchors("I flew to the U.S. last spring"), ["u.s"])
+        # Pronoun contractions are never anchors (parity with the JS
+        # CONTRACTION_TOKENS exclusion).
+        self.assertEqual(
+            question_anchors(
+                "I've been thinking about a get-together. I'm not sure what to serve."
+            ),
+            [],
+        )
+        self.assertEqual(question_anchors("I'm planning a trip to Tokyo next spring."), ["tokyo"])
+
+    def test_coverage_completions_match_js(self):
+        # Possessive anchor covered by the bare name.
+        out = evidence_sufficiency(
+            "What is the total cost of Lola's vet visit?",
+            ["user paid for lola's flea medication at the vet"],
+        )
+        self.assertEqual(out["status"], "sufficient")
+        out = evidence_sufficiency(
+            "What is the total cost of Lola's vet visit?",
+            ["user paid for the flea medication at the vet"],
+        )
+        self.assertEqual(out["status"], "insufficient")
+        # Multi-word anchor covered by its words in any order in one text.
+        out = evidence_sufficiency(
+            "What size is the Samsung TV I bought?",
+            ["user bought a samsung 55-inch 4k smart tv last year"],
+        )
+        self.assertEqual(out["status"], "sufficient")
+        # A genuinely absent anchor still reports insufficient.
+        out = evidence_sufficiency(
+            "What did The New Yorker say about it?",
+            ["user read the new york times every morning"],
+        )
+        self.assertEqual(out["status"], "insufficient")
+        self.assertEqual(out["uncovered"], ["the new yorker"])
 
 
 class SufficiencyGradeTest(unittest.TestCase):
