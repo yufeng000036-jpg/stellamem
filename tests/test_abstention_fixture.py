@@ -45,9 +45,11 @@ class AbstentionFixtureTests(unittest.TestCase):
         from unittest import mock
 
         out, err = io.StringIO(), io.StringIO()
-        with mock.patch.object(sys, "argv", ["abstention_fixture.py"]), (
-            redirect_stdout(out)
-        ), redirect_stderr(err):
+        with (
+            mock.patch.object(sys, "argv", ["abstention_fixture.py"]),
+            redirect_stdout(out),
+            redirect_stderr(err),
+        ):
             rc = fixture.main()
         self.assertEqual(rc, 0)
         payload = json.loads(out.getvalue())
@@ -73,9 +75,7 @@ class AbstentionFixtureTests(unittest.TestCase):
     def test_denominator_digest_tracks_the_must_fail_set(self):
         arms = [r[0] for r in fixture.ROWS if r[7]]
         self.assertEqual(len(arms), 9)
-        self.assertNotEqual(
-            fixture.denominator_digest(arms[:-1]), EXPECTED_DENOMINATOR_DIGEST
-        )
+        self.assertNotEqual(fixture.denominator_digest(arms[:-1]), EXPECTED_DENOMINATOR_DIGEST)
         # Order does not matter; the set does.
         self.assertEqual(
             fixture.denominator_digest(list(reversed(arms))),
