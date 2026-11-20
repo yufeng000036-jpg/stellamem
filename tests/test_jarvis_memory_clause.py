@@ -42,9 +42,7 @@ class JarvisMemoryClauseTests(unittest.TestCase):
         self.assertIn("先核对现状", system)
 
     def test_r0_selection_prompt_is_untouched(self):
-        source = (REPO / "experiments" / "jarvis" / "jarvis.py").read_text(
-            encoding="utf-8"
-        )
+        source = (REPO / "experiments" / "jarvis" / "jarvis.py").read_text(encoding="utf-8")
         self.assertIn(R0_SELECTION_PROMPT, source)
         # And the clause must not leak into the selection path.
         self.assertNotIn("记忆是线索", R0_SELECTION_PROMPT)
