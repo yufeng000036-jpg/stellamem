@@ -355,6 +355,18 @@ def normalize_claim(raw):
     if not isinstance(raw, dict):
         raise ValueError("claim must be an object")
     c = {k: canonical(raw.get(k)) for k in ("kind", "subject", "predicate", "value", "evidence")}
+    # A namespace-shaped subject ("group:<id>") is a classification claim
+    # smuggled into the topic field. Namespaces are authority: they are
+    # stamped by the review pipeline, never declared through the topic
+    # field (see subjects.py and test_model_namespace_is_not_authority).
+    # Storing such a claim silently produced an unclassified record that
+    # inflated totals while no governed recall could see it -- reject
+    # loudly at the funnel instead.
+    if c["subject"].casefold().startswith("group:"):
+        raise ValueError(
+            "subject must not be a namespace-shaped identifier ('group:...'); "
+            "classify the record through the review pipeline instead"
+        )
     c["kind"] = infer_kind(c["kind"], c["subject"], c["predicate"], c["value"], c["evidence"])
     c["scope"] = canonical(raw.get("scope")) or "global"
     c["source"] = canonical(raw.get("source", "unknown")).lower()
