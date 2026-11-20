@@ -287,6 +287,16 @@ const ANCHOR_STOP = new Set([
   "monday", "tuesday", "wednesday", "thursday", "friday", "saturday",
   "sunday", "i",
 ]);
+// Pronoun/auxiliary contractions are never named entities, but a
+// mid-sentence "I'm" tokenizes as a capitalized word and used to become
+// the question's only anchor - withholding every projected claim behind
+// a gate keyed on a token no claim text can contain.
+const CONTRACTION_TOKENS = new Set([
+  "i'm", "i've", "i'll", "i'd", "we're", "we've", "you're", "you've",
+  "he's", "she's", "it's", "that's", "there's", "don't", "can't", "won't",
+  "isn't", "aren't", "didn't", "doesn't", "haven't", "hasn't", "couldn't",
+  "wouldn't", "shouldn't", "let's",
+]);
 const ANCHOR_EDGE_PUNCT = new Set([
   ".", ",", ";", ":", "!", "?", "'", "\"", "(", ")", "[", "]", "{", "}", "<", ">",
   "。", "、", "，", "；", "：", "！", "？", "·", "…", "—",
@@ -312,17 +322,34 @@ export function questionAnchors(prompt) {
     const sentenceInitial = i === 0 || /[.!?]["']?\s*$/.test(String(prompt).slice(0, m.index));
     const capitalized = (/^[A-Z]/.test(tok) && /[a-z]/.test(tok)) ||
       (tok.length >= 2 && tok === tok.toUpperCase() && /[A-Z]/.test(tok));
-    if (capitalized && !sentenceInitial && !ANCHOR_STOP.has(tok.toLowerCase())) {
+    if (CONTRACTION_TOKENS.has(tok.toLowerCase())) flush();
+    else if (capitalized && !sentenceInitial && !ANCHOR_STOP.has(tok.toLowerCase())) {
       current.push(tok);
     } else flush();
   });
   flush();
   return anchors;
 }
-function anchorCovered(text, anchor) {
+function anchorCoveredExact(text, anchor) {
   if (anchor.includes(" ")) return text.includes(anchor);
   const esc = anchor.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return new RegExp(`(?<![a-z0-9])${esc}(?![a-z0-9])`).test(text);
+}
+function anchorCovered(text, anchor) {
+  if (anchorCoveredExact(text, anchor)) return true;
+  // A possessive anchor ("lola's") is covered by the bare name: claims
+  // routinely record the entity without the possessive form, and the
+  // exact rule withheld whole evidence sets over the missing "'s".
+  if (anchor.includes("'s") && anchorCoveredExact(text, anchor.replace(/'s/g, ""))) return true;
+  // A multi-word anchor is covered when every one of its words appears
+  // in the same claim text, in any order: "samsung tv" is named by a
+  // claim recording a "Samsung 55-inch 4K smart TV", which the exact
+  // contiguous-substring rule missed.
+  if (anchor.includes(" ")) {
+    const words = new Set(text.match(/[a-z0-9]+/g) || []);
+    if (anchor.split(" ").every((w) => words.has(w))) return true;
+  }
+  return false;
 }
 // Returns the anchor list when the gate fires (anchors exist and every
 // one is uncovered by every claim text); otherwise an empty array.
