@@ -78,6 +78,15 @@ CREATE VIRTUAL TABLE IF NOT EXISTS docs_fts USING fts5(text, tokenize='trigram')
 CREATE VIRTUAL TABLE IF NOT EXISTS records_grams USING fts5(grams, tokenize='unicode61');
 """
 
+# A tombstoned record's predicate must never enter the index in
+# plaintext (MemCut D1, 2026-11-21). deletion_chain._tombstone_record
+# erases it at the source with this same marker; the build erases it
+# again so pre-fix tombstone files — whose on-disk predicate is still
+# plaintext — cannot resurrect it into records / records_fts on a
+# rebuild. (Defined locally: deletion_chain imports Index from here,
+# so importing its TOMBSTONE_VALUE would be circular.)
+_TOMBSTONE_PREDICATE = "[已删除]"
+
 
 def _sha(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
@@ -261,6 +270,9 @@ class Index:
                 if status == "pending" and not include_pending:
                     continue
                 rid = f"{rec.get('claim_id')}:{rec.get('revision_id')}"
+                predicate = rec.get("predicate") or ""
+                if status == "tombstoned":
+                    predicate = _TOMBSTONE_PREDICATE
                 is_redacted = 1 if rec.get("redacted") or not rec.get("value") else 0
                 redacted += is_redacted
                 prov = rec.get("provenance") or {}
@@ -272,7 +284,7 @@ class Index:
                     layer,
                     rec.get("kind"),
                     rec.get("subject") or "",
-                    rec.get("predicate") or "",
+                    predicate,
                     "" if is_redacted else (rec.get("value") or ""),
                     "" if is_redacted else (rec.get("evidence") or "")[:240],
                     status,
@@ -349,9 +361,16 @@ class Index:
 
     @_locked
     def sync_vectors(self, force: bool = False) -> dict:
-        """清孤儿向量 + 补缺失向量。嵌入服务不可用时返回 skipped。"""
+        """清孤儿向量 + 补缺失向量。嵌入服务不可用时返回 skipped。
+
+        墓碑记录的向量一并删除（MemCut D2，2026-11-21）：墓碑行仍留在
+        records 表里，仅靠「id 不在 records 中」的孤儿清理永远删不掉
+        它的向量，撤销前的嵌入会逐字节残留并保持可语义检索。删除而
+        非重嵌占位文本——墓碑在语义上就不应拥有可检索向量。
+        """
         removed = self.con.execute(
             "DELETE FROM vectors WHERE id NOT IN (SELECT id FROM records)"
+            " OR id IN (SELECT id FROM records WHERE status = 'tombstoned')"
         ).rowcount
         self.con.commit()
         if not semantic.available():
