@@ -58,5 +58,5 @@ and legacy recovery behavior remain available; no host database is modified.
 ## 注意
 
 - **事件名用冒号格式**：`command:new` / `command:reset` / `gateway:startup`（不是下划线 `gateway_start`）。
-- **归档文件**：`/new` 或 `/reset` 后 OpenClaw 会把旧 session 重命名为 `xxx.jsonl.reset.<时间戳>`，历史消息都在归档里；过滤器用 `\.jsonl(?:\.reset\..+)?$`，否则漏读。
+- **归档文件**：`/new` 或 `/reset` 后 OpenClaw 会把旧 session 重命名为 `xxx.jsonl.reset.<时间戳>`，历史消息都在归档里；过滤器用 `\.jsonl(?:\.reset\..+)?$`，否则漏读。归档指针只有在操作员记录了对应轮转、归档文件哈希匹配且没有删除墓碑时才可供编译使用。
 - **来源缺失时**：编译阶段若指针无法解析（文件被移除或内容改变），`source_reader` 会抛 `SourceError` 并且**不消费**该来源；不会伪造原文。

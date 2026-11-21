@@ -1,6 +1,5 @@
 """Read complete sources and retain honest precision and offsets."""
 
-import glob
 import hashlib
 import json
 import re
@@ -10,8 +9,6 @@ from source_ledger import (
     LEDGER_FILENAME,
     LedgerError,
     authorized_rotations,
-    file_sha256,
-    is_tombstoned,
     load_ledger,
 )
 
@@ -55,19 +52,34 @@ def read_daily(path, config=None):
     pinned_head = config.get("source_ledger_head")
     if pinned_head and all(record.get("hash") != pinned_head for record in ledger):
         raise SourceError("Source ledger does not contain the pinned head; not consumed")
+
+    # daily-autolog emits both original names and .reset archive names.
+    # A tombstone recorded under either spelling covers that message identity.
+    def canonical_name(name):
+        return name.partition(".jsonl.reset.")[0] + ".jsonl" if ".jsonl.reset." in name else name
+
+    deleted = {
+        (canonical_name(r["session_file"]), str(r["message_id"]), r["content_hash"])
+        for r in ledger
+        if r["kind"] == "tombstone"
+    }
     cache = {}
     messages = []
 
-    def match_in(source, pointer, via=None):
+    def match_in(source, pointer, via=None, expected_hash=None):
         if source.resolve().parent != root:
             raise SourceError("Source path escaped configured root")
         if source not in cache:
-            cache[source] = source.read_text(encoding="utf-8").splitlines()
+            raw = source.read_bytes()
+            cache[source] = (hashlib.sha256(raw).hexdigest(), raw.decode("utf-8").splitlines())
+        digest, lines = cache[source]
+        if expected_hash is not None and digest != expected_hash:
+            return None
         idx = pointer.get("entry_index")
-        if not isinstance(idx, int) or idx < 0 or idx >= len(cache[source]):
+        if not isinstance(idx, int) or idx < 0 or idx >= len(lines):
             return None
         try:
-            entry = json.loads(cache[source][idx])
+            entry = json.loads(lines[idx])
         except ValueError:
             return None
         text = session_text(entry)
@@ -94,33 +106,23 @@ def read_daily(path, config=None):
         name = pointer.get("session_file", "")
         if not name or Path(name).name != name or "/" in name or "\\" in name:
             raise SourceError("Invalid source filename")
-        if is_tombstoned(ledger, pointer):
+        canonical = canonical_name(name)
+        if (
+            ".deleted" in name
+            or (canonical, str(pointer.get("message_id")), pointer.get("content_hash")) in deleted
+        ):
             raise SourceError("Source pointer tombstoned; not consumed")
         named = root / name
-        found = None
-        if named.exists():
-            found = match_in(named, pointer)
-            if found is None:
-                # The canonical filename was reused after rotation. The same
-                # state could be a user deletion, so an archive may only be
-                # consulted when a ledger rotation record authorizes this
-                # exact archive and its bytes are unchanged since recording.
-                for record in authorized_rotations(ledger, name):
-                    source = root / record["to_file"]
-                    if source == named or not source.exists():
-                        continue
-                    if source.resolve().parent != root:
-                        raise SourceError("Source path escaped configured root")
-                    if file_sha256(source) != record["file_sha256"]:
-                        continue
-                    found = match_in(source, pointer, via="rotation-ledger")
-                    if found is not None:
-                        break
-        else:
-            # Host may rename canonical session after /new; bounded same-session search.
-            base = name.split(".jsonl")[0]
-            for source in sorted(root.glob(glob.escape(base) + ".jsonl*")):
-                found = match_in(source, pointer)
+        found = match_in(named, pointer) if name == canonical and named.exists() else None
+        if found is None:
+            # A missing canonical file can mean deletion just like a reused name.
+            for record in authorized_rotations(ledger, canonical):
+                source = root / record["to_file"]
+                if name != canonical and source != named:
+                    continue
+                if source.name == canonical or ".deleted" in source.name or not source.exists():
+                    continue
+                found = match_in(source, pointer, "rotation-ledger", record["file_sha256"])
                 if found is not None:
                     break
         if found is None:
