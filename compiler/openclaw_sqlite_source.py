@@ -63,6 +63,48 @@ def _message_text(content):
     raise SourceError("unsupported message content; no partial read")
 
 
+def _active_schema25_rows(connection, session_id):
+    # Verified on the isolated 2026.10.9 host. Limit this adapter to fully
+    # indexed linear windows. A reset, compaction, branch or partial index
+    # needs the host's history-window semantics; never scan around it.
+    state = connection.execute(
+        "SELECT indexed_seq, active_event_count, needs_rebuild FROM session_transcript_index_state "
+        "WHERE session_id = ?",
+        (session_id,),
+    ).fetchone()
+    raw_count, last = connection.execute(
+        "SELECT COUNT(*), MAX(seq) FROM transcript_events WHERE session_id = ?", (session_id,)
+    ).fetchone()
+    if not state or state != (last, raw_count - 1, 0) or raw_count > MAX_SESSION_EVENTS:
+        raise SourceError("unsupported or incomplete OpenClaw active window")
+    header = connection.execute(
+        "SELECT event_json, event_zstd, event_utf8_bytes FROM transcript_events "
+        "WHERE session_id = ? AND seq = 0",
+        (session_id,),
+    ).fetchone()
+    if header is None:
+        raise SourceError("missing OpenClaw session header")
+    event, _ = _decode_event(*header)
+    if event.get("type") != "session" or event.get("id") != session_id:
+        raise SourceError("invalid OpenClaw session header")
+    rows = connection.execute(
+        "SELECT e.seq, e.event_json, e.event_zstd, e.event_utf8_bytes, "
+        "a.active_position, a.context_eligible, a.message_position "
+        "FROM session_transcript_active_events AS a "
+        "JOIN transcript_events AS e ON e.session_id = a.session_id AND e.seq = a.event_seq "
+        "WHERE a.session_id = ? ORDER BY a.active_position LIMIT ?",
+        (session_id, MAX_SESSION_EVENTS + 1),
+    )
+    count = 0
+    for seq, text, compressed, size, position, eligible, msg_position in rows:
+        if position != count or seq != count + 1 or eligible != 1:
+            raise SourceError("unsupported OpenClaw active window layout")
+        count += 1
+        yield seq, text, compressed, size, msg_position
+    if count != state[1]:
+        raise SourceError("incomplete OpenClaw active window")
+
+
 def read_session(database, session_id):
     """Read one explicit session consistently; never writes a manifest or data."""
     if not isinstance(session_id, str) or not session_id.strip():
@@ -76,11 +118,15 @@ def read_session(database, session_id):
         connection = sqlite3.connect(path.as_uri() + "?mode=ro", uri=True)
         connection.execute("PRAGMA query_only = ON")
         connection.execute("BEGIN")
-        rows = connection.execute(
-            "SELECT seq, event_json, event_zstd, event_utf8_bytes, message_role "
-            "FROM transcript_events WHERE session_id = ? ORDER BY seq LIMIT ?",
-            (session_id, MAX_SESSION_EVENTS + 1),
-        )
+        schema25 = connection.execute("PRAGMA user_version").fetchone()[0] == 25
+        if schema25:
+            rows = _active_schema25_rows(connection, session_id)
+        else:
+            rows = connection.execute(
+                "SELECT seq, event_json, event_zstd, event_utf8_bytes, message_role "
+                "FROM transcript_events WHERE session_id = ? ORDER BY seq LIMIT ?",
+                (session_id, MAX_SESSION_EVENTS + 1),
+            )
         messages = []
         seen_ids = set()
         total_bytes = 0
@@ -97,6 +143,17 @@ def read_session(database, session_id):
             total_bytes += declared if compressed is not None else len(text.encode("utf-8"))
             if total_bytes > MAX_SESSION_BYTES:
                 raise SourceError("session exceeds byte limit; no partial read")
+            if schema25:
+                kind = event.get("type")
+                if kind not in {"message", "model_change", "thinking_level_change", "custom"}:
+                    raise SourceError("unsupported OpenClaw history control")
+                if kind == "custom" and event.get("customType") not in {
+                    "model-snapshot",
+                    "openclaw:bootstrap-context:full",
+                }:
+                    raise SourceError("unsupported OpenClaw custom control")
+                if (indexed_role is not None) != (kind == "message"):
+                    raise SourceError("OpenClaw active message index mismatch")
             if event.get("type") != "message":
                 if indexed_role in {"user", "assistant"}:
                     raise SourceError("transcript role index mismatch")
@@ -109,7 +166,7 @@ def read_session(database, session_id):
                 if indexed_role in {"user", "assistant"}:
                     raise SourceError("transcript role index mismatch")
                 continue
-            if indexed_role != role:
+            if not schema25 and indexed_role != role:
                 raise SourceError("transcript role index mismatch")
             event_id = event.get("id")
             timestamp = event.get("timestamp")

@@ -61,12 +61,6 @@ test("isolated host passes only relevant synthetic memory to a local fixture mod
     try {
       const memory = path.join(root, "memory"), workspace = path.join(root, "workspace");
       await mkdir(path.join(memory, "semantic"), { recursive: true }); await mkdir(workspace);
-      const claim = { schema_version: 2, claim_id: "c-fixture", revision_id: "r-fixture", status: "active",
-        kind: "fact", subject: "user", scope: "global", predicate: "favorite fictional beverage",
-        value: "fictional nebula tea", evidence: "fictional nebula tea", evidence_verified: true,
-        source: "user", sensitivity: "PRIVATE", write_policy: "allow", injection_policy: "recall" };
-      await writeFile(path.join(memory, "semantic", "facts.md"),
-        `<!-- stellamem:v2 -->\n\`\`\`stellamem\n${JSON.stringify(claim)}\n\`\`\`\n`);
       const config = path.join(root, "openclaw.json");
       await writeFile(config, JSON.stringify({
         agents: { defaults: { workspace, model: { primary: "localfixture/fixture" } } },
@@ -97,6 +91,11 @@ test("isolated host passes only relevant synthetic memory to a local fixture mod
         assert.equal(requests.length, 1, "fixture model must receive exactly one request");
         return requests[0];
       }
+      await turn("state-origin", "My favorite fictional beverage is fictional nebula tea.");
+      const ingest = spawnSync(process.env.PYTHON || "python", [
+        path.join(repo, "tests", "host_sqlite_fixture.py"), root,
+      ], { encoding: "utf8", timeout: 20_000 });
+      assert.equal(ingest.status, 0, ingest.stderr || String(ingest.error));
       assert.ok((await turn("state-relevant", "What is my favorite fictional beverage?")).includes("fictional nebula tea"));
       assert.ok(!(await turn("state-unrelated", "What is the capital of France?")).includes("fictional nebula tea"));
     } finally {
