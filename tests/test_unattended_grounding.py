@@ -212,6 +212,40 @@ class UnattendedGroundingIngestTests(unittest.TestCase):
         self.assertEqual(counts["active"], 1)
         self.assertEqual(counts["pending"], 0)
 
+    def test_duration_cannot_anchor_an_unrelated_price(self):
+        self.assertIn("numeric_mismatch", support_flags("5年后付100元", "五年后付60元"))
+        self.assertIn("numeric_unanchored", support_flags("5年后付100元", "五年后付款"))
+        self.assertEqual(support_flags("5年后付60元", "五年后付60元"), [])
+
+    def test_chinese_duration_review_load(self):
+        for value, evidence in (
+            ("经验5年", "我有五年经验"),
+            ("等待2分钟", "我等了两分钟"),
+            ("耗时3小时", "我用了三小时"),
+            ("休息3天", "我休息了三天"),
+            ("行程两天", "行程2天"),
+            ("五年行业经验", "working in the industry for five years"),
+            ("一个月", "a month"),
+            ("下一步", "next step"),
+            ("三明治", "a sandwich"),
+            ("一台相机", "a camera"),
+            ("喜欢茶", "我喜欢喝茶"),
+            ("两周假期", "two weeks off"),
+        ):
+            with self.subTest(value=value, evidence=evidence):
+                counts = _ingest_counts(verified(value=value, evidence=evidence))
+                self.assertEqual((counts["active"], counts["pending"]), (1, 0))
+        for value, evidence in (
+            ("三年经验", "我有五年经验"),
+            ("耗时两小时", "我用了三小时"),
+            ("等了两分钟", "我等了三分钟"),
+            ("休息五天", "我休息了三天"),
+            ("计划三周", "计划四周"),
+        ):
+            with self.subTest(value=value, evidence=evidence):
+                counts = _ingest_counts(verified(value=value, evidence=evidence))
+                self.assertEqual((counts["active"], counts["pending"]), (0, 1))
+
     def test_faithful_paraphrases_still_auto_write(self):
         for kwargs in (
             dict(value="concise", evidence="Please keep replies concise."),

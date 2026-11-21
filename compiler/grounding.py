@@ -330,6 +330,23 @@ _EN_NUM_WORDS = {
 }
 
 
+# Compare single-digit Chinese durations only when both assertions actually
+# name the same unit. A weekday, an unrelated measure word or a differently
+# expressed duration is outside this narrow comparison.
+_DURATION = re.compile(
+    r"(?<![零一二两三四五六七八九十百千万点第0-9.])"
+    r"([一二两三四五六七八九]|[1-9])(分钟|小时|个月|年|周|天)"
+)
+
+
+def _duration_values(text):
+    by_unit = {}
+    for number, unit in _DURATION.findall(_norm(text)):
+        value = int(number) if number.isascii() else _CJK_DIGITS[number]
+        by_unit.setdefault(unit, set()).add(value)
+    return by_unit
+
+
 def _numbers(text):
     norm = _norm(text)
     out = set()
@@ -399,7 +416,17 @@ def support_flags(value, evidence):
     flags = []
     if _polarity_flip(value, evidence):
         flags.append("polarity_flip")
-    v_nums, e_nums = _numbers(value), _numbers(evidence)
+    v_durations, e_durations = _duration_values(value), _duration_values(evidence)
+    comparable = v_durations.keys() & e_durations.keys()
+    if any(v_durations[unit].isdisjoint(e_durations[unit]) for unit in comparable):
+        flags.append("numeric_mismatch")
+
+    def remaining_numbers(text):
+        # Matching durations cannot serve as evidence for separate quantities
+        # (e.g. a price). Leave every unpaired unit in the normal number check.
+        return _numbers(_DURATION.sub(lambda m: " " if m[2] in comparable else m[0], _norm(text)))
+
+    v_nums, e_nums = remaining_numbers(value), remaining_numbers(evidence)
     if 1.0 in v_nums and 1.0 not in e_nums:
         # "(1 month)" over "it's been a month": the indefinite article
         # carries the quantity. Narrow rule: value-side 1 with a time
@@ -414,9 +441,9 @@ def support_flags(value, evidence):
         ) or any("一" + u in evidence for u in units_zh)
         if v_unit and e_article:
             v_nums = v_nums - {1.0}
-    if v_nums and e_nums and not (v_nums & e_nums):
+    if "numeric_mismatch" not in flags and v_nums and e_nums and not (v_nums & e_nums):
         flags.append("numeric_mismatch")
-    elif v_nums and not e_nums:
+    elif "numeric_mismatch" not in flags and v_nums and not e_nums:
         flags.append("numeric_unanchored")
     shared = _shared_tokens(value, evidence)
     # Lexical anchoring is only meaningful within one script family: the
