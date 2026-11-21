@@ -21,16 +21,21 @@ import { promisify } from "node:util";
 import {
   ARM_EXECUTED,
   CONTRACT_VERSION,
+  REASON_CODES,
   SCHEMA_VERSION,
+  armOf,
   buildManifest,
   criteriaDigest,
   isCurrentEvidence,
   loadPoolData,
+  materializeCase,
   poolCriteriaDigest,
+  randomMustFailCase,
   runAll,
   runCase,
   runPool,
   summarize,
+  validateReasonBand,
 } from "../benchmark/longmemeval/negative_samples.mjs";
 
 const execFileAsync = promisify(execFile);
@@ -295,4 +300,162 @@ test("NOT_EXECUTED is never folded into 0 in the summary", async () => {
   assert.equal(ms.pass_rate, 1);
   // Nothing executed at all: pass rate is null, never 0/0.
   assert.equal(summarize([{ id: "y", verdict: "NOT_EXECUTED", pass: null }]).pass_rate, null);
+});
+
+// ---- Wave-3 batch 1 (governance draft §18.2 / §18.3) ----
+
+test("arms: baseline arm is pinned, rotation arm is the rest, counted apart", async () => {
+  const pool = await loadPool();
+  const baselineIds = pool.cases.filter((c) => armOf(c) === "baseline").map((c) => c.id);
+  assert.deepEqual(baselineIds.sort(),
+    ["neg-control-01", "neg-expired-01", "neg-superseded-01"]);
+  const run = await runPool(pool);
+  for (const r of run.results) {
+    const source = pool.cases.find((c) => c.id === r.id);
+    assert.equal(r.arm, armOf(source), `${r.id}: result must carry its arm`);
+  }
+  assert.equal(run.arms.baseline.executed, 3);
+  assert.equal(run.arms.baseline.passed, 3);
+  assert.equal(run.arms.rotation.executed, pool.cases.length - 3);
+  assert.equal(run.arms.rotation.passed, pool.cases.length - 3);
+});
+
+test("rotation: round 0 is the identity, later rounds rotate fault and position", async () => {
+  const pool = await loadPool();
+  const status = pool.cases.find((c) => c.id === "neg-status-01");
+  const round0 = materializeCase(status, 0);
+  assert.equal(round0.fault, "status");
+  assert.deepEqual(round0.records, status.records);
+  // fault_rotation[1] for neg-status-01 is "expired": the trap record is
+  // rewritten to the expired shape (valid_to in the past, status active).
+  const round1 = materializeCase(status, 1);
+  assert.equal(round1.fault, "expired");
+  assert.equal(round1.records[0].valid_to, "2000-01-01T00:00:00Z");
+  assert.equal(round1.records[0].status, undefined);
+  // The cycle length is the fault_rotation length: round 4 == round 0 fault.
+  assert.equal(materializeCase(status, 4).fault, "status");
+  // The declared case is never mutated by materializing a round.
+  assert.equal(status.fault, "status");
+  assert.equal(status.records[0].status, "superseded");
+  // Baseline cases never rotate, whatever the round.
+  const baseline = pool.cases.find((c) => c.id === "neg-expired-01");
+  assert.deepEqual(materializeCase(baseline, 3), baseline);
+  // Perturbation position: a multi-record rotation case rotates its
+  // record order by the round.
+  const ambiguous = pool.cases.find((c) => c.id === "neg-ambiguous-01");
+  const rotated = materializeCase(ambiguous, 1);
+  assert.deepEqual(rotated.records.map((r) => r.revision_id),
+    [...ambiguous.records.map((r) => r.revision_id)].reverse());
+});
+
+test("rotation: a rotated round still blocks every trap", async () => {
+  const pool = await loadPool();
+  const run = await runPool(pool, { round: 1 });
+  const failed = run.results.filter((r) => r.verdict === "FAIL");
+  assert.deepEqual(failed, [], "rotated-round failures: " + JSON.stringify(failed));
+  const status = run.results.find((r) => r.id === "neg-status-01");
+  assert.equal(status.injected_fault, "expired",
+    "round 1 materializes neg-status-01 with the expired fault shape");
+});
+
+test("reason_code band: every result carries criteria, check id and hit", async () => {
+  const pool = await loadPool();
+  const run = await runPool(pool);
+  for (const r of run.results) {
+    assert.ok(Array.isArray(r.reason_code) && r.reason_code.length >= 1,
+      `${r.id}: reason_code must be a non-empty array`);
+    for (const entry of r.reason_code) {
+      assert.equal(entry.criteria_digest, r.criteria_digest);
+      assert.ok(entry.check_id.startsWith("negctl."), `${r.id}: check id missing`);
+      assert.ok(REASON_CODES.includes(entry.code),
+        `${r.id}: code ${entry.code} outside the allow-list`);
+      assert.ok("hit" in entry, `${r.id}: band entry must carry the hit cell`);
+    }
+    assert.deepEqual(validateReasonBand(r.reason_code), []);
+  }
+  const blocked = run.results.find((r) => r.id === "neg-expired-01");
+  assert.equal(blocked.reason_code[0].code, "FAULT_BLOCKED");
+  assert.equal(blocked.reason_code[0].hit, null);
+});
+
+test("reason_code band: a leak names the leaked string as the hit", async () => {
+  const result = await runCase({
+    id: "meta-violation",
+    question: "我最喜欢什么颜色？",
+    must_not_contain: ["枫叶红"],
+    must_contain: [],
+    records: [{ claim_id: "c-meta", revision_id: "r-meta",
+      value: "虚构：最喜欢的颜色是枫叶红", evidence: "虚构：最喜欢的颜色是枫叶红" }],
+    reason: "meta-test: the band must name the specific leaked line",
+  });
+  const leak = result.reason_code.find((e) => e.code === "FAULT_LEAKED");
+  assert.ok(leak, "leaked case must carry a FAULT_LEAKED band entry");
+  assert.equal(leak.check_id, "negctl.must_not_contain");
+  assert.equal(leak.hit, "枫叶红");
+});
+
+test("reason_code band: NOT_EXECUTED carries a named code, not only free text", async () => {
+  const result = await runCase({
+    id: "meta-future-contract",
+    question: "q",
+    must_not_contain: [],
+    must_contain: [],
+    records: [],
+    contract_version: "99",
+    reason: "meta-test: named NOT_EXECUTED reason",
+  });
+  assert.equal(result.verdict, "NOT_EXECUTED");
+  assert.equal(result.reason_code[0].code, "CONTRACT_VERSION_UNSUPPORTED");
+  assert.equal(result.reason_code[0].check_id, "negctl.contract_version");
+});
+
+test("reason_code band: unknown codes fail closed in validation", () => {
+  const forged = [{ criteria_digest: "x".repeat(64),
+    check_id: "negctl.must_not_contain", code: "SOMETHING_ELSE", hit: null }];
+  const problems = validateReasonBand(forged);
+  assert.ok(problems.length >= 1, "a code outside the allow-list must be flagged");
+  assert.deepEqual(validateReasonBand("not-an-array").length >= 1, true);
+});
+
+test("families: negative failures get their own table and denominator", async () => {
+  const pool = await loadPool();
+  const run = await runPool(pool);
+  const s = summarize(run.results);
+  assert.equal(s.families.negative.executed, 8);
+  assert.equal(s.families.negative.passed, 8);
+  assert.equal(s.families.control.executed, 1);
+  assert.equal(s.families.control.passed, 1);
+  // A negative failure must not be diluted by the passing control arm:
+  // the negative table shows it against the negative denominator alone.
+  const mixed = run.results.map((r) =>
+    r.id === "neg-expired-01" ? { ...r, verdict: "FAIL", pass: false } : r);
+  const ms = summarize(mixed);
+  assert.equal(ms.families.negative.failed, 1);
+  assert.equal(ms.families.negative.pass_rate, 7 / 8);
+  assert.equal(ms.families.control.pass_rate, 1);
+});
+
+test("random must-fail inputs: generated per run, seeded, and blocked", async () => {
+  const pool = await loadPool();
+  const a = await runAll(pool.cases, {
+    poolVersion: pool.version, randomMustFail: 2, randomSeed: "seed-a",
+  });
+  const randomResults = a.results.filter((r) => r.id.startsWith("neg-random-"));
+  assert.equal(randomResults.length, 2);
+  assert.ok(randomResults.every((r) => r.verdict === "PASS"));
+  assert.ok(randomResults.every((r) => r.arm === "rotation"));
+  assert.equal(a.families.negative.executed, 10);
+  // Same seed, same generated cases: a run is reproducible from its seed.
+  const b = await runAll(pool.cases, {
+    poolVersion: pool.version, randomMustFail: 2, randomSeed: "seed-a",
+  });
+  assert.deepEqual(b.results.filter((r) => r.id.startsWith("neg-random-")).map((r) => r.id),
+    randomResults.map((r) => r.id));
+  // A different seed generates different traps.
+  const generated = randomMustFailCase("seed-a", 0);
+  assert.equal(generated.fault, "expired");
+  assert.notEqual(randomMustFailCase("seed-b", 0).id, generated.id);
+  // Default runs generate nothing: the pool alone decides the results.
+  const plain = await runPool(pool);
+  assert.equal(plain.results.length, pool.cases.length);
 });

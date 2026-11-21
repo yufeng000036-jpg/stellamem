@@ -377,7 +377,8 @@ def check_run_freshness(manifest):
 
     The manifest is a JSON object of the shape
         {"run_id": ..., "run_started_at": <ISO-8601>,
-         "artifacts": {name: {"generated_at": <ISO-8601>, "run_id": ...}}}
+         "artifacts": {name: {"generated_at": <ISO-8601>, "run_id": ...,
+                              "entries": <int>}}}
     An artifact counts as this run's output only when it was generated
     strictly after the run started: a run_id can be templated into an old
     artifact, so a matching id never proves freshness on its own. An
@@ -388,10 +389,19 @@ def check_run_freshness(manifest):
     is returned as NOT_EXECUTED (the third verdict, cf.
     negative_samples.mjs), never as a pass.
 
+    Reconciliation fields (draft §14.1, Hermes batch-1 addendum): each
+    artifact entry must also carry its entry count ("entries") next to
+    its last-update time ("generated_at"). Both are mandatory: without
+    the count, a reconciliation row cannot tell "nothing changed" from
+    "nothing ran" and degenerates to a constant. A fresh artifact whose
+    entry carries no usable count is therefore NOT_EXECUTED (missing
+    evidence), never a pass; artifacts passing every gate are counted
+    in notes["reconciled"].
+
     Returns (problems, not_executed, notes).
     """
     problems, not_executed = [], []
-    notes = {"fresh": 0, "artifacts": 0, "run_id": None}
+    notes = {"fresh": 0, "artifacts": 0, "run_id": None, "reconciled": 0}
     if not isinstance(manifest, dict):
         return ["run manifest is not a JSON object"], not_executed, notes
     run_id = manifest.get("run_id")
@@ -433,7 +443,15 @@ def check_run_freshness(manifest):
                 f"is not after run_started_at {started_raw!r}"
             )
             continue
+        entries = entry.get("entries")
+        if not isinstance(entries, int) or isinstance(entries, bool) or entries < 0:
+            not_executed.append(
+                f"{name}: run manifest artifact has no usable entry count "
+                f"(entries={entries!r}); reconciliation not executed"
+            )
+            continue
         notes["fresh"] += 1
+        notes["reconciled"] += 1
     return problems, not_executed, notes
 
 
@@ -694,7 +712,8 @@ def main():
                 passes.append(
                     f"run-freshness: {fresh_notes['fresh']} artifacts generated after "
                     f"run start {run_manifest.get('run_started_at')!r} "
-                    f"(run_id {fresh_notes['run_id']!r})"
+                    f"(run_id {fresh_notes['run_id']!r}); "
+                    f"{fresh_notes['reconciled']} reconciled with entry counts"
                 )
     else:
         skips.append("run-freshness: --run-manifest not given")

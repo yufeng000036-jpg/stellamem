@@ -36,7 +36,8 @@ check #10 consumes (``--run-manifest``, ``check_run_freshness``)::
 
     {"run_id": ..., "run_started_at": <ISO-8601>,
      "artifacts": {"results.json": {"generated_at": <ISO-8601>,
-                                    "run_id": ...}}}
+                                    "run_id": ...,
+                                    "entries": <case count>}}}
 
 Until now no step produced that manifest, so the freshness check could
 never execute. The shard results carry no run_id or start timestamp of
@@ -120,7 +121,17 @@ def build_run_manifest(result, started, generated):
     return {
         "run_id": run_id,
         "run_started_at": fmt_stamp(started) if started is not None else None,
-        "artifacts": {"results.json": {"generated_at": fmt_stamp(generated), "run_id": run_id}},
+        "artifacts": {
+            "results.json": {
+                "generated_at": fmt_stamp(generated),
+                "run_id": run_id,
+                # Mandatory reconciliation field (draft §14.1): the
+                # artifact's entry count, next to its last-update time
+                # (generated_at). verify_replay treats a missing or
+                # unusable count as NOT_EXECUTED, never as "unchanged".
+                "entries": len(result.get("cases") or []),
+            }
+        },
     }
 
 

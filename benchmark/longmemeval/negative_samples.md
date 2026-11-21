@@ -62,6 +62,8 @@ CI 里由 `tests/negative-samples.test.mjs` 跑同一套用例（见下）。
 | `records` | 写入隔离记忆根的 claim（只写与本用例有关的字段，其余走默认记录） |
 | `reason` | 这条用例在防什么 |
 | `fault` | 注入的故障类型：`expired` / `outdated` / `superseded` / `status` / `future` / `ambiguous` / `none`（`none` = 阳性对照，无故障） |
+| `arm` | 所在臂：`baseline` = 基线臂（固定跨轮对拍）；缺省 = 轮换臂（见“双臂与按轮次轮换”） |
+| `fault_rotation` | 轮换臂单记录用例的故障形状循环表（首项必须等于 `fault`，轮次 0 恒等）；多记录复合故障用例不写此字段 |
 
 ## 轮换（第二版新增）
 
@@ -80,6 +82,46 @@ CI 里由 `tests/negative-samples.test.mjs` 跑同一套用例（见下）。
 - **每次改动 version +1**，changelog 写清日期、改了什么、为什么；
   `manifest.pool_version` 与每条结果的 `evidence_source` 都跟着变，
   旧轮次的证据拿新池子的号对不上，一眼可辨。
+
+### 双臂与按轮次轮换（第三版新增，草案 §18.2 Architect）
+
+季度人工轮换之外，池子再分两臂、按轮次自动轮换：
+
+- **基线臂（`arm: "baseline"`）**：固定的三条（过期、替代、阳性
+  对照各一），任何轮次都原样跑，做跨轮对拍、抓回归。
+- **轮换臂（其余用例）**：按轮次（`round`，CLI 用环境变量
+  `NEGATIVE_SAMPLES_ROUND`，默认 0）物化——声明了 `fault_rotation`
+  的单记录用例，注入故障形状按轮次在该列表里循环（过期 / 未生效 /
+  outdated / 状态四种字段型故障互换）；多记录用例的陷阱记录位置
+  按轮次旋转。轮次 0 恒等，用例按声明原样跑。
+- **两臂分开计数**：汇总里 `arms.baseline` 与 `arms.rotation`
+  各自成表，轮换臂抓新形状、基线臂抓回归，不许混成一个数。
+
+### reason_code 带（第三版新增，草案 §18.2 / §2）
+
+每条结果再带一条 `reason_code` 数组（带 = 一组条目，不是单值），
+每条含四格：`criteria_digest`（判据版本，与结果同值）、`check_id`
+（检查项 id：`negctl.must_not_contain` / `negctl.must_contain` /
+`negctl.contract_version` / `negctl.execution`）、`code`（原因码，
+只能取 allow-list：`FAULT_BLOCKED` / `FAULT_LEAKED` /
+`INJECTION_MISSING` / `CONTROL_INJECTED` / `CONTROL_MISSING` /
+`CONTRACT_VERSION_UNSUPPORTED` / `RUN_ERROR`）、`hit`（命中的具体
+行：漏出或缺失的那条串原文；查过没命中时为 null）。
+`NOT_EXECUTED` 的结果也带具名原因码，不再只有自由文本 error。
+表外码 fail-closed：`validateReasonBand` 验出即报问题，绝不折进
+最近的已知码。
+
+### 负控独立表与随机必败输入（第三版新增，草案 §18.3 Hermes）
+
+- **独立表、独立分母**：汇总的 `families.negative` 只数负控用例
+  （含随机生成的那条），`families.control` 只数阳性对照；负控的
+  失败数不再被阳性对照的高通过率稀释。CLI 单独打印一行
+  `negative-control table: ...`。
+- **随机必败输入**：CLI 每轮按种子（种子 = 本轮 `run_id`，可复现）
+  生成一条虚构的过期陷阱（`neg-random-*`，归轮换臂），不是固定
+  夹具；库调用方用 `options.randomMustFail` 显式开启。生成用例已
+  验活：摘掉它的过期字段，同一条就会漏出并触发哨兵——它测的
+  确实是门，不是空气。
 
 ## 七字段与 manifest（第二版新增）
 
@@ -145,7 +187,8 @@ CI 里由 `tests/negative-samples.test.mjs` 跑同一套用例（见下）。
 
 - 只测**投影层**（旧事实进没进上下文）。reader 拿到空投影后会不会
   拒答，是 reader 的事，不在本评测里。
-- 用例是手工写的虚构固定样本，不是随机生成的对抗集。
+- 池内用例是手工写的虚构固定样本；随机性只来自每轮按种子生成的
+  那一条必败输入（见“负控独立表与随机必败输入”），不做随机对抗集。
 - 七字段交换格式已落地（本版）；小美征集的负对照 JSONL 九字段
   schema 与太极的故障注入验收片段还没拿到，拿到后对拍字段映射，
   不阻塞本版。

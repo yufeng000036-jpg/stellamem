@@ -196,6 +196,8 @@ class RunManifestTests(unittest.TestCase):
             self.assertEqual(manifest["run_started_at"], "2026-11-12T01:59:00Z")
             entry = manifest["artifacts"]["results.json"]
             self.assertEqual(entry["run_id"], manifest["run_id"])
+            results = json.loads((_run_dir / "work" / "full" / "results.json").read_text())
+            self.assertEqual(entry["entries"], len(results["cases"]))
             problems, not_executed, notes = verify_replay.check_run_freshness(manifest)
             self.assertEqual(problems, [])
             self.assertEqual(not_executed, [])
