@@ -230,6 +230,7 @@ class RunFreshnessTests(unittest.TestCase):
                 "results.json": {
                     "generated_at": "2026-11-12T02:30:00Z",
                     "run_id": "run-20261112-a",
+                    "entries": 40,
                 }
             }
         )
@@ -238,6 +239,43 @@ class RunFreshnessTests(unittest.TestCase):
         self.assertEqual(not_executed, [])
         self.assertEqual(notes["fresh"], 1)
         self.assertEqual(notes["artifacts"], 1)
+        self.assertEqual(notes["reconciled"], 1)
+
+    def test_fresh_artifact_without_entries_is_not_executed(self):
+        # Draft §14.1: the artifact entry count is a mandatory
+        # reconciliation field. A fresh artifact whose manifest entry
+        # carries no usable count cannot be reconciled — that is
+        # missing evidence (NOT_EXECUTED), never a quiet pass, or the
+        # reconciliation row degenerates to a constant.
+        manifest = self.manifest(
+            {
+                "results.json": {
+                    "generated_at": "2026-11-12T02:30:00Z",
+                    "run_id": "run-20261112-a",
+                }
+            }
+        )
+        problems, not_executed, notes = verify.check_run_freshness(manifest)
+        self.assertEqual(problems, [])
+        self.assertEqual(len(not_executed), 1)
+        self.assertIn("entries", not_executed[0])
+        self.assertEqual(notes["fresh"], 0)
+        self.assertEqual(notes["reconciled"], 0)
+
+    def test_non_integer_entries_is_not_executed(self):
+        manifest = self.manifest(
+            {
+                "results.json": {
+                    "generated_at": "2026-11-12T02:30:00Z",
+                    "run_id": "run-20261112-a",
+                    "entries": "many",
+                }
+            }
+        )
+        problems, not_executed, notes = verify.check_run_freshness(manifest)
+        self.assertEqual(problems, [])
+        self.assertEqual(len(not_executed), 1)
+        self.assertEqual(notes["reconciled"], 0)
 
     def test_stale_artifact_reports_stale_run_id(self):
         # The old artifact even carries this run's run_id (templated in):
