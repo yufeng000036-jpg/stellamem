@@ -120,10 +120,18 @@ def record_text(rec) -> str:
 
 
 def build_vectors(con: sqlite3.Connection, force: bool = False, limit: int = 0):
-    """为 records 生成/补齐向量。增量：默认只补 vectors 表里没有的。"""
-    base = "SELECT id, subject, predicate, value FROM records"
+    """为 records 生成/补齐向量。增量：默认只补 vectors 表里没有的。
+
+    墓碑记录永不嵌入（MemCut D2，2026-11-21）：既不能给它新生成
+    向量，已存在的向量由 Index.sync_vectors 删除——墓碑不应拥有
+    可检索向量，而不是换成占位文本的向量。
+    """
+    base = (
+        "SELECT id, subject, predicate, value FROM records"
+        " WHERE (status IS NULL OR status <> 'tombstoned')"
+    )
     if not force:
-        base += " WHERE id NOT IN (SELECT id FROM vectors)"
+        base += " AND id NOT IN (SELECT id FROM vectors)"
     rows = con.execute(base + " ORDER BY id").fetchall()
     if limit:
         rows = rows[:limit]

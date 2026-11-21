@@ -83,6 +83,10 @@ def _tombstone_record(record: dict, reason: str) -> dict:
     out = dict(record)
     out["status"] = "tombstoned"
     out["value"] = TOMBSTONE_VALUE
+    # The predicate can carry the secret itself (MemCut D1, 2026-11-21:
+    # it survived verbatim in the live file and the index). Erase it
+    # with the same marker as the value.
+    out["predicate"] = TOMBSTONE_VALUE
     out["evidence"] = ""
     out["deleted_at"] = datetime.now(timezone.utc).isoformat()
     out["deleted_reason"] = reason
