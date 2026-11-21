@@ -1,0 +1,16 @@
+# Public oracle reader diagnostics
+
+These experiments isolate reading or selection of raw source turns. Neither implements the production extractor, review or index, and neither produces a Route B 500-question score. Input is the pinned public oracle corpus in manifest.json. Only source text, its recorded date and speaker, the question and its date enter the requests. Opaque turn ids are independent of relevance labels. Gold annotations are used only after constructing the inputs.
+
+* Prompt trial: two hash-selected questions per category, 14 total. A uses the frozen worker's reader instruction. B adds subject, speaker, temporal and multi-source checks. Both receive the same complete lines within 16,000 characters. The experiment tests an instruction, not a new storage format.
+* Retrieval trial: 14 other questions per category, 98 total. Both arms use the baseline reader prompt. Rank 700-character turn prefixes lexically; on arm B discount a session's score by 1/(1+0.5 times the number of already selected turns from that session). Both arms have the same 4,000-character maximum. Count an identical same-question request once only when its full serialized payload and fixed reader instruction match. Changed contexts get fresh inference. Complete gold-turn coverage means that a snippet from each annotated turn was selected; it does not prove every necessary fact survived truncation.
+* Scoring: normalized exact match on answerable questions, valid explicit refusal on abstention questions. Report schema errors as failures, account separately for unexecuted calls, and do not interpret an ID match as semantic entailment. Compare each question against itself; report both transition directions. Raw model predictions for the retrieval experiment may be kept in a local-only review file. Do not commit source conversations, raw predictions or model weights.
+* Model: Qwen3-0.6B-Q8_0 and llama.cpp build b12032, pinned SHA-256 in PROTOCOL.md. Temperature 0, seed 42, thinking disabled, generation cap 512. This inexpensive local control is not the historical DeepSeek reader or semantic judge. Dollar/API cost is zero; report inference time and token counts separately.
+* Frozen work is untouched. Example commands (choose new output files):
+
+    python reader_pair.py longmemeval_oracle.json prompt-trial.jsonl --port 18677
+    python session_balance_pair.py longmemeval_oracle.json retrieval-trial.jsonl local-review.jsonl --port 18678
+
+## Order-only follow-up
+
+After observing two knowledge-update misses, test ordering on the same 14 knowledge-update and 14 temporal-reasoning development cases. Keep the lexical control's selected lines, bytes per line, total characters, question, inference settings and reader instruction. Present the candidate lines by descending session timestamp, session index and turn index. Inspect both improvement and regression directions on all 28. This follow-up reuses the measured baseline only after checking both request digests. It is exploratory and cannot establish generalization. The remaining public cases are untouched by these reader controls. Run temporal_order_pair.py with the dataset, completed retrieval audit, new output path and local port.
