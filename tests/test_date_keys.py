@@ -112,6 +112,27 @@ class FailClosedTests(unittest.TestCase):
             self.assertFalse(changed, text)
             self.assertNotIn("date_keys", c)
 
+    def test_overlapping_terms_use_only_the_specific_date(self):
+        for text, expected in (
+            ("the day before yesterday", ["2023-03-13"]),
+            ("day after tomorrow", ["2023-03-17"]),
+            ("the day before yesterday and yesterday", ["2023-03-13", "2023-03-14"]),
+            ("二十三天前", ["2023-02-20"]),
+            ("十二天前", ["2023-03-03"]),
+            ("两三天前", None),
+            ("一百三天前", None),
+            ("1234天前", None),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(keys(evidence=text)[0].get("date_keys"), expected)
+
+    def test_calendar_overflow_skips_only_the_invalid_expression(self):
+        c, changed = derive_date_keys(claim(evidence="yesterday and today"), "0001-01-01")
+        self.assertTrue(changed)
+        self.assertEqual(c["date_keys"], ["0001-01-01"])
+        c, changed = derive_date_keys(claim(evidence="next month"), "9999-12-31")
+        self.assertFalse(changed)
+
     def test_no_timestamp_no_keys(self):
         c, changed = derive_date_keys(claim(evidence="I did it yesterday.", provenance={}))
         self.assertFalse(changed)
