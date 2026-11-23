@@ -1,0 +1,14 @@
+# External evidence artifacts (not part of the package; hashes recorded at freeze time 2026-11-23)
+b4cd3f5b9d8da0cf66185a41df32a1be9a920936c752644bfff1af2cb3fea620  /home/hatch/workspace/reader-train/eval2/eval2.jsonl
+8d67fbc3c08ad47a25be9a58d08fdb759095104dc293c56497b1df5f82a14399  /home/hatch/workspace/reader-train/eval2/eval2_inputs.jsonl
+e8f6ee657e1ed49dce1144139c3442ac2fdca90c7e788741124879c3f42d3876  /home/hatch/workspace/reader-train/hybrid-proto/v62/v62_inputs.jsonl
+a7f65d4fa8626d49c5096f82c3ed157e3315215b5f7244680a589ffaeab8b5f6  /home/hatch/workspace/reader-train/hybrid-proto/v62/kaggle-output-v62/v62_outputs.jsonl
+5a3b7bf634297ee15ef3926b3eb89a152067dbce6fc6e112e28516d5fb310916  /home/hatch/workspace/reader-train/eval2-baselines/kaggle-output-c1/c1_outputs.jsonl
+43e28052c2ecd6e10ab5d4552c195a57c239bb5f67c175e5f4e59212984d8243  /home/hatch/workspace/reader-train/hybrid-proto/kaggle-output-hybrid/hybrid_outputs.jsonl
+70c2378f814d9f2b3d86070d7b46eaad480c2bdaa8d05375d70211308ef1e618  /home/hatch/workspace/reader-train/baseline/scorer.py
+5a8a5e5256dc76234b2c6bd33ef8e989ece74d2a6d922df7399ca0d02b03a494  /home/hatch/workspace/stellamem-takeover/v4-reader-exp-20261121/b2_rows.jsonl
+fee8849c65ff3f301dff856dae8b2100edf9ac2e5f5e972b9e80a3d719a53a4a  /home/hatch/workspace/reader-train/train-run1/c_outputs.jsonl
+094d8f619ebd1274ce8b03c392d66f2b8d88785ae142b30b4e7045daa6fd1c3e  /home/hatch/workspace/reader-train/hybrid-proto/v62/b2_inputs_v62.jsonl
+715de439383f8be500341c9e2f6472f7dcd7ffff552022e3a55dbd8b086aefe4  /home/hatch/workspace/reader-train/hybrid-proto/v62/kaggle-output-189/b2_v62_outputs.jsonl
+9f7798f97de206cea3f12f594c10a5bb9554d29af1c9f56784150fb8646ae0cb  /home/hatch/workspace/reader-train/eval3/eval3.jsonl
+# eval3.jsonl above: attestation hash only -- the file was never opened, read or used in this stage.

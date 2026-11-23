@@ -1,0 +1,8394 @@
+{
+ "tag": "v62_final3",
+ "routing": "pattern_first",
+ "bind": "completeness",
+ "guards": [
+  "validity",
+  "hop_owner",
+  "direct_owner",
+  "attribute",
+  "stale",
+  "identifier"
+ ],
+ "complete": "v2",
+ "baseline": {
+  "correct": 288,
+  "wrong_answer": 86,
+  "over_abstain": 14,
+  "correct_abstain": 32,
+  "format_fail": 0,
+  "citation_valid_among_correct": [
+   239,
+   288,
+   82.99
+  ],
+  "latency": {
+   "n": 420,
+   "mean": 4.18,
+   "p95": 5.71
+  },
+  "by_klass": {
+   "weak": {
+    "correct": 43,
+    "wrong_answer": 4,
+    "over_abstain": 7
+   },
+   "conflict": {
+    "correct": 27,
+    "over_abstain": 7,
+    "wrong_answer": 2
+   },
+   "expired": {
+    "correct": 28,
+    "wrong_answer": 1
+   },
+   "multi": {
+    "correct": 45,
+    "wrong_answer": 9
+   },
+   "date": {
+    "wrong_answer": 39,
+    "correct": 4
+   },
+   "simple": {
+    "correct": 35,
+    "wrong_answer": 1
+   },
+   "similar": {
+    "correct": 72
+   },
+   "update": {
+    "wrong_answer": 2,
+    "correct": 34
+   },
+   "abstain": {
+    "correct_abstain": 32,
+    "wrong_answer": 28
+   }
+  }
+ },
+ "hybrid": {
+  "correct": 335,
+  "wrong_answer": 4,
+  "over_abstain": 23,
+  "correct_abstain": 58,
+  "format_fail": 0,
+  "citation_valid_among_correct": [
+   275,
+   335,
+   82.09
+  ],
+  "latency": {
+   "n": 420,
+   "mean": 6.08,
+   "p95": 8.03
+  },
+  "by_klass": {
+   "weak": {
+    "correct": 40,
+    "over_abstain": 12,
+    "wrong_answer": 2
+   },
+   "conflict": {
+    "correct": 35,
+    "over_abstain": 1
+   },
+   "expired": {
+    "correct": 27,
+    "over_abstain": 2
+   },
+   "multi": {
+    "correct": 52,
+    "over_abstain": 2
+   },
+   "date": {
+    "correct": 43
+   },
+   "simple": {
+    "correct": 34,
+    "over_abstain": 2
+   },
+   "similar": {
+    "correct": 72
+   },
+   "update": {
+    "over_abstain": 4,
+    "correct": 32
+   },
+   "abstain": {
+    "correct_abstain": 58,
+    "wrong_answer": 2
+   }
+  }
+ },
+ "hybrid_abstain_by_missing_type": {
+  "entity_absent": {
+   "correct_abstain": 12
+  },
+  "multi_missing_one": {
+   "correct_abstain": 12
+  },
+  "only_near_entity": {
+   "correct_abstain": 12
+  },
+  "only_expired": {
+   "correct_abstain": 12
+  },
+  "attr_missing": {
+   "correct_abstain": 10,
+   "wrong_answer": 2
+  }
+ },
+ "baseline_abstain_by_missing_type": {
+  "entity_absent": {
+   "correct_abstain": 12
+  },
+  "multi_missing_one": {
+   "correct_abstain": 6,
+   "wrong_answer": 6
+  },
+  "only_near_entity": {
+   "correct_abstain": 10,
+   "wrong_answer": 2
+  },
+  "only_expired": {
+   "wrong_answer": 12
+  },
+  "attr_missing": {
+   "correct_abstain": 4,
+   "wrong_answer": 8
+  }
+ },
+ "flips": {
+  "positive": 83,
+  "negative": 10
+ },
+ "det_module_latency_ms": {
+  "n": 103,
+  "mean": 0.03,
+  "p95": 0.04
+ },
+ "assembly_log": [
+  {
+   "qid": "E0001",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0002",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0003",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0004",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-567cc18596c8905a1fe2bc65",
+     "c-af3a708a48d430f7a4621d65",
+     "c-85bbf771c24affce0e2aea0e"
+    ],
+    "operands": [
+     {
+      "record_id": "c-567cc18596c8905a1fe2bc65",
+      "value": 57.0,
+      "person": "Hugo Almeida",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-af3a708a48d430f7a4621d65",
+      "value": 60.0,
+      "person": "Peter Almasi",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-85bbf771c24affce0e2aea0e",
+      "value": 13.0,
+      "person": "Felix Wagner",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "Peter Almasi"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0005",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0006",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0007",
+   "route": "date_gap",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-d9bb5d0d6890b63008ab8379",
+     "c-c2bc80e0b12a55178bdab65a"
+    ],
+    "operands": [
+     {
+      "record_id": "c-d9bb5d0d6890b63008ab8379",
+      "value": "2023-09-18",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-c2bc80e0b12a55178bdab65a",
+      "value": "2024-08-10",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "date_gap_days",
+    "result": "327"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0008",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-ee864422434e6cb757260583",
+     "c-3e09fe5ff3bab74bb30cb5af",
+     "c-56bafcee791c4c4c42f281b6"
+    ],
+    "operands": [
+     {
+      "record_id": "c-ee864422434e6cb757260583",
+      "value": 24.0,
+      "person": "余晚舟",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-3e09fe5ff3bab74bb30cb5af",
+      "value": 18.0,
+      "person": "韩越",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-56bafcee791c4c4c42f281b6",
+      "value": 50.0,
+      "person": "萧未央",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "萧未央"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0009",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0010",
+   "route": "countdown",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-cb44ecac9c62aa2c7a675197"
+    ],
+    "operands": [
+     {
+      "record_id": "c-cb44ecac9c62aa2c7a675197",
+      "value": "2024-08-16",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": null,
+      "value": "2024-08-09",
+      "provenance": "question_date"
+     }
+    ],
+    "operation": "expiry_countdown_days",
+    "result": "7"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0011",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0012",
+   "route": "date_gap",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-598e13711b06e8b5cddd550c",
+     "c-6e4f0801cd5740be09f1c119"
+    ],
+    "operands": [
+     {
+      "record_id": "c-598e13711b06e8b5cddd550c",
+      "value": "2024-12-17",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-6e4f0801cd5740be09f1c119",
+      "value": "2023-12-20",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "date_gap_days",
+    "result": "363"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0013",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0014",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0015",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": {
+    "name": "stale_citation",
+    "reason": "cited record c-ee624d6a371fe33886790ce8 (2023-03-22) is stale: a later same-key record c-49ac81ddf7352a3bce0b7d57 (2023-08-02) exists and was not cited"
+   },
+   "repair": null
+  },
+  {
+   "qid": "E0016",
+   "route": "weekday",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-ea8534b6975d9f0bd0a79a9b"
+    ],
+    "operands": [
+     {
+      "record_id": "c-ea8534b6975d9f0bd0a79a9b",
+      "value": "2025-06-18",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "weekday_of_event_date",
+    "result": "星期三"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0017",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0018",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0019",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0020",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0021",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0022",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0023",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0024",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0025",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0026",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0027",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0028",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-8d512ac90dcd1fe82ef15035",
+     "c-e84418f90bfac191b5ec0b8a",
+     "c-840c1059ea6e631b092c5aea",
+     "c-fd8512124225e439bc2b1a87",
+     "c-e98d4b2ffe6d7fc4b7b981d4"
+    ],
+    "operands": [
+     {
+      "record_id": "c-8d512ac90dcd1fe82ef15035",
+      "value": "2025-08-26",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-e84418f90bfac191b5ec0b8a",
+      "value": "2025-12-13",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-840c1059ea6e631b092c5aea",
+      "value": "2025-07-27",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-fd8512124225e439bc2b1a87",
+      "value": "2025-06-27",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-e98d4b2ffe6d7fc4b7b981d4",
+      "value": "2025-09-26",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "5"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0029",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0030",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0031",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0032",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0033",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0034",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-fdb390915620c811d5e93d99",
+     "c-9c1d132d29bdb58827438fc9",
+     "c-8d71f364deb867cb6e698ba4"
+    ],
+    "operands": [
+     {
+      "record_id": "c-fdb390915620c811d5e93d99",
+      "value": 4,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-9c1d132d29bdb58827438fc9",
+      "value": 3,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-8d71f364deb867cb6e698ba4",
+      "value": 3,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "10"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0035",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "refused",
+   "reason_code": "insufficient_operands",
+   "receipt": null,
+   "reader_qtype": "count",
+   "operands_completed": {
+    "blocked": "cited records do not share one (person, scope, predicate) key"
+   },
+   "bound_refusal": true,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0036",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-b95fd95343480aa1d5cfd075",
+     "c-df1ad0de940f0b7c985e5107",
+     "c-9f2fb5556c0538ae7d1ba6f3",
+     "c-20b7b830278a86211ca8b198"
+    ],
+    "operands": [
+     {
+      "record_id": "c-b95fd95343480aa1d5cfd075",
+      "value": "2025-11-19",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-df1ad0de940f0b7c985e5107",
+      "value": "2025-09-16",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-9f2fb5556c0538ae7d1ba6f3",
+      "value": "2025-12-11",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-20b7b830278a86211ca8b198",
+      "value": "2025-06-27",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "4"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0037",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0038",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-f09620b1df0bab7cbfe6867b",
+     "c-911a51d557243f4f2925fc23",
+     "c-1004e470b939443e4c4c9a14"
+    ],
+    "operands": [
+     {
+      "record_id": "c-f09620b1df0bab7cbfe6867b",
+      "value": 5,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-911a51d557243f4f2925fc23",
+      "value": 2,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-1004e470b939443e4c4c9a14",
+      "value": 4,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "11"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0039",
+   "route": "nth_date",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-1afa9cda9af8cc39813c0978",
+     "c-4218f2f809ad20c850692d89",
+     "c-36d2b5c03acbbdf192529ef8",
+     "c-fc5d9605aa4637e82d595455"
+    ],
+    "operands": [
+     {
+      "record_id": "c-1afa9cda9af8cc39813c0978",
+      "value": "2023-11-17",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-4218f2f809ad20c850692d89",
+      "value": "2023-12-31",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-36d2b5c03acbbdf192529ef8",
+      "value": "2024-03-02",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-fc5d9605aa4637e82d595455",
+      "value": "2024-09-12",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "nth_occurrence_date(n=2)",
+    "result": "2023-12-31"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": {
+    "key": [
+     "贺兰庭",
+     "园艺修剪",
+     "活动日期"
+    ],
+    "n_cited": 1,
+    "n_completed": 4,
+    "added": [
+     {
+      "id": "c-1afa9cda9af8cc39813c0978",
+      "reason": "series match: person=贺兰庭 scope=园艺修剪 predicate=活动日期"
+     },
+     {
+      "id": "c-36d2b5c03acbbdf192529ef8",
+      "reason": "series match: person=贺兰庭 scope=园艺修剪 predicate=活动日期"
+     },
+     {
+      "id": "c-4218f2f809ad20c850692d89",
+      "reason": "series match: person=贺兰庭 scope=园艺修剪 predicate=活动日期"
+     }
+    ],
+    "deduped": []
+   },
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0040",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-d38396f655731ee65db989d5",
+     "c-c3d4ac82b31d7516f2fd0365",
+     "c-9dd1af0809e7920aac88a236"
+    ],
+    "operands": [
+     {
+      "record_id": "c-d38396f655731ee65db989d5",
+      "value": 3,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-c3d4ac82b31d7516f2fd0365",
+      "value": 3,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-9dd1af0809e7920aac88a236",
+      "value": 4,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "10"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0041",
+   "route": "weekday",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-2e8066508a534cdc6dc88d27"
+    ],
+    "operands": [
+     {
+      "record_id": "c-2e8066508a534cdc6dc88d27",
+      "value": "2025-04-12",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "weekday_of_event_date",
+    "result": "Saturday"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0042",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0043",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0044",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0045",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0046",
+   "route": "date_gap",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-c4bc9f5cf5fe8f2efb0c14c0",
+     "c-b43c98086a37ec34428fe468"
+    ],
+    "operands": [
+     {
+      "record_id": "c-c4bc9f5cf5fe8f2efb0c14c0",
+      "value": "2023-11-03",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-b43c98086a37ec34428fe468",
+      "value": "2024-01-13",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "date_gap_days",
+    "result": "71"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0047",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0048",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0049",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0050",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0051",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0052",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0053",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0054",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0055",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0056",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0057",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0058",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": {
+    "name": "validity_citation",
+    "reason": "answer cites only validity/expiry records, which do not state the asked value"
+   },
+   "repair": null
+  },
+  {
+   "qid": "E0059",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-db13bc0199da5c7a7de9a6b7",
+     "c-5e806a12014bb772b5fea6f9",
+     "c-881ccdef2ecc117f417511db"
+    ],
+    "operands": [
+     {
+      "record_id": "c-db13bc0199da5c7a7de9a6b7",
+      "value": 43.0,
+      "person": "Peter Almasi",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-5e806a12014bb772b5fea6f9",
+      "value": 58.0,
+      "person": "Elena Vasquez",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-881ccdef2ecc117f417511db",
+      "value": 10.0,
+      "person": "Clara Whitfield",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "Elena Vasquez"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0060",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-76420b42cd85e83514e56ade",
+     "c-3409a10950fe7ef4debd875d",
+     "c-ec7c7b57c78b667b53adaa66"
+    ],
+    "operands": [
+     {
+      "record_id": "c-76420b42cd85e83514e56ade",
+      "value": 7,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-3409a10950fe7ef4debd875d",
+      "value": 4,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-ec7c7b57c78b667b53adaa66",
+      "value": 8,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "19"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0061",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0062",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0063",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0064",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0065",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0066",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0067",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": {
+    "name": "hop_owner",
+    "reason": "question resolves to 罗一苇 via the role record, but the cited records are about ['白翎']"
+   },
+   "repair": null
+  },
+  {
+   "qid": "E0068",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0069",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0070",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0071",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-efea75be62b2d98c4bd40395",
+     "c-6b77cf45d195ae7ed5ffc1b7",
+     "c-86f21840c9786bb24751db2b",
+     "c-2449bc03ae4a675eb627a8f1",
+     "c-85ec2df3dbd7854330de76bc"
+    ],
+    "operands": [
+     {
+      "record_id": "c-efea75be62b2d98c4bd40395",
+      "value": 2,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-6b77cf45d195ae7ed5ffc1b7",
+      "value": 7,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-86f21840c9786bb24751db2b",
+      "value": 9,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-2449bc03ae4a675eb627a8f1",
+      "value": 4,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-85ec2df3dbd7854330de76bc",
+      "value": 2,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "24"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0072",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0073",
+   "route": "nth_date",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-741de6ddb1a945d1530885e6",
+     "c-d99c7ea15c8f0a6243110589",
+     "c-3be4b2bc85119a91c816af96",
+     "c-2120dc77a1692339ce79b096"
+    ],
+    "operands": [
+     {
+      "record_id": "c-741de6ddb1a945d1530885e6",
+      "value": "2023-09-27",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-d99c7ea15c8f0a6243110589",
+      "value": "2023-12-01",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-3be4b2bc85119a91c816af96",
+      "value": "2024-03-17",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-2120dc77a1692339ce79b096",
+      "value": "2024-03-25",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "nth_occurrence_date(n=2)",
+    "result": "2023-12-01"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": {
+    "key": [
+     "贺兰庭",
+     "园艺修剪",
+     "活动日期"
+    ],
+    "n_cited": 1,
+    "n_completed": 4,
+    "added": [
+     {
+      "id": "c-741de6ddb1a945d1530885e6",
+      "reason": "series match: person=贺兰庭 scope=园艺修剪 predicate=活动日期"
+     },
+     {
+      "id": "c-3be4b2bc85119a91c816af96",
+      "reason": "series match: person=贺兰庭 scope=园艺修剪 predicate=活动日期"
+     },
+     {
+      "id": "c-d99c7ea15c8f0a6243110589",
+      "reason": "series match: person=贺兰庭 scope=园艺修剪 predicate=活动日期"
+     }
+    ],
+    "deduped": []
+   },
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0074",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0075",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0076",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0077",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0078",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0079",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0080",
+   "route": "nth_date",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-5802b1a2140eabfe78ee028a",
+     "c-16722b9aab946f9e39a0510b",
+     "c-a241f2bfbd2b594d9e15fcf4",
+     "c-c2d092319d2206f074115b52"
+    ],
+    "operands": [
+     {
+      "record_id": "c-5802b1a2140eabfe78ee028a",
+      "value": "2023-01-08",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-16722b9aab946f9e39a0510b",
+      "value": "2023-03-29",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-a241f2bfbd2b594d9e15fcf4",
+      "value": "2023-04-05",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-c2d092319d2206f074115b52",
+      "value": "2023-06-04",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "nth_occurrence_date(n=3)",
+    "result": "2023-04-05"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": {
+    "key": [
+     "袁山月",
+     "摄影采风",
+     "活动日期"
+    ],
+    "n_cited": 1,
+    "n_completed": 4,
+    "added": [
+     {
+      "id": "c-a241f2bfbd2b594d9e15fcf4",
+      "reason": "series match: person=袁山月 scope=摄影采风 predicate=活动日期"
+     },
+     {
+      "id": "c-5802b1a2140eabfe78ee028a",
+      "reason": "series match: person=袁山月 scope=摄影采风 predicate=活动日期"
+     },
+     {
+      "id": "c-16722b9aab946f9e39a0510b",
+      "reason": "series match: person=袁山月 scope=摄影采风 predicate=活动日期"
+     }
+    ],
+    "deduped": []
+   },
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0081",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0082",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0083",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0084",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": {
+    "name": "hop_owner",
+    "reason": "question resolves to 金泽宇 via the role record, but the cited records are about ['韩越']"
+   },
+   "repair": null
+  },
+  {
+   "qid": "E0085",
+   "route": "date_gap",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-755dd90e770e46d725ca6d23",
+     "c-749d30b1b69e6812231a796e"
+    ],
+    "operands": [
+     {
+      "record_id": "c-755dd90e770e46d725ca6d23",
+      "value": "2023-06-21",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-749d30b1b69e6812231a796e",
+      "value": "2024-04-18",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "date_gap_days",
+    "result": "302"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0086",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0087",
+   "route": "countdown",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-7cead3a4d450a990b4a51d0b"
+    ],
+    "operands": [
+     {
+      "record_id": "c-7cead3a4d450a990b4a51d0b",
+      "value": "2024-09-02",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": null,
+      "value": "2024-07-24",
+      "provenance": "question_date"
+     }
+    ],
+    "operation": "expiry_countdown_days",
+    "result": "40"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0088",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0089",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0090",
+   "route": "countdown",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-657627232f27c9ca4bf2f180"
+    ],
+    "operands": [
+     {
+      "record_id": "c-657627232f27c9ca4bf2f180",
+      "value": "2024-08-16",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": null,
+      "value": "2024-08-03",
+      "provenance": "question_date"
+     }
+    ],
+    "operation": "expiry_countdown_days",
+    "result": "13"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0091",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0092",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0093",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0094",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0095",
+   "route": "countdown",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-8b726a6fca3d0748e4507fd7"
+    ],
+    "operands": [
+     {
+      "record_id": "c-8b726a6fca3d0748e4507fd7",
+      "value": "2025-04-03",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": null,
+      "value": "2025-02-26",
+      "provenance": "question_date"
+     }
+    ],
+    "operation": "expiry_countdown_days",
+    "result": "36"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0096",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0097",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0098",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0099",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0100",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0101",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0102",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0103",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0104",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0105",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0106",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0107",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0108",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0109",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-0191aa4d8eb968feb1cd0e80",
+     "c-83205954751a25a8efe2d224",
+     "c-f026460f097527050276fd3a"
+    ],
+    "operands": [
+     {
+      "record_id": "c-0191aa4d8eb968feb1cd0e80",
+      "value": 3,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-83205954751a25a8efe2d224",
+      "value": 4,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-f026460f097527050276fd3a",
+      "value": 4,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "11"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0110",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0111",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0112",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-3492421ab24a534bdc3e4dbe",
+     "c-98aadf9c4a6d1e93b6ca7ce8",
+     "c-a693e790b86eab7e9206d022"
+    ],
+    "operands": [
+     {
+      "record_id": "c-3492421ab24a534bdc3e4dbe",
+      "value": 46.0,
+      "person": "熊慕云",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-98aadf9c4a6d1e93b6ca7ce8",
+      "value": 10.0,
+      "person": "谢临风",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-a693e790b86eab7e9206d022",
+      "value": 40.0,
+      "person": "廖星回",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "熊慕云"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0113",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0114",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-f5380c9d7ecb2513546ef0f9",
+     "c-d0c05fbb0b1b3c7a09574ba9",
+     "c-958196ad5da971cb80928b09",
+     "c-9a2fa16ff0a18fb3f92438b5",
+     "c-0d2ed69ed28809304d424e27"
+    ],
+    "operands": [
+     {
+      "record_id": "c-f5380c9d7ecb2513546ef0f9",
+      "value": "2024-01-08",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-d0c05fbb0b1b3c7a09574ba9",
+      "value": "2024-04-04",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-958196ad5da971cb80928b09",
+      "value": "2024-03-08",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-9a2fa16ff0a18fb3f92438b5",
+      "value": "2024-01-23",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-0d2ed69ed28809304d424e27",
+      "value": "2023-11-26",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "5"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0115",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0116",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0117",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0118",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0119",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0120",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0121",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0122",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0123",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0124",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0125",
+   "route": "date_gap",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-ef9681ee3bf4da69726f7b17",
+     "c-43f7b0a07c40e78b7361019d"
+    ],
+    "operands": [
+     {
+      "record_id": "c-ef9681ee3bf4da69726f7b17",
+      "value": "2023-09-05",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-43f7b0a07c40e78b7361019d",
+      "value": "2024-12-14",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "date_gap_days",
+    "result": "466"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0126",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": {
+    "name": "validity_citation",
+    "reason": "answer cites only validity/expiry records, which do not state the asked value"
+   },
+   "repair": null
+  },
+  {
+   "qid": "E0127",
+   "route": "countdown",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-5f04c6fbec83c68fa0bcb742"
+    ],
+    "operands": [
+     {
+      "record_id": "c-5f04c6fbec83c68fa0bcb742",
+      "value": "2024-06-06",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": null,
+      "value": "2024-05-13",
+      "provenance": "question_date"
+     }
+    ],
+    "operation": "expiry_countdown_days",
+    "result": "24"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0128",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0129",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": {
+    "name": "attribute",
+    "reason": "question asks loc_item, but cited records state ['buyplace']"
+   },
+   "repair": null
+  },
+  {
+   "qid": "E0130",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0131",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0132",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0133",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0134",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-388f81c38bce6b2c1abe7503",
+     "c-4f8d8e5978318e10a8952639",
+     "c-efd614cad17b749cc63fbb86"
+    ],
+    "operands": [
+     {
+      "record_id": "c-388f81c38bce6b2c1abe7503",
+      "value": "2023-10-23",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-4f8d8e5978318e10a8952639",
+      "value": "2023-12-12",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-efd614cad17b749cc63fbb86",
+      "value": "2023-08-28",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "3"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0135",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0136",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-5d8374295b85becca4fb8c34",
+     "c-585c21fa94a35a53037405eb",
+     "c-ec85156faf22e93c781ee3e5",
+     "c-14c072918487985ede5e838a"
+    ],
+    "operands": [
+     {
+      "record_id": "c-5d8374295b85becca4fb8c34",
+      "value": "2025-06-21",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-585c21fa94a35a53037405eb",
+      "value": "2025-12-21",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-ec85156faf22e93c781ee3e5",
+      "value": "2025-09-11",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-14c072918487985ede5e838a",
+      "value": "2025-11-04",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "4"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0137",
+   "route": "weekday",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-9f2845b47d0a884232473885"
+    ],
+    "operands": [
+     {
+      "record_id": "c-9f2845b47d0a884232473885",
+      "value": "2023-06-03",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "weekday_of_event_date",
+    "result": "星期六"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0138",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-6e29225f891addf261993611",
+     "c-48ab8b79699e9337d1ed26c9",
+     "c-5958a1ec1423e24f259f42e2",
+     "c-eb8c00114b50ada1a0dea6ac",
+     "c-e428c4add6ca08588fd32393"
+    ],
+    "operands": [
+     {
+      "record_id": "c-6e29225f891addf261993611",
+      "value": "2024-02-25",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-48ab8b79699e9337d1ed26c9",
+      "value": "2023-11-09",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-5958a1ec1423e24f259f42e2",
+      "value": "2024-03-25",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-eb8c00114b50ada1a0dea6ac",
+      "value": "2023-09-08",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-e428c4add6ca08588fd32393",
+      "value": "2024-02-06",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "5"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0139",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0140",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0141",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0142",
+   "route": "date_gap",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-2ae85c4d8fb161dd91d00d57",
+     "c-7bd56435285ff16bd7819e1a"
+    ],
+    "operands": [
+     {
+      "record_id": "c-2ae85c4d8fb161dd91d00d57",
+      "value": "2024-04-07",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-7bd56435285ff16bd7819e1a",
+      "value": "2024-08-09",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "date_gap_days",
+    "result": "124"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0143",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0144",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0145",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0146",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "refused",
+   "reason_code": "insufficient_operands",
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": true,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0147",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0148",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0149",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0150",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0151",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0152",
+   "route": "weekday",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-23f5a19fdbf71ccfff96f93d"
+    ],
+    "operands": [
+     {
+      "record_id": "c-23f5a19fdbf71ccfff96f93d",
+      "value": "2025-06-22",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "weekday_of_event_date",
+    "result": "Sunday"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0153",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": {
+    "name": "stale_citation",
+    "reason": "cited record c-89f9fd46cc687c919116553f (2023-10-28) is stale: a later same-key record c-c31eb8c9333d68e35c3e1505 (2024-03-21) exists and was not cited"
+   },
+   "repair": null
+  },
+  {
+   "qid": "E0154",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0155",
+   "route": "weekday",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-153c93421f31e7af30c3cfbe"
+    ],
+    "operands": [
+     {
+      "record_id": "c-153c93421f31e7af30c3cfbe",
+      "value": "2025-03-21",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "weekday_of_event_date",
+    "result": "Friday"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0156",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0157",
+   "route": "nth_date",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-91b32773f56c0f669dbe7b0a",
+     "c-ebee73f4a5056033d6608271",
+     "c-e243351675b9b66729831ada",
+     "c-1267729b8dd36702326aff06"
+    ],
+    "operands": [
+     {
+      "record_id": "c-91b32773f56c0f669dbe7b0a",
+      "value": "2024-06-16",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-ebee73f4a5056033d6608271",
+      "value": "2024-07-31",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-e243351675b9b66729831ada",
+      "value": "2024-09-22",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-1267729b8dd36702326aff06",
+      "value": "2025-02-17",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "nth_occurrence_date(n=2)",
+    "result": "2024-07-31"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": {
+    "key": [
+     "Clara Whitfield",
+     "cycling drill",
+     "activity date"
+    ],
+    "n_cited": 1,
+    "n_completed": 4,
+    "added": [
+     {
+      "id": "c-e243351675b9b66729831ada",
+      "reason": "series match: person=Clara Whitfield scope=cycling drill predicate=activity date"
+     },
+     {
+      "id": "c-91b32773f56c0f669dbe7b0a",
+      "reason": "series match: person=Clara Whitfield scope=cycling drill predicate=activity date"
+     },
+     {
+      "id": "c-ebee73f4a5056033d6608271",
+      "reason": "series match: person=Clara Whitfield scope=cycling drill predicate=activity date"
+     }
+    ],
+    "deduped": []
+   },
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0158",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0159",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0160",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0161",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0162",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0163",
+   "route": "weekday",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-8f693008e297cc607db442d8"
+    ],
+    "operands": [
+     {
+      "record_id": "c-8f693008e297cc607db442d8",
+      "value": "2023-10-24",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "weekday_of_event_date",
+    "result": "星期二"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0164",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0165",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0166",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-6d62d132db2ce518f1ba9d14",
+     "c-3ecdd5165368f5017305b9d1",
+     "c-5dcd0d407f022647a68e9763",
+     "c-a9029213055dd4bd21d95d39"
+    ],
+    "operands": [
+     {
+      "record_id": "c-6d62d132db2ce518f1ba9d14",
+      "value": 4,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-3ecdd5165368f5017305b9d1",
+      "value": 3,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-5dcd0d407f022647a68e9763",
+      "value": 4,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-a9029213055dd4bd21d95d39",
+      "value": 2,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "13"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0167",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0168",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-e7cb48df21ec26bd2e4f93d2",
+     "c-1d77af6d7d2090ecd3d58997",
+     "c-1299c726006f03b6ebd38112"
+    ],
+    "operands": [
+     {
+      "record_id": "c-e7cb48df21ec26bd2e4f93d2",
+      "value": 20.0,
+      "person": "Marcus Thorne",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-1d77af6d7d2090ecd3d58997",
+      "value": 38.0,
+      "person": "Oliver Stamm",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-1299c726006f03b6ebd38112",
+      "value": 28.0,
+      "person": "Priya Raman",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "Oliver Stamm"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0169",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0170",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-4602fc948350f0516b8c0352",
+     "c-c33cca7a6eeadf8fa32428e8",
+     "c-3a4dcb3ed706bf4c99e50cc7"
+    ],
+    "operands": [
+     {
+      "record_id": "c-4602fc948350f0516b8c0352",
+      "value": 34.0,
+      "person": "Marcus Thorne",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-c33cca7a6eeadf8fa32428e8",
+      "value": 55.0,
+      "person": "Vera Ziegler",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-3a4dcb3ed706bf4c99e50cc7",
+      "value": 9.0,
+      "person": "Hugo Almeida",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "Vera Ziegler"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0171",
+   "route": "date_gap",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-af66de11fb9499e919d3d804",
+     "c-2f342f307826c882b5acebc4"
+    ],
+    "operands": [
+     {
+      "record_id": "c-af66de11fb9499e919d3d804",
+      "value": "2023-03-24",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-2f342f307826c882b5acebc4",
+      "value": "2025-06-12",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "date_gap_days",
+    "result": "811"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0172",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0173",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0174",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": {
+    "name": "attribute",
+    "reason": "question asks loc_item, but cited records state ['buyplace']"
+   },
+   "repair": null
+  },
+  {
+   "qid": "E0175",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0176",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0177",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-a1e7260d2d49217af386ad01",
+     "c-0b4f2f9b06e1a3e645bda714",
+     "c-a77d80cfeea8a1113477dd0b",
+     "c-0e8c11688d6cbd4bfe4d84ee"
+    ],
+    "operands": [
+     {
+      "record_id": "c-a1e7260d2d49217af386ad01",
+      "value": 7,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-0b4f2f9b06e1a3e645bda714",
+      "value": 7,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-a77d80cfeea8a1113477dd0b",
+      "value": 7,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-0e8c11688d6cbd4bfe4d84ee",
+      "value": 1,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "22"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0178",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0179",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0180",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0181",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0182",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0183",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0184",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-47a85c6c58c30e4c97e51988",
+     "c-66d98c5645e010ac707d0abe",
+     "c-55845769988c6fddf38bc777",
+     "c-9b50979983894fe6b8b08978"
+    ],
+    "operands": [
+     {
+      "record_id": "c-47a85c6c58c30e4c97e51988",
+      "value": 8,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-66d98c5645e010ac707d0abe",
+      "value": 6,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-55845769988c6fddf38bc777",
+      "value": 3,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-9b50979983894fe6b8b08978",
+      "value": 5,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "22"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0185",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0186",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-a74991bd308c952f36436d60",
+     "c-0a234894fc5afcccc59db064",
+     "c-1cdf1020ea127afac4e325f5"
+    ],
+    "operands": [
+     {
+      "record_id": "c-a74991bd308c952f36436d60",
+      "value": 17.0,
+      "person": "蒋梦蝶",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-0a234894fc5afcccc59db064",
+      "value": 6.0,
+      "person": "白翎",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-1cdf1020ea127afac4e325f5",
+      "value": 11.0,
+      "person": "曹归晚",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "蒋梦蝶"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0187",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0188",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0189",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0190",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0191",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0192",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0193",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0194",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0195",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0196",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0197",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-42e9af197466a3b8e0aca6ba",
+     "c-3fb3c914026c2409770d8aa1",
+     "c-b91d00fc6d0c7cf3381c8e36",
+     "c-acafad2a8e93cc0c9869aa03"
+    ],
+    "operands": [
+     {
+      "record_id": "c-42e9af197466a3b8e0aca6ba",
+      "value": "2025-08-20",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-3fb3c914026c2409770d8aa1",
+      "value": "2025-05-27",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-b91d00fc6d0c7cf3381c8e36",
+      "value": "2025-04-25",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-acafad2a8e93cc0c9869aa03",
+      "value": "2025-06-23",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "4"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0198",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0199",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0200",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0201",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0202",
+   "route": "countdown",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-cde0c11413d86bc22fdc83a5"
+    ],
+    "operands": [
+     {
+      "record_id": "c-cde0c11413d86bc22fdc83a5",
+      "value": "2024-12-25",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": null,
+      "value": "2024-10-28",
+      "provenance": "question_date"
+     }
+    ],
+    "operation": "expiry_countdown_days",
+    "result": "58"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0203",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0204",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0205",
+   "route": "nth_date",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-b92ec3e9f90712aaa38e9622",
+     "c-519873bcc18686647c7780f2",
+     "c-7455ea1c5f2fe33a637522ff",
+     "c-a9bba3e4609a9f906bb4e3d0"
+    ],
+    "operands": [
+     {
+      "record_id": "c-b92ec3e9f90712aaa38e9622",
+      "value": "2023-12-15",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-519873bcc18686647c7780f2",
+      "value": "2024-02-11",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-7455ea1c5f2fe33a637522ff",
+      "value": "2024-04-05",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-a9bba3e4609a9f906bb4e3d0",
+      "value": "2024-11-12",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "nth_occurrence_date(n=3)",
+    "result": "2024-04-05"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": {
+    "key": [
+     "蔡文茵",
+     "陶艺体验",
+     "活动日期"
+    ],
+    "n_cited": 1,
+    "n_completed": 4,
+    "added": [
+     {
+      "id": "c-519873bcc18686647c7780f2",
+      "reason": "series match: person=蔡文茵 scope=陶艺体验 predicate=活动日期"
+     },
+     {
+      "id": "c-7455ea1c5f2fe33a637522ff",
+      "reason": "series match: person=蔡文茵 scope=陶艺体验 predicate=活动日期"
+     },
+     {
+      "id": "c-b92ec3e9f90712aaa38e9622",
+      "reason": "series match: person=蔡文茵 scope=陶艺体验 predicate=活动日期"
+     }
+    ],
+    "deduped": []
+   },
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0206",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-24df2609d40273eb7ab9a66c",
+     "c-f45bc028e5d599d61425e564",
+     "c-9d31ede837f467f68b04d943"
+    ],
+    "operands": [
+     {
+      "record_id": "c-24df2609d40273eb7ab9a66c",
+      "value": 3,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-f45bc028e5d599d61425e564",
+      "value": 3,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-9d31ede837f467f68b04d943",
+      "value": 2,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "8"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0207",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0208",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0209",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0210",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0211",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0212",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0213",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0214",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0215",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0216",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0217",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0218",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": {
+    "name": "attribute",
+    "reason": "question asks loc_item, but cited records state ['buyplace']"
+   },
+   "repair": null
+  },
+  {
+   "qid": "E0219",
+   "route": "nth_date",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-aeb8c3bff228ff1e7c74e30a",
+     "c-7a25d3b5ddfea905d64fdf79",
+     "c-63b5fcbd2c47d9c4c3cc07b7",
+     "c-a0bdff01df1bb7383009a55d"
+    ],
+    "operands": [
+     {
+      "record_id": "c-aeb8c3bff228ff1e7c74e30a",
+      "value": "2024-06-24",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-7a25d3b5ddfea905d64fdf79",
+      "value": "2024-08-05",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-63b5fcbd2c47d9c4c3cc07b7",
+      "value": "2024-09-21",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-a0bdff01df1bb7383009a55d",
+      "value": "2025-02-04",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "nth_occurrence_date(n=3)",
+    "result": "2024-09-21"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": {
+    "key": [
+     "Dmitri Kovac",
+     "swim check-in",
+     "activity date"
+    ],
+    "n_cited": 1,
+    "n_completed": 4,
+    "added": [
+     {
+      "id": "c-63b5fcbd2c47d9c4c3cc07b7",
+      "reason": "series match: person=Dmitri Kovac scope=swim check-in predicate=activity date"
+     },
+     {
+      "id": "c-7a25d3b5ddfea905d64fdf79",
+      "reason": "series match: person=Dmitri Kovac scope=swim check-in predicate=activity date"
+     },
+     {
+      "id": "c-aeb8c3bff228ff1e7c74e30a",
+      "reason": "series match: person=Dmitri Kovac scope=swim check-in predicate=activity date"
+     }
+    ],
+    "deduped": []
+   },
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0220",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0221",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0222",
+   "route": "nth_date",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-4e48a29dfa72a081164d280f",
+     "c-21ad352dec50ff5af56971ea",
+     "c-0dec70deb6f0e4349350a786",
+     "c-d2fc33c75fe5ace9782721ef"
+    ],
+    "operands": [
+     {
+      "record_id": "c-4e48a29dfa72a081164d280f",
+      "value": "2023-03-26",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-21ad352dec50ff5af56971ea",
+      "value": "2023-06-27",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-0dec70deb6f0e4349350a786",
+      "value": "2023-06-28",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-d2fc33c75fe5ace9782721ef",
+      "value": "2023-07-08",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "nth_occurrence_date(n=3)",
+    "result": "2023-06-28"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": {
+    "key": [
+     "邓青禾",
+     "书法临帖",
+     "活动日期"
+    ],
+    "n_cited": 1,
+    "n_completed": 4,
+    "added": [
+     {
+      "id": "c-21ad352dec50ff5af56971ea",
+      "reason": "series match: person=邓青禾 scope=书法临帖 predicate=活动日期"
+     },
+     {
+      "id": "c-4e48a29dfa72a081164d280f",
+      "reason": "series match: person=邓青禾 scope=书法临帖 predicate=活动日期"
+     },
+     {
+      "id": "c-0dec70deb6f0e4349350a786",
+      "reason": "series match: person=邓青禾 scope=书法临帖 predicate=活动日期"
+     }
+    ],
+    "deduped": []
+   },
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0223",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0224",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0225",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0226",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "refused",
+   "reason_code": "insufficient_operands",
+   "receipt": null,
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": true,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0227",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-ac06ba5241e4da7b92615680",
+     "c-96be0792e32e830f33d26ecd",
+     "c-b94859ab01c90d5ec8645003"
+    ],
+    "operands": [
+     {
+      "record_id": "c-ac06ba5241e4da7b92615680",
+      "value": 5.0,
+      "person": "罗一苇",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-96be0792e32e830f33d26ecd",
+      "value": 18.0,
+      "person": "蒋梦蝶",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-b94859ab01c90d5ec8645003",
+      "value": 33.0,
+      "person": "谢临风",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "谢临风"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0228",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0229",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0230",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0231",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0232",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0233",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-ca79b7183d3e988e9aa5e0d7",
+     "c-7c2a7fc30f26890e00a26734",
+     "c-63e9bba58a72b8a531f4d316",
+     "c-7840b44c165719556d9bc032"
+    ],
+    "operands": [
+     {
+      "record_id": "c-ca79b7183d3e988e9aa5e0d7",
+      "value": "2025-02-14",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-7c2a7fc30f26890e00a26734",
+      "value": "2025-08-10",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-63e9bba58a72b8a531f4d316",
+      "value": "2025-04-07",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-7840b44c165719556d9bc032",
+      "value": "2025-06-08",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "4"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0234",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": {
+    "name": "identifier_extraction",
+    "replace": "BC-3367",
+    "from_record": "c-8c47c1e77434a32c27c16516",
+    "reason": "reader answered a bare integer; the cited record c-8c47c1e77434a32c27c16516 states exactly one identifier (BC-3367) for the person named in the question"
+   }
+  },
+  {
+   "qid": "E0235",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0236",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0237",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0238",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0239",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0240",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0241",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": {
+    "name": "attribute",
+    "reason": "question asks loc_item, but cited records state ['buyplace']"
+   },
+   "repair": null
+  },
+  {
+   "qid": "E0242",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": {
+    "name": "attribute",
+    "reason": "question asks loc_item, but cited records state ['buyplace']"
+   },
+   "repair": null
+  },
+  {
+   "qid": "E0243",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0244",
+   "route": "nth_date",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-0650a84ba3666b1dc9cfb79b",
+     "c-8411a9f17e06eecff950e071",
+     "c-f5d16c888000d04ee409dec2",
+     "c-c8e22fbecf75146c7907cb76"
+    ],
+    "operands": [
+     {
+      "record_id": "c-0650a84ba3666b1dc9cfb79b",
+      "value": "2024-02-16",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-8411a9f17e06eecff950e071",
+      "value": "2024-03-27",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-f5d16c888000d04ee409dec2",
+      "value": "2024-08-30",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-c8e22fbecf75146c7907cb76",
+      "value": "2025-01-11",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "nth_occurrence_date(n=3)",
+    "result": "2024-08-30"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": {
+    "key": [
+     "Sofia Marchetti",
+     "pottery session",
+     "activity date"
+    ],
+    "n_cited": 1,
+    "n_completed": 4,
+    "added": [
+     {
+      "id": "c-0650a84ba3666b1dc9cfb79b",
+      "reason": "series match: person=Sofia Marchetti scope=pottery session predicate=activity date"
+     },
+     {
+      "id": "c-f5d16c888000d04ee409dec2",
+      "reason": "series match: person=Sofia Marchetti scope=pottery session predicate=activity date"
+     },
+     {
+      "id": "c-8411a9f17e06eecff950e071",
+      "reason": "series match: person=Sofia Marchetti scope=pottery session predicate=activity date"
+     }
+    ],
+    "deduped": []
+   },
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0245",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-9191f80885ebaef4c3ee0c81",
+     "c-52c73442466fad575c303afd",
+     "c-98734282e6f83bffdc7a9230"
+    ],
+    "operands": [
+     {
+      "record_id": "c-9191f80885ebaef4c3ee0c81",
+      "value": 54.0,
+      "person": "Sofia Marchetti",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-52c73442466fad575c303afd",
+      "value": 22.0,
+      "person": "Ingrid Halvorsen",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-98734282e6f83bffdc7a9230",
+      "value": 38.0,
+      "person": "Greta Nilsen",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "Sofia Marchetti"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0246",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "refused",
+   "reason_code": "insufficient_operands",
+   "receipt": null,
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": true,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0247",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0248",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "refused",
+   "reason_code": "insufficient_operands",
+   "receipt": null,
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": true,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0249",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0250",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0251",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0252",
+   "route": "date_gap",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-b4dd086fdf0c8ddae3bd3804",
+     "c-3add30befc5648ff790e77b8"
+    ],
+    "operands": [
+     {
+      "record_id": "c-b4dd086fdf0c8ddae3bd3804",
+      "value": "2025-01-14",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-3add30befc5648ff790e77b8",
+      "value": "2024-04-25",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "date_gap_days",
+    "result": "264"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0253",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0254",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-57e295a5306bcbfd1387062e",
+     "c-bef870207561550202549916",
+     "c-863b90a967058cccaef149a2",
+     "c-6fc7a8f1e1461a4d2b48efc8",
+     "c-2720fe8b72f788c18beb814a"
+    ],
+    "operands": [
+     {
+      "record_id": "c-57e295a5306bcbfd1387062e",
+      "value": 6,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-bef870207561550202549916",
+      "value": 3,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-863b90a967058cccaef149a2",
+      "value": 3,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-6fc7a8f1e1461a4d2b48efc8",
+      "value": 5,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-2720fe8b72f788c18beb814a",
+      "value": 1,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "18"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0255",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0256",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0257",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0258",
+   "route": "weekday",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-a8ca3ed86eb999ab788fd50e"
+    ],
+    "operands": [
+     {
+      "record_id": "c-a8ca3ed86eb999ab788fd50e",
+      "value": "2023-04-10",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "weekday_of_event_date",
+    "result": "星期一"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0259",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0260",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0261",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0262",
+   "route": "weekday",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-5f48ae7de1565d427eb9aff3"
+    ],
+    "operands": [
+     {
+      "record_id": "c-5f48ae7de1565d427eb9aff3",
+      "value": "2023-12-06",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "weekday_of_event_date",
+    "result": "星期三"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0263",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0264",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-528adb4e5dd9656168300544",
+     "c-96c77de7affec7f887b43d98",
+     "c-14415adf002748b85f58a084",
+     "c-9f8238412efc242c59cc749f"
+    ],
+    "operands": [
+     {
+      "record_id": "c-528adb4e5dd9656168300544",
+      "value": "2024-08-24",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-96c77de7affec7f887b43d98",
+      "value": "2024-06-02",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-14415adf002748b85f58a084",
+      "value": "2024-03-18",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-9f8238412efc242c59cc749f",
+      "value": "2024-01-09",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "4"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0265",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0266",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0267",
+   "route": "countdown",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-f796144a318dc57a91ee1d7e"
+    ],
+    "operands": [
+     {
+      "record_id": "c-f796144a318dc57a91ee1d7e",
+      "value": "2024-11-22",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": null,
+      "value": "2024-10-03",
+      "provenance": "question_date"
+     }
+    ],
+    "operation": "expiry_countdown_days",
+    "result": "50"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0268",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0269",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": {
+    "name": "identifier_extraction",
+    "replace": "PK-1527",
+    "from_record": "c-eb846999c9552cbba8cb4fa7",
+    "reason": "reader answered a bare integer; the cited record c-eb846999c9552cbba8cb4fa7 states exactly one identifier (PK-1527) for the person named in the question"
+   }
+  },
+  {
+   "qid": "E0270",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-1e984b9c1e658f9b2ae5b86f",
+     "c-2ce8ed6133f079b866cd4878",
+     "c-19f4d14fb8a96d670f7c939b",
+     "c-788e2a2fdc2633a3312b4ea4",
+     "c-766166f3e149e92c01ffe47b"
+    ],
+    "operands": [
+     {
+      "record_id": "c-1e984b9c1e658f9b2ae5b86f",
+      "value": "2025-01-15",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-2ce8ed6133f079b866cd4878",
+      "value": "2024-12-29",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-19f4d14fb8a96d670f7c939b",
+      "value": "2024-10-09",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-788e2a2fdc2633a3312b4ea4",
+      "value": "2025-04-11",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-766166f3e149e92c01ffe47b",
+      "value": "2025-06-27",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "5"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0271",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-7af89d6f1370b727f0950858",
+     "c-680598ac92bc6eebac2762f2",
+     "c-99daec0c0f8ab75a066602ea"
+    ],
+    "operands": [
+     {
+      "record_id": "c-7af89d6f1370b727f0950858",
+      "value": 45.0,
+      "person": "薛采薇",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-680598ac92bc6eebac2762f2",
+      "value": 40.0,
+      "person": "蔡文茵",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-99daec0c0f8ab75a066602ea",
+      "value": 39.0,
+      "person": "谢临风",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "薛采薇"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0272",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0273",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0274",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0275",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-df11b5209b214d36a0b4353e",
+     "c-96ff11fefce8c617074919bb",
+     "c-8378cfde9de4daa03ef631c9",
+     "c-1bb0859edd4c43a8050b5cbc",
+     "c-31be8ffc19aefebc77b6ad9c"
+    ],
+    "operands": [
+     {
+      "record_id": "c-df11b5209b214d36a0b4353e",
+      "value": "2024-03-19",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-96ff11fefce8c617074919bb",
+      "value": "2024-09-13",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-8378cfde9de4daa03ef631c9",
+      "value": "2024-08-02",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-1bb0859edd4c43a8050b5cbc",
+      "value": "2024-05-17",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-31be8ffc19aefebc77b6ad9c",
+      "value": "2024-10-15",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "5"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0276",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0277",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0278",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0279",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "refused",
+   "reason_code": "insufficient_operands",
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": true,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0280",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0281",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0282",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0283",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-e2f21a53af14fa43154a5ffd",
+     "c-cf29aefe813d7e6ea3812461",
+     "c-61231bf766d8573b2c3acec8"
+    ],
+    "operands": [
+     {
+      "record_id": "c-e2f21a53af14fa43154a5ffd",
+      "value": 18.0,
+      "person": "余晚舟",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-cf29aefe813d7e6ea3812461",
+      "value": 10.0,
+      "person": "袁山月",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-61231bf766d8573b2c3acec8",
+      "value": 43.0,
+      "person": "范思远",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "范思远"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0284",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0285",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0286",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-5f90a1a6fa7181c7b4af21b2",
+     "c-165d9e58f69be36146729687",
+     "c-946f5419b5aeadf7a66b0a62",
+     "c-8bf87515b484151653f9b4aa"
+    ],
+    "operands": [
+     {
+      "record_id": "c-5f90a1a6fa7181c7b4af21b2",
+      "value": 9,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-165d9e58f69be36146729687",
+      "value": 5,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-946f5419b5aeadf7a66b0a62",
+      "value": 6,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-8bf87515b484151653f9b4aa",
+      "value": 9,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "29"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0287",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0288",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-93b8f896feb83fcb0ca7557d",
+     "c-3fbcc8d220e061f5d5a9fe03",
+     "c-57281a04e7f63e4ebf4e0f53"
+    ],
+    "operands": [
+     {
+      "record_id": "c-93b8f896feb83fcb0ca7557d",
+      "value": "2024-02-13",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-3fbcc8d220e061f5d5a9fe03",
+      "value": "2024-01-06",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-57281a04e7f63e4ebf4e0f53",
+      "value": "2023-10-11",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "3"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0289",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0290",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0291",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0292",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0293",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0294",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0295",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0296",
+   "route": "countdown",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-1fb6667bd2322092741fc4e6"
+    ],
+    "operands": [
+     {
+      "record_id": "c-1fb6667bd2322092741fc4e6",
+      "value": "2024-06-12",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": null,
+      "value": "2024-05-25",
+      "provenance": "question_date"
+     }
+    ],
+    "operation": "expiry_countdown_days",
+    "result": "18"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0297",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0298",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0299",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0300",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0301",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-6259bdf67824da93e54be393",
+     "c-d618800eccb1ba111ddde075",
+     "c-e44ccdbb53c6c1d4efe47a01",
+     "c-f5e672cbf387e8463a348d1c",
+     "c-207857970ca11c2469fa27fa"
+    ],
+    "operands": [
+     {
+      "record_id": "c-6259bdf67824da93e54be393",
+      "value": 4,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-d618800eccb1ba111ddde075",
+      "value": 3,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-e44ccdbb53c6c1d4efe47a01",
+      "value": 7,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-f5e672cbf387e8463a348d1c",
+      "value": 5,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-207857970ca11c2469fa27fa",
+      "value": 1,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "20"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0302",
+   "route": "date_gap",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-69068243b0963ecb36232ba4",
+     "c-643fc0e5678b4fb8b80cf460"
+    ],
+    "operands": [
+     {
+      "record_id": "c-69068243b0963ecb36232ba4",
+      "value": "2025-01-01",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-643fc0e5678b4fb8b80cf460",
+      "value": "2024-09-06",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "date_gap_days",
+    "result": "117"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0303",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-e262bc4c5d84bac5ba1fef8e",
+     "c-ed8ca50106b0a5b36572a162",
+     "c-c0d0a41a453a59786d95f719"
+    ],
+    "operands": [
+     {
+      "record_id": "c-e262bc4c5d84bac5ba1fef8e",
+      "value": 50.0,
+      "person": "Greta Nilsen",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-ed8ca50106b0a5b36572a162",
+      "value": 10.0,
+      "person": "Felix Wagner",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-c0d0a41a453a59786d95f719",
+      "value": 21.0,
+      "person": "Peter Almasi",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "Greta Nilsen"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0304",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0305",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0306",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0307",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0308",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0309",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0310",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0311",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-2239bcc28cb250380d42dcfa",
+     "c-518be0b07817d127be716afd",
+     "c-bb9efa196e4ae7fcb51b6536",
+     "c-475eba2afa4034a6a3bec052",
+     "c-f3ad811ab01e05d2afa590db"
+    ],
+    "operands": [
+     {
+      "record_id": "c-2239bcc28cb250380d42dcfa",
+      "value": 5,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-518be0b07817d127be716afd",
+      "value": 8,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-bb9efa196e4ae7fcb51b6536",
+      "value": 6,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-475eba2afa4034a6a3bec052",
+      "value": 2,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-f3ad811ab01e05d2afa590db",
+      "value": 7,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "28"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0312",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0313",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0314",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0315",
+   "route": "date_gap",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-56ff412f162ba224faf8b2f1",
+     "c-85fe009473326d34aa87d7c3"
+    ],
+    "operands": [
+     {
+      "record_id": "c-56ff412f162ba224faf8b2f1",
+      "value": "2023-05-09",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-85fe009473326d34aa87d7c3",
+      "value": "2024-07-09",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "date_gap_days",
+    "result": "427"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0316",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0317",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0318",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0319",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0320",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0321",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0322",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0323",
+   "route": "weekday",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-0e42a3bd41ec60c45455a3e7"
+    ],
+    "operands": [
+     {
+      "record_id": "c-0e42a3bd41ec60c45455a3e7",
+      "value": "2023-02-24",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "weekday_of_event_date",
+    "result": "星期五"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0324",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "refused",
+   "reason_code": "insufficient_operands",
+   "receipt": null,
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": true,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0325",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0326",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0327",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0328",
+   "route": "nth_date",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-16d26b0e76acf50eba12554b",
+     "c-ebbe20469153656a08579380",
+     "c-af71d1dae29ebafc46ef759d",
+     "c-c7cdc0153dd0bbdc604b83d7"
+    ],
+    "operands": [
+     {
+      "record_id": "c-16d26b0e76acf50eba12554b",
+      "value": "2023-04-21",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-ebbe20469153656a08579380",
+      "value": "2023-07-18",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-af71d1dae29ebafc46ef759d",
+      "value": "2023-11-09",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-c7cdc0153dd0bbdc604b83d7",
+      "value": "2024-03-19",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "nth_occurrence_date(n=3)",
+    "result": "2023-11-09"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": {
+    "key": [
+     "白翎",
+     "合唱练习",
+     "活动日期"
+    ],
+    "n_cited": 1,
+    "n_completed": 4,
+    "added": [
+     {
+      "id": "c-af71d1dae29ebafc46ef759d",
+      "reason": "series match: person=白翎 scope=合唱练习 predicate=活动日期"
+     },
+     {
+      "id": "c-ebbe20469153656a08579380",
+      "reason": "series match: person=白翎 scope=合唱练习 predicate=活动日期"
+     },
+     {
+      "id": "c-16d26b0e76acf50eba12554b",
+      "reason": "series match: person=白翎 scope=合唱练习 predicate=活动日期"
+     }
+    ],
+    "deduped": []
+   },
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0329",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0330",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0331",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-0f09d8c7e147a84746aa9585",
+     "c-4d72f1b31b6db4e028d7f1e5",
+     "c-41cb6c8500831b5c89b8a2b1",
+     "c-3126542fff8b7076dcaaaa9d",
+     "c-c1f17b5a89f9fa53d2f13211"
+    ],
+    "operands": [
+     {
+      "record_id": "c-0f09d8c7e147a84746aa9585",
+      "value": "2024-05-05",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-4d72f1b31b6db4e028d7f1e5",
+      "value": "2024-06-06",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-41cb6c8500831b5c89b8a2b1",
+      "value": "2024-03-01",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-3126542fff8b7076dcaaaa9d",
+      "value": "2024-04-11",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-c1f17b5a89f9fa53d2f13211",
+      "value": "2024-05-20",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "5"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0332",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-dcb55c7baefb288353e0e84b",
+     "c-56f9a7760f8dc6a6c273faba",
+     "c-2506020e4f43e83b43e89e82"
+    ],
+    "operands": [
+     {
+      "record_id": "c-dcb55c7baefb288353e0e84b",
+      "value": 2,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-56f9a7760f8dc6a6c273faba",
+      "value": 9,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-2506020e4f43e83b43e89e82",
+      "value": 5,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "16"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0333",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0334",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": {
+    "name": "stale_citation",
+    "reason": "cited record c-56e3a0dcdd7e2b4e0062cd09 (2023-06-29) is stale: a later same-key record c-bcdd17d6a3082c88c5bb2934 (2023-09-07) exists and was not cited"
+   },
+   "repair": null
+  },
+  {
+   "qid": "E0335",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-72d5fa45f8302fad026dfccc",
+     "c-421b6ae1c056d3f558580e74",
+     "c-41a21ee21de4fdc009bfeaf2"
+    ],
+    "operands": [
+     {
+      "record_id": "c-72d5fa45f8302fad026dfccc",
+      "value": 26.0,
+      "person": "韩越",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-421b6ae1c056d3f558580e74",
+      "value": 49.0,
+      "person": "石清如",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-41a21ee21de4fdc009bfeaf2",
+      "value": 23.0,
+      "person": "冯抱朴",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "石清如"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0336",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0337",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-75d142feadd8478bdc487b8c",
+     "c-b5c4656700e89bfa09f02cf7",
+     "c-3cca356c6d6aa70b4bc85cbd",
+     "c-71d32d6d1af6159abbd2253d"
+    ],
+    "operands": [
+     {
+      "record_id": "c-75d142feadd8478bdc487b8c",
+      "value": "2024-04-06",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-b5c4656700e89bfa09f02cf7",
+      "value": "2024-03-02",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-3cca356c6d6aa70b4bc85cbd",
+      "value": "2023-12-06",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-71d32d6d1af6159abbd2253d",
+      "value": "2023-10-06",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "4"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0338",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-3500b0a53c0657b6b1faef06",
+     "c-25b34b3c66e152d59717dbd3",
+     "c-fb0aae050a5fd78cce016002"
+    ],
+    "operands": [
+     {
+      "record_id": "c-3500b0a53c0657b6b1faef06",
+      "value": 56.0,
+      "person": "蒋梦蝶",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-25b34b3c66e152d59717dbd3",
+      "value": 39.0,
+      "person": "冯抱朴",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-fb0aae050a5fd78cce016002",
+      "value": 21.0,
+      "person": "薛采薇",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "蒋梦蝶"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0339",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0340",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0341",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0342",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0343",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0344",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0345",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0346",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0347",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0348",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-a0e2f6edcac5ecf3ced89ed9",
+     "c-a3d41c2e0d7fdb3c749b12cd",
+     "c-421cac09290165a5cb4128c1",
+     "c-289ce131a70590a8da16827b",
+     "c-a84129a7092a054448d404e4"
+    ],
+    "operands": [
+     {
+      "record_id": "c-a0e2f6edcac5ecf3ced89ed9",
+      "value": "2023-11-26",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-a3d41c2e0d7fdb3c749b12cd",
+      "value": "2023-10-09",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-421cac09290165a5cb4128c1",
+      "value": "2023-04-25",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-289ce131a70590a8da16827b",
+      "value": "2023-05-22",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-a84129a7092a054448d404e4",
+      "value": "2023-08-05",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "5"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0349",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0350",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-44c39a907c2f86513b9bdad2",
+     "c-37c7e20904df15497f15edaf",
+     "c-e61b1dff10cfed5d7da1f48d"
+    ],
+    "operands": [
+     {
+      "record_id": "c-44c39a907c2f86513b9bdad2",
+      "value": 4,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-37c7e20904df15497f15edaf",
+      "value": 5,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-e61b1dff10cfed5d7da1f48d",
+      "value": 2,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "11"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0351",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-4d482aaa22365400f1e740ff",
+     "c-4b610bfbfe3efa83b293f809",
+     "c-bbba65574a439bc09e6773dd"
+    ],
+    "operands": [
+     {
+      "record_id": "c-4d482aaa22365400f1e740ff",
+      "value": 32.0,
+      "person": "Peter Almasi",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-4b610bfbfe3efa83b293f809",
+      "value": 40.0,
+      "person": "Oliver Stamm",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-bbba65574a439bc09e6773dd",
+      "value": 29.0,
+      "person": "Anders Holm",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "Oliver Stamm"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0352",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0353",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0354",
+   "route": "weekday",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-bd0c74c50e94744847fe50d5"
+    ],
+    "operands": [
+     {
+      "record_id": "c-bd0c74c50e94744847fe50d5",
+      "value": "2023-03-04",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "weekday_of_event_date",
+    "result": "星期六"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0355",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0356",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0357",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0358",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0359",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0360",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-82baf00a1f3837fc15300ce1",
+     "c-2da38e95751f858303a5055e",
+     "c-5da563eb54531abca2924370",
+     "c-e4c422200d346489d5d18b5a"
+    ],
+    "operands": [
+     {
+      "record_id": "c-82baf00a1f3837fc15300ce1",
+      "value": 2,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-2da38e95751f858303a5055e",
+      "value": 2,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-5da563eb54531abca2924370",
+      "value": 6,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-e4c422200d346489d5d18b5a",
+      "value": 5,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "15"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0361",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0362",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-5b0df4de4df4c684c610931a",
+     "c-401ff26653eb1db1ecf2a6f2",
+     "c-27989aa7caa7ca8778381fe9"
+    ],
+    "operands": [
+     {
+      "record_id": "c-5b0df4de4df4c684c610931a",
+      "value": 9.0,
+      "person": "Bruno Keller",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-401ff26653eb1db1ecf2a6f2",
+      "value": 22.0,
+      "person": "Tomas Riedel",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-27989aa7caa7ca8778381fe9",
+      "value": 21.0,
+      "person": "Hugo Almeida",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "Tomas Riedel"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0363",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0364",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0365",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0366",
+   "route": "weekday",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-ee74353e5d32f35d5a33f41d"
+    ],
+    "operands": [
+     {
+      "record_id": "c-ee74353e5d32f35d5a33f41d",
+      "value": "2024-02-25",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "weekday_of_event_date",
+    "result": "Sunday"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0367",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0368",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0369",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0370",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0371",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "refused",
+   "reason_code": "insufficient_operands",
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": true,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0372",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0373",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0374",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-78257699a559ba852cf25f11",
+     "c-903c03da59b3c9905e3a51f9",
+     "c-af5e44a5b662e27da3ea5e3e",
+     "c-f32cac462c666f2f131b9c03",
+     "c-bd84a2d8bb2f1a5c91dd8d9e"
+    ],
+    "operands": [
+     {
+      "record_id": "c-78257699a559ba852cf25f11",
+      "value": "2024-06-18",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-903c03da59b3c9905e3a51f9",
+      "value": "2024-02-15",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-af5e44a5b662e27da3ea5e3e",
+      "value": "2023-10-28",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-f32cac462c666f2f131b9c03",
+      "value": "2024-05-01",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-bd84a2d8bb2f1a5c91dd8d9e",
+      "value": "2023-12-09",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "5"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0375",
+   "route": "countdown",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-dab07d07c19d7e07268758b0"
+    ],
+    "operands": [
+     {
+      "record_id": "c-dab07d07c19d7e07268758b0",
+      "value": "2024-10-09",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": null,
+      "value": "2024-09-05",
+      "provenance": "question_date"
+     }
+    ],
+    "operation": "expiry_countdown_days",
+    "result": "34"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0376",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0377",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0378",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0379",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0380",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0381",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0382",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0383",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0384",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0385",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0386",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": {
+    "name": "identifier_extraction",
+    "replace": "PJ-9287",
+    "from_record": "c-dcea4da88ead18786cdd8f7d",
+    "reason": "reader answered a bare integer; the cited record c-dcea4da88ead18786cdd8f7d states exactly one identifier (PJ-9287) for the person named in the question"
+   }
+  },
+  {
+   "qid": "E0387",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0388",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0389",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0390",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0391",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0392",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0393",
+   "route": "countdown",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-e1584e715cffe80d39c4c4ff"
+    ],
+    "operands": [
+     {
+      "record_id": "c-e1584e715cffe80d39c4c4ff",
+      "value": "2024-06-10",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": null,
+      "value": "2024-05-25",
+      "provenance": "question_date"
+     }
+    ],
+    "operation": "expiry_countdown_days",
+    "result": "16"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0394",
+   "route": "nth_date",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-3a22f08c567fb29432d78d70",
+     "c-58954a61f5da68492b52b710",
+     "c-6b79daf6ded3b9b0b2c95d7a",
+     "c-87fbcdf74deee69190a2bcc1"
+    ],
+    "operands": [
+     {
+      "record_id": "c-3a22f08c567fb29432d78d70",
+      "value": "2023-03-19",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-58954a61f5da68492b52b710",
+      "value": "2023-05-27",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-6b79daf6ded3b9b0b2c95d7a",
+      "value": "2023-06-05",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-87fbcdf74deee69190a2bcc1",
+      "value": "2023-06-11",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "nth_occurrence_date(n=2)",
+    "result": "2023-05-27"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": {
+    "key": [
+     "贺兰庭",
+     "合唱练习",
+     "活动日期"
+    ],
+    "n_cited": 1,
+    "n_completed": 4,
+    "added": [
+     {
+      "id": "c-6b79daf6ded3b9b0b2c95d7a",
+      "reason": "series match: person=贺兰庭 scope=合唱练习 predicate=活动日期"
+     },
+     {
+      "id": "c-58954a61f5da68492b52b710",
+      "reason": "series match: person=贺兰庭 scope=合唱练习 predicate=活动日期"
+     },
+     {
+      "id": "c-3a22f08c567fb29432d78d70",
+      "reason": "series match: person=贺兰庭 scope=合唱练习 predicate=活动日期"
+     }
+    ],
+    "deduped": []
+   },
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0395",
+   "route": "count",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-cac2cfd6576cf1ec97fb7548",
+     "c-9d19c512093d2e8fb3007498",
+     "c-6d3807f1325e5a6aed90f768",
+     "c-1a38350ba8a9f4e8c1aa6c5c"
+    ],
+    "operands": [
+     {
+      "record_id": "c-cac2cfd6576cf1ec97fb7548",
+      "value": "2023-09-07",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-9d19c512093d2e8fb3007498",
+      "value": "2023-08-12",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-6d3807f1325e5a6aed90f768",
+      "value": "2023-04-24",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-1a38350ba8a9f4e8c1aa6c5c",
+      "value": "2023-06-12",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "count_events",
+    "result": "4"
+   },
+   "reader_qtype": "count",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0396",
+   "route": "date_gap",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-c6231be7740ef0df550bc225",
+     "c-e97236d56c07483e5495764c"
+    ],
+    "operands": [
+     {
+      "record_id": "c-c6231be7740ef0df550bc225",
+      "value": "2024-07-21",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-e97236d56c07483e5495764c",
+      "value": "2023-08-05",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "date_gap_days",
+    "result": "351"
+   },
+   "reader_qtype": "date_gap",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0397",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0398",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0399",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0400",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": {
+    "name": "validity_citation",
+    "reason": "answer cites only validity/expiry records, which do not state the asked value"
+   },
+   "repair": null
+  },
+  {
+   "qid": "E0401",
+   "route": "sum",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-21961be7e3e6c4ab03b0a08c",
+     "c-fbfa762553bdfa3ba1a2d10f",
+     "c-77b955b2260c35485c7fc896",
+     "c-783766dba30210aafc0e7401"
+    ],
+    "operands": [
+     {
+      "record_id": "c-21961be7e3e6c4ab03b0a08c",
+      "value": 1,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-fbfa762553bdfa3ba1a2d10f",
+      "value": 9,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-77b955b2260c35485c7fc896",
+      "value": 5,
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-783766dba30210aafc0e7401",
+      "value": 7,
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "sum_quantities",
+    "result": "22"
+   },
+   "reader_qtype": "sum",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0402",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0403",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0404",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0405",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0406",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0407",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": {
+    "name": "direct_owner",
+    "reason": "question names 罗一苇, who has same-key records in context, but the cited records are about ['石清如']"
+   },
+   "repair": null
+  },
+  {
+   "qid": "E0408",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": {
+    "name": "attribute",
+    "reason": "question asks loc_item, but cited records state ['buyplace']"
+   },
+   "repair": null
+  },
+  {
+   "qid": "E0409",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0410",
+   "route": "max",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-728103f178ac05dd9d1136db",
+     "c-7f1a7a94c7fea88249708fa2",
+     "c-b15c04bbcde4316bed5fa2a6"
+    ],
+    "operands": [
+     {
+      "record_id": "c-728103f178ac05dd9d1136db",
+      "value": 22.0,
+      "person": "白翎",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-7f1a7a94c7fea88249708fa2",
+      "value": 43.0,
+      "person": "熊慕云",
+      "provenance": "text_extracted"
+     },
+     {
+      "record_id": "c-b15c04bbcde4316bed5fa2a6",
+      "value": 37.0,
+      "person": "金泽宇",
+      "provenance": "text_extracted"
+     }
+    ],
+    "operation": "argmax_distance",
+    "result": "熊慕云"
+   },
+   "reader_qtype": "max",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0411",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0412",
+   "route": "nth_date",
+   "route_source": "pattern",
+   "compute_status": "ok",
+   "reason_code": null,
+   "receipt": {
+    "record_ids": [
+     "c-9856cbcedf69cd357b96324f",
+     "c-6d5315f6a1d52102b1a76606",
+     "c-3699d43c0fbb472eaea40d23",
+     "c-0b63ce1c483201f9eba913b9"
+    ],
+    "operands": [
+     {
+      "record_id": "c-9856cbcedf69cd357b96324f",
+      "value": "2023-08-01",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-6d5315f6a1d52102b1a76606",
+      "value": "2023-09-07",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-3699d43c0fbb472eaea40d23",
+      "value": "2023-11-05",
+      "provenance": "event_date"
+     },
+     {
+      "record_id": "c-0b63ce1c483201f9eba913b9",
+      "value": "2024-02-23",
+      "provenance": "event_date"
+     }
+    ],
+    "operation": "nth_occurrence_date(n=2)",
+    "result": "2023-09-07"
+   },
+   "reader_qtype": "lookup",
+   "operands_completed": {
+    "key": [
+     "Dmitri Kovac",
+     "garden pruning",
+     "activity date"
+    ],
+    "n_cited": 1,
+    "n_completed": 4,
+    "added": [
+     {
+      "id": "c-3699d43c0fbb472eaea40d23",
+      "reason": "series match: person=Dmitri Kovac scope=garden pruning predicate=activity date"
+     },
+     {
+      "id": "c-9856cbcedf69cd357b96324f",
+      "reason": "series match: person=Dmitri Kovac scope=garden pruning predicate=activity date"
+     },
+     {
+      "id": "c-6d5315f6a1d52102b1a76606",
+      "reason": "series match: person=Dmitri Kovac scope=garden pruning predicate=activity date"
+     }
+    ],
+    "deduped": []
+   },
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0413",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0414",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0415",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0416",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0417",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0418",
+   "route": null,
+   "route_source": null,
+   "compute_status": "not_applicable",
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": null,
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0419",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  },
+  {
+   "qid": "E0420",
+   "route": null,
+   "route_source": null,
+   "compute_status": null,
+   "reason_code": null,
+   "receipt": null,
+   "reader_qtype": "lookup",
+   "operands_completed": null,
+   "bound_refusal": false,
+   "guard": null,
+   "repair": null
+  }
+ ]
+}

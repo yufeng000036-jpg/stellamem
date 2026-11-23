@@ -1,0 +1,5795 @@
+{
+ "n": 420,
+ "gold_total": 583,
+ "gold_survived": 583,
+ "survival_failures": [],
+ "removals_by_rule": {
+  "R2_correction_conflict": 39,
+  "R1_marked_expired": 17,
+  "R3_validity_join": 24
+ },
+ "removals_by_klass": {
+  "conflict": 39,
+  "expired": 29,
+  "abstain": 12
+ },
+ "questions_with_removals": 77,
+ "per_question": {
+  "E0001": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 10,
+   "n_after": 10,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0002": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-f91492ef9e922756fd94b698"
+   ],
+   "removals": [
+    {
+     "id": "c-f91492ef9e922756fd94b698",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-0de8b522034035882c8d4ecb (asserted value: Marigold Bakery)"
+    }
+   ],
+   "n_before": 16,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-c5ed72268ee6ffea3e415add"
+    ]
+   }
+  },
+  "E0003": {
+   "klass": "expired",
+   "sub": "marked_expired",
+   "removed_ids": [
+    "c-35a070386176484481d2483f"
+   ],
+   "removals": [
+    {
+     "id": "c-35a070386176484481d2483f",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 19,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0004": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0005": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0006": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-593bb934af4a77a7ffb87e05"
+   ],
+   "removals": [
+    {
+     "id": "c-593bb934af4a77a7ffb87e05",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-71f460ab79162147e06610d4 (asserted value: 汀兰棋社)"
+    }
+   ],
+   "n_before": 6,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-47c9bbae3f8e4d7063bf75ba"
+    ]
+   }
+  },
+  "E0007": {
+   "klass": "date",
+   "sub": "event_gap",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0008": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0009": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-a38413e5ab5be136269dde1c"
+   ],
+   "removals": [
+    {
+     "id": "c-a38413e5ab5be136269dde1c",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-dd93bb3921e87472ff0f349d (asserted value: 拾翠市场)"
+    }
+   ],
+   "n_before": 5,
+   "n_after": 4,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-81acde12ff44803a62d57e5f"
+    ]
+   }
+  },
+  "E0010": {
+   "klass": "date",
+   "sub": "expiry_countdown",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0011": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 5,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0012": {
+   "klass": "date",
+   "sub": "event_gap",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0013": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0014": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 5,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0015": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0016": {
+   "klass": "date",
+   "sub": "weekday_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0017": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0018": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0019": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0020": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0021": {
+   "klass": "abstain",
+   "sub": "entity_absent",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 5,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0022": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0023": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 18,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0024": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0025": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0026": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 17,
+   "n_after": 17,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0027": {
+   "klass": "expired",
+   "sub": "marked_expired",
+   "removed_ids": [
+    "c-d7ee0774831c85d0e51a0905"
+   ],
+   "removals": [
+    {
+     "id": "c-d7ee0774831c85d0e51a0905",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 8,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0028": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0029": {
+   "klass": "abstain",
+   "sub": "multi_missing_one",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0030": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0031": {
+   "klass": "abstain",
+   "sub": "only_near_entity",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0032": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0033": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0034": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0035": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0036": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 18,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0037": {
+   "klass": "abstain",
+   "sub": "only_expired",
+   "removed_ids": [
+    "c-cc4f65239befc8ee186fbc69"
+   ],
+   "removals": [
+    {
+     "id": "c-cc4f65239befc8ee186fbc69",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-51e69bb13625459ab1c24116 expired 2024-04-09 before question date 2024-04-26"
+    }
+   ],
+   "n_before": 6,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0038": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0039": {
+   "klass": "date",
+   "sub": "nth_occurrence",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0040": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 5,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0041": {
+   "klass": "date",
+   "sub": "weekday_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0042": {
+   "klass": "abstain",
+   "sub": "entity_absent",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 18,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0043": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0044": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0045": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-35273e5d9b9661cb47d1e6a2"
+   ],
+   "removals": [
+    {
+     "id": "c-35273e5d9b9661cb47d1e6a2",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-76b31c1735d6bc608de531ec (asserted value: Quarry Gym)"
+    }
+   ],
+   "n_before": 19,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-7915877f8753b5fc14294b93"
+    ]
+   }
+  },
+  "E0046": {
+   "klass": "date",
+   "sub": "event_gap",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0047": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 18,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0048": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0049": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0050": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0051": {
+   "klass": "abstain",
+   "sub": "only_near_entity",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0052": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-8a2c47fcec3a308738cdd267"
+   ],
+   "removals": [
+    {
+     "id": "c-8a2c47fcec3a308738cdd267",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-9651af5884c6f34887c0e3ea (asserted value: 云栖健身房)"
+    }
+   ],
+   "n_before": 19,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-3a1f9be29a59b36061b6a0d4"
+    ]
+   }
+  },
+  "E0053": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0054": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0055": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0056": {
+   "klass": "abstain",
+   "sub": "only_near_entity",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 18,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0057": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-eeea3276ab7b27a3bcf2ae24"
+   ],
+   "removals": [
+    {
+     "id": "c-eeea3276ab7b27a3bcf2ae24",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-0f9073dc1a5c666c16c01672 expired 2024-06-23 before question date 2024-09-21"
+    }
+   ],
+   "n_before": 11,
+   "n_after": 10,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0058": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-3c511452d4d37faed362cf32"
+   ],
+   "removals": [
+    {
+     "id": "c-3c511452d4d37faed362cf32",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-3379e10fb0039a7f032c1358 expired 2024-09-21 before question date 2024-10-29"
+    }
+   ],
+   "n_before": 15,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0059": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0060": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0061": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0062": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0063": {
+   "klass": "abstain",
+   "sub": "entity_absent",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0064": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0065": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-6573ce3d5f85f362861a0f86"
+   ],
+   "removals": [
+    {
+     "id": "c-6573ce3d5f85f362861a0f86",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-4dec5b29727ee6db13f80b76 (asserted value: 松风琴行)"
+    }
+   ],
+   "n_before": 13,
+   "n_after": 12,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-4e9efeb62e22a26823a94117"
+    ]
+   }
+  },
+  "E0066": {
+   "klass": "abstain",
+   "sub": "only_expired",
+   "removed_ids": [
+    "c-537d6b4f156862c43124fc0a"
+   ],
+   "removals": [
+    {
+     "id": "c-537d6b4f156862c43124fc0a",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-908e4790454f53513b7e98d0 expired 2024-06-30 before question date 2024-08-18"
+    }
+   ],
+   "n_before": 12,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0067": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0068": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0069": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0070": {
+   "klass": "abstain",
+   "sub": "multi_missing_one",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0071": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0072": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-52f5f1832985f7cf6bfaf823"
+   ],
+   "removals": [
+    {
+     "id": "c-52f5f1832985f7cf6bfaf823",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-226a4cb6016a0094c0485179 (asserted value: 归雁民宿)"
+    }
+   ],
+   "n_before": 15,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [
+     "c-52f5f1832985f7cf6bfaf823"
+    ],
+    "dropped": []
+   }
+  },
+  "E0073": {
+   "klass": "date",
+   "sub": "nth_occurrence",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0074": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-6645a21111741540a4dc8692"
+   ],
+   "removals": [
+    {
+     "id": "c-6645a21111741540a4dc8692",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-6c6f1d3b5dab3c278ccf5b49 (asserted value: convener)"
+    }
+   ],
+   "n_before": 20,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-85c259cc6667058da763d0fa"
+    ]
+   }
+  },
+  "E0075": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0076": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-11e9ef5fbe3ee200ba6c56a8"
+   ],
+   "removals": [
+    {
+     "id": "c-11e9ef5fbe3ee200ba6c56a8",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-e84439986b27f9a9da6796b1 (asserted value: 听涛泳池)"
+    }
+   ],
+   "n_before": 19,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [
+     "c-11e9ef5fbe3ee200ba6c56a8"
+    ],
+    "dropped": []
+   }
+  },
+  "E0077": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0078": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0079": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0080": {
+   "klass": "date",
+   "sub": "nth_occurrence",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0081": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-52901d02a1c2d2f30a6341fe"
+   ],
+   "removals": [
+    {
+     "id": "c-52901d02a1c2d2f30a6341fe",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-0a26ca772779410f98a7a5b0 (asserted value: 听涛泳池)"
+    }
+   ],
+   "n_before": 5,
+   "n_after": 4,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-3960172b2131db412cc81c24"
+    ]
+   }
+  },
+  "E0082": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-1acecad755d59562ee2282ff"
+   ],
+   "removals": [
+    {
+     "id": "c-1acecad755d59562ee2282ff",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-2bcb64432c98791bb9b3ec6e expired 2024-08-09 before question date 2024-09-02"
+    }
+   ],
+   "n_before": 7,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0083": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 10,
+   "n_after": 10,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0084": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0085": {
+   "klass": "date",
+   "sub": "event_gap",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0086": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0087": {
+   "klass": "date",
+   "sub": "expiry_countdown",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0088": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0089": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 5,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0090": {
+   "klass": "date",
+   "sub": "expiry_countdown",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0091": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0092": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0093": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0094": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-fac3ea4e374eb83f34632a46"
+   ],
+   "removals": [
+    {
+     "id": "c-fac3ea4e374eb83f34632a46",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-4af0fde347634214bc2fe3bd (asserted value: Marigold Bakery)"
+    }
+   ],
+   "n_before": 17,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-61b768a953de8bced4bc803e"
+    ]
+   }
+  },
+  "E0095": {
+   "klass": "date",
+   "sub": "expiry_countdown",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0096": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-51f95c2c78224fbd59064253"
+   ],
+   "removals": [
+    {
+     "id": "c-51f95c2c78224fbd59064253",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-7d7aa4de56556ccd409c00f1 (asserted value: 栖梧体育馆)"
+    }
+   ],
+   "n_before": 12,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [
+     "c-51f95c2c78224fbd59064253"
+    ],
+    "dropped": []
+   }
+  },
+  "E0097": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-ae218d0e9f96cd69bd7a029e"
+   ],
+   "removals": [
+    {
+     "id": "c-ae218d0e9f96cd69bd7a029e",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-463a9f928e31992d635dea8d (asserted value: Summit Climbing Gym)"
+    }
+   ],
+   "n_before": 16,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-3639d70128eb970788b082be"
+    ]
+   }
+  },
+  "E0098": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0099": {
+   "klass": "expired",
+   "sub": "marked_expired",
+   "removed_ids": [
+    "c-8df48d87dd596214991f45d5"
+   ],
+   "removals": [
+    {
+     "id": "c-8df48d87dd596214991f45d5",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 7,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0100": {
+   "klass": "abstain",
+   "sub": "only_expired",
+   "removed_ids": [
+    "c-1cb465f198940bcbf2ae0c45"
+   ],
+   "removals": [
+    {
+     "id": "c-1cb465f198940bcbf2ae0c45",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-ae74bf8ea97b5bdfe1544eef expired 2023-12-18 before question date 2024-03-16"
+    }
+   ],
+   "n_before": 7,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0101": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0102": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-8bd490c5b5ce170b54f9635c"
+   ],
+   "removals": [
+    {
+     "id": "c-8bd490c5b5ce170b54f9635c",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-1116ae9e8cfc43a4e0262410 (asserted value: Sedge Market)"
+    }
+   ],
+   "n_before": 18,
+   "n_after": 17,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-d5987bc7702c0f04d7800e36"
+    ]
+   }
+  },
+  "E0103": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-9e66a8863fa38962c36b4ec0"
+   ],
+   "removals": [
+    {
+     "id": "c-9e66a8863fa38962c36b4ec0",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-3e47872f1d2ba810871abce0 (asserted value: Thistle Bakery)"
+    }
+   ],
+   "n_before": 16,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-39dc03ebb2bcdccbc7efbc3a"
+    ]
+   }
+  },
+  "E0104": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0105": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-2fc50d4f3bfebee55c75dffb",
+    "c-cc99e34774f0e2525980303e"
+   ],
+   "removals": [
+    {
+     "id": "c-2fc50d4f3bfebee55c75dffb",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-b6ecbdcfc3de1d6aaf142cc0 (asserted value: 担任场务)"
+    },
+    {
+     "id": "c-cc99e34774f0e2525980303e",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-b6ecbdcfc3de1d6aaf142cc0 (asserted value: 担任场务)"
+    }
+   ],
+   "n_before": 20,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0106": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0107": {
+   "klass": "abstain",
+   "sub": "multi_missing_one",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0108": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-3e57dbfb300ce6225c472df7",
+    "c-90fdc78f049ca68d4e7135b2"
+   ],
+   "removals": [
+    {
+     "id": "c-90fdc78f049ca68d4e7135b2",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-7adb0c22cac9f11ded6030fb (asserted value: 担任召集人)"
+    },
+    {
+     "id": "c-3e57dbfb300ce6225c472df7",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-7adb0c22cac9f11ded6030fb (asserted value: 担任召集人)"
+    }
+   ],
+   "n_before": 11,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0109": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0110": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0111": {
+   "klass": "expired",
+   "sub": "marked_expired",
+   "removed_ids": [
+    "c-d85f5b1d61978eded5309d1e"
+   ],
+   "removals": [
+    {
+     "id": "c-d85f5b1d61978eded5309d1e",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 5,
+   "n_after": 4,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0112": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0113": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0114": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0115": {
+   "klass": "abstain",
+   "sub": "only_expired",
+   "removed_ids": [
+    "c-c78d00d3ce5b3e58944f85a4"
+   ],
+   "removals": [
+    {
+     "id": "c-c78d00d3ce5b3e58944f85a4",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-ab3d23147bb3068c277349c3 expired 2024-04-11 before question date 2024-05-10"
+    }
+   ],
+   "n_before": 6,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0116": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0117": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 12,
+   "n_after": 12,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0118": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 18,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0119": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0120": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0121": {
+   "klass": "abstain",
+   "sub": "only_expired",
+   "removed_ids": [
+    "c-31fce1183e939a3ea062fdf5"
+   ],
+   "removals": [
+    {
+     "id": "c-31fce1183e939a3ea062fdf5",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-ee4bdaea0a605f27d25174c2 expired 2024-08-09 before question date 2024-09-02"
+    }
+   ],
+   "n_before": 5,
+   "n_after": 4,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0122": {
+   "klass": "abstain",
+   "sub": "entity_absent",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0123": {
+   "klass": "abstain",
+   "sub": "multi_missing_one",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0124": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0125": {
+   "klass": "date",
+   "sub": "event_gap",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0126": {
+   "klass": "abstain",
+   "sub": "only_expired",
+   "removed_ids": [
+    "c-2c29492140ef018967ebab57"
+   ],
+   "removals": [
+    {
+     "id": "c-2c29492140ef018967ebab57",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-0ff67931b3a58707a1a900d5 expired 2024-09-21 before question date 2024-10-29"
+    }
+   ],
+   "n_before": 13,
+   "n_after": 12,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0127": {
+   "klass": "date",
+   "sub": "expiry_countdown",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0128": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 17,
+   "n_after": 17,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0129": {
+   "klass": "abstain",
+   "sub": "attr_missing",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 10,
+   "n_after": 10,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0130": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0131": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0132": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 18,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0133": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 17,
+   "n_after": 17,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0134": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0135": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 5,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0136": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0137": {
+   "klass": "date",
+   "sub": "weekday_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0138": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0139": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0140": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0141": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0142": {
+   "klass": "date",
+   "sub": "event_gap",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0143": {
+   "klass": "abstain",
+   "sub": "attr_missing",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 12,
+   "n_after": 12,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0144": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0145": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0146": {
+   "klass": "abstain",
+   "sub": "multi_missing_one",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0147": {
+   "klass": "abstain",
+   "sub": "attr_missing",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0148": {
+   "klass": "abstain",
+   "sub": "only_expired",
+   "removed_ids": [
+    "c-244ec3014a8dcb02e583a61a"
+   ],
+   "removals": [
+    {
+     "id": "c-244ec3014a8dcb02e583a61a",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 5,
+   "n_after": 4,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0149": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0150": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0151": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 17,
+   "n_after": 17,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0152": {
+   "klass": "date",
+   "sub": "weekday_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0153": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0154": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-08bd88ddca067bee91ec107d"
+   ],
+   "removals": [
+    {
+     "id": "c-08bd88ddca067bee91ec107d",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-c558a68ad3a0dd41a9b5209f expired 2024-04-09 before question date 2024-04-26"
+    }
+   ],
+   "n_before": 8,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0155": {
+   "klass": "date",
+   "sub": "weekday_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 10,
+   "n_after": 10,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0156": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0157": {
+   "klass": "date",
+   "sub": "nth_occurrence",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0158": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 5,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0159": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0160": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0161": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0162": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0163": {
+   "klass": "date",
+   "sub": "weekday_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0164": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0165": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0166": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0167": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 17,
+   "n_after": 17,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0168": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0169": {
+   "klass": "expired",
+   "sub": "marked_expired",
+   "removed_ids": [
+    "c-60dc719c3e04af6404b4066d"
+   ],
+   "removals": [
+    {
+     "id": "c-60dc719c3e04af6404b4066d",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 7,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0170": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0171": {
+   "klass": "date",
+   "sub": "event_gap",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0172": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 10,
+   "n_after": 10,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0173": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-e1cd15ce382d40bc8bf82b08"
+   ],
+   "removals": [
+    {
+     "id": "c-e1cd15ce382d40bc8bf82b08",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-3ffb5f9f60b73e9610a6f795 expired 2024-04-25 before question date 2024-05-30"
+    }
+   ],
+   "n_before": 20,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0174": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0175": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-212fed176657557189d16c3c"
+   ],
+   "removals": [
+    {
+     "id": "c-212fed176657557189d16c3c",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-910c2c618a4f2158106eff34 expired 2024-06-08 before question date 2024-08-15"
+    }
+   ],
+   "n_before": 20,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0176": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-709582cdc31f55e93ea552c4"
+   ],
+   "removals": [
+    {
+     "id": "c-709582cdc31f55e93ea552c4",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-8a1be8a2aa68d9a219f10ada (asserted value: photo editor)"
+    }
+   ],
+   "n_before": 16,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-8363b38c8368a8c816ec7e2a"
+    ]
+   }
+  },
+  "E0177": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0178": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0179": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0180": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0181": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0182": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0183": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0184": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0185": {
+   "klass": "abstain",
+   "sub": "attr_missing",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0186": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 12,
+   "n_after": 12,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0187": {
+   "klass": "abstain",
+   "sub": "multi_missing_one",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 17,
+   "n_after": 17,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0188": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0189": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0190": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 5,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0191": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-83a25b4e2a66f94f8ace4e71"
+   ],
+   "removals": [
+    {
+     "id": "c-83a25b4e2a66f94f8ace4e71",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-6b36f049feb656e047ff59ae (asserted value: 青萝园艺店)"
+    }
+   ],
+   "n_before": 20,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [
+     "c-83a25b4e2a66f94f8ace4e71"
+    ],
+    "dropped": []
+   }
+  },
+  "E0192": {
+   "klass": "abstain",
+   "sub": "entity_absent",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0193": {
+   "klass": "abstain",
+   "sub": "only_near_entity",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0194": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0195": {
+   "klass": "expired",
+   "sub": "marked_expired",
+   "removed_ids": [
+    "c-c222dfb339af06ae5abdeaba"
+   ],
+   "removals": [
+    {
+     "id": "c-c222dfb339af06ae5abdeaba",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 16,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0196": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0197": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0198": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0199": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0200": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 12,
+   "n_after": 12,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0201": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0202": {
+   "klass": "date",
+   "sub": "expiry_countdown",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0203": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 5,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0204": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0205": {
+   "klass": "date",
+   "sub": "nth_occurrence",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0206": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 17,
+   "n_after": 17,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0207": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0208": {
+   "klass": "abstain",
+   "sub": "only_expired",
+   "removed_ids": [
+    "c-b75b70d126392bda626529ed"
+   ],
+   "removals": [
+    {
+     "id": "c-b75b70d126392bda626529ed",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 18,
+   "n_after": 17,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0209": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0210": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0211": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0212": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-166fffb932eddcf6edb5a61b"
+   ],
+   "removals": [
+    {
+     "id": "c-166fffb932eddcf6edb5a61b",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-6bc2574c899041ac0667402a expired 2024-10-25 before question date 2024-12-04"
+    }
+   ],
+   "n_before": 9,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0213": {
+   "klass": "abstain",
+   "sub": "only_expired",
+   "removed_ids": [
+    "c-963adcd548504c4a940c1e09"
+   ],
+   "removals": [
+    {
+     "id": "c-963adcd548504c4a940c1e09",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 8,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0214": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0215": {
+   "klass": "abstain",
+   "sub": "only_near_entity",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0216": {
+   "klass": "abstain",
+   "sub": "entity_absent",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0217": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0218": {
+   "klass": "abstain",
+   "sub": "attr_missing",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0219": {
+   "klass": "date",
+   "sub": "nth_occurrence",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 18,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0220": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0221": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0222": {
+   "klass": "date",
+   "sub": "nth_occurrence",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0223": {
+   "klass": "abstain",
+   "sub": "only_near_entity",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 4,
+   "n_after": 4,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0224": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0225": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0226": {
+   "klass": "abstain",
+   "sub": "multi_missing_one",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0227": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0228": {
+   "klass": "abstain",
+   "sub": "only_expired",
+   "removed_ids": [
+    "c-06761b24b69166de2aa7a320"
+   ],
+   "removals": [
+    {
+     "id": "c-06761b24b69166de2aa7a320",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 7,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0229": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0230": {
+   "klass": "abstain",
+   "sub": "only_near_entity",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0231": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0232": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 17,
+   "n_after": 17,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0233": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0234": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-e87eb4d6d057bf6f5765a263"
+   ],
+   "removals": [
+    {
+     "id": "c-e87eb4d6d057bf6f5765a263",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-7319d646ec5a92de12820e2c expired 2023-07-28 before question date 2023-09-15"
+    }
+   ],
+   "n_before": 8,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0235": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0236": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-704231d1ec0d657f1a276b5d"
+   ],
+   "removals": [
+    {
+     "id": "c-704231d1ec0d657f1a276b5d",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-5d9135cc45ff1b2788413e21 (asserted value: 临江邮局)"
+    }
+   ],
+   "n_before": 7,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-98696d599044beca9d8c296d"
+    ]
+   }
+  },
+  "E0237": {
+   "klass": "abstain",
+   "sub": "attr_missing",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 10,
+   "n_after": 10,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0238": {
+   "klass": "abstain",
+   "sub": "attr_missing",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0239": {
+   "klass": "expired",
+   "sub": "marked_expired",
+   "removed_ids": [
+    "c-481a57285216099a62bfedd2"
+   ],
+   "removals": [
+    {
+     "id": "c-481a57285216099a62bfedd2",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 20,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0240": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0241": {
+   "klass": "abstain",
+   "sub": "attr_missing",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 10,
+   "n_after": 10,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0242": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0243": {
+   "klass": "abstain",
+   "sub": "entity_absent",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0244": {
+   "klass": "date",
+   "sub": "nth_occurrence",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0245": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0246": {
+   "klass": "abstain",
+   "sub": "multi_missing_one",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 10,
+   "n_after": 10,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0247": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0248": {
+   "klass": "abstain",
+   "sub": "multi_missing_one",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0249": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0250": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-2ddae1a76d6dccddc4420dc8"
+   ],
+   "removals": [
+    {
+     "id": "c-2ddae1a76d6dccddc4420dc8",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-9bd5073e20ec69d99e3f764e expired 2024-03-24 before question date 2024-04-17"
+    }
+   ],
+   "n_before": 20,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0251": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0252": {
+   "klass": "date",
+   "sub": "event_gap",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0253": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0254": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 12,
+   "n_after": 12,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0255": {
+   "klass": "abstain",
+   "sub": "entity_absent",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 18,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0256": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0257": {
+   "klass": "abstain",
+   "sub": "only_near_entity",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0258": {
+   "klass": "date",
+   "sub": "weekday_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0259": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0260": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 5,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0261": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-d606947f9216b1ab2f9708c4"
+   ],
+   "removals": [
+    {
+     "id": "c-d606947f9216b1ab2f9708c4",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-28c445a771aeddfd3a147843 (asserted value: 枫溪书院)"
+    }
+   ],
+   "n_before": 15,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-83eacc2294c7699eaf00bd32"
+    ]
+   }
+  },
+  "E0262": {
+   "klass": "date",
+   "sub": "weekday_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 12,
+   "n_after": 12,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0263": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0264": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0265": {
+   "klass": "abstain",
+   "sub": "multi_missing_one",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0266": {
+   "klass": "abstain",
+   "sub": "entity_absent",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 4,
+   "n_after": 4,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0267": {
+   "klass": "date",
+   "sub": "expiry_countdown",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0268": {
+   "klass": "abstain",
+   "sub": "attr_missing",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0269": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-043f1dce7b1cc0b0d7d186ec"
+   ],
+   "removals": [
+    {
+     "id": "c-043f1dce7b1cc0b0d7d186ec",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-79295621cf8476b0d1726d2e expired 2024-02-02 before question date 2024-03-26"
+    }
+   ],
+   "n_before": 20,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0270": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0271": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0272": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0273": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0274": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0275": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0276": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0277": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-9031c588fd04dd4611b4fed1"
+   ],
+   "removals": [
+    {
+     "id": "c-9031c588fd04dd4611b4fed1",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-673700c66a1b739b54413031 expired 2024-03-27 before question date 2024-06-01"
+    }
+   ],
+   "n_before": 16,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0278": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0279": {
+   "klass": "abstain",
+   "sub": "multi_missing_one",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0280": {
+   "klass": "abstain",
+   "sub": "only_expired",
+   "removed_ids": [
+    "c-c539fb353728ccff8613f9c9"
+   ],
+   "removals": [
+    {
+     "id": "c-c539fb353728ccff8613f9c9",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 6,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0281": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 18,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0282": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0283": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0284": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0285": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0286": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0287": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0288": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0289": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-ee1ae11a716b66ef887564ec"
+   ],
+   "removals": [
+    {
+     "id": "c-ee1ae11a716b66ef887564ec",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-445688ffafeb10a4a448529a (asserted value: Anchor Bookshop)"
+    }
+   ],
+   "n_before": 7,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-cdb9efe9d14d87ac2069795b"
+    ]
+   }
+  },
+  "E0290": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 12,
+   "n_after": 12,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0291": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0292": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-abb89cec943589362cc6257e"
+   ],
+   "removals": [
+    {
+     "id": "c-abb89cec943589362cc6257e",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-1d932411c3644fa8c3e9d4c0 expired 2024-08-16 before question date 2024-11-11"
+    }
+   ],
+   "n_before": 14,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0293": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0294": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0295": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 18,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0296": {
+   "klass": "date",
+   "sub": "expiry_countdown",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0297": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0298": {
+   "klass": "expired",
+   "sub": "marked_expired",
+   "removed_ids": [
+    "c-ed6bd5e20e27eb432cb470ac"
+   ],
+   "removals": [
+    {
+     "id": "c-ed6bd5e20e27eb432cb470ac",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 16,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0299": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0300": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0301": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0302": {
+   "klass": "date",
+   "sub": "event_gap",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 5,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0303": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0304": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0305": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0306": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0307": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0308": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0309": {
+   "klass": "abstain",
+   "sub": "only_near_entity",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0310": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-86543e1b08f31d98fa200bdd"
+   ],
+   "removals": [
+    {
+     "id": "c-86543e1b08f31d98fa200bdd",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-80549105315f6c6ab89fdd5a (asserted value: 鹿饮牧场)"
+    }
+   ],
+   "n_before": 11,
+   "n_after": 10,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-f774c044bc74d8790ae68726"
+    ]
+   }
+  },
+  "E0311": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0312": {
+   "klass": "abstain",
+   "sub": "only_near_entity",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 17,
+   "n_after": 17,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0313": {
+   "klass": "abstain",
+   "sub": "attr_missing",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0314": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0315": {
+   "klass": "date",
+   "sub": "event_gap",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0316": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0317": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 18,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0318": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 17,
+   "n_after": 17,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0319": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-358857e99a8840c7ecd3a414"
+   ],
+   "removals": [
+    {
+     "id": "c-358857e99a8840c7ecd3a414",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-1ab317c2ac1d26a7f6d208b3 (asserted value: Osprey Bike Shop)"
+    }
+   ],
+   "n_before": 18,
+   "n_after": 17,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-85bf101a79353ec32c748dd3"
+    ]
+   }
+  },
+  "E0320": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0321": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-767446ce8447a948a0c9d539"
+   ],
+   "removals": [
+    {
+     "id": "c-767446ce8447a948a0c9d539",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-ecc094a3782c1790cf436503 (asserted value: 沉香文具店)"
+    }
+   ],
+   "n_before": 14,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-1d1e1fb8139a0718f89e694b"
+    ]
+   }
+  },
+  "E0322": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-125b24b3a19c275473c0b8ff",
+    "c-77a880fa29091362422fe526"
+   ],
+   "removals": [
+    {
+     "id": "c-125b24b3a19c275473c0b8ff",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-15bd10d6dc7c8e57a90384a3 (asserted value: 担任检录员)"
+    },
+    {
+     "id": "c-77a880fa29091362422fe526",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-15bd10d6dc7c8e57a90384a3 (asserted value: 担任检录员)"
+    }
+   ],
+   "n_before": 7,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0323": {
+   "klass": "date",
+   "sub": "weekday_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0324": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0325": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0326": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0327": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0328": {
+   "klass": "date",
+   "sub": "nth_occurrence",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0329": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0330": {
+   "klass": "expired",
+   "sub": "marked_expired",
+   "removed_ids": [
+    "c-6de92732c4913add41143453"
+   ],
+   "removals": [
+    {
+     "id": "c-6de92732c4913add41143453",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 14,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0331": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0332": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0333": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 5,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0334": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0335": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0336": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-c589e277db2bcb11dd1eb465"
+   ],
+   "removals": [
+    {
+     "id": "c-c589e277db2bcb11dd1eb465",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-f91b08a0a6538973b056a122 (asserted value: 担任主理人)"
+    }
+   ],
+   "n_before": 20,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-13adb78880d285fe4909c4d6"
+    ]
+   }
+  },
+  "E0337": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0338": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0339": {
+   "klass": "abstain",
+   "sub": "entity_absent",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 4,
+   "n_after": 4,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0340": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-6aa001e94a24bc0f8ad0bd7b"
+   ],
+   "removals": [
+    {
+     "id": "c-6aa001e94a24bc0f8ad0bd7b",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-455f06abf5df062caf1c7ca0 (asserted value: 担任主理人)"
+    }
+   ],
+   "n_before": 17,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-1c0a078e7d79db728ef23ef0"
+    ]
+   }
+  },
+  "E0341": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-6aa854e8990aece986302bb7"
+   ],
+   "removals": [
+    {
+     "id": "c-6aa854e8990aece986302bb7",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-83d8b2ea2a2c56c6fa8cf171 (asserted value: 青藤茶馆)"
+    }
+   ],
+   "n_before": 8,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-160aa28afd42e10441490a57"
+    ]
+   }
+  },
+  "E0342": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-ed68e53619ae17f775698380"
+   ],
+   "removals": [
+    {
+     "id": "c-ed68e53619ae17f775698380",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-3d8aee77b783db17acac4a92 (asserted value: Anchor Bookshop)"
+    }
+   ],
+   "n_before": 20,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-11efdcfd3aa8319e660bbbbc"
+    ]
+   }
+  },
+  "E0343": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-6896591a59e99c77d385b979"
+   ],
+   "removals": [
+    {
+     "id": "c-6896591a59e99c77d385b979",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-0cedfb2587a4666511f691e6 expired 2024-04-11 before question date 2024-05-10"
+    }
+   ],
+   "n_before": 8,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0344": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0345": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0346": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0347": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-ef8447b43baac4a3ca9aa63b"
+   ],
+   "removals": [
+    {
+     "id": "c-ef8447b43baac4a3ca9aa63b",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-a0c9ae70fa592bc5a160236b (asserted value: 松风琴行)"
+    }
+   ],
+   "n_before": 12,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-02eca6bde673e7d82e21f96d"
+    ]
+   }
+  },
+  "E0348": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0349": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0350": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0351": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0352": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0353": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0354": {
+   "klass": "date",
+   "sub": "weekday_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0355": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0356": {
+   "klass": "abstain",
+   "sub": "attr_missing",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 16,
+   "n_after": 16,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0357": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0358": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0359": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0360": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0361": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-bcacc73fc24c07c54a34699d"
+   ],
+   "removals": [
+    {
+     "id": "c-bcacc73fc24c07c54a34699d",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-1bb0569f70f3791890b2e5c6 expired 2024-06-30 before question date 2024-08-18"
+    }
+   ],
+   "n_before": 14,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0362": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0363": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 12,
+   "n_after": 12,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0364": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 5,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0365": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0366": {
+   "klass": "date",
+   "sub": "weekday_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0367": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0368": {
+   "klass": "similar",
+   "sub": "person_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0369": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0370": {
+   "klass": "abstain",
+   "sub": "entity_absent",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0371": {
+   "klass": "abstain",
+   "sub": "multi_missing_one",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0372": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0373": {
+   "klass": "abstain",
+   "sub": "only_near_entity",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0374": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0375": {
+   "klass": "date",
+   "sub": "expiry_countdown",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0376": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0377": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0378": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0379": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0380": {
+   "klass": "simple",
+   "sub": "confirm_lookup",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 13,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0381": {
+   "klass": "expired",
+   "sub": "marked_expired",
+   "removed_ids": [
+    "c-7eed2f833dc4761eed58a619"
+   ],
+   "removals": [
+    {
+     "id": "c-7eed2f833dc4761eed58a619",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 7,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0382": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-cf72ea4fd9bdb98076ed8de1"
+   ],
+   "removals": [
+    {
+     "id": "c-cf72ea4fd9bdb98076ed8de1",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-f90989665b04a0b2424a7aed (asserted value: Garnet Tea House)"
+    }
+   ],
+   "n_before": 19,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-139a93fbb0c9880e83a5862e"
+    ]
+   }
+  },
+  "E0383": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0384": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 10,
+   "n_after": 10,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0385": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-16197ff1d49ab0cf1ae2ea74"
+   ],
+   "removals": [
+    {
+     "id": "c-16197ff1d49ab0cf1ae2ea74",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-f36e1800e5896f285f76fc4c (asserted value: 归雁民宿)"
+    }
+   ],
+   "n_before": 13,
+   "n_after": 12,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-bafec43cdfba84866a37382c"
+    ]
+   }
+  },
+  "E0386": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-4fd9a0fbba211f448360ecdf"
+   ],
+   "removals": [
+    {
+     "id": "c-4fd9a0fbba211f448360ecdf",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-3a251ff2cc6d3c77f5c93f32 expired 2024-04-03 before question date 2024-05-17"
+    }
+   ],
+   "n_before": 15,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0387": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0388": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-3306bbbb67d5965780862b14"
+   ],
+   "removals": [
+    {
+     "id": "c-3306bbbb67d5965780862b14",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-4e697ebb6ce428aaa21b1b08 (asserted value: warm-up lead)"
+    }
+   ],
+   "n_before": 15,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-65d1a06a9c35186f27b4e732"
+    ]
+   }
+  },
+  "E0389": {
+   "klass": "abstain",
+   "sub": "only_expired",
+   "removed_ids": [
+    "c-33da91960992891f98779952"
+   ],
+   "removals": [
+    {
+     "id": "c-33da91960992891f98779952",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 9,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0390": {
+   "klass": "abstain",
+   "sub": "only_near_entity",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 12,
+   "n_after": 12,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0391": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0392": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 9,
+   "n_after": 9,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0393": {
+   "klass": "date",
+   "sub": "expiry_countdown",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 12,
+   "n_after": 12,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0394": {
+   "klass": "date",
+   "sub": "nth_occurrence",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 11,
+   "n_after": 11,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0395": {
+   "klass": "multi",
+   "sub": "count_events",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 5,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0396": {
+   "klass": "date",
+   "sub": "event_gap",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 12,
+   "n_after": 12,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0397": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0398": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 17,
+   "n_after": 17,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0399": {
+   "klass": "expired",
+   "sub": "marked_expired",
+   "removed_ids": [
+    "c-cfe6f1a291d7795338984434"
+   ],
+   "removals": [
+    {
+     "id": "c-cfe6f1a291d7795338984434",
+     "rule": "R1_marked_expired",
+     "reason": "record's own value states it has expired"
+    }
+   ],
+   "n_before": 11,
+   "n_after": 10,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0400": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-9d1b274b0fdd61445e68ab19"
+   ],
+   "removals": [
+    {
+     "id": "c-9d1b274b0fdd61445e68ab19",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-2a70e250a8c855e2ea810b47 expired 2023-11-24 before question date 2024-02-29"
+    }
+   ],
+   "n_before": 11,
+   "n_after": 10,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0401": {
+   "klass": "multi",
+   "sub": "sum_copies",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0402": {
+   "klass": "similar",
+   "sub": "item_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0403": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 15,
+   "n_after": 15,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0404": {
+   "klass": "abstain",
+   "sub": "entity_absent",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0405": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0406": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0407": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 8,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0408": {
+   "klass": "abstain",
+   "sub": "attr_missing",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 14,
+   "n_after": 14,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0409": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-18088862f3f4ff1a8c622543"
+   ],
+   "removals": [
+    {
+     "id": "c-18088862f3f4ff1a8c622543",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-92716997b193cfc6120e5adb (asserted value: 鹿饮牧场)"
+    }
+   ],
+   "n_before": 7,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-b58073c60ab883d1ba8e5608"
+    ]
+   }
+  },
+  "E0410": {
+   "klass": "multi",
+   "sub": "max3_distance",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 5,
+   "n_after": 5,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0411": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0412": {
+   "klass": "date",
+   "sub": "nth_occurrence",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 19,
+   "n_after": 19,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0413": {
+   "klass": "conflict",
+   "sub": "correction_pair",
+   "removed_ids": [
+    "c-4cc1b0120e7bd59f6e91b4cf"
+   ],
+   "removals": [
+    {
+     "id": "c-4cc1b0120e7bd59f6e91b4cf",
+     "rule": "R2_correction_conflict",
+     "reason": "contradicts explicit correction c-9764f3000db25139bb8ea397 (asserted value: Summit Climbing Gym)"
+    }
+   ],
+   "n_before": 14,
+   "n_after": 13,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": [
+     "c-d49bf0697a6b963d88a43bb1"
+    ]
+   }
+  },
+  "E0414": {
+   "klass": "similar",
+   "sub": "attr_twins",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 10,
+   "n_after": 10,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0415": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-c0796182bfb26ede411ea6fa"
+   ],
+   "removals": [
+    {
+     "id": "c-c0796182bfb26ede411ea6fa",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-81967e3477b91b5e4779576e expired 2024-07-14 before question date 2024-08-19"
+    }
+   ],
+   "n_before": 19,
+   "n_after": 18,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0416": {
+   "klass": "update",
+   "sub": "chain_latest",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 6,
+   "n_after": 6,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0417": {
+   "klass": "expired",
+   "sub": "permit_window",
+   "removed_ids": [
+    "c-8cb176c4b3e7131504331d14"
+   ],
+   "removals": [
+    {
+     "id": "c-8cb176c4b3e7131504331d14",
+     "rule": "R3_validity_join",
+     "reason": "paired validity record c-d8df85fc8bcb1af85ccd42f7 expired 2023-12-18 before question date 2024-03-16"
+    }
+   ],
+   "n_before": 9,
+   "n_after": 8,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0418": {
+   "klass": "weak",
+   "sub": "alias_ref",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 20,
+   "n_after": 20,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0419": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 12,
+   "n_after": 12,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  },
+  "E0420": {
+   "klass": "weak",
+   "sub": "two_hop_role",
+   "removed_ids": [],
+   "removals": [],
+   "n_before": 7,
+   "n_after": 7,
+   "removed_vs_v1": {
+    "added": [],
+    "dropped": []
+   }
+  }
+ },
+ "gold_survival_rate": 1.0,
+ "contexts_changed_vs_v1": [
+  "E0002",
+  "E0006",
+  "E0009",
+  "E0045",
+  "E0052",
+  "E0065",
+  "E0072",
+  "E0074",
+  "E0076",
+  "E0081",
+  "E0094",
+  "E0096",
+  "E0097",
+  "E0102",
+  "E0103",
+  "E0176",
+  "E0191",
+  "E0236",
+  "E0261",
+  "E0289",
+  "E0310",
+  "E0319",
+  "E0321",
+  "E0336",
+  "E0340",
+  "E0341",
+  "E0342",
+  "E0347",
+  "E0382",
+  "E0385",
+  "E0388",
+  "E0409",
+  "E0413"
+ ]
+}

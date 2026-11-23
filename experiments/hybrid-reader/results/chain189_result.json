@@ -1,0 +1,482 @@
+{
+ "note": "V6.2 189 full chain (prefilter_v2 -> prompt v2 reader -> det assembly, frozen candidate config) vs sealed C-arm outputs, frozen classify_b2 caliber. Observational only.",
+ "full189": {
+  "good_base": 50,
+  "good_chain": 35,
+  "transitions": {
+   "correct->correct": 27,
+   "correct->over_abstain": 20,
+   "correct->wrong_answer": 3,
+   "over_abstain->over_abstain": 48,
+   "wrong_answer->correct": 6,
+   "wrong_answer->correct_abstain": 2,
+   "wrong_answer->over_abstain": 55,
+   "wrong_answer->wrong_answer": 28
+  },
+  "flips": [
+   {
+    "qid": "c4f10528",
+    "klass": "F",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "gpt4_6ed717ea",
+    "klass": "G",
+    "label": "材料外/口径",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "09ba9854",
+    "klass": "F",
+    "label": "材料外/口径",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "gpt4_e414231f",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "wrong_answer",
+    "direction": "-"
+   },
+   {
+    "qid": "00ca467f",
+    "klass": "F",
+    "label": "材料外/口径",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "gpt4_cd90e484",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "2c63a862",
+    "klass": "F",
+    "label": "材料外/口径",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "7405e8b1",
+    "klass": "F",
+    "label": "材料外/口径",
+    "base": "correct",
+    "chain": "wrong_answer",
+    "direction": "-"
+   },
+   {
+    "qid": "eac54add",
+    "klass": "F",
+    "label": "材料外/口径",
+    "base": "wrong_answer",
+    "chain": "correct",
+    "direction": "+"
+   },
+   {
+    "qid": "gpt4_d9af6064",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "87f22b4a",
+    "klass": "F",
+    "label": "材料外/口径",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "0f05491a",
+    "klass": "G",
+    "label": "材料外/口径",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "gpt4_65aabe59",
+    "klass": "F",
+    "label": "材料外/口径",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "6e984302",
+    "klass": "F",
+    "label": "材料内可判",
+    "base": "wrong_answer",
+    "chain": "correct",
+    "direction": "+"
+   },
+   {
+    "qid": "gpt4_1e4a8aec",
+    "klass": "F",
+    "label": "材料外/口径",
+    "base": "correct",
+    "chain": "wrong_answer",
+    "direction": "-"
+   },
+   {
+    "qid": "0ddfec37_abs",
+    "klass": "H",
+    "label": "材料内可判",
+    "base": "wrong_answer",
+    "chain": "correct_abstain",
+    "direction": "+"
+   },
+   {
+    "qid": "a89d7624",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "wrong_answer",
+    "chain": "correct",
+    "direction": "+"
+   },
+   {
+    "qid": "1c0ddc50",
+    "klass": "G",
+    "label": "材料外/口径",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "gpt4_8279ba03",
+    "klass": "F",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "gpt4_2d58bcd6",
+    "klass": "F",
+    "label": "材料外/口径",
+    "base": "wrong_answer",
+    "chain": "correct",
+    "direction": "+"
+   },
+   {
+    "qid": "945e3d21",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "wrong_answer",
+    "chain": "correct",
+    "direction": "+"
+   },
+   {
+    "qid": "gpt4_2f584639",
+    "klass": "G",
+    "label": "材料外/口径",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "afdc33df",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "wrong_answer",
+    "chain": "correct",
+    "direction": "+"
+   },
+   {
+    "qid": "b6025781",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "6c49646a",
+    "klass": "F",
+    "label": "材料外/口径",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "22d2cb42",
+    "klass": "F",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "ec81a493",
+    "klass": "F",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "91b15a6e",
+    "klass": "F",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "5809eb10",
+    "klass": "F",
+    "label": "材料外/口径",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "gpt4_0b2f1d21",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "gpt4_c27434e8_abs",
+    "klass": "H",
+    "label": "材料内可判",
+    "base": "wrong_answer",
+    "chain": "correct_abstain",
+    "direction": "+"
+   }
+  ],
+  "net": -15
+ },
+ "judgeable63": {
+  "good_base": 20,
+  "good_chain": 16,
+  "transitions": {
+   "correct->correct": 10,
+   "correct->over_abstain": 9,
+   "correct->wrong_answer": 1,
+   "over_abstain->over_abstain": 5,
+   "wrong_answer->correct": 4,
+   "wrong_answer->correct_abstain": 2,
+   "wrong_answer->over_abstain": 21,
+   "wrong_answer->wrong_answer": 11
+  },
+  "flips": [
+   {
+    "qid": "c4f10528",
+    "klass": "F",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "gpt4_e414231f",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "wrong_answer",
+    "direction": "-"
+   },
+   {
+    "qid": "gpt4_cd90e484",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "gpt4_d9af6064",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "6e984302",
+    "klass": "F",
+    "label": "材料内可判",
+    "base": "wrong_answer",
+    "chain": "correct",
+    "direction": "+"
+   },
+   {
+    "qid": "0ddfec37_abs",
+    "klass": "H",
+    "label": "材料内可判",
+    "base": "wrong_answer",
+    "chain": "correct_abstain",
+    "direction": "+"
+   },
+   {
+    "qid": "a89d7624",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "wrong_answer",
+    "chain": "correct",
+    "direction": "+"
+   },
+   {
+    "qid": "gpt4_8279ba03",
+    "klass": "F",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "945e3d21",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "wrong_answer",
+    "chain": "correct",
+    "direction": "+"
+   },
+   {
+    "qid": "afdc33df",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "wrong_answer",
+    "chain": "correct",
+    "direction": "+"
+   },
+   {
+    "qid": "b6025781",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "22d2cb42",
+    "klass": "F",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "ec81a493",
+    "klass": "F",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "91b15a6e",
+    "klass": "F",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "gpt4_0b2f1d21",
+    "klass": "G",
+    "label": "材料内可判",
+    "base": "correct",
+    "chain": "over_abstain",
+    "direction": "-"
+   },
+   {
+    "qid": "gpt4_c27434e8_abs",
+    "klass": "H",
+    "label": "材料内可判",
+    "base": "wrong_answer",
+    "chain": "correct_abstain",
+    "direction": "+"
+   }
+  ],
+  "net": -4
+ },
+ "det_latency_ms": [
+  3.2668999665474985e-05,
+  1.7595999452169053e-05,
+  2.6570000045467168e-05,
+  1.325999983237125e-05,
+  1.161800082627451e-05,
+  9.98499945126241e-06,
+  9.544000022287946e-06,
+  1.181700008601183e-05,
+  1.1838000318675768e-05,
+  1.0905999261012767e-05,
+  1.1608000022533815e-05,
+  9.763999514689203e-06,
+  8.873999831848778e-06,
+  4.176000402367208e-06,
+  1.1696999536070507e-05,
+  1.068599976861151e-05,
+  9.534000128041953e-06,
+  1.0945999747491442e-05,
+  6.469000254583079e-06,
+  1.0946000656986143e-05,
+  9.474000762565993e-06,
+  9.964999662770424e-06,
+  9.393999789608642e-06,
+  5.297999450704083e-06,
+  4.455699945538072e-05,
+  1.0726000255090185e-05,
+  1.122599951486336e-05,
+  1.0896999810938723e-05,
+  9.734999366628472e-06,
+  1.9670000256155618e-05,
+  9.674000466475263e-06,
+  6.400000529538374e-06,
+  9.784000212675892e-06,
+  1.2449000678316224e-05,
+  1.0695999662857503e-05,
+  1.495200012868736e-05,
+  1.20980002975557e-05,
+  9.654000677983277e-06,
+  7.841999831725843e-06,
+  1.0515999747440219e-05,
+  1.0955999641737435e-05,
+  8.4530001913663e-06,
+  9.823999789659865e-06,
+  7.241000275826082e-06,
+  1.133699970523594e-05,
+  8.862999493430834e-06,
+  9.544999556965195e-06,
+  8.342000000993721e-06,
+  6.940000275790226e-06,
+  2.205300006608013e-05,
+  9.13399981072871e-06,
+  6.610000127693638e-06,
+  8.813000022200868e-06,
+  9.414000487595331e-06,
+  3.895999725500587e-06,
+  9.3039998319e-06
+ ],
+ "base_outcomes": {
+  "correct": 50,
+  "over_abstain": 48,
+  "wrong_answer": 91
+ },
+ "chain_outcomes": {
+  "correct": 33,
+  "over_abstain": 123,
+  "wrong_answer": 31,
+  "correct_abstain": 2
+ }
+}
