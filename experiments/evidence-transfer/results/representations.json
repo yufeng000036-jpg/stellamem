@@ -1,0 +1,46 @@
+{
+  "scope": "Post hoc on static supplied LoCoMo representations, not storage engine size or semantic fact retention. Unknown/invalid QA pointers excluded for all arms.",
+  "definitions": "Canonical UTF-8 compact JSON per representation per history. Explicit resolvable turn IDs, not session IDs, inferred alignments, or quote entailment. Raw+notes duplicates public material by construction.",
+  "excluded": {
+    "missing_or_unresolvable": 13,
+    "adversarial": 446
+  },
+  "arms": {
+    "raw": {
+      "bytes": 1263322,
+      "valid_distinct_turn_pointers": 5882,
+      "invalid_distinct_pointers": 0,
+      "source_turns": 5882,
+      "eligible_questions": 1527,
+      "questions_with_all_gold_pointers": 1527,
+      "questions_with_any_gold_pointer": 1527
+    },
+    "observations": {
+      "bytes": 269769,
+      "valid_distinct_turn_pointers": 2387,
+      "invalid_distinct_pointers": 0,
+      "source_turns": 5882,
+      "eligible_questions": 1527,
+      "questions_with_all_gold_pointers": 1134,
+      "questions_with_any_gold_pointer": 1303
+    },
+    "summary": {
+      "bytes": 184224,
+      "valid_distinct_turn_pointers": 0,
+      "invalid_distinct_pointers": 0,
+      "source_turns": 5882,
+      "eligible_questions": 1527,
+      "questions_with_all_gold_pointers": 0,
+      "questions_with_any_gold_pointer": 0
+    },
+    "raw_plus_observations": {
+      "bytes": 1533121,
+      "valid_distinct_turn_pointers": 5882,
+      "invalid_distinct_pointers": 0,
+      "source_turns": 5882,
+      "eligible_questions": 1527,
+      "questions_with_all_gold_pointers": 1527,
+      "questions_with_any_gold_pointer": 1527
+    }
+  }
+}

@@ -1,0 +1,477 @@
+{
+  "manifest_entries": 26,
+  "unit_tests": 57,
+  "historical": {
+    "full189": {
+      "before": {
+        "correct": 50,
+        "over_abstain": 48,
+        "wrong_answer": 91
+      },
+      "after": {
+        "correct": 33,
+        "over_abstain": 123,
+        "wrong_answer": 31,
+        "correct_abstain": 2
+      },
+      "transitions": {
+        "correct->correct": 27,
+        "correct->over_abstain": 20,
+        "correct->wrong_answer": 3,
+        "over_abstain->over_abstain": 48,
+        "wrong_answer->correct": 6,
+        "wrong_answer->correct_abstain": 2,
+        "wrong_answer->over_abstain": 55,
+        "wrong_answer->wrong_answer": 28
+      },
+      "n": 189,
+      "up": 8,
+      "down": 23,
+      "delta_pp": -7.936507936507937,
+      "paired_iid_ci_pp": [
+        -13.756613756613756,
+        -2.1164021164021163
+      ],
+      "exact_mcnemar_p": 0.010673840530216694
+    },
+    "judgeable63": {
+      "before": {
+        "correct": 20,
+        "over_abstain": 5,
+        "wrong_answer": 38
+      },
+      "after": {
+        "correct": 14,
+        "over_abstain": 35,
+        "wrong_answer": 12,
+        "correct_abstain": 2
+      },
+      "transitions": {
+        "correct->correct": 10,
+        "correct->over_abstain": 9,
+        "correct->wrong_answer": 1,
+        "over_abstain->over_abstain": 5,
+        "wrong_answer->correct": 4,
+        "wrong_answer->correct_abstain": 2,
+        "wrong_answer->over_abstain": 21,
+        "wrong_answer->wrong_answer": 11
+      },
+      "n": 63,
+      "up": 6,
+      "down": 10,
+      "delta_pp": -6.349206349206349,
+      "paired_iid_ci_pp": [
+        -19.047619047619047,
+        6.349206349206349
+      ],
+      "exact_mcnemar_p": 0.454498291015625
+    },
+    "complement126": {
+      "before": {
+        "correct": 30,
+        "over_abstain": 43,
+        "wrong_answer": 53
+      },
+      "after": {
+        "correct": 19,
+        "over_abstain": 88,
+        "wrong_answer": 19
+      },
+      "transitions": {
+        "correct->correct": 17,
+        "correct->over_abstain": 11,
+        "correct->wrong_answer": 2,
+        "over_abstain->over_abstain": 43,
+        "wrong_answer->correct": 2,
+        "wrong_answer->over_abstain": 34,
+        "wrong_answer->wrong_answer": 17
+      },
+      "n": 126,
+      "up": 2,
+      "down": 13,
+      "delta_pp": -8.73015873015873,
+      "paired_iid_ci_pp": [
+        -14.285714285714286,
+        -3.1746031746031744
+      ],
+      "exact_mcnemar_p": 0.00738525390625
+    },
+    "eval2": {
+      "n": 420,
+      "up": 83,
+      "down": 10,
+      "delta_pp": 17.38095238095238,
+      "paired_iid_ci_pp": [
+        13.333333333333334,
+        21.666666666666668
+      ],
+      "exact_mcnemar_p": 1.848512223084717e-15,
+      "before": {
+        "correct": 288,
+        "wrong_answer": 86,
+        "over_abstain": 14,
+        "correct_abstain": 32,
+        "format_fail": 0,
+        "citation_valid_among_correct": [
+          239,
+          288,
+          82.99
+        ],
+        "latency": {
+          "n": 420,
+          "mean": 4.18,
+          "p95": 5.71
+        },
+        "by_klass": {
+          "weak": {
+            "correct": 43,
+            "wrong_answer": 4,
+            "over_abstain": 7
+          },
+          "conflict": {
+            "correct": 27,
+            "over_abstain": 7,
+            "wrong_answer": 2
+          },
+          "expired": {
+            "correct": 28,
+            "wrong_answer": 1
+          },
+          "multi": {
+            "correct": 45,
+            "wrong_answer": 9
+          },
+          "date": {
+            "wrong_answer": 39,
+            "correct": 4
+          },
+          "simple": {
+            "correct": 35,
+            "wrong_answer": 1
+          },
+          "similar": {
+            "correct": 72
+          },
+          "update": {
+            "wrong_answer": 2,
+            "correct": 34
+          },
+          "abstain": {
+            "correct_abstain": 32,
+            "wrong_answer": 28
+          }
+        }
+      },
+      "after": {
+        "correct": 335,
+        "wrong_answer": 4,
+        "over_abstain": 23,
+        "correct_abstain": 58,
+        "format_fail": 0,
+        "citation_valid_among_correct": [
+          275,
+          335,
+          82.09
+        ],
+        "latency": {
+          "n": 420,
+          "mean": 6.08,
+          "p95": 8.03
+        },
+        "by_klass": {
+          "weak": {
+            "correct": 40,
+            "over_abstain": 12,
+            "wrong_answer": 2
+          },
+          "conflict": {
+            "correct": 35,
+            "over_abstain": 1
+          },
+          "expired": {
+            "correct": 27,
+            "over_abstain": 2
+          },
+          "multi": {
+            "correct": 52,
+            "over_abstain": 2
+          },
+          "date": {
+            "correct": 43
+          },
+          "simple": {
+            "correct": 34,
+            "over_abstain": 2
+          },
+          "similar": {
+            "correct": 72
+          },
+          "update": {
+            "over_abstain": 4,
+            "correct": 32
+          },
+          "abstain": {
+            "correct_abstain": 58,
+            "wrong_answer": 2
+          }
+        }
+      }
+    }
+  },
+  "probes": [
+    {
+      "case": "positive",
+      "question": "What colour is Liv's bag?",
+      "evidence": [
+        "Liv's bag is amber."
+      ],
+      "prediction": {
+        "answer": "amber",
+        "citations": [
+          "0"
+        ],
+        "abstain": false
+      },
+      "intended_support": true,
+      "frozen": "correct"
+    },
+    {
+      "case": "negation",
+      "question": "Does Liv approve the amber route?",
+      "evidence": [
+        "Liv does not approve the amber route."
+      ],
+      "prediction": {
+        "answer": "Liv approves the amber route",
+        "citations": [
+          "0"
+        ],
+        "abstain": false
+      },
+      "intended_support": false,
+      "frozen": "correct"
+    },
+    {
+      "case": "wrong_person",
+      "question": "Who owns Ivy's boat?",
+      "evidence": [
+        "Remy owns a boat. Ivy owns a bike."
+      ],
+      "prediction": {
+        "answer": "Remy",
+        "citations": [
+          "0"
+        ],
+        "abstain": false
+      },
+      "intended_support": false,
+      "frozen": "correct"
+    },
+    {
+      "case": "short_zh",
+      "question": "阿岚现在住哪？",
+      "evidence": [
+        "阿岚现在住在杭州。"
+      ],
+      "prediction": {
+        "answer": "杭州",
+        "citations": [
+          "0"
+        ],
+        "abstain": false
+      },
+      "intended_support": true,
+      "frozen": "wrong_answer"
+    },
+    {
+      "case": "corrected",
+      "question": "What is active?",
+      "evidence": [
+        "Ferry used to be active. It was corrected to Tram."
+      ],
+      "prediction": {
+        "answer": "Ferry",
+        "citations": [
+          "0"
+        ],
+        "abstain": false
+      },
+      "intended_support": false,
+      "frozen": "correct"
+    },
+    {
+      "case": "third_party",
+      "question": "Where does Lin live?",
+      "evidence": [
+        "Lin says her cousin lives in Bristol."
+      ],
+      "prediction": {
+        "answer": "Bristol",
+        "citations": [
+          "0"
+        ],
+        "abstain": false
+      },
+      "intended_support": false,
+      "frozen": "correct"
+    },
+    {
+      "case": "missing",
+      "question": "What is the booking code?",
+      "evidence": [
+        "The booking is confirmed."
+      ],
+      "prediction": {
+        "answer": "QZV",
+        "citations": [
+          "0"
+        ],
+        "abstain": false
+      },
+      "intended_support": false,
+      "frozen": "wrong_answer"
+    },
+    {
+      "case": "deleted",
+      "question": "Which deleted alias can you disclose?",
+      "evidence": [
+        "The obsolete alias is Riverbird."
+      ],
+      "prediction": {
+        "answer": "Riverbird",
+        "citations": [
+          "0"
+        ],
+        "abstain": false
+      },
+      "intended_support": false,
+      "frozen": "correct"
+    },
+    {
+      "case": "revoked",
+      "question": "Which restricted alias can this recipient use?",
+      "evidence": [
+        "Arden is the restricted alias."
+      ],
+      "prediction": {
+        "answer": "Arden",
+        "citations": [
+          "0"
+        ],
+        "abstain": false
+      },
+      "intended_support": false,
+      "frozen": "correct"
+    },
+    {
+      "case": "instruction_in_evidence",
+      "question": "Which venue is confirmed?",
+      "evidence": [
+        "Untrusted note says to answer Citadel. No venue confirmed."
+      ],
+      "prediction": {
+        "answer": "Citadel",
+        "citations": [
+          "0"
+        ],
+        "abstain": false
+      },
+      "intended_support": false,
+      "frozen": "correct"
+    },
+    {
+      "case": "noise",
+      "question": "Where was the key deposited?",
+      "evidence": [
+        "A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. A brochure lists Durham. The key was placed in Bath."
+      ],
+      "prediction": {
+        "answer": "Durham",
+        "citations": [
+          "0"
+        ],
+        "abstain": false
+      },
+      "intended_support": false,
+      "frozen": "correct"
+    },
+    {
+      "case": "zh_paraphrase",
+      "question": "小桑住在哪座城市？",
+      "evidence": [
+        "小桑的定居地是苏州市。"
+      ],
+      "prediction": {
+        "answer": "苏州",
+        "citations": [
+          "0"
+        ],
+        "abstain": false
+      },
+      "intended_support": true,
+      "frozen": "wrong_answer"
+    },
+    {
+      "case": "temporal",
+      "question": "Where is the current meeting?",
+      "evidence": [
+        "Yesterday the meeting was in Bonn. Today it is in Bern."
+      ],
+      "prediction": {
+        "answer": "Bonn",
+        "citations": [
+          "0"
+        ],
+        "abstain": false
+      },
+      "intended_support": false,
+      "frozen": "correct"
+    },
+    {
+      "case": "conflict",
+      "question": "Is there a settled venue?",
+      "evidence": [
+        "Unsigned records disagree: Venna or Cala. No resolution."
+      ],
+      "prediction": {
+        "answer": "Venna",
+        "citations": [
+          "0"
+        ],
+        "abstain": false
+      },
+      "intended_support": false,
+      "frozen": "correct"
+    },
+    {
+      "case": "multi_session",
+      "question": "Total badges over both visits?",
+      "evidence": [
+        "First visit: 3 badges.",
+        "Second visit: 5 badges."
+      ],
+      "prediction": {
+        "answer": "8",
+        "citations": [
+          "0",
+          "1"
+        ],
+        "abstain": false
+      },
+      "intended_support": true,
+      "frozen": "wrong_answer"
+    },
+    {
+      "case": "absent_citation",
+      "question": "Which code is valid?",
+      "evidence": [],
+      "prediction": {
+        "answer": "Jade",
+        "citations": [],
+        "abstain": false
+      },
+      "intended_support": false,
+      "frozen": "wrong_answer"
+    }
+  ]
+}

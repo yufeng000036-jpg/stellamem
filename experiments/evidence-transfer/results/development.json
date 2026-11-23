@@ -1,0 +1,77 @@
+{
+  "histories": [
+    "conv-47",
+    "conv-48"
+  ],
+  "exclusions": {
+    "other_question": 364,
+    "not_single_explicit_day": 38,
+    "adversarial": 3
+  },
+  "n": 24,
+  "arms": {
+    "A": {
+      "supported": 0,
+      "exact": 0,
+      "wrong": 0,
+      "refused": 24,
+      "unsupported_exact": 0,
+      "hit1": 0,
+      "hit5": 0,
+      "words": 0,
+      "mean_gold_fraction": 0.0
+    },
+    "B": {
+      "supported": 0,
+      "exact": 0,
+      "wrong": 0,
+      "refused": 24,
+      "unsupported_exact": 0,
+      "hit1": 10,
+      "hit5": 19,
+      "words": 2567,
+      "mean_gold_fraction": 0.7708333333333334
+    },
+    "D": {
+      "supported": 12,
+      "exact": 12,
+      "wrong": 1,
+      "refused": 11,
+      "unsupported_exact": 0,
+      "hit1": 10,
+      "hit5": 19,
+      "words": 2567,
+      "mean_gold_fraction": 0.7708333333333334
+    },
+    "E": {
+      "supported": 15,
+      "exact": 15,
+      "wrong": 1,
+      "refused": 8,
+      "unsupported_exact": 0,
+      "hit1": 24,
+      "hit5": 24,
+      "words": 808,
+      "mean_gold_fraction": 1.0
+    }
+  },
+  "paired": {
+    "up": 12,
+    "down": 0,
+    "delta_pp": 50.0,
+    "cluster_n": 2,
+    "cluster_ci_pp": [
+      42.857142857142854,
+      60.0
+    ],
+    "cluster_sign_flip_p": 0.5,
+    "question_mcnemar_p": 0.00048828125
+  },
+  "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4",
+  "data_bytes": 2805274,
+  "cpu_s": 0.0914,
+  "split": "development",
+  "gpu_s": 0,
+  "model_tokens": 0,
+  "api_cost": 0
+}
