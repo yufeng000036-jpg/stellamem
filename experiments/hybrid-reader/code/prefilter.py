@@ -98,9 +98,7 @@ def prefilter(records, question, qdate):
         for rec in records:
             v = rec.get("value") or ""
             if any(m in v for m in _EXPIRED_MARKERS):
-                drop(
-                    rec, "R1_marked_expired", "record's own value states it has expired"
-                )
+                drop(rec, "R1_marked_expired", "record's own value states it has expired")
 
     # R2: explicit correction supersedes earlier same-scope same-person
     for corr in [r for r in records if _is_correction(r)]:

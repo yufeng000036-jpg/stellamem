@@ -29,9 +29,7 @@ def rec(rid, value, rdate, scope="s", pred="p", source="user"):
 
 
 def row(qid, question, records, qdate="2025/05/03 (Sat) 10:00"):
-    ctx = build_context(
-        HEADER, [(json.dumps(r, ensure_ascii=False), r) for r in records]
-    )
+    ctx = build_context(HEADER, [(json.dumps(r, ensure_ascii=False), r) for r in records])
     return {"qid": qid, "question": question, "question_date": qdate, "context": ctx}
 
 
@@ -61,9 +59,7 @@ def assemble_one(r, o, **kw):
     return sc.parse_output(assembled[r["qid"]]["raw"]), log[0]
 
 
-MAX_Q = (
-    "Among Anna Berg, Cara Dahl and Elsa Frey, who ran the farthest during dawn run?"
-)
+MAX_Q = "Among Anna Berg, Cara Dahl and Elsa Frey, who ran the farthest during dawn run?"
 MAX_RECS = [
     rec(
         "c-a",

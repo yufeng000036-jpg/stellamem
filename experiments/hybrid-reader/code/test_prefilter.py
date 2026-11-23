@@ -39,9 +39,7 @@ class TestMarkedExpired(unittest.TestCase):
         )
 
     def test_current_question_removes_marked(self):
-        kept, rm = prefilter(
-            [self.old, self.new], "白翎把宝蓝保温壶放哪儿了？", date(2025, 5, 3)
-        )
+        kept, rm = prefilter([self.old, self.new], "白翎把宝蓝保温壶放哪儿了？", date(2025, 5, 3))
         self.assertEqual([r["id"] for r in kept], ["c-new"])
         self.assertEqual(rm[0]["rule"], "R1_marked_expired")
 

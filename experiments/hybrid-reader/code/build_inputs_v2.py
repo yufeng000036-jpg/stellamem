@@ -72,17 +72,13 @@ for row in inputs:
     audit["gold_survived"] += sum(1 for c in g["gold_citations"] if c in kept_ids)
     lost = [c for c in g["gold_citations"] if c not in kept_ids]
     if lost:
-        audit["survival_failures"].append(
-            {"qid": qid, "klass": g["klass"], "lost_gold_ids": lost}
-        )
+        audit["survival_failures"].append({"qid": qid, "klass": g["klass"], "lost_gold_ids": lost})
     if removals:
         audit["questions_with_removals"] += 1
     for rm in removals:
         audit["removals_by_rule"][rm["rule"]] += 1
         audit["removals_by_klass"][g["klass"]] += 1
-    old_removed = (
-        set(old_audit["per_question"][qid]["removed_ids"]) if old_audit else set()
-    )
+    old_removed = set(old_audit["per_question"][qid]["removed_ids"]) if old_audit else set()
     new_removed = {r["id"] for r in removals}
     audit["per_question"][qid] = {
         "klass": g["klass"],

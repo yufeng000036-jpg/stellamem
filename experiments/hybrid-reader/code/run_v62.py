@@ -33,9 +33,7 @@ SEGMENT_CAP = 6500.0
 
 
 def surr():
-    return str(
-        dynamic_credential_entry("custom.kaggle", "access_token")["surrogate"]
-    ).strip()
+    return str(dynamic_credential_entry("custom.kaggle", "access_token")["surrogate"]).strip()
 
 
 def post_api(url, payload):
@@ -129,9 +127,7 @@ def main():
         "modelDataSources": [],
         "categoryIds": [],
     }
-    s, b = post_api(
-        "https://api.kaggle.com/v1/kernels.KernelsApiService/SaveKernel", payload
-    )
+    s, b = post_api("https://api.kaggle.com/v1/kernels.KernelsApiService/SaveKernel", payload)
     print(f"[{args.slug}] SaveKernel", s, b[:400].decode(errors="replace"), flush=True)
     if s != 200:
         print("push failed; stopping.", flush=True)
@@ -180,9 +176,7 @@ def main():
             f"{seg:.1f}s of {SEGMENT_CAP:.0f}s",
             flush=True,
         )
-        with open(
-            os.path.join(HERE, "gpu_ledger_v62.jsonl"), "a", encoding="utf-8"
-        ) as fh:
+        with open(os.path.join(HERE, "gpu_ledger_v62.jsonl"), "a", encoding="utf-8") as fh:
             fh.write(
                 json.dumps(
                     {

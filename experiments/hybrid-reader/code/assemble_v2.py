@@ -98,9 +98,7 @@ def complete_operands_v2(route, cited, all_records, question):
         for r in cited
     }
     if len(keys) != 1:
-        return cited, {
-            "blocked": "cited records do not share one (person, scope, predicate) key"
-        }
+        return cited, {"blocked": "cited records do not share one (person, scope, predicate) key"}
     ((person, scope, pred),) = keys
     if person is None:
         return cited, {"blocked": "series person unresolved"}
@@ -120,8 +118,7 @@ def complete_operands_v2(route, cited, all_records, question):
         pool = [
             r
             for r in pool
-            if (det_module.event_date(r)[0] or record_date(r) or date(1, 1, 1)).year
-            == year
+            if (det_module.event_date(r)[0] or record_date(r) or date(1, 1, 1)).year == year
         ]
     if route == "sum":
         pool = [r for r in pool if det_module._quantity(r) is not None]
@@ -153,9 +150,7 @@ def complete_operands_v2(route, cited, all_records, question):
         "key": [person, scope, pred],
         "n_cited": len(cited),
         "n_completed": len(pool),
-        "added": [
-            {"id": r["id"], "reason": reason} for r in pool if r["id"] not in cited_ids
-        ],
+        "added": [{"id": r["id"], "reason": reason} for r in pool if r["id"] not in cited_ids],
         "deduped": deduped,
     }
     return pool, info
@@ -171,10 +166,7 @@ def guard_validity_citation(a, cited_records, question):
     if re.search(r"到期|过期|失效|expire|expiry|valid until|有效期", question or ""):
         return None
     if all((r.get("predicate") or "") in _VALIDITY_PREDICATES for r in cited_records):
-        return (
-            "answer cites only validity/expiry records, which do not "
-            "state the asked value"
-        )
+        return "answer cites only validity/expiry records, which do not state the asked value"
     return None
 
 
@@ -523,9 +515,7 @@ def assemble_v2(
             log.append(entry)
             continue
         entry["reader_qtype"] = a.get("qtype")
-        reader_qtype = (
-            a.get("qtype") if a.get("qtype") in det_module.COMPUTE_TYPES else None
-        )
+        reader_qtype = a.get("qtype") if a.get("qtype") in det_module.COMPUTE_TYPES else None
         pattern_qtype, _ = det_module.classify_question(row["question"])
         if routing == "pattern_first" and pattern_qtype != "lookup":
             route, source = pattern_qtype, "pattern"
@@ -572,8 +562,7 @@ def assemble_v2(
                 entry["reason_code"] = res["reason_code"]
                 binding = bind == "all" or (
                     bind == "completeness"
-                    and res["reason_code"]
-                    in ("insufficient_operands", "no_valid_evidence")
+                    and res["reason_code"] in ("insufficient_operands", "no_valid_evidence")
                 )
                 if binding:
                     entry["bound_refusal"] = True
@@ -613,24 +602,18 @@ def assemble_v2(
                     checks.append(
                         (
                             "hop_owner",
-                            guard_hop_owner(
-                                a, cited, row["question"], all_records, cands
-                            ),
+                            guard_hop_owner(a, cited, row["question"], all_records, cands),
                         )
                     )
                 if "direct_owner" in guards:
                     checks.append(
                         (
                             "direct_owner",
-                            guard_direct_owner(
-                                a, cited, row["question"], all_records, cands
-                            ),
+                            guard_direct_owner(a, cited, row["question"], all_records, cands),
                         )
                     )
                 if "attribute" in guards:
-                    checks.append(
-                        ("attribute", guard_attribute(a, cited, row["question"]))
-                    )
+                    checks.append(("attribute", guard_attribute(a, cited, row["question"])))
                 if "stale" in guards:
                     checks.append(
                         (
@@ -662,9 +645,7 @@ def abstain_diag(gold_rows, per_q):
     keys anywhere in assemble_v2)."""
     specs = {
         json.loads(line)["qid"]: json.loads(line)
-        for line in open(
-            os.path.join(RT, "eval2", "eval2_specs.jsonl"), encoding="utf-8"
-        )
+        for line in open(os.path.join(RT, "eval2", "eval2_specs.jsonl"), encoding="utf-8")
     }
     by_mt = defaultdict(Counter)
     for g in gold_rows:
@@ -678,12 +659,8 @@ def main():
     ap.add_argument("--reader-outputs", required=True)
     ap.add_argument("--reader-inputs", required=True)
     ap.add_argument("--tag", required=True)
-    ap.add_argument(
-        "--routing", default="pattern_first", choices=("reader_first", "pattern_first")
-    )
-    ap.add_argument(
-        "--bind", default="completeness", choices=("none", "completeness", "all")
-    )
+    ap.add_argument("--routing", default="pattern_first", choices=("reader_first", "pattern_first"))
+    ap.add_argument("--bind", default="completeness", choices=("none", "completeness", "all"))
     ap.add_argument(
         "--guards", default="validity,hop_owner,direct_owner,attribute,stale,identifier"
     )
@@ -739,9 +716,7 @@ def main():
                 "guard": (e.get("guard") or {}).get("name"),
             }
         )
-    with open(
-        os.path.join(HERE, f"flips_{args.tag}.csv"), "w", encoding="utf-8", newline=""
-    ) as fh:
+    with open(os.path.join(HERE, f"flips_{args.tag}.csv"), "w", encoding="utf-8", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(flips[0].keys()))
         w.writeheader()
         w.writerows(flips)
@@ -780,9 +755,7 @@ def main():
             )
         },
         "hybrid_abstain_by_missing_type": abstain_diag(gold_rows, hyb["per_question"]),
-        "baseline_abstain_by_missing_type": abstain_diag(
-            gold_rows, base["per_question"]
-        ),
+        "baseline_abstain_by_missing_type": abstain_diag(gold_rows, base["per_question"]),
         "flips": {
             "positive": sum(1 for f in flips if f["direction"] == 1),
             "negative": sum(1 for f in flips if f["direction"] == -1),
@@ -790,9 +763,7 @@ def main():
         "det_module_latency_ms": det_lat,
         "assembly_log": log,
     }
-    with open(
-        os.path.join(HERE, f"ab_result_{args.tag}.json"), "w", encoding="utf-8"
-    ) as fh:
+    with open(os.path.join(HERE, f"ab_result_{args.tag}.json"), "w", encoding="utf-8") as fh:
         json.dump(result, fh, ensure_ascii=False, indent=1)
     print(
         f"[{args.tag}] baseline correct={base['correct']} wrong={base['wrong_answer']} "

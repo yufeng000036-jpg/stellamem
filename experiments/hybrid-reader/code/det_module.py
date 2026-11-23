@@ -159,18 +159,14 @@ def _event_operands(records, need):
     for rec in records:
         d, prov = event_date(rec)
         if prov == "ambiguous_date":
-            return None, _refuse(
-                "ambiguous_date", f"record {rec['id']} states several dates"
-            )
+            return None, _refuse("ambiguous_date", f"record {rec['id']} states several dates")
         if prov != "event_date" or d is None:
             return None, _refuse(
                 "insufficient_operands",
                 f"record {rec['id']} has no event date in its text "
                 f"(only session_date); refusing to compute on it",
             )
-        ops.append(
-            {"record_id": rec["id"], "value": d.isoformat(), "provenance": "event_date"}
-        )
+        ops.append({"record_id": rec["id"], "value": d.isoformat(), "provenance": "event_date"})
     if len(ops) < need:
         return None, _refuse(
             "insufficient_operands", f"need {need} event-date operands, got {len(ops)}"
@@ -190,9 +186,7 @@ def op_date_gap(records, question, qdate):
         return ref
     d1 = date.fromisoformat(ops[0]["value"])
     d2 = date.fromisoformat(ops[1]["value"])
-    return _ok(
-        str(abs((d2 - d1).days)), "date_gap_days", ops, [r["id"] for r in records]
-    )
+    return _ok(str(abs((d2 - d1).days)), "date_gap_days", ops, [r["id"] for r in records])
 
 
 _WD_EN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -220,15 +214,11 @@ def op_nth_date(records, question, qdate, n, from_last=False):
     if ref:
         return ref
     if len(records) < n:
-        return _refuse(
-            "insufficient_operands", f"only {len(records)} cited occurrences, need {n}"
-        )
+        return _refuse("insufficient_operands", f"only {len(records)} cited occurrences, need {n}")
     ordered = sorted(ops, key=lambda o: o["value"])
     pick = ordered[-n] if from_last else ordered[n - 1]
     op_name = (
-        f"nth_from_last_occurrence_date(n={n})"
-        if from_last
-        else f"nth_occurrence_date(n={n})"
+        f"nth_from_last_occurrence_date(n={n})" if from_last else f"nth_occurrence_date(n={n})"
     )
     return _ok(pick["value"], op_name, ordered, [o["record_id"] for o in ordered])
 
@@ -245,8 +235,7 @@ def op_countdown(records, question, qdate):
             if days < 0:
                 return _refuse(
                     "insufficient_operands",
-                    f"expiry {exp} precedes question date {qdate}; "
-                    "no positive countdown exists",
+                    f"expiry {exp} precedes question date {qdate}; no positive countdown exists",
                 )
             ops = [
                 {
@@ -261,9 +250,7 @@ def op_countdown(records, question, qdate):
                 },
             ]
             return _ok(str(days), "expiry_countdown_days", ops, [rec["id"]])
-    return _refuse(
-        "insufficient_operands", "no expiry date extractable from cited records"
-    )
+    return _refuse("insufficient_operands", "no expiry date extractable from cited records")
 
 
 def op_count(records, question, qdate):

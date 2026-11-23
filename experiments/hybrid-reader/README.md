@@ -1,4 +1,4 @@
-# Stellamem Hybrid Reader — Frozen Candidate 1.0.1-v62
+# Stellamem Hybrid Reader — Frozen Candidate 1.0.2-v62
 
 V6.3 Stage 1 deliverable: the V6 deterministic-hybrid prototype after the
 V6.2 safety hardening, frozen as a reproducible standalone candidate.

@@ -14,9 +14,7 @@ RT = os.path.expanduser("~/workspace/reader-train")
 path = sys.argv[1]
 res = json.load(open(path))
 tag = os.path.basename(path)[len("ab_result_") : -len(".json")]
-flips = {
-    r["qid"]: r for r in csv.DictReader(open(os.path.join(HERE, f"flips_{tag}.csv")))
-}
+flips = {r["qid"]: r for r in csv.DictReader(open(os.path.join(HERE, f"flips_{tag}.csv")))}
 gold = {
     json.loads(line)["qid"]: json.loads(line)
     for line in open(os.path.join(RT, "eval2", "eval2.jsonl"))
@@ -45,19 +43,14 @@ gates = [
 ]
 print(f"== gates for {tag} ==")
 for name, val, _thr, ok in gates:
-    print(
-        f"  {'PASS' if ok else ('FAIL' if ok is not None else ' n/a')}  "
-        f"{name}  value={val}"
-    )
+    print(f"  {'PASS' if ok else ('FAIL' if ok is not None else ' n/a')}  {name}  value={val}")
 print(
     f"totals: correct={h['correct']} wrong={h['wrong_answer']} "
     f"over={h['over_abstain']} ca={h['correct_abstain']} "
     f"format_fail={h['format_fail']}"
 )
 print(f"citations valid among correct: {h['citation_valid_among_correct']}")
-print(
-    f"multi_missing_one correct_abstain: {mm_ca}/12 (v2 assembly was 3, C1 baseline 6)"
-)
+print(f"multi_missing_one correct_abstain: {mm_ca}/12 (v2 assembly was 3, C1 baseline 6)")
 print("by_klass:", json.dumps(by, ensure_ascii=False))
 print("abstain_by_missing_type:", json.dumps(ab, ensure_ascii=False))
 pos = sum(1 for f in flips.values() if f["direction"] in ("+", "1"))

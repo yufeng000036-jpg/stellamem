@@ -231,9 +231,7 @@ def prefilter_v2(records, question, qdate):
         for rec in records:
             v = rec.get("value") or ""
             if any(m in v for m in _EXPIRED_MARKERS):
-                drop(
-                    rec, "R1_marked_expired", "record's own value states it has expired"
-                )
+                drop(rec, "R1_marked_expired", "record's own value states it has expired")
 
     # R2 v2: explicit correction supersedes only CONFLICTING earlier
     # same-scope same-person fact records.
@@ -264,8 +262,7 @@ def prefilter_v2(records, question, qdate):
             drop(
                 rec,
                 "R2_correction_conflict",
-                f"contradicts explicit correction {corr['id']} "
-                f"(asserted value: {asserted})",
+                f"contradicts explicit correction {corr['id']} (asserted value: {asserted})",
             )
 
     # R3: credential validity join (current stance only) -- v1 semantics,

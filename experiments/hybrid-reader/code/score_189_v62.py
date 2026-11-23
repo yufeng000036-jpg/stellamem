@@ -24,17 +24,13 @@ RT = os.path.expanduser("~/workspace/reader-train")
 sys.path.insert(0, HERE)
 sys.path.insert(0, HP)
 
-spec = importlib.util.spec_from_file_location(
-    "sc", os.path.join(RT, "baseline", "scorer.py")
-)
+spec = importlib.util.spec_from_file_location("sc", os.path.join(RT, "baseline", "scorer.py"))
 sc = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(sc)
 
 import assemble_v2  # noqa: E402
 
-B2 = os.path.expanduser(
-    "~/workspace/stellamem-takeover/v4-reader-exp-20261121/b2_rows.jsonl"
-)
+B2 = os.path.expanduser("~/workspace/stellamem-takeover/v4-reader-exp-20261121/b2_rows.jsonl")
 GOOD = ("correct", "correct_abstain")
 
 
@@ -50,9 +46,7 @@ def main():
     ]
     labels = {
         json.loads(line)["qid"]: json.loads(line)["label"]
-        for line in open(
-            os.path.join(RT, "regression-189", "labels_189.jsonl"), encoding="utf-8"
-        )
+        for line in open(os.path.join(RT, "regression-189", "labels_189.jsonl"), encoding="utf-8")
     }
     diag = sc.load_diag()
 
@@ -78,9 +72,7 @@ def main():
     )
 
     c_out = {}
-    for line in open(
-        os.path.join(RT, "train-run1", "c_outputs.jsonl"), encoding="utf-8"
-    ):
+    for line in open(os.path.join(RT, "train-run1", "c_outputs.jsonl"), encoding="utf-8"):
         r = json.loads(line)
         if r.get("set") == "b2":
             c_out[r["qid"]] = r

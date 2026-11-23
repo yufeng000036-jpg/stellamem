@@ -230,10 +230,7 @@ def load_diag():
     diag = {}
     for d in ("replay-stage2", "replay-topup2"):
         man = json.load(open(f"{W}/{d}/manifest.json", encoding="utf-8"))
-        by_prefix = {
-            f.rsplit("/", 1)[-1][:-5]: f
-            for f in glob.glob(f"{W}/{d}/diagnostics/*.json")
-        }
+        by_prefix = {f.rsplit("/", 1)[-1][:-5]: f for f in glob.glob(f"{W}/{d}/diagnostics/*.json")}
         for prefix, meta in man.items():
             f = by_prefix.get(prefix)
             if not f:
@@ -387,9 +384,7 @@ def score_b2(rows, outputs, diag, downgrade=True):
                 if outcome == "correct":
                     cit_total += 1
                     carriers = {
-                        cid
-                        for cid, cl in dg["claims"].items()
-                        if carries(cl["text"], a["answer"])
+                        cid for cid, cl in dg["claims"].items() if carries(cl["text"], a["answer"])
                     }
                     if set(a["citations"]) == carriers:
                         cit_valid += 1
@@ -423,9 +418,7 @@ def score_b2(rows, outputs, diag, downgrade=True):
 
 def main():
     holdout_rows = [json.loads(line) for line in open(HOLDOUT, encoding="utf-8")]
-    b2_rows = [
-        json.loads(line) for line in open(f"{EXP}/b2_rows.jsonl", encoding="utf-8")
-    ]
+    b2_rows = [json.loads(line) for line in open(f"{EXP}/b2_rows.jsonl", encoding="utf-8")]
     diag = load_diag()
 
     new_out = {}
@@ -446,12 +439,8 @@ def main():
     scores["holdout_A"] = score_holdout(holdout_rows, new_out.get(("holdout", "A"), {}))
     scores["holdout_B"] = score_holdout(holdout_rows, new_out.get(("holdout", "B"), {}))
     scores["b2_A_rescored"] = score_b2(b2_rows, old_out, diag, downgrade=True)
-    scores["b2_A_v1caliber_crosscheck"] = score_b2(
-        b2_rows, old_out, diag, downgrade=False
-    )
-    scores["b2_B"] = score_b2(
-        b2_rows, new_out.get(("b2", "B"), {}), diag, downgrade=True
-    )
+    scores["b2_A_v1caliber_crosscheck"] = score_b2(b2_rows, old_out, diag, downgrade=False)
+    scores["b2_B"] = score_b2(b2_rows, new_out.get(("b2", "B"), {}), diag, downgrade=True)
 
     with open(os.path.join(HERE, "scores.json"), "w", encoding="utf-8") as fh:
         json.dump(scores, fh, ensure_ascii=False, indent=1)

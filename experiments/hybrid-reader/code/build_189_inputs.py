@@ -18,9 +18,7 @@ sys.path.insert(0, HP)
 from prefilter_v2 import prefilter_v2 as filter_context  # noqa: E402
 from records import build_context, parse_context, parse_question_date  # noqa: E402
 
-B2 = os.path.expanduser(
-    "~/workspace/stellamem-takeover/v4-reader-exp-20261121/b2_rows.jsonl"
-)
+B2 = os.path.expanduser("~/workspace/stellamem-takeover/v4-reader-exp-20261121/b2_rows.jsonl")
 
 rows = [json.loads(line) for line in open(B2, encoding="utf-8")]
 assert len(rows) == 189, len(rows)

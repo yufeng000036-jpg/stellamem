@@ -39,24 +39,18 @@ class TestDateOps(unittest.TestCase):
         self.assertEqual(r["answer"], "2")
         self.assertEqual(r["receipt"]["operation"], "date_gap_days")
         self.assertEqual(r["receipt"]["record_ids"], ["c-1", "c-2"])
-        self.assertTrue(
-            all(o["provenance"] == "event_date" for o in r["receipt"]["operands"])
-        )
+        self.assertTrue(all(o["provenance"] == "event_date" for o in r["receipt"]["operands"]))
 
     def test_gap_zh_dates(self):
         a = rec("c-1", "韩越于2024年2月28日参加合唱练习。", "2024-02-28T10:00:00+00:00")
-        b = rec(
-            "c-2", "罗一苇于2024年3月1日参加合唱练习。", "2024-03-01T10:00:00+00:00"
-        )
+        b = rec("c-2", "罗一苇于2024年3月1日参加合唱练习。", "2024-03-01T10:00:00+00:00")
         r = dm.compute("date_gap", "相隔多少天？", [a, b], None)
         self.assertEqual((r["status"], r["answer"]), ("ok", "2"))
 
     def test_weekday_known_dates(self):
         # 2000-01-01 was a Saturday; 2024-02-29 (leap day) was a Thursday.
         a = rec("c-1", "Ana Ruiz attended choir practice on January 1, 2000.")
-        r = dm.compute(
-            "weekday", "On what day of the week did Ana Ruiz attend?", [a], None
-        )
+        r = dm.compute("weekday", "On what day of the week did Ana Ruiz attend?", [a], None)
         self.assertEqual((r["status"], r["answer"]), ("ok", "Saturday"))
         b = rec("c-2", "韩越于2024年2月29日参加合唱练习。")
         r = dm.compute("weekday", "韩越参加合唱练习那天是星期几？", [b], None)
@@ -70,9 +64,7 @@ class TestDateOps(unittest.TestCase):
             "Ana Ruiz usually does choir practice at the hall.",
             "2024-03-05T10:00:00+00:00",
         )
-        r = dm.compute(
-            "weekday", "On what day of the week did Ana Ruiz attend?", [a], None
-        )
+        r = dm.compute("weekday", "On what day of the week did Ana Ruiz attend?", [a], None)
         self.assertEqual(r["status"], "refused")
         self.assertEqual(r["reason_code"], "insufficient_operands")
 
@@ -104,16 +96,12 @@ class TestDateOps(unittest.TestCase):
             "2024-05-18T10:00:00+00:00",
             pred="有效期",
         )
-        r = dm.compute(
-            "countdown", "方既明的图书馆借阅证还有多少天到期？", [a], date(2024, 8, 9)
-        )
+        r = dm.compute("countdown", "方既明的图书馆借阅证还有多少天到期？", [a], date(2024, 8, 9))
         self.assertEqual((r["status"], r["answer"]), ("ok", "7"))
         provs = {o["provenance"] for o in r["receipt"]["operands"]}
         self.assertEqual(provs, {"text_extracted", "question_date"})
         # Already expired at question time -> no fake precise result.
-        r = dm.compute(
-            "countdown", "方既明的图书馆借阅证还有多少天到期？", [a], date(2024, 9, 1)
-        )
+        r = dm.compute("countdown", "方既明的图书馆借阅证还有多少天到期？", [a], date(2024, 9, 1))
         self.assertEqual(r["status"], "refused")
 
 
@@ -185,9 +173,7 @@ class TestAggregateOps(unittest.TestCase):
         )
         self.assertEqual(r["status"], "refused")
         self.assertEqual(r["reason_code"], "insufficient_operands")
-        recs.append(
-            rec("c-3", "Felix Wagner ran 13 km during dawn run on April 1, 2023.")
-        )
+        recs.append(rec("c-3", "Felix Wagner ran 13 km during dawn run on April 1, 2023."))
         r = dm.compute(
             "max",
             "Among Hugo Almeida, Felix Wagner and Peter "

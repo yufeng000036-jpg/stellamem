@@ -41,9 +41,7 @@ def main():
     prompt = open(prompt_path, encoding="utf-8").read()
     prompt_sha = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
     raw = open(args.inputs, "rb").read()
-    rows = [
-        json.loads(line) for line in raw.decode("utf-8").splitlines() if line.strip()
-    ]
+    rows = [json.loads(line) for line in raw.decode("utf-8").splitlines() if line.strip()]
     assert len(rows) == args.n, len(rows)
     for f in ("qid", "question", "question_date", "context", "set"):
         assert f in rows[0], f"inputs row missing field {f}"
@@ -61,11 +59,10 @@ def main():
     assert k == 1
     # 2. prompt + its sha
     new_sys = (
-        f"HYBRID_SYS = {json.dumps(prompt, ensure_ascii=False)}\n"
-        f'HYBRID_SYS_SHA256 = "{prompt_sha}"'
+        f'HYBRID_SYS = {json.dumps(prompt, ensure_ascii=False)}\nHYBRID_SYS_SHA256 = "{prompt_sha}"'
     )
     src, k = re.subn(
-        r'HYBRID_SYS = ".*"\nHYBRID_SYS_SHA256 = "[0-9a-f]+"',
+        r'HYBRID_SYS = (?:".*?"|\'.*?\')\nHYBRID_SYS_SHA256 = "[0-9a-f]+"',
         lambda m: new_sys,
         src,
         flags=re.S,
@@ -86,7 +83,7 @@ def main():
 
     # verify the clone: syntax, embedded prompt, embedded inputs
     ast.parse(src)
-    m = re.search(r'HYBRID_SYS = (".*")\nHYBRID_SYS_SHA256', src, flags=re.S)
+    m = re.search(r'HYBRID_SYS = (".*?"|\'.*?\')\nHYBRID_SYS_SHA256', src, flags=re.S)
     embedded_prompt = ast.literal_eval(m.group(1))
     assert embedded_prompt == prompt, "prompt round-trip mismatch"
     m = re.search(r'INPUTS_XZ_B64 = "(.*?)"', src, flags=re.S)
