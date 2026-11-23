@@ -7,6 +7,7 @@ the session (recording) date; an event date exists only when the value text
 itself states one. Keeping those two apart is the point of det_module's
 provenance tags.
 """
+
 import json
 import re
 from datetime import date
@@ -72,7 +73,7 @@ def person_token(value):
     v = (value or "").strip()
     for pfx in ("Correction:", "更正：", "更正:"):
         if v.startswith(pfx):
-            v = v[len(pfx):].strip()
+            v = v[len(pfx) :].strip()
             break
     m = _EN_NAME.search(v)
     if m:

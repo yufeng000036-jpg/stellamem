@@ -11,6 +11,7 @@ have changed the inference conditions vs the v1 run).
 Usage: python3 build_kernel_v62.py --inputs v62_inputs.jsonl --n 420 \
     --out-name v62_outputs.jsonl --kernel-out v62_kernel.py
 """
+
 import argparse
 import ast
 import base64
@@ -34,10 +35,15 @@ def main():
 
     src = open(os.path.join(HP, "hybrid_kernel.py"), encoding="utf-8").read()
 
-    prompt = open(os.path.join(HERE, "prompt_v2.txt"), encoding="utf-8").read()
+    prompt_path = os.path.join(HERE, "prompt_v2.txt")
+    if not os.path.exists(prompt_path):
+        prompt_path = os.path.join(HP, "prompt_v2.txt")  # package layout
+    prompt = open(prompt_path, encoding="utf-8").read()
     prompt_sha = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
     raw = open(args.inputs, "rb").read()
-    rows = [json.loads(l) for l in raw.decode("utf-8").splitlines() if l.strip()]
+    rows = [
+        json.loads(line) for line in raw.decode("utf-8").splitlines() if line.strip()
+    ]
     assert len(rows) == args.n, len(rows)
     for f in ("qid", "question", "question_date", "context", "set"):
         assert f in rows[0], f"inputs row missing field {f}"
@@ -45,28 +51,37 @@ def main():
     b64 = base64.b64encode(lzma.compress(raw, preset=6)).decode()
 
     # 1. embedded inputs + their sha
-    src, k = re.subn(r'INPUTS_XZ_B64 = ".*?"',
-                     lambda m: f'INPUTS_XZ_B64 = "{b64}"',
-                     src, flags=re.S)
+    src, k = re.subn(
+        r'INPUTS_XZ_B64 = ".*?"', lambda m: f'INPUTS_XZ_B64 = "{b64}"', src, flags=re.S
+    )
     assert k == 1
-    src, k = re.subn(r'INPUTS_SHA256 = "[0-9a-f]+"',
-                     lambda m: f'INPUTS_SHA256 = "{inputs_sha}"', src)
+    src, k = re.subn(
+        r'INPUTS_SHA256 = "[0-9a-f]+"', lambda m: f'INPUTS_SHA256 = "{inputs_sha}"', src
+    )
     assert k == 1
     # 2. prompt + its sha
-    new_sys = (f'HYBRID_SYS = {json.dumps(prompt, ensure_ascii=False)}\n'
-               f'HYBRID_SYS_SHA256 = "{prompt_sha}"')
-    src, k = re.subn(r'HYBRID_SYS = ".*"\nHYBRID_SYS_SHA256 = "[0-9a-f]+"',
-                     lambda m: new_sys, src, flags=re.S)
+    new_sys = (
+        f"HYBRID_SYS = {json.dumps(prompt, ensure_ascii=False)}\n"
+        f'HYBRID_SYS_SHA256 = "{prompt_sha}"'
+    )
+    src, k = re.subn(
+        r'HYBRID_SYS = ".*"\nHYBRID_SYS_SHA256 = "[0-9a-f]+"',
+        lambda m: new_sys,
+        src,
+        flags=re.S,
+    )
     assert k == 1
     # 3. row-count assert + output name + arm label + stage label
-    src, k = re.subn(r"assert len\(inputs\) == \d+",
-                     lambda m: f"assert len(inputs) == {args.n}", src)
+    src, k = re.subn(
+        r"assert len\(inputs\) == \d+", lambda m: f"assert len(inputs) == {args.n}", src
+    )
     assert k == 1
-    src, k = re.subn(r'WORK \+ "/hybrid_outputs\.jsonl"',
-                     lambda m: f'WORK + "/{args.out_name}"', src)
+    src, k = re.subn(
+        r'WORK \+ "/hybrid_outputs\.jsonl"', lambda m: f'WORK + "/{args.out_name}"', src
+    )
     assert k == 1
     src = src.replace('"arm": "H1"', '"arm": "V62"')
-    src = src.replace(':H1:{row', ':V62:{row')
+    src = src.replace(":H1:{row", ":V62:{row")
     src = src.replace('"stage": "eval2-HYBRID"', '"stage": "v62"')
 
     # verify the clone: syntax, embedded prompt, embedded inputs
@@ -81,8 +96,16 @@ def main():
 
     with open(args.kernel_out, "w", encoding="utf-8") as f:
         f.write(src)
-    print("kernel written:", args.kernel_out, "| prompt_sha:", prompt_sha,
-          "| inputs_sha:", inputs_sha, "| n:", len(rows))
+    print(
+        "kernel written:",
+        args.kernel_out,
+        "| prompt_sha:",
+        prompt_sha,
+        "| inputs_sha:",
+        inputs_sha,
+        "| n:",
+        len(rows),
+    )
 
 
 if __name__ == "__main__":

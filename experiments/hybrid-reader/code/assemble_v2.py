@@ -28,6 +28,7 @@ scorer, with the V6.2 safety changes:
   - Every assembly log entry carries routing / completion / guard fields
     (fixes the run-1 provenance gap).
 """
+
 import argparse
 import csv
 from datetime import date
@@ -45,12 +46,13 @@ RT = os.path.expanduser("~/workspace/reader-train")
 sys.path.insert(0, HERE)
 sys.path.insert(0, HP)
 
-import det_module
-from prefilter_v2 import candidate_persons, person_of
-from records import parse_context, parse_question_date, record_date
+import det_module  # noqa: E402
+from prefilter_v2 import candidate_persons, person_of  # noqa: E402
+from records import parse_context, parse_question_date, record_date  # noqa: E402
 
 spec = importlib.util.spec_from_file_location(
-    "frozen_scorer", os.path.join(RT, "baseline", "scorer.py"))
+    "frozen_scorer", os.path.join(RT, "baseline", "scorer.py")
+)
 scorer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(scorer)
 
@@ -70,9 +72,12 @@ def load_outputs(path):
 
 def _abstain_output(rec):
     final = {"answer": "", "citations": [], "abstain": True}
-    return {"qid": rec["qid"], "arm": rec.get("arm"),
-            "raw": json.dumps(final, ensure_ascii=False),
-            "secs": rec.get("secs")}
+    return {
+        "qid": rec["qid"],
+        "arm": rec.get("arm"),
+        "raw": json.dumps(final, ensure_ascii=False),
+        "secs": rec.get("secs"),
+    }
 
 
 # ------------------------------------------------------- completion v2
@@ -84,36 +89,52 @@ def complete_operands_v2(route, cited, all_records, question):
     if route not in ("count", "sum", "nth_date") or not cited:
         return cited, None
     cands = candidate_persons(all_records)
-    keys = {(person_of(r.get("value"), cands, r.get("scope")),
-             r.get("scope"), r.get("predicate")) for r in cited}
+    keys = {
+        (
+            person_of(r.get("value"), cands, r.get("scope")),
+            r.get("scope"),
+            r.get("predicate"),
+        )
+        for r in cited
+    }
     if len(keys) != 1:
-        return cited, {"blocked": "cited records do not share one "
-                                   "(person, scope, predicate) key"}
-    (person, scope, pred), = keys
+        return cited, {
+            "blocked": "cited records do not share one (person, scope, predicate) key"
+        }
+    ((person, scope, pred),) = keys
     if person is None:
         return cited, {"blocked": "series person unresolved"}
-    pool = [r for r in all_records
-            if r.get("scope") == scope and r.get("predicate") == pred
-            and person_of(r.get("value"), cands, r.get("scope")) == person]
+    pool = [
+        r
+        for r in all_records
+        if r.get("scope") == scope
+        and r.get("predicate") == pred
+        and person_of(r.get("value"), cands, r.get("scope")) == person
+    ]
     # explicit time range stated in the question restricts the series
-    ym = re.search(r"(20\d{2})\s*年", question or "") or \
-        re.search(r"\bin\s+(20\d{2})\b", question or "")
+    ym = re.search(r"(20\d{2})\s*年", question or "") or re.search(
+        r"\bin\s+(20\d{2})\b", question or ""
+    )
     year = int(ym.group(1)) if ym else None
     if year is not None:
-        pool = [r for r in pool
-                if (det_module.event_date(r)[0] or
-                    record_date(r) or date(1, 1, 1)).year == year]
+        pool = [
+            r
+            for r in pool
+            if (det_module.event_date(r)[0] or record_date(r) or date(1, 1, 1)).year
+            == year
+        ]
     if route == "sum":
         pool = [r for r in pool if det_module._quantity(r) is not None]
     else:
-        pool = [r for r in pool
-                if det_module.event_date(r)[1] == "event_date"]
+        pool = [r for r in pool if det_module.event_date(r)[1] == "event_date"]
     # same-event dedupe: duplicate statements of one event count once
     seen, deduped, uniq = set(), [], []
     for r in pool:
         if route == "sum":
-            sig = (det_module.event_date(r)[0] or record_date(r),
-                   det_module._quantity(r))
+            sig = (
+                det_module.event_date(r)[0] or record_date(r),
+                det_module._quantity(r),
+            )
         else:
             sig = det_module.event_date(r)[0]
         if sig in seen:
@@ -125,13 +146,18 @@ def complete_operands_v2(route, cited, all_records, question):
     if len(pool) <= len(cited):
         return cited, None
     cited_ids = {r["id"] for r in cited}
-    reason = (f"series match: person={person} scope={scope} "
-              f"predicate={pred}" + (f" year={year}" if year else ""))
-    info = {"key": [person, scope, pred], "n_cited": len(cited),
-            "n_completed": len(pool),
-            "added": [{"id": r["id"], "reason": reason}
-                      for r in pool if r["id"] not in cited_ids],
-            "deduped": deduped}
+    reason = f"series match: person={person} scope={scope} predicate={pred}" + (
+        f" year={year}" if year else ""
+    )
+    info = {
+        "key": [person, scope, pred],
+        "n_cited": len(cited),
+        "n_completed": len(pool),
+        "added": [
+            {"id": r["id"], "reason": reason} for r in pool if r["id"] not in cited_ids
+        ],
+        "deduped": deduped,
+    }
     return pool, info
 
 
@@ -142,13 +168,13 @@ def guard_validity_citation(a, cited_records, question):
     and countdown-routed flow (handled before guards)."""
     if not cited_records:
         return None
-    if re.search(r"到期|过期|失效|expire|expiry|valid until|有效期",
-                 question or ""):
+    if re.search(r"到期|过期|失效|expire|expiry|valid until|有效期", question or ""):
         return None
-    if all((r.get("predicate") or "") in _VALIDITY_PREDICATES
-           for r in cited_records):
-        return "answer cites only validity/expiry records, which do not " \
-               "state the asked value"
+    if all((r.get("predicate") or "") in _VALIDITY_PREDICATES for r in cited_records):
+        return (
+            "answer cites only validity/expiry records, which do not "
+            "state the asked value"
+        )
     return None
 
 
@@ -192,8 +218,7 @@ def _guard_person_view(cands):
     superstrings of another candidate -- those are glued extractions of
     the shorter name ('韩越购入' harvested from a purchase record vs the
     clean '韩越'), not distinct persons."""
-    return {c for c in cands
-            if not any(o != c and c.startswith(o) for o in cands)}
+    return {c for c in cands if not any(o != c and c.startswith(o) for o in cands)}
 
 
 def _same_person(cp, p, view):
@@ -204,8 +229,7 @@ def _same_person(cp, p, view):
     # glued token of the same name (name + verb chars), unless a longer
     # distinct candidate matches the token better
     if cp.startswith(p):
-        return not any(c != p and cp.startswith(c) and len(c) > len(p)
-                       for c in view)
+        return not any(c != p and cp.startswith(c) and len(c) > len(p) for c in view)
     return False
 
 
@@ -224,21 +248,37 @@ def guard_hop_owner(a, cited_records, question, all_records, cands):
         if cp is None:
             return None  # unextractable citation -> conservative no-op
         cited_persons.append(cp)
-    if cited_persons and not any(_same_person(cp, p, view)
-                                 for cp in cited_persons):
-        return (f"question resolves to {p} via the role record, but the "
-                f"cited records are about {sorted(set(cited_persons))}")
+    if cited_persons and not any(_same_person(cp, p, view) for cp in cited_persons):
+        return (
+            f"question resolves to {p} via the role record, but the "
+            f"cited records are about {sorted(set(cited_persons))}"
+        )
     return None
 
 
 _ASKED_PATTERNS = [
-    ("price", re.compile(r"多少钱|价格是多少|花了多少|how much did .* "
-                         r"(?:pay|cost)|what is the price")),
-    ("buyplace", re.compile(r"在哪里买|在哪儿买|哪里购入|在哪里购|"
-                            r"where did .* buy|where .* bought")),
-    ("loc_item", re.compile(r"搁在哪儿|放在哪儿|收在哪儿|放哪儿了|放在哪|"
-                            r"where does .* keep|where .* stored|"
-                            r"where .* keep .*")),
+    (
+        "price",
+        re.compile(
+            r"多少钱|价格是多少|花了多少|how much did .* "
+            r"(?:pay|cost)|what is the price"
+        ),
+    ),
+    (
+        "buyplace",
+        re.compile(
+            r"在哪里买|在哪儿买|哪里购入|在哪里购|"
+            r"where did .* buy|where .* bought"
+        ),
+    ),
+    (
+        "loc_item",
+        re.compile(
+            r"搁在哪儿|放在哪儿|收在哪儿|放哪儿了|放在哪|"
+            r"where does .* keep|where .* stored|"
+            r"where .* keep .*"
+        ),
+    ),
 ]
 _PRED_CLASS = [
     ("price", ("价格", "price paid", "price")),
@@ -272,15 +312,15 @@ def guard_attribute(a, cited_records, question):
     if any(c is None for c in classes):
         return None
     if all(c != asked for c in classes):
-        return (f"question asks {asked}, but cited records state "
-                f"{sorted(set(classes))}")
+        return f"question asks {asked}, but cited records state {sorted(set(classes))}"
     return None
 
 
 _CODE_QUESTION = re.compile(
     r"编号|号码|证件号|what is the (?:current )?number|"
     r"what .* (?:number|code) (?:of|is)|membership number|pass number",
-    re.IGNORECASE)
+    re.IGNORECASE,
+)
 _CODE_TOKEN = re.compile(r"[A-Z]{1,4}-\d{3,}")
 
 
@@ -310,24 +350,33 @@ def identifier_repair(a, cited_records, question, all_records, cands):
         view = _guard_person_view(cands)
         owner = person_of(rec.get("value"), cands, rec.get("scope"))
         if _same_person(owner, named[0], view):
-            return {"replace": tok, "from_record": rec["id"],
-                    "reason": (f"reader answered a bare integer; the cited "
-                               f"record {rec['id']} states exactly one "
-                               f"identifier ({tok}) for the person named "
-                               f"in the question")}
-    return {"abstain": (f"reader answered a bare integer to an "
-                        f"identifier question; cited records carry "
-                        f"identifier(s) {sorted(found)} that do not "
-                        f"uniquely match the named person")}
+            return {
+                "replace": tok,
+                "from_record": rec["id"],
+                "reason": (
+                    f"reader answered a bare integer; the cited "
+                    f"record {rec['id']} states exactly one "
+                    f"identifier ({tok}) for the person named "
+                    f"in the question"
+                ),
+            }
+    return {
+        "abstain": (
+            f"reader answered a bare integer to an "
+            f"identifier question; cited records carry "
+            f"identifier(s) {sorted(found)} that do not "
+            f"uniquely match the named person"
+        )
+    }
 
 
 _PAST_MARKERS = re.compile(
     r"当时|那时|去年|上个月|曾经|起初|最初|at that time|back then|"
-    r"originally|used to")
+    r"originally|used to"
+)
 
 
-def guard_stale_citation(a, cited_records, question, all_records, cands,
-                         qdate):
+def guard_stale_citation(a, cited_records, question, all_records, cands, qdate):
     """G6: current-state question; the reader cited a fact record while
     a later record with the same (person, scope, predicate) key exists
     in context and was NOT cited -> the citation is provably stale.
@@ -353,8 +402,11 @@ def guard_stale_citation(a, cited_records, question, all_records, cands,
             if (s.get("predicate") or "") in _VALIDITY_PREDICATES:
                 continue
             sp = person_of(s.get("value"), cands, s.get("scope"))
-            if sp is not None and _same_person(sp, p, view) and \
-                    (sp, s.get("scope"), s.get("predicate"))[1:] == key[1:]:
+            if (
+                sp is not None
+                and _same_person(sp, p, view)
+                and (sp, s.get("scope"), s.get("predicate"))[1:] == key[1:]
+            ):
                 sibs.append(s)
         dated = [(record_date(s), s) for s in sibs]
         dated = [(d, s) for d, s in dated if d is not None]
@@ -362,17 +414,23 @@ def guard_stale_citation(a, cited_records, question, all_records, cands,
             continue
         dmax, latest = max(dated, key=lambda t: t[0])
         rd = record_date(r)
-        if rd is not None and dmax > rd and latest["id"] not in cited_ids \
-                and (qdate is None or dmax <= qdate):
+        if (
+            rd is not None
+            and dmax > rd
+            and latest["id"] not in cited_ids
+            and (qdate is None or dmax <= qdate)
+        ):
             # corroboration escape: if the reader's answer also appears
             # in the latest record's value, the newest evidence supports
             # the answer despite the stale citation -> do not convert.
             ans = (a.get("answer") or "").strip()
             if ans and ans in (latest.get("value") or ""):
                 continue
-            return (f"cited record {r['id']} ({rd}) is stale: a later "
-                    f"same-key record {latest['id']} ({dmax}) exists and "
-                    f"was not cited")
+            return (
+                f"cited record {r['id']} ({rd}) is stale: a later "
+                f"same-key record {latest['id']} ({dmax}) exists and "
+                f"was not cited"
+            )
     return None
 
 
@@ -396,40 +454,65 @@ def guard_direct_owner(a, cited_records, question, all_records, cands):
         cited_persons.append(cp)
     if any(_same_person(cp, p, view) for cp in cited_persons):
         return None
-    own_keys = {(r.get("scope"), r.get("predicate")) for r in all_records
-                if _same_person(person_of(r.get("value"), cands,
-                                          r.get("scope")), p, view)}
-    cited_keys = {(r.get("scope"), r.get("predicate"))
-                  for r in cited_records}
+    own_keys = {
+        (r.get("scope"), r.get("predicate"))
+        for r in all_records
+        if _same_person(person_of(r.get("value"), cands, r.get("scope")), p, view)
+    }
+    cited_keys = {(r.get("scope"), r.get("predicate")) for r in cited_records}
     if own_keys & cited_keys:
         # corroboration escape: the reader's answer appears in one of
         # P's own records -> the evidence exists (the citation pointer
         # is wrong, the answer is not unsupported) -> do not convert.
         ans = (a.get("answer") or "").strip()
-        if ans and any(ans in (r.get("value") or "") for r in all_records
-                       if _same_person(person_of(r.get("value"), cands,
-                                                 r.get("scope")), p, view)
-                       or p in (r.get("value") or "")):
+        if ans and any(
+            ans in (r.get("value") or "")
+            for r in all_records
+            if _same_person(person_of(r.get("value"), cands, r.get("scope")), p, view)
+            or p in (r.get("value") or "")
+        ):
             return None
-        return (f"question names {p}, who has same-key records in "
-                f"context, but the cited records are about "
-                f"{sorted(set(cited_persons))}")
+        return (
+            f"question names {p}, who has same-key records in "
+            f"context, but the cited records are about "
+            f"{sorted(set(cited_persons))}"
+        )
     return None
 
 
 # ------------------------------------------------------------ assembly
-def assemble_v2(reader_outputs, rows, routing="pattern_first",
-                complete=True, bind="completeness",
-                guards=("validity", "hop_owner", "direct_owner", "attribute", "stale", "identifier")):
+def assemble_v2(
+    reader_outputs,
+    rows,
+    routing="pattern_first",
+    complete=True,
+    bind="completeness",
+    guards=(
+        "validity",
+        "hop_owner",
+        "direct_owner",
+        "attribute",
+        "stale",
+        "identifier",
+    ),
+):
     assembled, log, det_secs = {}, [], []
     for row in rows:
         qid = row["qid"]
         rec = reader_outputs.get(qid)
-        entry = {"qid": qid, "route": None, "route_source": None,
-                 "compute_status": None, "reason_code": None,
-                 "receipt": None, "reader_qtype": None,
-                 "operands_completed": None, "bound_refusal": False,
-                 "guard": None, "repair": None}
+        entry = {
+            "qid": qid,
+            "route": None,
+            "route_source": None,
+            "compute_status": None,
+            "reason_code": None,
+            "receipt": None,
+            "reader_qtype": None,
+            "operands_completed": None,
+            "bound_refusal": False,
+            "guard": None,
+            "repair": None,
+        }
         if rec is None:
             log.append(entry)
             continue
@@ -440,7 +523,9 @@ def assemble_v2(reader_outputs, rows, routing="pattern_first",
             log.append(entry)
             continue
         entry["reader_qtype"] = a.get("qtype")
-        reader_qtype = a.get("qtype") if a.get("qtype") in det_module.COMPUTE_TYPES else None
+        reader_qtype = (
+            a.get("qtype") if a.get("qtype") in det_module.COMPUTE_TYPES else None
+        )
         pattern_qtype, _ = det_module.classify_question(row["question"])
         if routing == "pattern_first" and pattern_qtype != "lookup":
             route, source = pattern_qtype, "pattern"
@@ -462,27 +547,34 @@ def assemble_v2(reader_outputs, rows, routing="pattern_first",
             compute_records = cited
             if complete:
                 compute_records, comp = complete_operands_v2(
-                    route, cited, all_records, row["question"])
+                    route, cited, all_records, row["question"]
+                )
                 entry["operands_completed"] = comp
             qdate = parse_question_date(row["question_date"])
             t0 = time.perf_counter()
-            res = det_module.compute(route, row["question"],
-                                     compute_records, qdate)
+            res = det_module.compute(route, row["question"], compute_records, qdate)
             det_secs.append(time.perf_counter() - t0)
             entry["compute_status"] = res["status"]
             if res["status"] == "ok":
                 entry["receipt"] = res["receipt"]
-                ans = {"answer": res["answer"],
-                       "citations": a["citations"], "abstain": False}
-                final = {"qid": qid, "arm": rec.get("arm"),
-                         "raw": json.dumps(ans, ensure_ascii=False),
-                         "secs": rec.get("secs")}
+                ans = {
+                    "answer": res["answer"],
+                    "citations": a["citations"],
+                    "abstain": False,
+                }
+                final = {
+                    "qid": qid,
+                    "arm": rec.get("arm"),
+                    "raw": json.dumps(ans, ensure_ascii=False),
+                    "secs": rec.get("secs"),
+                }
             else:
                 entry["reason_code"] = res["reason_code"]
-                binding = (bind == "all" or
-                           (bind == "completeness" and
-                            res["reason_code"] in
-                            ("insufficient_operands", "no_valid_evidence")))
+                binding = bind == "all" or (
+                    bind == "completeness"
+                    and res["reason_code"]
+                    in ("insufficient_operands", "no_valid_evidence")
+                )
                 if binding:
                     entry["bound_refusal"] = True
                     final = _abstain_output(rec)
@@ -490,40 +582,64 @@ def assemble_v2(reader_outputs, rows, routing="pattern_first",
             # reader answer stands unless a repair/guard converts it
             cands = candidate_persons(all_records)
             if "identifier" in guards:
-                rep = identifier_repair(a, cited, row["question"],
-                                        all_records, cands)
+                rep = identifier_repair(a, cited, row["question"], all_records, cands)
                 if rep and "replace" in rep:
-                    entry["repair"] = {"name": "identifier_extraction",
-                                       **rep}
-                    ans = {"answer": rep["replace"],
-                           "citations": a["citations"], "abstain": False}
-                    final = {"qid": qid, "arm": rec.get("arm"),
-                             "raw": json.dumps(ans, ensure_ascii=False),
-                             "secs": rec.get("secs")}
+                    entry["repair"] = {"name": "identifier_extraction", **rep}
+                    ans = {
+                        "answer": rep["replace"],
+                        "citations": a["citations"],
+                        "abstain": False,
+                    }
+                    final = {
+                        "qid": qid,
+                        "arm": rec.get("arm"),
+                        "raw": json.dumps(ans, ensure_ascii=False),
+                        "secs": rec.get("secs"),
+                    }
                 elif rep and "abstain" in rep:
-                    entry["guard"] = {"name": "identifier",
-                                      "reason": rep["abstain"]}
+                    entry["guard"] = {"name": "identifier", "reason": rep["abstain"]}
                     final = _abstain_output(rec)
             if final is None:
                 qdate2 = parse_question_date(row["question_date"])
                 checks = []
                 if "validity" in guards:
-                    checks.append(("validity_citation",
-                                   guard_validity_citation(
-                                       a, cited, row["question"])))
+                    checks.append(
+                        (
+                            "validity_citation",
+                            guard_validity_citation(a, cited, row["question"]),
+                        )
+                    )
                 if "hop_owner" in guards:
-                    checks.append(("hop_owner", guard_hop_owner(
-                        a, cited, row["question"], all_records, cands)))
+                    checks.append(
+                        (
+                            "hop_owner",
+                            guard_hop_owner(
+                                a, cited, row["question"], all_records, cands
+                            ),
+                        )
+                    )
                 if "direct_owner" in guards:
-                    checks.append(("direct_owner", guard_direct_owner(
-                        a, cited, row["question"], all_records, cands)))
+                    checks.append(
+                        (
+                            "direct_owner",
+                            guard_direct_owner(
+                                a, cited, row["question"], all_records, cands
+                            ),
+                        )
+                    )
                 if "attribute" in guards:
-                    checks.append(("attribute", guard_attribute(
-                        a, cited, row["question"])))
+                    checks.append(
+                        ("attribute", guard_attribute(a, cited, row["question"]))
+                    )
                 if "stale" in guards:
-                    checks.append(("stale_citation", guard_stale_citation(
-                        a, cited, row["question"], all_records, cands,
-                        qdate2)))
+                    checks.append(
+                        (
+                            "stale_citation",
+                            guard_stale_citation(
+                                a, cited, row["question"], all_records, cands, qdate2
+                            ),
+                        )
+                    )
                 for name, reason in checks:
                     if reason:
                         entry["guard"] = {"name": name, "reason": reason}
@@ -544,9 +660,12 @@ def abstain_diag(gold_rows, per_q):
     """REPORTING ONLY: reads eval2 specs to break abstentions down by
     missing_type. Never feeds the pipeline (no runtime use of gold/spec
     keys anywhere in assemble_v2)."""
-    specs = {json.loads(l)["qid"]: json.loads(l)
-             for l in open(os.path.join(RT, "eval2", "eval2_specs.jsonl"),
-                           encoding="utf-8")}
+    specs = {
+        json.loads(line)["qid"]: json.loads(line)
+        for line in open(
+            os.path.join(RT, "eval2", "eval2_specs.jsonl"), encoding="utf-8"
+        )
+    }
     by_mt = defaultdict(Counter)
     for g in gold_rows:
         if g["gold_abstain"]:
@@ -559,25 +678,37 @@ def main():
     ap.add_argument("--reader-outputs", required=True)
     ap.add_argument("--reader-inputs", required=True)
     ap.add_argument("--tag", required=True)
-    ap.add_argument("--routing", default="pattern_first",
-                    choices=("reader_first", "pattern_first"))
-    ap.add_argument("--bind", default="completeness",
-                    choices=("none", "completeness", "all"))
-    ap.add_argument("--guards", default="validity,hop_owner,direct_owner,attribute,stale,identifier")
+    ap.add_argument(
+        "--routing", default="pattern_first", choices=("reader_first", "pattern_first")
+    )
+    ap.add_argument(
+        "--bind", default="completeness", choices=("none", "completeness", "all")
+    )
+    ap.add_argument(
+        "--guards", default="validity,hop_owner,direct_owner,attribute,stale,identifier"
+    )
     ap.add_argument("--complete", default="v2", choices=("v2", "off"))
     args = ap.parse_args()
 
-    gold_rows = [json.loads(l) for l in open(
-        os.path.join(RT, "eval2", "eval2.jsonl"), encoding="utf-8")]
-    rows = [json.loads(l) for l in open(args.reader_inputs, encoding="utf-8")]
+    gold_rows = [
+        json.loads(line)
+        for line in open(os.path.join(RT, "eval2", "eval2.jsonl"), encoding="utf-8")
+    ]
+    rows = [json.loads(line) for line in open(args.reader_inputs, encoding="utf-8")]
     reader_outputs = load_outputs(args.reader_outputs)
-    baseline_outputs = load_outputs(os.path.join(
-        RT, "eval2-baselines", "kaggle-output-c1", "c1_outputs.jsonl"))
+    baseline_outputs = load_outputs(
+        os.path.join(RT, "eval2-baselines", "kaggle-output-c1", "c1_outputs.jsonl")
+    )
     guards = tuple(g for g in args.guards.split(",") if g)
 
     assembled, log, det_secs = assemble_v2(
-        reader_outputs, rows, routing=args.routing,
-        complete=(args.complete == "v2"), bind=args.bind, guards=guards)
+        reader_outputs,
+        rows,
+        routing=args.routing,
+        complete=(args.complete == "v2"),
+        bind=args.bind,
+        guards=guards,
+    )
     hyb = score_arm(gold_rows, assembled)
     base = score_arm(gold_rows, baseline_outputs)
 
@@ -592,47 +723,86 @@ def main():
         elif b in GOOD and h not in GOOD:
             direction = -1
         e = log_by_qid.get(qid, {})
-        flips.append({"qid": qid, "klass": g["klass"], "sub": g.get("sub"),
-                      "baseline_outcome": b, "hybrid_outcome": h,
-                      "direction": direction, "route": e.get("route"),
-                      "route_source": e.get("route_source"),
-                      "compute_status": e.get("compute_status"),
-                      "reason_code": e.get("reason_code"),
-                      "bound_refusal": e.get("bound_refusal"),
-                      "guard": (e.get("guard") or {}).get("name")})
-    with open(os.path.join(HERE, f"flips_{args.tag}.csv"), "w",
-              encoding="utf-8", newline="") as fh:
+        flips.append(
+            {
+                "qid": qid,
+                "klass": g["klass"],
+                "sub": g.get("sub"),
+                "baseline_outcome": b,
+                "hybrid_outcome": h,
+                "direction": direction,
+                "route": e.get("route"),
+                "route_source": e.get("route_source"),
+                "compute_status": e.get("compute_status"),
+                "reason_code": e.get("reason_code"),
+                "bound_refusal": e.get("bound_refusal"),
+                "guard": (e.get("guard") or {}).get("name"),
+            }
+        )
+    with open(
+        os.path.join(HERE, f"flips_{args.tag}.csv"), "w", encoding="utf-8", newline=""
+    ) as fh:
         w = csv.DictWriter(fh, fieldnames=list(flips[0].keys()))
         w.writeheader()
         w.writerows(flips)
 
     det_lat = scorer.lat_stats([s * 1000 for s in det_secs])
     result = {
-        "tag": args.tag, "routing": args.routing, "bind": args.bind,
-        "guards": list(guards), "complete": args.complete,
-        "baseline": {k: base[k] for k in
-                     ("correct", "wrong_answer", "over_abstain",
-                      "correct_abstain", "format_fail",
-                      "citation_valid_among_correct", "latency", "by_klass")},
-        "hybrid": {k: hyb[k] for k in
-                   ("correct", "wrong_answer", "over_abstain",
-                    "correct_abstain", "format_fail",
-                    "citation_valid_among_correct", "latency", "by_klass")},
+        "tag": args.tag,
+        "routing": args.routing,
+        "bind": args.bind,
+        "guards": list(guards),
+        "complete": args.complete,
+        "baseline": {
+            k: base[k]
+            for k in (
+                "correct",
+                "wrong_answer",
+                "over_abstain",
+                "correct_abstain",
+                "format_fail",
+                "citation_valid_among_correct",
+                "latency",
+                "by_klass",
+            )
+        },
+        "hybrid": {
+            k: hyb[k]
+            for k in (
+                "correct",
+                "wrong_answer",
+                "over_abstain",
+                "correct_abstain",
+                "format_fail",
+                "citation_valid_among_correct",
+                "latency",
+                "by_klass",
+            )
+        },
         "hybrid_abstain_by_missing_type": abstain_diag(gold_rows, hyb["per_question"]),
-        "baseline_abstain_by_missing_type": abstain_diag(gold_rows, base["per_question"]),
-        "flips": {"positive": sum(1 for f in flips if f["direction"] == 1),
-                  "negative": sum(1 for f in flips if f["direction"] == -1)},
+        "baseline_abstain_by_missing_type": abstain_diag(
+            gold_rows, base["per_question"]
+        ),
+        "flips": {
+            "positive": sum(1 for f in flips if f["direction"] == 1),
+            "negative": sum(1 for f in flips if f["direction"] == -1),
+        },
         "det_module_latency_ms": det_lat,
         "assembly_log": log,
     }
-    with open(os.path.join(HERE, f"ab_result_{args.tag}.json"), "w",
-              encoding="utf-8") as fh:
+    with open(
+        os.path.join(HERE, f"ab_result_{args.tag}.json"), "w", encoding="utf-8"
+    ) as fh:
         json.dump(result, fh, ensure_ascii=False, indent=1)
-    print(f"[{args.tag}] baseline correct={base['correct']} wrong={base['wrong_answer']} "
-          f"over={base['over_abstain']} ca={base['correct_abstain']}")
-    print(f"[{args.tag}] hybrid   correct={hyb['correct']} wrong={hyb['wrong_answer']} "
-          f"over={hyb['over_abstain']} ca={hyb['correct_abstain']} "
-          f"flips +{result['flips']['positive']} / -{result['flips']['negative']}")
+    print(
+        f"[{args.tag}] baseline correct={base['correct']} wrong={base['wrong_answer']} "
+        f"over={base['over_abstain']} ca={base['correct_abstain']}"
+    )
+    print(
+        f"[{args.tag}] hybrid   correct={hyb['correct']} wrong={hyb['wrong_answer']} "
+        f"over={hyb['over_abstain']} ca={hyb['correct_abstain']} "
+        f"flips +{result['flips']['positive']} / -{result['flips']['negative']}"
+    )
     print(f"[{args.tag}] det latency ms: {det_lat}")
 
 

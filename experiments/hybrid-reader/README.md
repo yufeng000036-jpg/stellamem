@@ -1,4 +1,4 @@
-# Stellamem Hybrid Reader — Frozen Candidate 1.0.0-v62
+# Stellamem Hybrid Reader — Frozen Candidate 1.0.1-v62
 
 V6.3 Stage 1 deliverable: the V6 deterministic-hybrid prototype after the
 V6.2 safety hardening, frozen as a reproducible standalone candidate.
@@ -10,9 +10,12 @@ wired into production Stellamem, DSH, OpenClaw or Jarvis.
 ## Contents
 
 - `code/` — the full pipeline (records, det_module, prefilter_v2,
-  assemble_v2), the frozen scorer (`scorer.py`, copy of
-  `reader-train/baseline/scorer.py`), input builders, the Kaggle kernel
+  assemble_v2), the frozen scorer (`scorer.py`, lint-formatted copy of
+  `reader-train/baseline/scorer.py`; original hash in
+  `EXTERNAL-EVIDENCE.sha256`), input builders, the Kaggle kernel
   builder/runner, the 189-chain scorer and the gate evaluator.
+- `hybrid_kernel.py` — the proven v1 reader kernel, kept at package root
+  as the clone base for `code/build_kernel_v62.py`.
 - `prompt_v2.txt` — the reader system prompt (sha256 in `config.json`).
 - `config.json` — model/adapter/decoding/assembly configuration and the
   frozen eval2 results.

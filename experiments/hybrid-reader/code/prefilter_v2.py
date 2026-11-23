@@ -35,6 +35,7 @@ Unchanged from v1 (user细则):
   - The filter only changes the evidence VIEW for one question; it never
     deletes or edits memory data.
 """
+
 import os
 import re
 import sys
@@ -44,18 +45,43 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from det_module import expiry_date
 from records import person_token, record_date
 
-_EXPIRED_MARKERS = ("已过期", "已失效", "已作废", "此记录已过期",
-                    "no longer valid", "has expired", "is expired")
-_HISTORICAL_MARKERS = ("当时", "之前", "起初", "曾经", "原本",
-                       "used to", "at that time", "originally",
-                       "back then", "previously")
+_EXPIRED_MARKERS = (
+    "已过期",
+    "已失效",
+    "已作废",
+    "此记录已过期",
+    "no longer valid",
+    "has expired",
+    "is expired",
+)
+_HISTORICAL_MARKERS = (
+    "当时",
+    "之前",
+    "起初",
+    "曾经",
+    "原本",
+    "used to",
+    "at that time",
+    "originally",
+    "back then",
+    "previously",
+)
 _CODE_PREDICATES = ("code number", "编号")
 _VALIDITY_PREDICATES = ("valid until", "有效期")
 _CODE_VALUE_RE = re.compile(r"[A-Z]{2}-\d{3,5}")
 _CORRECTION_PREDICATES = ("correction", "更正")
-_BOILERPLATE = ("此前记录有误", "记录有误", "有误", "此前的记录有误",
-                "the earlier record was wrong", "earlier record was wrong",
-                "was wrong", "is wrong", "was incorrect", "is incorrect")
+_BOILERPLATE = (
+    "此前记录有误",
+    "记录有误",
+    "有误",
+    "此前的记录有误",
+    "the earlier record was wrong",
+    "earlier record was wrong",
+    "was wrong",
+    "is wrong",
+    "was incorrect",
+    "is incorrect",
+)
 _ZH_FUNCTION = set("去在是的就把被")
 
 
@@ -74,8 +100,9 @@ def _is_correction(rec):
 def _is_code(rec):
     if (rec.get("predicate") or "") in _CODE_PREDICATES:
         return True
-    return bool(_CODE_VALUE_RE.search(rec.get("value") or "")) and \
-        ("number" in (rec.get("value") or "") or "编号" in (rec.get("value") or ""))
+    return bool(_CODE_VALUE_RE.search(rec.get("value") or "")) and (
+        "number" in (rec.get("value") or "") or "编号" in (rec.get("value") or "")
+    )
 
 
 def _is_validity(rec):
@@ -86,7 +113,7 @@ def _strip_correction_prefix(value):
     v = (value or "").strip()
     for pfx in ("Correction:", "更正：", "更正:"):
         if v.startswith(pfx):
-            return v[len(pfx):].strip()
+            return v[len(pfx) :].strip()
     return v
 
 
@@ -107,8 +134,7 @@ def candidate_persons(records):
     pairing keys inside the context."""
     out = set()
     for rec in records:
-        for v in (rec.get("value"),
-                  _strip_scope(rec.get("value"), rec.get("scope"))):
+        for v in (rec.get("value"), _strip_scope(rec.get("value"), rec.get("scope"))):
             p = person_token(v)
             if p:
                 out.add(p)
@@ -147,7 +173,7 @@ def correction_assertion(corr, person):
     CJK run for Chinese)."""
     text = _strip_correction_prefix(corr.get("value"))
     if person and text.startswith(person):
-        text = text[len(person):]
+        text = text[len(person) :]
     for bp in _BOILERPLATE:
         text = text.replace(bp, " ")
     scope = corr.get("scope") or ""
@@ -162,11 +188,13 @@ def correction_assertion(corr, person):
         return max(spans, key=len)
     # English role phrases: 'serves as convener in ...', 'is the photo
     # editor of ...' -- the asserted value is a lowercase role noun.
-    for pat in (r"serves as (?:an? |the )?([A-Za-z][A-Za-z\- ]+?)"
-                r"(?:\s+in\s+|\s+at\s+|;|,|$)",
-                r"is the ([A-Za-z][A-Za-z\- ]+?)(?:\s+of\s+|\s+in\s+|;|,|$)",
-                r"works as (?:an? |the )?([A-Za-z][A-Za-z\- ]+?)"
-                r"(?:\s+in\s+|\s+at\s+|;|,|$)"):
+    for pat in (
+        r"serves as (?:an? |the )?([A-Za-z][A-Za-z\- ]+?)"
+        r"(?:\s+in\s+|\s+at\s+|;|,|$)",
+        r"is the ([A-Za-z][A-Za-z\- ]+?)(?:\s+of\s+|\s+in\s+|;|,|$)",
+        r"works as (?:an? |the )?([A-Za-z][A-Za-z\- ]+?)"
+        r"(?:\s+in\s+|\s+at\s+|;|,|$)",
+    ):
         m = re.search(pat, text)
         if m and len(m.group(1).strip()) >= 3:
             return m.group(1).strip()
@@ -196,16 +224,16 @@ def prefilter_v2(records, question, qdate):
 
     def drop(rec, rule, reason):
         if rec["id"] not in removed:
-            removed[rec["id"]] = {"id": rec["id"], "rule": rule,
-                                  "reason": reason}
+            removed[rec["id"]] = {"id": rec["id"], "rule": rule, "reason": reason}
 
     # R1: self-marked expired (current stance only) -- unchanged from v1
     if stance == "current":
         for rec in records:
             v = rec.get("value") or ""
             if any(m in v for m in _EXPIRED_MARKERS):
-                drop(rec, "R1_marked_expired",
-                     "record's own value states it has expired")
+                drop(
+                    rec, "R1_marked_expired", "record's own value states it has expired"
+                )
 
     # R2 v2: explicit correction supersedes only CONFLICTING earlier
     # same-scope same-person fact records.
@@ -233,9 +261,12 @@ def prefilter_v2(records, question, qdate):
                 continue  # only records the correction can refer to
             if asserted in (rec.get("value") or ""):
                 continue  # agrees with the correction -> keep
-            drop(rec, "R2_correction_conflict",
-                 f"contradicts explicit correction {corr['id']} "
-                 f"(asserted value: {asserted})")
+            drop(
+                rec,
+                "R2_correction_conflict",
+                f"contradicts explicit correction {corr['id']} "
+                f"(asserted value: {asserted})",
+            )
 
     # R3: credential validity join (current stance only) -- v1 semantics,
     # pairing via the context-assisted person resolution.
@@ -247,18 +278,24 @@ def prefilter_v2(records, question, qdate):
             cdate = record_date(code)
             if person is None or cdate is None:
                 continue
-            pairs = [v for v in valids
-                     if v.get("scope") == code.get("scope")
-                     and person_of(v.get("value"), candidates, v.get("scope")) == person
-                     and record_date(v) == cdate]
+            pairs = [
+                v
+                for v in valids
+                if v.get("scope") == code.get("scope")
+                and person_of(v.get("value"), candidates, v.get("scope")) == person
+                and record_date(v) == cdate
+            ]
             if len(pairs) != 1:
                 continue  # ambiguous or unpaired -> conservative keep
             exp = expiry_date(pairs[0])
             if exp is not None and exp < qdate:
-                drop(code, "R3_validity_join",
-                     f"paired validity record {pairs[0]['id']} expired "
-                     f"{exp.isoformat()} before question date "
-                     f"{qdate.isoformat()}")
+                drop(
+                    code,
+                    "R3_validity_join",
+                    f"paired validity record {pairs[0]['id']} expired "
+                    f"{exp.isoformat()} before question date "
+                    f"{qdate.isoformat()}",
+                )
 
     kept = [r for r in records if r["id"] not in removed]
     return kept, list(removed.values())

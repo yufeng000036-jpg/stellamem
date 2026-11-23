@@ -21,23 +21,46 @@ Design rules (user ruling, 2026-11-23):
   - Every successful computation emits a receipt:
         {record_ids, operands, operation, result}
 """
+
 import re
 from datetime import date
 
 from records import is_zh, person_token, record_date
 
-REFUSALS = ("insufficient_operands", "ambiguous_date",
-            "conflicting_records", "no_valid_evidence")
+REFUSALS = (
+    "insufficient_operands",
+    "ambiguous_date",
+    "conflicting_records",
+    "no_valid_evidence",
+)
 
-_MONTHS = {m: i + 1 for i, m in enumerate(
-    ["January", "February", "March", "April", "May", "June", "July",
-     "August", "September", "October", "November", "December"])}
+_MONTHS = {
+    m: i + 1
+    for i, m in enumerate(
+        [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ]
+    )
+}
 
 _DATE_PATTERNS = [
     re.compile(r"(\d{4})年(\d{1,2})月(\d{1,2})日"),
     re.compile(r"(\d{4})-(\d{1,2})-(\d{1,2})"),
-    re.compile(r"(January|February|March|April|May|June|July|August|"
-               r"September|October|November|December)\s+(\d{1,2}),\s+(\d{4})"),
+    re.compile(
+        r"(January|February|March|April|May|June|July|August|"
+        r"September|October|November|December)\s+(\d{1,2}),\s+(\d{4})"
+    ),
 ]
 
 
@@ -78,8 +101,15 @@ def event_date(rec):
     return record_date(rec), "session_date"
 
 
-_EXPIRY_ANCHORS = ("有效期截止到", "有效期至", "截止到", "valid until",
-                   "expires on", "is valid until", "expiry")
+_EXPIRY_ANCHORS = (
+    "有效期截止到",
+    "有效期至",
+    "截止到",
+    "valid until",
+    "expires on",
+    "is valid until",
+    "expiry",
+)
 
 
 def expiry_date(rec):
@@ -110,9 +140,16 @@ def _refuse(code, detail):
 
 
 def _ok(answer, operation, operands, record_ids):
-    return {"status": "ok", "answer": answer,
-            "receipt": {"record_ids": record_ids, "operands": operands,
-                        "operation": operation, "result": answer}}
+    return {
+        "status": "ok",
+        "answer": answer,
+        "receipt": {
+            "record_ids": record_ids,
+            "operands": operands,
+            "operation": operation,
+            "result": answer,
+        },
+    }
 
 
 def _event_operands(records, need):
@@ -122,44 +159,52 @@ def _event_operands(records, need):
     for rec in records:
         d, prov = event_date(rec)
         if prov == "ambiguous_date":
-            return None, _refuse("ambiguous_date",
-                                 f"record {rec['id']} states several dates")
+            return None, _refuse(
+                "ambiguous_date", f"record {rec['id']} states several dates"
+            )
         if prov != "event_date" or d is None:
             return None, _refuse(
                 "insufficient_operands",
                 f"record {rec['id']} has no event date in its text "
-                f"(only session_date); refusing to compute on it")
-        ops.append({"record_id": rec["id"], "value": d.isoformat(),
-                    "provenance": "event_date"})
+                f"(only session_date); refusing to compute on it",
+            )
+        ops.append(
+            {"record_id": rec["id"], "value": d.isoformat(), "provenance": "event_date"}
+        )
     if len(ops) < need:
-        return None, _refuse("insufficient_operands",
-                             f"need {need} event-date operands, got {len(ops)}")
+        return None, _refuse(
+            "insufficient_operands", f"need {need} event-date operands, got {len(ops)}"
+        )
     return ops, None
 
 
 # ------------------------------------------------------------------ ops
 def op_date_gap(records, question, qdate):
     if len(records) != 2:
-        return _refuse("insufficient_operands",
-                       f"date_gap needs exactly 2 cited records, got {len(records)}")
+        return _refuse(
+            "insufficient_operands",
+            f"date_gap needs exactly 2 cited records, got {len(records)}",
+        )
     ops, ref = _event_operands(records, 2)
     if ref:
         return ref
     d1 = date.fromisoformat(ops[0]["value"])
     d2 = date.fromisoformat(ops[1]["value"])
-    return _ok(str(abs((d2 - d1).days)), "date_gap_days",
-               ops, [r["id"] for r in records])
+    return _ok(
+        str(abs((d2 - d1).days)), "date_gap_days", ops, [r["id"] for r in records]
+    )
 
 
-_WD_EN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
-          "Saturday", "Sunday"]
+_WD_EN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 _WD_ZH = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]
 
 
 def op_weekday(records, question, qdate):
     if len(records) != 1:
-        return _refuse("insufficient_operands",
-                       f"weekday needs exactly 1 cited record, got {len(records)}")
+        return _refuse(
+            "insufficient_operands",
+            f"weekday needs exactly 1 cited record, got {len(records)}",
+        )
     ops, ref = _event_operands(records, 1)
     if ref:
         return ref
@@ -175,14 +220,17 @@ def op_nth_date(records, question, qdate, n, from_last=False):
     if ref:
         return ref
     if len(records) < n:
-        return _refuse("insufficient_operands",
-                       f"only {len(records)} cited occurrences, need {n}")
+        return _refuse(
+            "insufficient_operands", f"only {len(records)} cited occurrences, need {n}"
+        )
     ordered = sorted(ops, key=lambda o: o["value"])
     pick = ordered[-n] if from_last else ordered[n - 1]
-    op_name = (f"nth_from_last_occurrence_date(n={n})" if from_last
-               else f"nth_occurrence_date(n={n})")
-    return _ok(pick["value"], op_name,
-               ordered, [o["record_id"] for o in ordered])
+    op_name = (
+        f"nth_from_last_occurrence_date(n={n})"
+        if from_last
+        else f"nth_occurrence_date(n={n})"
+    )
+    return _ok(pick["value"], op_name, ordered, [o["record_id"] for o in ordered])
 
 
 def op_countdown(records, question, qdate):
@@ -195,16 +243,27 @@ def op_countdown(records, question, qdate):
         if exp is not None:
             days = (exp - qdate).days
             if days < 0:
-                return _refuse("insufficient_operands",
-                               f"expiry {exp} precedes question date {qdate}; "
-                               "no positive countdown exists")
-            ops = [{"record_id": rec["id"], "value": exp.isoformat(),
-                    "provenance": "text_extracted"},
-                   {"record_id": None, "value": qdate.isoformat(),
-                    "provenance": "question_date"}]
+                return _refuse(
+                    "insufficient_operands",
+                    f"expiry {exp} precedes question date {qdate}; "
+                    "no positive countdown exists",
+                )
+            ops = [
+                {
+                    "record_id": rec["id"],
+                    "value": exp.isoformat(),
+                    "provenance": "text_extracted",
+                },
+                {
+                    "record_id": None,
+                    "value": qdate.isoformat(),
+                    "provenance": "question_date",
+                },
+            ]
             return _ok(str(days), "expiry_countdown_days", ops, [rec["id"]])
-    return _refuse("insufficient_operands",
-                   "no expiry date extractable from cited records")
+    return _refuse(
+        "insufficient_operands", "no expiry date extractable from cited records"
+    )
 
 
 def op_count(records, question, qdate):
@@ -213,14 +272,15 @@ def op_count(records, question, qdate):
     ops, ref = _event_operands(records, 1)
     if ref:
         return ref
-    return _ok(str(len(records)), "count_events", ops,
-               [r["id"] for r in records])
+    return _ok(str(len(records)), "count_events", ops, [r["id"] for r in records])
 
 
-_QTY_PATTERNS = [re.compile(r"(\d+)\s*copies"),
-                 re.compile(r"买了\s*(\d+)\s*本"),
-                 re.compile(r"(\d+)\s*本"),
-                 re.compile(r"(?:purchased|bought)\s+(\d+)")]
+_QTY_PATTERNS = [
+    re.compile(r"(\d+)\s*copies"),
+    re.compile(r"买了\s*(\d+)\s*本"),
+    re.compile(r"(\d+)\s*本"),
+    re.compile(r"(?:purchased|bought)\s+(\d+)"),
+]
 
 
 def _quantity(rec):
@@ -240,17 +300,20 @@ def op_sum(records, question, qdate):
     for rec in records:
         q = _quantity(rec)
         if q is None:
-            return _refuse("insufficient_operands",
-                           f"no quantity extractable from record {rec['id']}")
+            return _refuse(
+                "insufficient_operands",
+                f"no quantity extractable from record {rec['id']}",
+            )
         total += q
-        ops.append({"record_id": rec["id"], "value": q,
-                    "provenance": "text_extracted"})
+        ops.append({"record_id": rec["id"], "value": q, "provenance": "text_extracted"})
     return _ok(str(total), "sum_quantities", ops, [r["id"] for r in records])
 
 
-_DIST_PATTERNS = [re.compile(r"(\d+(?:\.\d+)?)\s*km"),
-                  re.compile(r"(\d+(?:\.\d+)?)\s*公里"),
-                  re.compile(r"跑了\s*(\d+(?:\.\d+)?)")]
+_DIST_PATTERNS = [
+    re.compile(r"(\d+(?:\.\d+)?)\s*km"),
+    re.compile(r"(\d+(?:\.\d+)?)\s*公里"),
+    re.compile(r"跑了\s*(\d+(?:\.\d+)?)"),
+]
 
 
 def _distance(rec):
@@ -287,22 +350,34 @@ def op_max(records, question, qdate):
     for rec in records:
         dist = _distance(rec)
         if dist is None:
-            return _refuse("insufficient_operands",
-                           f"no distance extractable from record {rec['id']}")
+            return _refuse(
+                "insufficient_operands",
+                f"no distance extractable from record {rec['id']}",
+            )
         person = person_token(rec.get("value"))
         if person is None:
-            return _refuse("insufficient_operands",
-                           f"no person extractable from record {rec['id']}")
-        ops.append({"record_id": rec["id"], "value": dist,
-                    "person": person, "provenance": "text_extracted"})
+            return _refuse(
+                "insufficient_operands",
+                f"no person extractable from record {rec['id']}",
+            )
+        ops.append(
+            {
+                "record_id": rec["id"],
+                "value": dist,
+                "person": person,
+                "provenance": "text_extracted",
+            }
+        )
     named = _named_persons(question)
     if named is not None:
         covered = {o["person"] for o in ops}
         missing = [n for n in named if n not in covered]
         if missing:
-            return _refuse("insufficient_operands",
-                           f"cited set misses named person(s) {missing}; "
-                           "the evidence set is provably incomplete")
+            return _refuse(
+                "insufficient_operands",
+                f"cited set misses named person(s) {missing}; "
+                "the evidence set is provably incomplete",
+            )
     for o in ops:
         dist = o["value"]
         if best is None or dist > best[0]:
@@ -316,11 +391,21 @@ def op_max(records, question, qdate):
 
 
 # ------------------------------------------------------------- classifier
-_CN_NUM = {"一": 1, "二": 2, "两": 2, "三": 3, "四": 4, "五": 5,
-           "六": 6, "七": 7, "八": 8, "九": 9, "十": 10}
+_CN_NUM = {
+    "一": 1,
+    "二": 2,
+    "两": 2,
+    "三": 3,
+    "四": 4,
+    "五": 5,
+    "六": 6,
+    "七": 7,
+    "八": 8,
+    "九": 9,
+    "十": 10,
+}
 
-COMPUTE_TYPES = ("date_gap", "weekday", "nth_date", "countdown",
-                 "count", "sum", "max")
+COMPUTE_TYPES = ("date_gap", "weekday", "nth_date", "countdown", "count", "sum", "max")
 
 
 def parse_ordinal(question):
@@ -357,31 +442,48 @@ def classify_question(question):
     """Deterministic question-type routing (fallback/cross-check for the
     reader's own qtype). Returns (qtype, params)."""
     q = question or ""
-    I = re.IGNORECASE
-    if re.search(r"还有多少天到期|多少天到期|几天到期|days are left before|"
-                 r"days left before|days until .* expir", q, I):
+    ICASE = re.IGNORECASE
+    if re.search(
+        r"还有多少天到期|多少天到期|几天到期|days are left before|"
+        r"days left before|days until .* expir",
+        q,
+        ICASE,
+    ):
         return "countdown", {}
-    if re.search(r"星期几|day of the week", q, I):
+    if re.search(r"星期几|day of the week", q, ICASE):
         return "weekday", {}
     n, from_last = parse_nth(q)
-    if n is not None and re.search(r"哪一天|what date|on what date", q, I):
+    if n is not None and re.search(r"哪一天|what date|on what date", q, ICASE):
         return "nth_date", {"n": n, "from_last": from_last}
-    if re.search(r"相隔多少天|间隔多少天|相差多少天|how many days apart|"
-                 r"days apart|how many days between", q, I):
+    if re.search(
+        r"相隔多少天|间隔多少天|相差多少天|how many days apart|"
+        r"days apart|how many days between",
+        q,
+        ICASE,
+    ):
         return "date_gap", {}
-    if re.search(r"参加了几次|how many times did .* attend|"
-                 r"how many times did .* take part|how many times", q, I):
+    if re.search(
+        r"参加了几次|how many times did .* attend|"
+        r"how many times did .* take part|how many times",
+        q,
+        ICASE,
+    ):
         return "count", {}
-    if re.search(r"how many copies|一共买了多少本|总共买了多少本|买了多少本", q, I):
+    if re.search(r"how many copies|一共买了多少本|总共买了多少本|买了多少本", q, ICASE):
         return "sum", {}
-    if re.search(r"跑得最远|ran the farthest|who .* farthest|谁.*最远", q, I):
+    if re.search(r"跑得最远|ran the farthest|who .* farthest|谁.*最远", q, ICASE):
         return "max", {}
     return "lookup", {}
 
 
-_OPS = {"date_gap": op_date_gap, "weekday": op_weekday,
-        "countdown": op_countdown, "count": op_count,
-        "sum": op_sum, "max": op_max}
+_OPS = {
+    "date_gap": op_date_gap,
+    "weekday": op_weekday,
+    "countdown": op_countdown,
+    "count": op_count,
+    "sum": op_sum,
+    "max": op_max,
+}
 
 
 def compute(qtype, question, cited_records, qdate):

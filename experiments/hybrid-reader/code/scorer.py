@@ -46,13 +46,19 @@ Latency: per (set, arm) mean and p95 (nearest-rank) of recorded secs.
 A:b2 latencies and raw outputs come from the frozen v4 results.jsonl
 (B2:BASE records); all other cells from baseline_outputs.jsonl.
 """
-import glob, json, math, os, re, sys
+
+import glob
+import json
+import math
+import os
+import re
 from collections import Counter, defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HOLDOUT = "/home/hatch/workspace/reader-train/data/holdout_v1.jsonl"
 EXP = "/home/hatch/workspace/stellamem-takeover/v4-reader-exp-20261121"
 W = "/home/hatch/workspace/longmemeval-wse-20261118/work"
+
 
 # ---------------------------------------------------------------- parsing
 def parse_output(raw):
@@ -76,6 +82,7 @@ def parse_output(raw):
     a["citations"] = [c for c in a["citations"] if isinstance(c, str)]
     return a
 
+
 def slate_ids(context):
     ids = []
     for line in (context or "").split("\n")[1:]:
@@ -90,12 +97,15 @@ def slate_ids(context):
             ids.append(obj["id"])
     return ids
 
+
 # ------------------------------------------------------- holdout equality
 UNITS = "元块个本张次天年月日号岁米克人只条件套瓶盒包份台节课"
 FW = {chr(0xFF01 + i): chr(0x21 + i) for i in range(94)}
 
+
 def halfwidth(s):
     return "".join(FW.get(ch, ch) for ch in s)
+
 
 def norm(s):
     s = halfwidth((s or "").lower()).strip()
@@ -104,8 +114,21 @@ def norm(s):
         s = s[:-1]
     return re.sub(r"[^0-9a-z\u4e00-\u9fff]+", "", s)
 
-CN_NUM = {"零": 0, "一": 1, "二": 2, "两": 2, "三": 3, "四": 4, "五": 5,
-          "六": 6, "七": 7, "八": 8, "九": 9}
+
+CN_NUM = {
+    "零": 0,
+    "一": 1,
+    "二": 2,
+    "两": 2,
+    "三": 3,
+    "四": 4,
+    "五": 5,
+    "六": 6,
+    "七": 7,
+    "八": 8,
+    "九": 9,
+}
+
 
 def parse_cn_number(s):
     if not s or any(ch not in CN_NUM and ch not in "十百千万" for ch in s):
@@ -115,14 +138,19 @@ def parse_cn_number(s):
         if ch in CN_NUM:
             number = CN_NUM[ch]
         elif ch == "十":
-            section += (number or 1) * 10; number = 0
+            section += (number or 1) * 10
+            number = 0
         elif ch == "百":
-            section += (number or 1) * 100; number = 0
+            section += (number or 1) * 100
+            number = 0
         elif ch == "千":
-            section += (number or 1) * 1000; number = 0
+            section += (number or 1) * 1000
+            number = 0
         elif ch == "万":
-            total += (section + number) * 10000; section, number = 0, 0
+            total += (section + number) * 10000
+            section, number = 0, 0
     return total + section + number
+
 
 def parse_number(s):
     """Parse s as a single number if the whole normalized string is one."""
@@ -135,14 +163,17 @@ def parse_number(s):
     v = parse_cn_number(t)
     return float(v) if v is not None else None
 
+
 DATE_RE = re.compile(r"(\d{4})\s*[-/年.]\s*(\d{1,2})\s*[-/月.]\s*(\d{1,2})\s*日?")
+
 
 def extract_date(s):
     m = DATE_RE.search(s or "")
     if not m:
         return None, s
     tup = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
-    return tup, (s[:m.start()] + s[m.end():])
+    return tup, (s[: m.start()] + s[m.end() :])
+
 
 def answers_equal(pred, gold):
     if norm(pred) == norm(gold):
@@ -156,19 +187,26 @@ def answers_equal(pred, gold):
         return True
     return False
 
+
 # ------------------------------------------- b2 historical caliber (verbatim
 # helpers from analyze_reader2.py, plus the v1 variant without downgrade)
-STOP = set("the a an of to in on for and or is was were are be been at by with as it its from that this i my me we you he she they them his her our your their not no yes do does did have has had".split())
+STOP = set(
+    "the a an of to in on for and or is was were are be been at by with as it its from that this i my me we you he she they them his her our your their not no yes do does did have has had".split()
+)
+
 
 def b2_norm(s):
     return re.sub(r"[^0-9a-z\u4e00-\u9fff]+", "", (s or "").lower())
+
 
 def content_tokens(s):
     toks = re.findall(r"[a-z0-9]+|[\u4e00-\u9fff]", (s or "").lower())
     return [t for t in toks if t not in STOP and len(t) >= 2 or (t.isdigit())]
 
+
 def numbers(s):
     return re.findall(r"\d+(?:\.\d+)?", (s or "").replace(",", ""))
+
 
 def carries(claim_text, hyp):
     text_n, hyp_n = b2_norm(claim_text), b2_norm(hyp)
@@ -187,11 +225,15 @@ def carries(claim_text, hyp):
         return True
     return False
 
+
 def load_diag():
     diag = {}
     for d in ("replay-stage2", "replay-topup2"):
         man = json.load(open(f"{W}/{d}/manifest.json", encoding="utf-8"))
-        by_prefix = {f.rsplit("/", 1)[-1][:-5]: f for f in glob.glob(f"{W}/{d}/diagnostics/*.json")}
+        by_prefix = {
+            f.rsplit("/", 1)[-1][:-5]: f
+            for f in glob.glob(f"{W}/{d}/diagnostics/*.json")
+        }
         for prefix, meta in man.items():
             f = by_prefix.get(prefix)
             if not f:
@@ -210,12 +252,15 @@ def load_diag():
                 if not cid or cid.startswith("stellamem:"):
                     continue
                 claims[cid] = {
-                    "text": " ".join(str(obj.get(k) or "") for k in ("scope", "predicate", "value")),
+                    "text": " ".join(
+                        str(obj.get(k) or "") for k in ("scope", "predicate", "value")
+                    ),
                     "superseded_by": obj.get("superseded_by"),
                 }
                 order.append(cid)
             diag[meta["question_id"]] = {"claims": claims, "order": order}
     return diag
+
 
 def classify_b2(row, a, diag, downgrade=True):
     """a = parsed output dict. Returns outcome string."""
@@ -235,9 +280,11 @@ def classify_b2(row, a, diag, downgrade=True):
             return "correct"
     return "wrong_answer"
 
+
 # ---------------------------------------------------------------- scoring
 def pct(num, den):
     return round(100.0 * num / den, 2) if den else None
+
 
 def lat_stats(secs):
     if not secs:
@@ -245,6 +292,7 @@ def lat_stats(secs):
     ss = sorted(secs)
     p95 = ss[min(len(ss) - 1, math.ceil(0.95 * len(ss)) - 1)]
     return {"n": len(ss), "mean": round(sum(ss) / len(ss), 2), "p95": round(p95, 2)}
+
 
 def score_holdout(rows, outputs):
     per_q, by_klass = {}, defaultdict(Counter)
@@ -288,19 +336,29 @@ def score_holdout(rows, outputs):
     n_ans = sum(1 for r in rows if not r["gold_abstain"])
     n_abs = n - n_ans
     return {
-        "n": n, "n_answerable": n_ans, "n_abstain_gold": n_abs,
-        "correct": agg["correct"], "wrong_answer": agg["wrong_answer"],
-        "over_abstain": agg["over_abstain"], "correct_abstain": agg["correct_abstain"],
-        "format_fail": agg["format_fail"], "missing": agg["missing"],
+        "n": n,
+        "n_answerable": n_ans,
+        "n_abstain_gold": n_abs,
+        "correct": agg["correct"],
+        "wrong_answer": agg["wrong_answer"],
+        "over_abstain": agg["over_abstain"],
+        "correct_abstain": agg["correct_abstain"],
+        "format_fail": agg["format_fail"],
+        "missing": agg["missing"],
         "accuracy_answerable": pct(agg["correct"], n_ans),
         "accuracy_overall": pct(agg["correct"] + agg["correct_abstain"], n),
-        "citation_valid_among_correct": [cit_valid, cit_total, pct(cit_valid, cit_total)],
+        "citation_valid_among_correct": [
+            cit_valid,
+            cit_total,
+            pct(cit_valid, cit_total),
+        ],
         "nonexistent_citation_rows": nonexistent_rows,
         "nonexistent_citation_ids": nonexistent_ids,
         "latency": lat_stats(secs),
         "by_klass": {k: dict(v) for k, v in by_klass.items() if k != "ALL"},
         "per_question": per_q,
     }
+
 
 def score_b2(rows, outputs, diag, downgrade=True):
     per_q = {}
@@ -328,8 +386,11 @@ def score_b2(rows, outputs, diag, downgrade=True):
                 outcome = classify_b2(row, a, diag, downgrade=downgrade)
                 if outcome == "correct":
                     cit_total += 1
-                    carriers = {cid for cid, cl in dg["claims"].items()
-                                if carries(cl["text"], a["answer"])}
+                    carriers = {
+                        cid
+                        for cid, cl in dg["claims"].items()
+                        if carries(cl["text"], a["answer"])
+                    }
                     if set(a["citations"]) == carriers:
                         cit_valid += 1
         per_q[qid] = outcome
@@ -337,22 +398,34 @@ def score_b2(rows, outputs, diag, downgrade=True):
     n = len(rows)
     n_ans = sum(1 for r in rows if r["klass"] != "H")
     return {
-        "n": n, "n_answerable": n_ans, "n_abstain_gold": n - n_ans,
-        "correct": agg["correct"], "wrong_answer": agg["wrong_answer"],
-        "over_abstain": agg["over_abstain"], "correct_abstain": agg["correct_abstain"],
-        "format_fail": agg["format_fail"], "missing": agg["missing"],
+        "n": n,
+        "n_answerable": n_ans,
+        "n_abstain_gold": n - n_ans,
+        "correct": agg["correct"],
+        "wrong_answer": agg["wrong_answer"],
+        "over_abstain": agg["over_abstain"],
+        "correct_abstain": agg["correct_abstain"],
+        "format_fail": agg["format_fail"],
+        "missing": agg["missing"],
         "accuracy_answerable": pct(agg["correct"], n_ans),
         "accuracy_overall": pct(agg["correct"] + agg["correct_abstain"], n),
-        "citation_valid_among_correct": [cit_valid, cit_total, pct(cit_valid, cit_total)],
+        "citation_valid_among_correct": [
+            cit_valid,
+            cit_total,
+            pct(cit_valid, cit_total),
+        ],
         "nonexistent_citation_rows": nonexistent_rows,
         "nonexistent_citation_ids": nonexistent_ids,
         "latency": lat_stats(secs),
         "per_question": per_q,
     }
 
+
 def main():
-    holdout_rows = [json.loads(l) for l in open(HOLDOUT, encoding="utf-8")]
-    b2_rows = [json.loads(l) for l in open(f"{EXP}/b2_rows.jsonl", encoding="utf-8")]
+    holdout_rows = [json.loads(line) for line in open(HOLDOUT, encoding="utf-8")]
+    b2_rows = [
+        json.loads(line) for line in open(f"{EXP}/b2_rows.jsonl", encoding="utf-8")
+    ]
     diag = load_diag()
 
     new_out = {}
@@ -373,18 +446,25 @@ def main():
     scores["holdout_A"] = score_holdout(holdout_rows, new_out.get(("holdout", "A"), {}))
     scores["holdout_B"] = score_holdout(holdout_rows, new_out.get(("holdout", "B"), {}))
     scores["b2_A_rescored"] = score_b2(b2_rows, old_out, diag, downgrade=True)
-    scores["b2_A_v1caliber_crosscheck"] = score_b2(b2_rows, old_out, diag, downgrade=False)
-    scores["b2_B"] = score_b2(b2_rows, new_out.get(("b2", "B"), {}), diag, downgrade=True)
+    scores["b2_A_v1caliber_crosscheck"] = score_b2(
+        b2_rows, old_out, diag, downgrade=False
+    )
+    scores["b2_B"] = score_b2(
+        b2_rows, new_out.get(("b2", "B"), {}), diag, downgrade=True
+    )
 
     with open(os.path.join(HERE, "scores.json"), "w", encoding="utf-8") as fh:
         json.dump(scores, fh, ensure_ascii=False, indent=1)
     for name, s in scores.items():
-        print(f"{name}: n={s['n']} correct={s['correct']} wrong={s['wrong_answer']} "
-              f"over_abstain={s['over_abstain']} correct_abstain={s['correct_abstain']} "
-              f"format_fail={s['format_fail']} missing={s['missing']} "
-              f"acc_ans={s['accuracy_answerable']} acc_all={s['accuracy_overall']} "
-              f"cit_valid={s['citation_valid_among_correct']} nonexist_rows={s['nonexistent_citation_rows']} "
-              f"lat={s['latency']}")
+        print(
+            f"{name}: n={s['n']} correct={s['correct']} wrong={s['wrong_answer']} "
+            f"over_abstain={s['over_abstain']} correct_abstain={s['correct_abstain']} "
+            f"format_fail={s['format_fail']} missing={s['missing']} "
+            f"acc_ans={s['accuracy_answerable']} acc_all={s['accuracy_overall']} "
+            f"cit_valid={s['citation_valid_among_correct']} nonexist_rows={s['nonexistent_citation_rows']} "
+            f"lat={s['latency']}"
+        )
+
 
 if __name__ == "__main__":
     main()
