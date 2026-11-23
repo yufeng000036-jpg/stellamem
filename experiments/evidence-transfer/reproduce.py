@@ -109,6 +109,7 @@ def main():
         run("public_dates.py", data, results, "--split", split)
     run("independent_check.py", data, results)
     curves(data, results)
+    run("representation.py", data, results / "representations.json")
     for name in (
         "audit.json",
         "archive500.json",
@@ -116,6 +117,7 @@ def main():
         "validation.jsonl",
         "test.jsonl",
         "posthoc_k.json",
+        "representations.json",
     ):
         original = (
             json.loads((HERE / "results" / name).read_bytes())

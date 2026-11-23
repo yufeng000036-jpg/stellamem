@@ -28,3 +28,5 @@ py -3 replay189.py --package ".\public-replay-01\source\experiments\hybrid-reade
 ```
 
 Replace X:\research paths with actual read-only research artifacts. The output stays on that machine. Each record contains the question ID, material-availability stratum, six outcomes and binding diagnostics, not raw chats. Report totals only after archived 189/63 transitions and the IDs/direction of all GOOD flips match. Cached old/v2 readers differ in prompt and potentially serialization; this diagnostic does not rerun the model. New missing-artifact errors, partial outputs, or mismatched hashes should not be counted as zero performance. To assess natural correctness/harm, double-blind review original questions, allowed evidence and answers offline. This semantic audit has not been completed here.
+
+Post-hoc representation audit: representation.py compares the canonical byte size and explicit source-turn pointer coverage of the published LoCoMo raw conversations, observation notes, session summaries, and raw plus observations. No gold labels are added to the representations. See results/representations.json and the paper, section 6.1.
