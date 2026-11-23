@@ -1,4 +1,5 @@
 """Fixed one-day evidence reader on public LoCoMo. Python 3.10+, standard library."""
+
 import argparse
 import calendar
 import hashlib
@@ -24,7 +25,9 @@ REGEX = [
 ]
 OFFSETS = {"the day before yesterday": -2, "yesterday": -1, "today": 0, "tomorrow": 1}
 REL = re.compile(r"\b(?:" + "|".join(OFFSETS) + r")\b", re.I)
-STOP = set("a an the of in on at by to from when what date did does do is are was were has have had for with and or their his her its she he they it".split())
+STOP = set(
+    "a an the of in on at by to from when what date did does do is are was were has have had for with and or their his her its she he they it".split()
+)
 
 
 def literal_days(s):
@@ -34,7 +37,13 @@ def literal_days(s):
             parts = dict(zip(order, match.groups()))
             month = parts["m"]
             try:
-                result.add(date(int(parts["y"]), int(month) if month.isdigit() else MONTHS[month.lower()], int(parts["d"])))
+                result.add(
+                    date(
+                        int(parts["y"]),
+                        int(month) if month.isdigit() else MONTHS[month.lower()],
+                        int(parts["d"]),
+                    )
+                )
             except ValueError:
                 continue
     return result
@@ -54,12 +63,17 @@ def tokenize(s):
 
 def turns(conversation):
     result = []
-    for key in sorted((key for key in conversation if re.fullmatch(r"session_\d+", key)), key=lambda k: int(k.split("_")[1])):
+    for key in sorted(
+        (key for key in conversation if re.fullmatch(r"session_\d+", key)),
+        key=lambda k: int(k.split("_")[1]),
+    ):
         session = literal_days(conversation[key + "_date_time"])
         if len(session) != 1:
             raise ValueError(f"ambiguous session day {key}")
         for turn in conversation[key]:
-            result.append((turn["dia_id"], str(turn["speaker"]), turn.get("text", ""), next(iter(session))))
+            result.append(
+                (turn["dia_id"], str(turn["speaker"]), turn.get("text", ""), next(iter(session)))
+            )
     if len(set(r[0] for r in result)) != len(result):
         raise ValueError("duplicate dialogue ID")
     return result
@@ -81,7 +95,9 @@ class BM25:
             for i, doc in enumerate(self.docs):
                 tf = doc[term]
                 if tf:
-                    scores[i] += idf * tf * 2.2 / (tf + 1.2 * (0.25 + 0.75 * self.lengths[i] / self.average))
+                    scores[i] += (
+                        idf * tf * 2.2 / (tf + 1.2 * (0.25 + 0.75 * self.lengths[i] / self.average))
+                    )
         order = sorted(range(len(scores)), key=lambda i: -scores[i])
         return [self.history[i] for i in order[:5] if scores[i] > 0]
 
@@ -115,11 +131,27 @@ def summary(rows):
         return result
     for arm in "ABDE":
         values = [row["arms"][arm] for row in rows]
-        result["arms"][arm] = {key: sum(v[key] for v in values) for key in ("supported", "exact", "wrong", "refused", "unsupported_exact", "hit1", "hit5", "words")}
-        result["arms"][arm]["mean_gold_fraction"] = sum(v["gold_fraction"] for v in values) / len(rows)
+        result["arms"][arm] = {
+            key: sum(v[key] for v in values)
+            for key in (
+                "supported",
+                "exact",
+                "wrong",
+                "refused",
+                "unsupported_exact",
+                "hit1",
+                "hit5",
+                "words",
+            )
+        }
+        result["arms"][arm]["mean_gold_fraction"] = sum(v["gold_fraction"] for v in values) / len(
+            rows
+        )
     cluster = defaultdict(list)
     for row in rows:
-        cluster[row["history"]].append(int(row["arms"]["D"]["supported"]) - int(row["arms"]["B"]["supported"]))
+        cluster[row["history"]].append(
+            int(row["arms"]["D"]["supported"]) - int(row["arms"]["B"]["supported"])
+        )
     groups = list(cluster.values())
     signs = list(itertools.product([-1, 1], repeat=len(groups)))
     diffs = list(itertools.chain.from_iterable(groups))
@@ -130,16 +162,28 @@ def summary(rows):
     for _ in range(20000):
         selected = rng.choices(sizes_and_sums, k=len(groups))
         draws.append(100 * sum(s for _, s in selected) / sum(n for n, _ in selected))
-    result["paired"] = {"up": diffs.count(1), "down": diffs.count(-1), "delta_pp": 100*observed/len(rows),
-                        "cluster_n": len(groups), "cluster_ci_pp": quantiles(draws),
-                        "cluster_sign_flip_p":sum(abs(sum(s*sum(g) for s,g in zip(sign,groups))) >= abs(observed) for sign in signs)/len(signs),
-                        "question_mcnemar_p": mcnemar(diffs.count(1), diffs.count(-1))}
+    result["paired"] = {
+        "up": diffs.count(1),
+        "down": diffs.count(-1),
+        "delta_pp": 100 * observed / len(rows),
+        "cluster_n": len(groups),
+        "cluster_ci_pp": quantiles(draws),
+        "cluster_sign_flip_p": sum(
+            abs(sum(s * sum(g) for s, g in zip(sign, groups))) >= abs(observed) for sign in signs
+        )
+        / len(signs),
+        "question_mcnemar_p": mcnemar(diffs.count(1), diffs.count(-1)),
+    }
     return result
 
 
 def evaluate(data, split):
     sorted_data = sorted(data, key=lambda r: hashlib.sha256(r["sample_id"].encode()).digest())
-    subset = {"development": sorted_data[:2], "validation": sorted_data[2:4], "test": sorted_data[4:]}[split]
+    subset = {
+        "development": sorted_data[:2],
+        "validation": sorted_data[2:4],
+        "test": sorted_data[4:],
+    }[split]
     rows, exclusions = [], Counter()
     for item in subset:
         history = turns(item["conversation"])
@@ -163,34 +207,67 @@ def evaluate(data, split):
                 continue
             slate = index.retrieve(query)
             oracle = [turn for turn in history if turn[0] in gold_ids][:5]
-            row = {"history":item["sample_id"],"question_index":i,"gold":day.isoformat(),"gold_ids":sorted(gold_ids),"arms":{}}
-            for arm, evidence in (("A", []),("B",slate),("D",slate),("E",oracle)):
+            row = {
+                "history": item["sample_id"],
+                "question_index": i,
+                "gold": day.isoformat(),
+                "gold_ids": sorted(gold_ids),
+                "arms": {},
+            }
+            for arm, evidence in (("A", []), ("B", slate), ("D", slate), ("E", oracle)):
                 answer, citation = read(evidence, relative=arm in "DE")
                 exact = answer == day.isoformat()
                 selected = [r[0] for r in evidence]
                 supported = exact and citation in gold_ids
-                row["arms"][arm] = {"answer":answer,"cite":citation,"slate":selected,"exact":exact,"supported":supported,
-                                    "unsupported_exact":exact and not supported,"wrong":answer is not None and not exact,
-                                    "refused":answer is None,"hit1":bool(set(selected[:1]) & gold_ids),
-                                    "hit5":bool(set(selected) & gold_ids),"gold_fraction":len(set(selected) & gold_ids)/len(gold_ids),
-                                    "words":sum(min(len(t[2].split()),96) for t in evidence)}
+                row["arms"][arm] = {
+                    "answer": answer,
+                    "cite": citation,
+                    "slate": selected,
+                    "exact": exact,
+                    "supported": supported,
+                    "unsupported_exact": exact and not supported,
+                    "wrong": answer is not None and not exact,
+                    "refused": answer is None,
+                    "hit1": bool(set(selected[:1]) & gold_ids),
+                    "hit5": bool(set(selected) & gold_ids),
+                    "gold_fraction": len(set(selected) & gold_ids) / len(gold_ids),
+                    "words": sum(min(len(t[2].split()), 96) for t in evidence),
+                }
             rows.append(row)
-    return rows, {"histories":[d["sample_id"] for d in subset],"exclusions":dict(exclusions), **summary(rows)}
+    return rows, {
+        "histories": [d["sample_id"] for d in subset],
+        "exclusions": dict(exclusions),
+        **summary(rows),
+    }
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("data", type=Path)
     parser.add_argument("out", type=Path)
-    parser.add_argument("--split", required=True, choices=["development","validation","test"])
+    parser.add_argument("--split", required=True, choices=["development", "validation", "test"])
     args = parser.parse_args()
     started = time.process_time()
     raw = args.data.read_bytes()
     rows, report = evaluate(json.loads(raw), args.split)
-    report.update({"sha256":hashlib.sha256(raw).hexdigest(),"data_bytes":len(raw),"cpu_s":round(time.process_time()-started,4),"split":args.split,"gpu_s":0,"model_tokens":0,"api_cost":0})
-    args.out.mkdir(exist_ok=True,parents=True)
-    (args.out / (args.split+".json")).write_text(json.dumps(report, indent=2)+"\n",encoding="utf-8")
-    (args.out / (args.split+".jsonl")).write_text("".join(json.dumps(row, sort_keys=True)+"\n" for row in rows),encoding="utf-8")
+    report.update(
+        {
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "data_bytes": len(raw),
+            "cpu_s": round(time.process_time() - started, 4),
+            "split": args.split,
+            "gpu_s": 0,
+            "model_tokens": 0,
+            "api_cost": 0,
+        }
+    )
+    args.out.mkdir(exist_ok=True, parents=True)
+    (args.out / (args.split + ".json")).write_text(
+        json.dumps(report, indent=2) + "\n", encoding="utf-8"
+    )
+    (args.out / (args.split + ".jsonl")).write_text(
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows), encoding="utf-8"
+    )
     print(json.dumps(report))
 
 

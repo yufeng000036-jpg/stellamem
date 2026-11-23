@@ -1,0 +1,56 @@
+{
+  "scope": "Post hoc, historical oracle-session input; session recall is coarser than turn or entailment.",
+  "sha256": {
+    "results-20261108-summary.json": "2f628f27eaa39803c51259f652a25579e2815c8e36928b5c3af0c9ce64845153",
+    "tracking_table_20261108.csv": "fe7994351789cf2359a8cb6c66264959df4a2be618f11cb6a685890df93c88a6"
+  },
+  "source": {
+    "results_json": "longmemeval-rerun3-20261108/work/full/results.json",
+    "results_json_sha256": "dee1d928e8a64169166257eb6e3d77b042083ae4533039f50e00634c6031421d",
+    "results_json_bytes": 9130349,
+    "protocol": "v2-full-route-B",
+    "repo_sha": "9034cdec0bf709ee5d66c281b9af48bf17c515f7",
+    "dataset_sha256": "821a2034d219ab45846873dd14c14f12cfe7776e73527a483f9dac095d38620c",
+    "n_questions": 500,
+    "n_manifest_verified": 140
+  },
+  "stages": {
+    "project/cite": 211,
+    "answer/use": 57,
+    "pass": 175,
+    "extract": 37,
+    "retrieve": 14,
+    "answer": 6
+  },
+  "arms": {
+    "main": {
+      "judge_true": 177,
+      "judge_and_valid_reference_nonrefusal": 151
+    },
+    "direct": {
+      "judge_true": 294,
+      "judge_and_valid_reference_nonrefusal": 270
+    },
+    "none": {
+      "judge_true": 30,
+      "judge_and_valid_reference_nonrefusal": 0
+    }
+  },
+  "complete_session_recall": {
+    "n": 381,
+    "judge_false": 234
+  },
+  "main_vs_direct_judge": {
+    "n": 500,
+    "up": 41,
+    "down": 158,
+    "delta_pp": -23.4,
+    "paired_iid_ci_pp": [
+      -28.6,
+      -18.4
+    ],
+    "exact_mcnemar_p": 2.1257893303906883e-17
+  },
+  "known_189_flip_ids_also_in_500": 31,
+  "known_189_flip_ids": 31
+}

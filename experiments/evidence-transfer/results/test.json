@@ -1,0 +1,80 @@
+{
+  "histories": [
+    "conv-44",
+    "conv-41",
+    "conv-42",
+    "conv-49",
+    "conv-43",
+    "conv-30"
+  ],
+  "exclusions": {
+    "other_question": 1021,
+    "not_single_explicit_day": 101
+  },
+  "n": 32,
+  "arms": {
+    "A": {
+      "supported": 0,
+      "exact": 0,
+      "wrong": 0,
+      "refused": 32,
+      "unsupported_exact": 0,
+      "hit1": 0,
+      "hit5": 0,
+      "words": 0,
+      "mean_gold_fraction": 0.0
+    },
+    "B": {
+      "supported": 0,
+      "exact": 0,
+      "wrong": 0,
+      "refused": 32,
+      "unsupported_exact": 0,
+      "hit1": 14,
+      "hit5": 22,
+      "words": 3779,
+      "mean_gold_fraction": 0.6875
+    },
+    "D": {
+      "supported": 12,
+      "exact": 13,
+      "wrong": 4,
+      "refused": 15,
+      "unsupported_exact": 1,
+      "hit1": 14,
+      "hit5": 22,
+      "words": 3779,
+      "mean_gold_fraction": 0.6875
+    },
+    "E": {
+      "supported": 18,
+      "exact": 18,
+      "wrong": 1,
+      "refused": 13,
+      "unsupported_exact": 0,
+      "hit1": 32,
+      "hit5": 32,
+      "words": 996,
+      "mean_gold_fraction": 1.0
+    }
+  },
+  "paired": {
+    "up": 12,
+    "down": 0,
+    "delta_pp": 37.5,
+    "cluster_n": 6,
+    "cluster_ci_pp": [
+      25.0,
+      50.0
+    ],
+    "cluster_sign_flip_p": 0.125,
+    "question_mcnemar_p": 0.00048828125
+  },
+  "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4",
+  "data_bytes": 2805274,
+  "cpu_s": 0.0904,
+  "split": "test",
+  "gpu_s": 0,
+  "model_tokens": 0,
+  "api_cost": 0
+}

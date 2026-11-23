@@ -1,0 +1,23 @@
+{
+  "1": {
+    "supported": 8,
+    "exact": 8,
+    "wrong": 0,
+    "refused": 24,
+    "words": 885
+  },
+  "3": {
+    "supported": 11,
+    "exact": 12,
+    "wrong": 3,
+    "refused": 17,
+    "words": 2391
+  },
+  "5": {
+    "supported": 12,
+    "exact": 13,
+    "wrong": 4,
+    "refused": 15,
+    "words": 3779
+  }
+}

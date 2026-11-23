@@ -1,0 +1,78 @@
+{
+  "histories": [
+    "conv-26",
+    "conv-50"
+  ],
+  "exclusions": {
+    "not_single_explicit_day": 44,
+    "other_question": 339,
+    "missing_or_unresolved_evidence": 1,
+    "adversarial": 2
+  },
+  "n": 17,
+  "arms": {
+    "A": {
+      "supported": 0,
+      "exact": 0,
+      "wrong": 0,
+      "refused": 17,
+      "unsupported_exact": 0,
+      "hit1": 0,
+      "hit5": 0,
+      "words": 0,
+      "mean_gold_fraction": 0.0
+    },
+    "B": {
+      "supported": 0,
+      "exact": 0,
+      "wrong": 0,
+      "refused": 17,
+      "unsupported_exact": 0,
+      "hit1": 7,
+      "hit5": 14,
+      "words": 2227,
+      "mean_gold_fraction": 0.8235294117647058
+    },
+    "D": {
+      "supported": 10,
+      "exact": 11,
+      "wrong": 3,
+      "refused": 3,
+      "unsupported_exact": 1,
+      "hit1": 7,
+      "hit5": 14,
+      "words": 2227,
+      "mean_gold_fraction": 0.8235294117647058
+    },
+    "E": {
+      "supported": 12,
+      "exact": 12,
+      "wrong": 0,
+      "refused": 5,
+      "unsupported_exact": 0,
+      "hit1": 17,
+      "hit5": 17,
+      "words": 625,
+      "mean_gold_fraction": 1.0
+    }
+  },
+  "paired": {
+    "up": 10,
+    "down": 0,
+    "delta_pp": 58.8235294117647,
+    "cluster_n": 2,
+    "cluster_ci_pp": [
+      55.55555555555556,
+      62.5
+    ],
+    "cluster_sign_flip_p": 0.5,
+    "question_mcnemar_p": 0.001953125
+  },
+  "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4",
+  "data_bytes": 2805274,
+  "cpu_s": 0.077,
+  "split": "validation",
+  "gpu_s": 0,
+  "model_tokens": 0,
+  "api_cost": 0
+}
